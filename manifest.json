@@ -1,0 +1,10 @@
+{
+  "name": "NEXORA Global Food Trade",
+  "short_name": "NEXORA",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f6f8f3",
+  "theme_color": "#0b3d2e",
+  "description": "B2B food and agriculture marketplace",
+  "icons": []
+}
