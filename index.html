@@ -2,69 +2,120 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#102a43">
-<title>NEXORA | Global Trade</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <meta name="description" content="NEXORA - Connecting global buyers and sellers.">
+  <title>NEXORA | Global Trade Platform</title>
+  <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
+
 <header>
-  <a class="brand" href="#">NEXORA
-    <small>GLOBAL TRADE</small>
+  <a class="brand" href="#">
+    NEXORA
+    <small>GLOBAL TRADE NETWORK</small>
   </a>
+
+  <nav aria-label="Main navigation">
+    <a href="#">হোম</a>
+    <a href="#market">পণ্যের বাজার</a>
+    <a href="#sell">পণ্য বিক্রি</a>
+  </nav>
+
   <button id="accountBtn">অ্যাকাউন্ট</button>
 </header>
 
 <main>
-<section class="hero">
-  <p class="eyebrow">BUY · SELL · CONNECT</p>
-  <h1>বিশ্ববাণিজ্যের নতুন সংযোগ</h1>
-  <p>বিশ্বের ক্রেতা ও বিক্রেতাকে যুক্ত করুন এক প্ল্যাটফর্মে।</p>
-  <a class="primary" href="#market">পণ্য খুঁজুন</a>
-</section>
 
-<section class="searchbar" id="market">
-  <input id="q" placeholder="পণ্য খুঁজুন">
-  <select id="cat">
-    <option value="">সব ক্যাটাগরি</option>
-    <option>Food & Agriculture</option>
-    <option>Textile</option>
-    <option>Manufacturing</option>
-    <option>Electronics</option>
-  </select>
-</section>
+  <section class="hero">
+    <p class="eyebrow">🌐 BUY · SELL · CONNECT</p>
 
-<section class="section">
-  <h2>পণ্যের বাজার</h2>
-  <div id="list" class="grid"></div>
-</section>
+    <h1>
+      বিশ্ববাণিজ্যের নতুন
+      <span>সংযোগস্থল</span>
+    </h1>
 
-<section class="panel">
-  <h2>বিক্রেতা হিসেবে পণ্য যোগ করুন</h2>
-  <form id="addForm">
-    <input name="name" placeholder="পণ্যের নাম" required>
-    <input name="country" placeholder="দেশ" required>
-    <select name="category">
+    <p>
+      বিশ্বের ক্রেতা ও বিক্রেতাদের এক প্ল্যাটফর্মে যুক্ত করুন।
+      স্থানীয় পণ্য পৌঁছে দিন আন্তর্জাতিক বাজারে।
+    </p>
+
+    <a class="primary" href="#market">
+      আন্তর্জাতিক বাজার ঘুরে দেখুন →
+    </a>
+
+    <div class="hero-note">
+      <span>🌍 Global Marketplace</span>
+      <span>🤝 Buyer & Seller Network</span>
+    </div>
+  </section>
+
+  <section class="searchbar" id="market">
+    <input
+      id="q"
+      type="search"
+      placeholder="কোন পণ্য খুঁজছেন?"
+      aria-label="পণ্য খুঁজুন"
+    >
+
+    <select id="cat" aria-label="পণ্যের ক্যাটাগরি">
+      <option value="">সব ক্যাটাগরি</option>
       <option>Food & Agriculture</option>
       <option>Textile</option>
       <option>Manufacturing</option>
       <option>Electronics</option>
     </select>
-    <input name="price" placeholder="পণ্যের দাম">
-    <textarea name="details" placeholder="পণ্যের বিবরণ"></textarea>
-    <button class="primary" type="submit">পণ্য যোগ করুন</button>
-  </form>
-</section>
+  </section>
 
-<section class="ad">
-  <b>Advertisement</b>
-  <span>বিজ্ঞাপনের জায়গা</span>
-</section>
+  <section class="section">
+    <p class="eyebrow">EXPLORE PRODUCTS</p>
+    <h2>আন্তর্জাতিক পণ্যের বাজার</h2>
+    <p>বিভিন্ন দেশের পণ্য আবিষ্কার করুন।</p>
+
+    <div id="list" class="grid"></div>
+  </section>
+
+  <section class="panel" id="sell">
+    <p class="eyebrow">JOIN NEXORA</p>
+    <h2>আপনার পণ্য বিশ্ববাজারে তুলে ধরুন</h2>
+    <p>বিক্রেতা হিসেবে পণ্যের তথ্য যোগ করুন।</p>
+
+    <form id="addForm">
+      <input name="name" placeholder="পণ্যের নাম" required>
+      <input name="country" placeholder="উৎপাদনকারী দেশ" required>
+
+      <select name="category">
+        <option>Food & Agriculture</option>
+        <option>Textile</option>
+        <option>Manufacturing</option>
+        <option>Electronics</option>
+      </select>
+
+      <input name="price" placeholder="পণ্যের দাম">
+      <textarea name="details" placeholder="পণ্যের বিস্তারিত বিবরণ"></textarea>
+
+      <button class="primary" type="submit">
+        + পণ্য যোগ করুন
+      </button>
+    </form>
+  </section>
+
+  <section class="ad">
+    <b>BUSINESS PARTNERSHIP</b>
+    <span>বিজ্ঞাপন ও ব্যবসায়িক প্রচারের স্থান</span>
+  </section>
+
 </main>
 
-<footer>NEXORA © 2026 | Global Trade Marketplace</footer>
+<footer>
+  <strong>NEXORA</strong>
+  <p>Connecting Businesses. Empowering Global Trade.</p>
+  <p>© 2026 NEXORA. All rights reserved.</p>
+</footer>
 
 <script src="app.js"></script>
+
 </body>
 </html>
