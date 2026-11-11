@@ -4,20 +4,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#102a43">
-<meta name="description" content="NEXORA Global Trade Network">
-<title>NEXORA | Global Trade Network</title>
+<title>NEXORA | Global Trade Marketplace</title>
 
 <style>
 :root{
-  --navy:#102a43;
+  --navy:#10243a;
   --blue:#1769aa;
-  --green:#00a878;
+  --green:#0b9875;
   --bg:#f3f6fa;
-  --text:#203449;
-  --muted:#718096;
   --white:#fff;
-  --border:#e1e8ef;
+  --text:#243449;
+  --muted:#718096;
+  --border:#e3e9f0;
 }
 *{box-sizing:border-box}
 body{
@@ -26,210 +24,117 @@ body{
   background:var(--bg);
   color:var(--text);
 }
-button,input,select,textarea{font:inherit}
 header{
   background:var(--navy);
   color:white;
-  padding:15px 5%;
+  padding:16px 5%;
   display:flex;
-  align-items:center;
   justify-content:space-between;
-  gap:15px;
+  align-items:center;
   flex-wrap:wrap;
+  gap:12px;
 }
-.brand{
-  color:white;
-  text-decoration:none;
-  font-size:25px;
-  font-weight:900;
-  letter-spacing:2px;
-}
-.brand small{
-  display:block;
-  font-size:9px;
-  letter-spacing:2px;
-  color:#9dc8e8;
-  margin-top:3px;
-}
-nav{display:flex;gap:20px;flex-wrap:wrap}
-nav a{
-  color:white;
-  text-decoration:none;
+.logo{font-size:25px;font-weight:800;letter-spacing:2px}
+.logo span{color:#36d6a8}
+nav{display:flex;gap:8px;flex-wrap:wrap}
+button{
+  border:0;
+  border-radius:8px;
+  padding:11px 16px;
+  cursor:pointer;
+  font-weight:600;
   font-size:14px;
 }
-nav a:hover{color:#6ee7bd}
-button,.primary{
-  border:0;
-  cursor:pointer;
-  border-radius:8px;
-  padding:12px 18px;
-  font-weight:700;
-}
-.primary{
-  background:var(--green);
-  color:white;
-  text-decoration:none;
-  display:inline-block;
-}
-#accountBtn{
-  background:white;
-  color:var(--navy);
-}
+nav button{background:#203d59;color:white}
+nav button:hover{background:var(--green)}
+.primary{background:var(--green);color:white}
+.secondary{background:var(--blue);color:white}
+.light{background:#eaf1f8;color:var(--navy)}
+.danger{background:#ffe8e8;color:#b42318}
+.container{max-width:1150px;margin:auto;padding:22px 16px}
 .hero{
-  background:linear-gradient(125deg,#102a43,#1769aa);
+  background:linear-gradient(120deg,#10243a,#1769aa);
   color:white;
-  padding:75px 7%;
+  padding:36px 24px;
+  border-radius:16px;
+  margin-bottom:24px;
 }
-.eyebrow{
-  color:#00d6a0;
-  font-size:12px;
-  font-weight:bold;
-  letter-spacing:2px;
-}
-.hero h1{
-  font-size:clamp(32px,6vw,55px);
-  max-width:650px;
-  line-height:1.2;
-  margin:15px 0;
-}
-.hero h1 span{color:#63e6be}
-.hero p{
-  max-width:600px;
-  line-height:1.8;
-  color:#dceaf5;
-}
-.hero-note{
+.hero h1{font-size:30px;margin:0 0 12px}
+.hero p{line-height:1.7;color:#dceafa}
+.section{margin:28px 0}
+.section-head{
   display:flex;
-  gap:20px;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
   flex-wrap:wrap;
-  margin-top:30px;
-  font-size:13px;
+  margin-bottom:15px;
 }
-.container{
-  max-width:1150px;
-  margin:auto;
-  padding:35px 20px;
-}
-.searchbar{
-  display:grid;
-  grid-template-columns:1fr 250px;
-  gap:12px;
-  margin-top:-20px;
-  position:relative;
-}
-input,select,textarea{
-  width:100%;
-  padding:13px;
-  border:1px solid var(--border);
-  border-radius:8px;
+h2{font-size:22px;margin:0;color:var(--navy)}
+.card{
   background:white;
-  outline:none;
-  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:13px;
+  padding:18px;
+  margin-bottom:14px;
+  box-shadow:0 3px 12px #10243a08;
 }
-input:focus,select:focus,textarea:focus{
-  border-color:var(--blue);
-  box-shadow:0 0 0 3px #1769aa18;
-}
-textarea{min-height:100px;resize:vertical}
-.section-title{margin-bottom:25px}
-.section-title h2{margin:5px 0;font-size:27px}
-.section-title p{color:var(--muted)}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:20px;
+  gap:15px;
 }
-.product-card{
-  background:white;
-  border:1px solid var(--border);
-  border-radius:13px;
-  overflow:hidden;
-  transition:.2s;
-}
-.product-card:hover{
-  transform:translateY(-4px);
-  box-shadow:0 10px 25px #102a4314;
-}
-.product-visual{
-  height:150px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:#e8f2f8;
-  font-size:65px;
-}
-.product-body{padding:18px}
-.product-body h3{margin:0 0 10px}
-.product-body p{
-  font-size:13px;
-  color:var(--muted);
-  line-height:1.6;
-}
-.product-body button{
-  background:var(--navy);
-  color:white;
+label{display:block;font-size:14px;font-weight:600;margin:13px 0 6px}
+input,select,textarea{
   width:100%;
-  margin-top:8px;
-}
-.panel{
-  background:white;
-  padding:28px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  margin-top:30px;
-}
-.product-form{
-  display:grid;
-  gap:11px;
-}
-.product-form label{
+  padding:12px;
+  border:1px solid #d6dee8;
+  border-radius:8px;
   font-size:14px;
-  font-weight:700;
-  margin-top:8px;
-}
-.product-form button{margin-top:15px}
-.ad{
-  background:#e7f5f1;
-  border:1px dashed #71cdb1;
-  border-radius:12px;
-  padding:25px;
-  text-align:center;
-  margin-top:30px;
-  color:#176b55;
-}
-.ad span{display:block;margin-top:8px;font-size:13px}
-footer{
-  background:#0b1e30;
-  color:white;
-  padding:35px 20px;
-  text-align:center;
-  margin-top:35px;
-}
-footer p{font-size:13px;color:#a9bac9}
-.detail-box{
   background:white;
-  padding:25px;
-  border-radius:13px;
-  border:1px solid var(--border);
-  margin-top:20px;
-  line-height:1.8;
+  color:var(--text);
 }
-.detail-box img{
-  max-width:100%;
-  width:180px;
-  height:140px;
-  object-fit:cover;
-  border-radius:9px;
-  margin:5px;
+textarea{min-height:90px;resize:vertical}
+input:focus,select:focus,textarea:focus{
+  outline:2px solid #b8d9f5;border-color:var(--blue)
 }
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .hidden{display:none!important}
-@media(max-width:650px){
-  header{justify-content:center}
-  nav{justify-content:center;width:100%;gap:13px}
-  .hero{padding:55px 22px}
-  .container{padding:25px 15px}
-  .searchbar{grid-template-columns:1fr}
-  .panel{padding:19px}
+.muted{color:var(--muted);font-size:13px;line-height:1.6}
+.tag{
+  display:inline-block;
+  padding:5px 9px;
+  background:#e8f6f2;
+  color:#087b5f;
+  border-radius:20px;
+  font-size:12px;
+  margin:3px;
+}
+.price{font-size:19px;font-weight:800;color:var(--green)}
+.product-image{
+  width:100%;height:150px;object-fit:cover;
+  border-radius:9px;background:#edf1f5;
+}
+.demand-date{
+  background:#fff5e5;color:#9a5a00;
+  padding:7px 10px;border-radius:7px;
+  display:inline-block;font-size:13px;font-weight:700;
+}
+.offer{
+  background:#f5f9ff;padding:12px;
+  border-radius:9px;margin-top:10px;
+  border:1px solid #dce8f5;
+}
+footer{
+  text-align:center;padding:25px;
+  background:var(--navy);color:#dceafa;margin-top:40px;
+}
+hr{border:0;border-top:1px solid var(--border);margin:18px 0}
+@media(max-width:600px){
+  header{padding:14px}
+  .hero h1{font-size:24px}
+  .container{padding:16px 12px}
+  nav button{padding:9px 10px;font-size:12px}
 }
 </style>
 </head>
@@ -237,312 +142,460 @@ footer p{font-size:13px;color:#a9bac9}
 <body>
 
 <header>
-  <a class="brand" href="#">
-    NEXORA
-    <small>GLOBAL TRADE NETWORK</small>
-  </a>
-
+  <div class="logo">NEX<span>ORA</span></div>
   <nav>
-    <a href="#">হোম</a>
-    <a href="#market">পণ্যের বাজার</a>
-    <a href="#sell">পণ্য বিক্রি</a>
+    <button onclick="showSection('market')">Marketplace</button>
+    <button onclick="showSection('demandBoard')">Demand Board</button>
+    <button onclick="showSection('postDemand')">Post a Demand</button>
+    <button onclick="showSection('sellerDashboard')">Seller Account</button>
   </nav>
-
-  <button id="accountBtn">অ্যাকাউন্ট</button>
 </header>
 
-<main>
+<main class="container">
 
-<section class="hero">
-  <p class="eyebrow">GLOBAL BUYERS · GLOBAL SELLERS</p>
-  <h1>বিশ্ববাণিজ্যের নতুন <span>সংযোগস্থল</span></h1>
-  <p>
-    বিশ্বের ক্রেতা ও বিক্রেতাদের এক প্ল্যাটফর্মে যুক্ত করুন।
-    স্থানীয় পণ্য পৌঁছে দিন আন্তর্জাতিক বাজারে।
-  </p>
-  <a class="primary" href="#market">আন্তর্জাতিক বাজার ঘুরে দেখুন →</a>
-  <div class="hero-note">
-    <span>🌍 Global Marketplace</span>
-    <span>🤝 Buyer & Seller Network</span>
-  </div>
-</section>
+  <section class="hero">
+    <h1>Connect. Trade. Grow.</h1>
+    <p>
+      NEXORA একটি B2B Global Trade Marketplace।
+      ক্রেতা ও বিক্রেতাদের মধ্যে আন্তর্জাতিক বাণিজ্যের সংযোগ তৈরি করাই আমাদের লক্ষ্য।
+    </p>
+    <button class="primary" onclick="showSection('postDemand')">
+      Post Your Requirement
+    </button>
+    <button class="light" onclick="showSection('market')">
+      Explore Products
+    </button>
+  </section>
 
-<div class="container">
+  <!-- MARKETPLACE -->
+  <section id="market" class="section">
+    <div class="section-head">
+      <h2>Global Marketplace</h2>
+      <span class="muted" id="productCount"></span>
+    </div>
 
-<section id="market">
-  <div class="searchbar">
-    <input id="q" type="search" placeholder="কোন পণ্য খুঁজছেন?">
-    <select id="cat">
-      <option value="">সব ক্যাটাগরি</option>
-      <option>Food & Agriculture</option>
-      <option>Textile & Garments</option>
-      <option>Electronics</option>
-      <option>Manufacturing</option>
-      <option>Handicrafts</option>
-      <option>Raw Materials</option>
-      <option>Other</option>
-    </select>
-  </div>
+    <div class="grid">
+      <input id="productSearch" placeholder="Search products..." oninput="renderProducts()">
+      <select id="categoryFilter" onchange="renderProducts()">
+        <option value="">All Categories</option>
+        <option>Food & Agriculture</option>
+        <option>Textile & Garments</option>
+        <option>Electronics</option>
+        <option>Industrial Products</option>
+        <option>Handicrafts</option>
+        <option>Other</option>
+      </select>
+    </div>
 
-  <div class="section-title" style="margin-top:40px">
-    <p class="eyebrow">EXPLORE PRODUCTS</p>
-    <h2>আন্তর্জাতিক পণ্যের বাজার</h2>
-    <p>বিভিন্ন দেশের পণ্য আবিষ্কার করুন।</p>
-  </div>
+    <div id="productList" class="grid" style="margin-top:18px"></div>
+  </section>
 
-  <div id="list" class="grid"></div>
-</section>
+  <!-- POST DEMAND -->
+  <section id="postDemand" class="section hidden">
+    <div class="section-head">
+      <h2>Post a Demand</h2>
+      <span class="tag">Buyer Section</span>
+    </div>
 
-<section id="productDetails" class="hidden">
-  <div class="detail-box" id="detailContent"></div>
-</section>
+    <div class="card">
+      <p class="muted">
+        আপনার পণ্যের চাহিদা প্রকাশ করুন। প্রাসঙ্গিক বিক্রেতারা আপনার চাহিদার বিপরীতে দাম প্রস্তাব করতে পারবেন।
+      </p>
 
-<section class="panel" id="sell">
-  <div class="section-title">
-    <p class="eyebrow">SELL ON NEXORA</p>
-    <h2>আপনার পণ্য বিশ্ববাজারে তুলে ধরুন</h2>
-    <p>আন্তর্জাতিক ক্রেতাদের জন্য পণ্যের তথ্য প্রকাশ করুন।</p>
-  </div>
+      <form id="demandForm">
+        <div class="grid">
+          <div>
+            <label>পণ্যের নাম *</label>
+            <input name="name" required placeholder="যেমন: Fresh Mango">
+          </div>
+          <div>
+            <label>ক্যাটাগরি *</label>
+            <select name="category" required>
+              <option value="">Select Category</option>
+              <option>Food & Agriculture</option>
+              <option>Textile & Garments</option>
+              <option>Electronics</option>
+              <option>Industrial Products</option>
+              <option>Handicrafts</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
 
-  <form id="addForm" class="product-form">
+        <label>বিস্তারিত বিবরণ *</label>
+        <textarea name="description" required placeholder="আপনার কী ধরনের পণ্য প্রয়োজন বিস্তারিত লিখুন"></textarea>
 
-    <label>১. Product Name / পণ্যের নাম *</label>
-    <input name="name" required placeholder="যেমন: Premium Fresh Mango">
+        <label>প্রয়োজনীয় স্পেসিফিকেশন ও গুণগত মান *</label>
+        <textarea name="specifications" required placeholder="পণ্যের মান, সাইজ, ধরন, বৈশিষ্ট্য ইত্যাদি"></textarea>
 
-    <label>২. Category / ক্যাটাগরি *</label>
-    <select name="category" required>
-      <option value="">ক্যাটাগরি নির্বাচন করুন</option>
-      <option>Food & Agriculture</option>
-      <option>Textile & Garments</option>
-      <option>Electronics</option>
-      <option>Manufacturing</option>
-      <option>Handicrafts</option>
-      <option>Raw Materials</option>
-      <option>Other</option>
-    </select>
+        <div class="grid">
+          <div>
+            <label>প্রয়োজনীয় পরিমাণ *</label>
+            <input name="quantity" required placeholder="যেমন: 5000 KG">
+          </div>
+          <div>
+            <label>বাজেট *</label>
+            <input name="budget" required placeholder="যেমন: 5000">
+          </div>
+          <div>
+            <label>মুদ্রা *</label>
+            <select name="currency" required>
+              <option value="USD">USD</option>
+              <option value="BDT">BDT</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="CNY">CNY</option>
+            </select>
+          </div>
+        </div>
 
-    <label>৩. Product Images / পণ্যের ছবির লিংক *</label>
-    <textarea name="images" required
-      placeholder="প্রতি লাইনে একটি ছবির URL দিন"></textarea>
+        <div class="grid">
+          <div>
+            <label>ডেলিভারির গন্তব্য দেশ *</label>
+            <input name="country" required placeholder="যেমন: Bangladesh">
+          </div>
+          <div>
+            <label>শহর / গন্তব্য *</label>
+            <input name="destination" required placeholder="যেমন: Dhaka">
+          </div>
+        </div>
 
-    <label>৪. Product Description / বিস্তারিত বিবরণ *</label>
-    <textarea name="details" required
-      placeholder="পণ্যের পরিচিতি, ব্যবহার ও অন্যান্য বিবরণ লিখুন"></textarea>
+        <label>পণ্য কোন তারিখের মধ্যে প্রয়োজন? *</label>
+        <input type="date" name="requiredDate" id="requiredDate" required>
+        <p class="muted">এই তারিখটি বিক্রেতারা চাহিদার সঙ্গে দেখতে পারবেন।</p>
 
-    <label>৫. Origin / উৎপত্তির দেশ ও স্থান *</label>
-    <input name="country" required
-      placeholder="যেমন: Rajshahi, Bangladesh">
+        <div class="form-actions">
+          <button class="primary" type="submit">Publish Demand</button>
+          <button class="light" type="reset">Reset</button>
+        </div>
+      </form>
+    </div>
+  </section>
 
-    <label>৬. Specifications & Quality / বৈশিষ্ট্য ও মান *</label>
-    <textarea name="specifications" required
-      placeholder="ওজন, আকার, উপাদান, গ্রেড ও গুণগত মান লিখুন"></textarea>
+  <!-- DEMAND BOARD -->
+  <section id="demandBoard" class="section hidden">
+    <div class="section-head">
+      <h2>Public Demand Board</h2>
+      <span class="tag">Open Requirements</span>
+    </div>
+    <p class="muted">
+      এখানে প্রকাশিত ক্রেতাদের চাহিদা সবাই দেখতে পারবেন।
+      নিবন্ধিত Seller-দের জন্য Price Offer সুবিধা থাকবে।
+    </p>
+    <div id="demandList"></div>
+  </section>
 
-    <label>৭. Price / পণ্যের মূল্য *</label>
-    <input name="price" type="number" min="0" step="any"
-      required placeholder="পণ্যের মূল্য লিখুন">
+  <!-- SELLER DASHBOARD -->
+  <section id="sellerDashboard" class="section hidden">
+    <div class="section-head">
+      <h2>Seller Dashboard</h2>
+      <span class="tag">Seller Workspace</span>
+    </div>
 
-    <label>Currency / মুদ্রা *</label>
-    <select name="currency" required>
-      <option value="USD">USD - US Dollar</option>
-      <option value="EUR">EUR - Euro</option>
-      <option value="BDT">BDT - Bangladeshi Taka</option>
-      <option value="GBP">GBP - British Pound</option>
-      <option value="CNY">CNY - Chinese Yuan</option>
-    </select>
+    <div class="card">
+      <h3>Matched Buyer Demands</h3>
+      <p class="muted">
+        আপনার যোগ করা পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন চাহিদাগুলো এখানে দেখানো হবে।
+      </p>
+      <div id="matchedDemands"></div>
+    </div>
 
-    <button class="primary" type="submit">+ Publish Product</button>
-  </form>
-</section>
+    <div class="card">
+      <div class="section-head">
+        <h3>My Products</h3>
+        <button class="primary" onclick="toggleProductForm()">+ Add Product</button>
+      </div>
 
-<section class="ad">
-  <b>BUSINESS PARTNERSHIP</b>
-  <span>বিজ্ঞাপন ও ব্যবসায়িক প্রচারের স্থান</span>
-</section>
+      <form id="productForm" class="hidden">
+        <label>Product Name *</label>
+        <input name="name" required>
 
-</div>
+        <label>Category *</label>
+        <select name="category" required>
+          <option value="">Select Category</option>
+          <option>Food & Agriculture</option>
+          <option>Textile & Garments</option>
+          <option>Electronics</option>
+          <option>Industrial Products</option>
+          <option>Handicrafts</option>
+          <option>Other</option>
+        </select>
+
+        <label>Product Images (Image URLs, one per line)</label>
+        <textarea name="images" placeholder="https://example.com/image.jpg"></textarea>
+
+        <label>Product Description *</label>
+        <textarea name="description" required></textarea>
+
+        <label>Origin *</label>
+        <input name="origin" required placeholder="Country / City">
+
+        <label>Specifications & Quality *</label>
+        <textarea name="specifications" required></textarea>
+
+        <div class="grid">
+          <div>
+            <label>Price *</label>
+            <input name="price" required>
+          </div>
+          <div>
+            <label>Currency *</label>
+            <select name="currency" required>
+              <option>USD</option>
+              <option>BDT</option>
+              <option>EUR</option>
+              <option>GBP</option>
+              <option>CNY</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button class="primary" type="submit">Save Product</button>
+          <button class="light" type="button" onclick="toggleProductForm()">Cancel</button>
+        </div>
+      </form>
+
+      <div id="sellerProducts"></div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
-  <strong>NEXORA</strong>
-  <p>Connecting Businesses. Empowering Global Trade.</p>
-  <p>© 2026 NEXORA. All rights reserved.</p>
+  <div class="logo">NEX<span>ORA</span></div>
+  <p>Connecting Buyers & Sellers Across Borders</p>
+  <p class="muted">NEXORA Global Trade Marketplace</p>
 </footer>
 
 <script>
-const seed = [
-  {
-    id:"p1",
-    name:"Fresh Mango",
-    category:"Food & Agriculture",
-    country:"Rajshahi, Bangladesh",
-    details:"Seasonal fresh mangoes.",
-    specifications:"Fresh seasonal mango.",
-    price:"0",
-    currency:"USD",
-    images:"",
-    emoji:"🥭"
-  },
-  {
-    id:"p2",
-    name:"Premium Rice",
-    category:"Food & Agriculture",
-    country:"Dinajpur, Bangladesh",
-    details:"Quality rice for wholesale buyers.",
-    specifications:"Quality rice.",
-    price:"0",
-    currency:"USD",
-    images:"",
-    emoji:"🌾"
-  },
-  {
-    id:"p3",
-    name:"Red Lentils",
-    category:"Food & Agriculture",
-    country:"Bangladesh",
-    details:"Red lentils for food distributors.",
-    specifications:"Food grade lentils.",
-    price:"0",
-    currency:"USD",
-    images:"",
-    emoji:"🫘"
-  }
-];
+const KEYS = {
+  products: "nexora_products",
+  demands: "nexora_demands"
+};
 
-const $ = id => document.getElementById(id);
-
-const safe = value => String(value ?? "").replace(/[&<>"']/g,
-  c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",
-    '"':"&quot;","'":"&#39;"
-  }[c])
-);
-
-function readProducts(){
-  try{
-    return JSON.parse(localStorage.getItem("nexora_products")) || seed;
-  }catch{
-    return seed;
+function getData(key){
+  try {
+    return JSON.parse(localStorage.getItem(key)) || [];
+  } catch(e) {
+    return [];
   }
 }
 
-let products = readProducts();
-
-function saveProducts(){
-  localStorage.setItem("nexora_products",JSON.stringify(products));
+function saveData(key,data){
+  localStorage.setItem(key,JSON.stringify(data));
 }
 
-function getImage(p){
-  const first = (p.images || "").split("\n")[0].trim();
-  return first;
+let products = getData(KEYS.products);
+let demands = getData(KEYS.demands);
+
+function escapeHTML(value){
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
 }
 
-function render(){
-  const q = $("q").value.trim().toLowerCase();
-  const cat = $("cat").value;
+function showSection(id){
+  document.querySelectorAll("main section").forEach(section=>{
+    if(section.id !== "market" && section.id !== "postDemand" &&
+       section.id !== "demandBoard" && section.id !== "sellerDashboard"){
+      return;
+    }
+    section.classList.toggle("hidden",section.id !== id);
+  });
 
-  const filtered = products.filter(p =>
-    (p.name+" "+p.country+" "+p.details)
-      .toLowerCase().includes(q) &&
-    (!cat || p.category === cat)
+  if(id === "market") renderProducts();
+  if(id === "demandBoard") renderDemands();
+  if(id === "sellerDashboard") renderSellerDashboard();
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderProducts(){
+  const search = document.getElementById("productSearch").value.toLowerCase();
+  const category = document.getElementById("categoryFilter").value;
+
+  const filtered = products.filter(p=>
+    (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
+    (!category || p.category === category)
   );
 
-  $("list").innerHTML = filtered.length
-    ? filtered.map(p => {
-      const img = getImage(p);
-      return `
-      <article class="product-card">
-        <div class="product-visual">
-          ${img
-            ? `<img src="${safe(img)}" alt="${safe(p.name)}"
-                 style="width:100%;height:150px;object-fit:cover"
-                 onerror="this.outerHTML='📦'">`
-            : safe(p.emoji || "📦")}
-        </div>
-        <div class="product-body">
-          <h3>${safe(p.name)}</h3>
-          <p>${safe(p.category)}</p>
-          <p>${safe(p.details)}</p>
-          <p>📍 ${safe(p.country)}</p>
-          <p><b>${safe(p.price)} ${safe(p.currency || "USD")}</b></p>
-          <button type="button" data-view="${safe(p.id)}">
-            View Product
-          </button>
-        </div>
-      </article>`;
-    }).join("")
-    : "<p>No products found.</p>";
+  document.getElementById("productCount").textContent =
+    filtered.length + " Products";
+
+  document.getElementById("productList").innerHTML =
+    filtered.length ? filtered.map(p=>`
+      <article class="card">
+        ${p.images ? `<img class="product-image" src="${escapeHTML(p.images.split("\n")[0])}" alt="Product image" onerror="this.style.display='none'">` : ""}
+        <span class="tag">${escapeHTML(p.category)}</span>
+        <h3>${escapeHTML(p.name)}</h3>
+        <p class="muted">${escapeHTML(p.description)}</p>
+        <p class="muted">Origin: ${escapeHTML(p.origin)}</p>
+        <p class="price">${escapeHTML(p.price)} ${escapeHTML(p.currency)}</p>
+        <p class="muted">Product ID: ${escapeHTML(p.id)}</p>
+      </article>
+    `).join("") : `<div class="card">কোনো পণ্য পাওয়া যায়নি।</div>`;
 }
 
-function showProduct(id){
-  const p = products.find(x => x.id === id);
-  if(!p) return;
-
-  const detail = $("detailContent");
-  const imageList = (p.images || "")
-    .split("\n")
-    .map(x => x.trim())
-    .filter(Boolean);
-
-  detail.innerHTML = `
-    <h2>${safe(p.name)}</h2>
-    ${imageList.map(url =>
-      `<img src="${safe(url)}" alt="${safe(p.name)}">`
-    ).join("")}
-    <p><b>Product ID:</b> ${safe(p.id)}</p>
-    <p><b>Category:</b> ${safe(p.category)}</p>
-    <p><b>Description:</b> ${safe(p.details)}</p>
-    <p><b>Origin:</b> ${safe(p.country)}</p>
-    <p><b>Specifications:</b> ${safe(p.specifications)}</p>
-    <p><b>Price:</b> ${safe(p.price)} ${safe(p.currency)}</p>
-    <button type="button" id="closeDetails">Close</button>
-  `;
-
-  $("productDetails").classList.remove("hidden");
-  $("closeDetails").addEventListener("click",() =>
-    $("productDetails").classList.add("hidden")
-  );
-  $("productDetails").scrollIntoView({behavior:"smooth"});
-}
-
-$("q").addEventListener("input",render);
-$("cat").addEventListener("change",render);
-
-$("list").addEventListener("click",e=>{
-  const id = e.target.closest("[data-view]")?.dataset.view;
-  if(id) showProduct(id);
-});
-
-$("addForm").addEventListener("submit",e=>{
+document.getElementById("productForm").addEventListener("submit",function(e){
   e.preventDefault();
+  const data = Object.fromEntries(new FormData(this));
 
-  const data = new FormData(e.currentTarget);
   const product = {
-    id:"NX-"+Date.now(),
-    name:data.get("name").trim(),
-    category:data.get("category"),
-    images:data.get("images").trim(),
-    details:data.get("details").trim(),
-    country:data.get("country").trim(),
-    specifications:data.get("specifications").trim(),
-    price:data.get("price"),
-    currency:data.get("currency"),
-    emoji:"📦"
+    ...data,
+    id:"NX-" + Date.now(),
+    createdAt:new Date().toISOString()
   };
 
-  products.unshift(product);
-  saveProducts();
-  e.currentTarget.reset();
-  render();
-
-  alert("পণ্য যোগ হয়েছে। Product ID: "+product.id);
-  $("market").scrollIntoView({behavior:"smooth"});
+  products.push(product);
+  saveData(KEYS.products,products);
+  this.reset();
+  this.classList.add("hidden");
+  renderSellerDashboard();
+  alert("পণ্য সফলভাবে সংরক্ষিত হয়েছে।");
 });
 
-$("accountBtn").addEventListener("click",()=>{
-  alert("NEXORA Account System পরবর্তী ধাপে যুক্ত করা হবে।");
+function toggleProductForm(){
+  document.getElementById("productForm").classList.toggle("hidden");
+}
+
+function renderSellerDashboard(){
+  const list = document.getElementById("sellerProducts");
+
+  list.innerHTML = products.length ? products.map(p=>`
+    <div class="offer">
+      <strong>${escapeHTML(p.name)}</strong>
+      <p class="muted">${escapeHTML(p.category)} | ${escapeHTML(p.origin)}</p>
+      <p class="price">${escapeHTML(p.price)} ${escapeHTML(p.currency)}</p>
+      <p class="muted">Product ID: ${escapeHTML(p.id)}</p>
+      <button class="danger" onclick="deleteProduct('${p.id}')">Delete</button>
+    </div>
+  `).join("") : `<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>`;
+
+  renderMatchedDemands();
+}
+
+function deleteProduct(id){
+  if(!confirm("এই পণ্যটি মুছে ফেলতে চান?")) return;
+  products = products.filter(p=>p.id !== id);
+  saveData(KEYS.products,products);
+  renderSellerDashboard();
+  renderProducts();
+}
+
+document.getElementById("demandForm").addEventListener("submit",function(e){
+  e.preventDefault();
+
+  const data = Object.fromEntries(new FormData(this));
+
+  const demand = {
+    ...data,
+    id:"ND-" + Date.now(),
+    status:"Open",
+    offers:[],
+    createdAt:new Date().toISOString()
+  };
+
+  demands.unshift(demand);
+  saveData(KEYS.demands,demands);
+
+  this.reset();
+  alert("আপনার চাহিদা প্রকাশিত হয়েছে।");
+  showSection("demandBoard");
 });
 
-render();
+function renderDemands(){
+  const list = document.getElementById("demandList");
+
+  list.innerHTML = demands.length ? demands.map(d=>`
+    <article class="card">
+      <span class="tag">${escapeHTML(d.category)}</span>
+      <span class="tag">${escapeHTML(d.status)}</span>
+      <h3>${escapeHTML(d.name)}</h3>
+      <p>${escapeHTML(d.description)}</p>
+      <p class="muted"><strong>Specifications:</strong> ${escapeHTML(d.specifications)}</p>
+      <div class="grid">
+        <div><p class="muted">Quantity</p><strong>${escapeHTML(d.quantity)}</strong></div>
+        <div><p class="muted">Budget</p><strong>${escapeHTML(d.budget)} ${escapeHTML(d.currency)}</strong></div>
+        <div><p class="muted">Destination</p><strong>${escapeHTML(d.destination)}, ${escapeHTML(d.country)}</strong></div>
+      </div>
+      <p><span class="demand-date">Required by: ${escapeHTML(d.requiredDate)}</span></p>
+      <p class="muted">Demand ID: ${escapeHTML(d.id)}</p>
+      <p><strong>${d.offers.length} Price Offer(s)</strong></p>
+
+      ${d.offers.map(o=>`
+        <div class="offer">
+          <strong>${escapeHTML(o.seller)}</strong>
+          <p class="price">${escapeHTML(o.price)} ${escapeHTML(o.currency)}</p>
+          <p class="muted">Available Quantity: ${escapeHTML(o.quantity)}</p>
+        </div>
+      `).join("")}
+
+      <button class="secondary" onclick="makeOffer('${d.id}')">Submit Price Offer</button>
+    </article>
+  `).join("") : `<div class="card">এখনো কোনো চাহিদা প্রকাশিত হয়নি।</div>`;
+}
+
+function makeOffer(id){
+  const demand = demands.find(d=>d.id===id);
+  if(!demand) return;
+
+  const seller = prompt("আপনার Seller / Business Name লিখুন:");
+  if(!seller) return;
+
+  const price = prompt("আপনার প্রস্তাবিত দাম লিখুন:");
+  if(!price) return;
+
+  const currency = prompt("Currency লিখুন (USD / BDT / EUR):","USD");
+  if(!currency) return;
+
+  const quantity = prompt("আপনি কত পরিমাণ সরবরাহ করতে পারবেন?");
+  if(!quantity) return;
+
+  demand.offers.push({
+    seller,
+    price,
+    currency,
+    quantity,
+    createdAt:new Date().toISOString()
+  });
+
+  saveData(KEYS.demands,demands);
+  renderDemands();
+  alert("আপনার Price Offer যুক্ত হয়েছে।");
+}
+
+function renderMatchedDemands(){
+  const matched = demands.filter(d=>
+    products.some(p=>p.category===d.category)
+  );
+
+  document.getElementById("matchedDemands").innerHTML =
+    matched.length ? matched.map(d=>`
+      <div class="offer">
+        <strong>${escapeHTML(d.name)}</strong>
+        <p class="muted">${escapeHTML(d.category)}</p>
+        <p>${escapeHTML(d.description)}</p>
+        <p><span class="demand-date">Required by: ${escapeHTML(d.requiredDate)}</span></p>
+        <button class="secondary" onclick="showSection('demandBoard')">View Demand & Offer</button>
+      </div>
+    `).join("") : `<p class="muted">আপনার পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন কোনো চাহিদা এখনো পাওয়া যায়নি।</p>`;
+}
+
+// Set minimum date to today
+const today = new Date();
+const localToday = new Date(today.getTime()-today.getTimezoneOffset()*60000)
+  .toISOString().split("T")[0];
+
+document.getElementById("requiredDate").min = localToday;
+
+// Initial rendering
+renderProducts();
+renderDemands();
 </script>
 
 </body>
