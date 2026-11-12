@@ -495,6 +495,22 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-module-status{display:inline-block;margin-top:12px;padding:5px 8px;border-radius:20px;background:#f1f4f7;color:#657487;font-size:11px;font-weight:700}
 @media(max-width:600px){.nx-role-hero{padding:18px}.nx-role-hero-mark{width:44px;height:44px}}
 
+
+/* Seller Center operational overview */
+.nx-seller-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.nx-seller-stat{min-width:0;padding:16px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;box-shadow:0 2px 8px #10243a08}
+.nx-seller-stat span{display:block;color:var(--nx-muted);font-size:12px;font-weight:700}
+.nx-seller-stat strong{display:block;margin:7px 0 3px;color:var(--nx-ink);font-size:27px;line-height:1.2;overflow-wrap:anywhere}
+.nx-seller-stat small{display:block;color:var(--nx-muted);font-size:11px}
+.nx-seller-stat .nx-seller-status-value{font-size:17px}
+.nx-seller-product-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,220px);gap:8px 12px;align-items:center;margin:12px 0 16px}
+.nx-seller-search-label{font-size:12px;font-weight:700;color:var(--nx-muted)}
+.nx-seller-product-tools input,.nx-seller-product-tools select{width:100%;min-width:0}
+.nx-seller-product-item{padding:15px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;margin:10px 0}
+.nx-seller-product-item[hidden]{display:none!important}
+@media(max-width:760px){.nx-seller-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.nx-seller-stat{padding:12px}.nx-seller-stat strong{font-size:23px}.nx-seller-product-tools{grid-template-columns:1fr}.nx-seller-search-label{margin-top:4px}}
+
 </style>
 </head>
 
@@ -887,10 +903,17 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div class="nx-role-hero-mark" aria-hidden="true">▣</div>
     </div>
     <nav class="nx-role-shortcuts" aria-label="Seller workspace sections">
+      <a href="#sellerOverview">Overview</a>
       <a href="#businessProfileCard" onclick="event.preventDefault();document.getElementById('businessProfileCard')?.scrollIntoView({behavior:'smooth',block:'start'})">Business Profile</a>
-      <a href="#productForm" onclick="event.preventDefault();document.getElementById('productForm')?.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('productForm')?.classList.remove('hidden')">My Products</a>
-      <a href="#matchedDemands" onclick="event.preventDefault();document.getElementById('matchedDemands')?.scrollIntoView({behavior:'smooth',block:'start'})">Matched Buyer Demands</a>
+      <a href="#sellerProductsCard" onclick="event.preventDefault();document.getElementById('sellerProductsCard')?.scrollIntoView({behavior:'smooth',block:'start'})">My Products</a>
+      <a href="#matchedDemands" onclick="event.preventDefault();document.getElementById('matchedDemands')?.scrollIntoView({behavior:'smooth',block:'start'})">Buyer Demands</a>
     </nav>
+    <div id="sellerOverview" class="nx-seller-overview" aria-label="Seller business overview">
+      <article class="nx-seller-stat"><span>মোট পণ্য</span><strong id="nxSellerTotalProducts">—</strong><small>আপনার তালিকাভুক্ত পণ্য</small></article>
+      <article class="nx-seller-stat"><span>অনুমোদিত পণ্য</span><strong id="nxSellerApprovedProducts">—</strong><small>Marketplace-এ প্রকাশিত</small></article>
+      <article class="nx-seller-stat"><span>পর্যালোচনাধীন</span><strong id="nxSellerPendingProducts">—</strong><small>Admin review অপেক্ষায়</small></article>
+      <article class="nx-seller-stat"><span>Business Profile</span><strong id="nxSellerBusinessStatus" class="nx-seller-status-value">—</strong><small>ব্যবসার অনুমোদন অবস্থা</small></article>
+    </div>
     <div class="section-head">
       <h2>Seller Dashboard</h2>
       <span class="tag">Seller Workspace</span>
@@ -904,10 +927,21 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div id="matchedDemands"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sellerProductsCard">
       <div class="section-head">
-        <h3>My Products</h3>
+        <div><h3>My Products</h3><p class="muted">আপনার পণ্য তালিকা ও প্রকাশের অনুমোদন পরিচালনা করুন।</p></div>
         <button class="primary" onclick="toggleProductForm()">+ Add Product</button>
+      </div>
+      <div class="nx-seller-product-tools">
+        <label class="nx-seller-search-label" for="nxSellerProductSearch">পণ্য খুঁজুন</label>
+        <input id="nxSellerProductSearch" type="search" placeholder="পণ্যের নাম, Category বা Product ID লিখুন">
+        <label class="nx-seller-search-label" for="nxSellerProductStatus">অনুমোদন অবস্থা</label>
+        <select id="nxSellerProductStatus">
+          <option value="all">সব পণ্য</option>
+          <option value="approved">অনুমোদিত</option>
+          <option value="pending">পর্যালোচনাধীন</option>
+          <option value="rejected">অননুমোদিত / প্রত্যাখ্যাত</option>
+        </select>
       </div>
 
       <form id="productForm" class="hidden">
