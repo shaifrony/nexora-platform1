@@ -14,8 +14,6 @@
   let currentUser = null;
   let profile = null;
   let adminStaff = null;
-  let forgotMode = false;
-  let recoveryMode = false;
 
   const style = document.createElement("style");
   style.textContent = `
@@ -64,36 +62,21 @@
     const admin = document.getElementById("nxAdmin");
     const loginView = document.getElementById("nxLoginView");
     const signupView = document.getElementById("nxSignupView");
-    const forgotView = document.getElementById("nxForgotView");
-    const recoveryView = document.getElementById("nxPasswordRecoveryView");
     if (!current) return;
-    if (recoveryMode) {
-      current.textContent = "নতুন পাসওয়ার্ড সেট করুন।";
-      logged.classList.add("hidden");
-      admin.classList.add("hidden");
-      loginView?.classList.add("hidden");
-      signupView?.classList.add("hidden");
-      forgotView?.classList.add("hidden");
-      recoveryView?.classList.remove("hidden");
-      return;
-    }
-    recoveryView?.classList.add("hidden");
     if (!currentUser) {
       current.textContent = "আপনি লগইন করেননি।";
       logged.classList.add("hidden");
       admin.classList.add("hidden");
       document.getElementById("nxSignup").classList.remove("hidden");
       document.getElementById("nxLogin").classList.remove("hidden");
-      document.getElementById("nxLoginView")?.classList.toggle("hidden", forgotMode);
+      document.getElementById("nxLoginView")?.classList.remove("hidden");
       document.getElementById("nxSignupView")?.classList.add("hidden");
-      document.getElementById("nxForgotView")?.classList.toggle("hidden", !forgotMode);
       return;
     }
     document.getElementById("nxSignup").classList.add("hidden");
     document.getElementById("nxLogin").classList.add("hidden");
     document.getElementById("nxLoginView")?.classList.add("hidden");
     document.getElementById("nxSignupView")?.classList.add("hidden");
-    document.getElementById("nxForgotView")?.classList.add("hidden");
     logged.classList.remove("hidden");
     const p = profile || {};
     current.textContent = "লগইন: " + currentUser.email;
@@ -150,61 +133,6 @@
       form.reset();
     } catch (err) { say("রেজিস্ট্রেশন ব্যর্থ: " + err.message); }
     finally { setBusy(form, false); }
-  });
-
-  document.getElementById("nxForgotOpen")?.addEventListener("click", () => {
-    forgotMode = true;
-    const loginEmail = document.querySelector('#nxLogin input[name="email"]')?.value || "";
-    const emailInput = document.querySelector('#nxForgotForm input[name="email"]');
-    if (emailInput) emailInput.value = loginEmail;
-    render();
-    document.querySelector('#accountSection .section-head h2').textContent = "Reset Password";
-  });
-
-  document.getElementById("nxForgotBack")?.addEventListener("click", () => {
-    forgotMode = false;
-    render();
-    document.querySelector('#accountSection .section-head h2').textContent = "Login";
-  });
-
-  document.getElementById("nxForgotForm")?.addEventListener("submit", async e => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    setBusy(form, true); say("");
-    const email = String(new FormData(form).get("email")).trim();
-    try {
-      const { error } = await db.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + window.location.pathname
-      });
-      if (error) throw error;
-      say("পাসওয়ার্ড রিসেট লিংক আপনার ইমেইলে পাঠানো হয়েছে। ইমেইলের লিংক খুলে নতুন পাসওয়ার্ড সেট করুন।", true);
-    } catch (err) {
-      say("রিসেট লিংক পাঠানো যায়নি: " + err.message);
-    } finally { setBusy(form, false); }
-  });
-
-  document.getElementById("nxPasswordRecoveryForm")?.addEventListener("submit", async e => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const f = new FormData(form);
-    const password = String(f.get("password"));
-    const confirm = String(f.get("confirm_password"));
-    if (password.length < 8) return say("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
-    if (password !== confirm) return say("দুটি পাসওয়ার্ড মিলছে না।");
-    setBusy(form, true); say("");
-    try {
-      const { error } = await db.auth.updateUser({ password });
-      if (error) throw error;
-      recoveryMode = false;
-      forgotMode = false;
-      await db.auth.signOut();
-      await sync(null);
-      document.querySelector('#accountSection .section-head h2').textContent = "Login";
-      say("পাসওয়ার্ড সফলভাবে পরিবর্তন হয়েছে। নতুন পাসওয়ার্ড দিয়ে লগইন করুন।", true);
-      form.reset();
-    } catch (err) {
-      say("পাসওয়ার্ড পরিবর্তন হয়নি: " + err.message);
-    } finally { setBusy(form, false); }
   });
 
   document.getElementById("nxLogin").addEventListener("submit", async e => {
@@ -379,11 +307,6 @@
 
   // Keep database reads outside the Auth callback to avoid holding the Auth lock.
   db.auth.onAuthStateChange((event, session) => {
-    if (event === "PASSWORD_RECOVERY") {
-      recoveryMode = true;
-      forgotMode = false;
-      document.querySelector('#accountSection .section-head h2').textContent = "Set a New Password";
-    }
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
