@@ -200,4 +200,37 @@ revoke all on function private.review_transport_vehicle(uuid,text,text) from pub
 grant execute on function private.review_transport_provider(uuid,text,text) to authenticated;
 grant execute on function private.review_transport_vehicle(uuid,text,text) to authenticated;
 
+-- Public, invoker-rights RPC wrappers are exposed through PostgREST.
+-- The private SECURITY DEFINER functions perform the privileged, audited operation.
+create or replace function public.review_transport_provider(
+  p_provider_id uuid,
+  p_action text,
+  p_reason text default null
+)
+returns jsonb
+language sql
+security invoker
+set search_path = ''
+as $
+  select private.review_transport_provider(p_provider_id,p_action,p_reason);
+$;
+
+create or replace function public.review_transport_vehicle(
+  p_vehicle_id uuid,
+  p_action text,
+  p_reason text default null
+)
+returns jsonb
+language sql
+security invoker
+set search_path = ''
+as $
+  select private.review_transport_vehicle(p_vehicle_id,p_action,p_reason);
+$;
+
+revoke all on function public.review_transport_provider(uuid,text,text) from public,anon;
+revoke all on function public.review_transport_vehicle(uuid,text,text) from public,anon;
+grant execute on function public.review_transport_provider(uuid,text,text) to authenticated;
+grant execute on function public.review_transport_vehicle(uuid,text,text) to authenticated;
+
 commit;
