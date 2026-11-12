@@ -342,7 +342,7 @@
   $("endCall")?.addEventListener("click",endCall);
   $("chatComposer")?.addEventListener("submit",sendMessage);
   $("chatFile")?.addEventListener("change",uploadChatFile);
-  window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if(state.callChannel){db().removeChannel(state.callChannel);state.callChannel=null;}if(isSignedIn())setupCallNotifications();if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
+  window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if(state.channel){db().removeChannel(state.channel);state.channel=null;}if(state.callChannel){db().removeChannel(state.callChannel);state.callChannel=null;}closeCall("Authentication state changed.");if(isSignedIn())setupCallNotifications();if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
   setChatVisible(true);
   if(isSignedIn())setupCallNotifications();
 })();
