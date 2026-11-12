@@ -205,6 +205,30 @@
       (!category || p.category === category)
     );
     if ($("productCount")) $("productCount").textContent = rows.length + " Products";
+
+    // Clearly labelled visual samples appear only until real approved listings exist.
+    if (!state.products.length) {
+      const demos = [
+        {name:"Fresh Mango",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
+        {name:"Premium Cotton Fabric",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
+        {name:"Handcrafted Decor",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
+        {name:"Electronic Components",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"}
+      ].filter(p =>
+        (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
+        (!category || p.category === category)
+      );
+      host.innerHTML = demos.length ? demos.map(p => `<article class="card">
+        <img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">
+        <span class="tag">DEMO • নমুনা বিজ্ঞাপন</span>
+        <span class="tag">${esc(p.category)}</span>
+        <h3>${esc(p.name)}</h3>
+        <p class="muted">${esc(p.description)}</p>
+        <p class="muted">Origin: ${esc(p.origin)}</p>
+        <p class="price">দাম জানতে যোগাযোগ করুন</p>
+      </article>`).join("") : '<div class="card">কোনো নমুনা পণ্য মেলেনি।</div>';
+      return;
+    }
+
     host.innerHTML = rows.length ? rows.map(p => {
       const b = businessMap.get(p.business_id);
       const image = (p.image_urls || [])[0];
