@@ -120,7 +120,7 @@
     finally { setBusy(form, false); }
   });
 
-  // Social sign-in: Google is built-in; Yahoo uses Supabase Custom OIDC provider.
+  // Social sign-in with Google or Facebook through Supabase Auth.
   document.querySelectorAll("[data-oauth-provider]").forEach(button => {
     button.addEventListener("click", async () => {
       const provider = button.dataset.oauthProvider;
@@ -133,7 +133,7 @@
         });
         if (error) throw error;
       } catch (err) {
-        say((provider === "google" ? "Google" : "Yahoo") + " Login চালু হয়নি: " + err.message);
+        say((provider === "google" ? "Google" : "Facebook") + " Login চালু হয়নি: " + err.message);
         button.disabled = false;
       }
     });
