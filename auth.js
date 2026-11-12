@@ -397,17 +397,31 @@
 
   async function loadRequests() {
     const host = document.getElementById("nxRequests");
+    if (!host) return;
     const { data, error } = await db.from("role_requests")
       .select("id,user_id,requested_role,created_at")
       .eq("status", "pending").order("created_at");
     if (error) { host.textContent = "আবেদন লোড হয়নি: " + error.message; return; }
     if (!data?.length) { host.textContent = "কোনো pending আবেদন নেই।"; return; }
-    host.innerHTML = data.map(r =>
-      '<div class="offer"><b>' + r.requested_role + '</b> — ' + r.user_id +
-      '<div class="form-actions"><button class="primary" data-id="' + r.id +
-      '" data-decision="approved">Approve</button><button class="danger" data-id="' +
-      r.id + '" data-decision="rejected">Reject</button></div></div>'
-    ).join("");
+    const userIds = [...new Set(data.map(r => r.user_id))];
+    const { data: users, error: userError } = await db.from("profiles")
+      .select("id,full_name,role,account_status")
+      .in("id", userIds);
+    if (userError) { host.textContent = "আবেদনকারীর তথ্য লোড হয়নি: " + userError.message; return; }
+    const profileById = new Map((users || []).map(u => [u.id, u]));
+    host.innerHTML = data.map(r => {
+      const applicant = profileById.get(r.user_id);
+      const roleLabel = r.requested_role === "seller" ? "Seller" : "Porter";
+      const created = r.created_at ? new Date(r.created_at).toLocaleString("bn-BD") : "সময় পাওয়া যায়নি";
+      return '<div class="offer"><b>' + escapeHtml(roleLabel) + ' আবেদন</b>' +
+        '<div>আবেদনকারী: ' + escapeHtml(applicant?.full_name || "নাম পাওয়া যায়নি") + '</div>' +
+        '<div class="muted">বর্তমান Role: ' + escapeHtml(applicant?.role || "অজানা") +
+        ' | Account Status: ' + escapeHtml(applicant?.account_status || "অজানা") +
+        '<br>আবেদনের সময়: ' + escapeHtml(created) + '</div>' +
+        '<div class="form-actions"><button class="primary" data-id="' + r.id +
+        '" data-decision="approved">Approve</button><button class="danger" data-id="' +
+        r.id + '" data-decision="rejected">Reject</button></div></div>';
+    }).join("");
   }
   document.getElementById("nxRequests")?.addEventListener("click", async e => {
     const b = e.target.closest("button[data-id]");
