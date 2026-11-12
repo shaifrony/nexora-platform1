@@ -111,6 +111,7 @@ input:focus,select:focus,textarea:focus{
   margin:3px;
 }
 .price{font-size:19px;font-weight:800;color:var(--green)}
+.call-video{width:100%;min-height:120px;max-height:240px;background:#172b40;border-radius:8px;object-fit:contain}
 .chat-messages{height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f7f9fc;border:1px solid var(--border);border-radius:10px;margin:12px 0}
 .chat-person,.chat-thread{display:block;width:100%;text-align:left;margin:6px 0}
 .product-image{
@@ -394,11 +395,27 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
           </div>
           <p class="muted">সর্বোচ্চ ফাইল ২০ MB। অনুমোদিত: JPG, PNG, WebP, PDF, TXT, DOCX, XLSX।</p>
         </form>
-        <div class="offer">
+        <div id="chatCallPanel" class="offer">
           <strong>Audio / Video Calling</strong>
-          <p class="muted">Call session ও নিরাপদ signaling-এর Database প্রস্তুত করা হচ্ছে। লাইভ অডিও/ভিডিও চালুর আগে WebRTC media, TURN connectivity এবং দুই-পক্ষের ডিভাইস পরীক্ষা বাকি।</p>
-        </div>
-      </div>
+          <p class="muted">একজন অংশগ্রহণকারী থাকলে Audio বা Video Call শুরু করুন। Browser-এর Microphone/Camera অনুমতি লাগবে।</p>
+          <div class="form-actions">
+            <button class="secondary" id="startAudioCall" type="button">Audio Call</button>
+            <button class="secondary" id="startVideoCall" type="button">Video Call</button>
+            <button class="danger hidden" id="endCall" type="button">End Call</button>
+          </div>
+          <div id="incomingCall" class="hidden">
+            <p id="incomingCallText">Incoming call…</p>
+            <div class="form-actions">
+              <button class="primary" id="acceptIncomingCall" type="button">Accept</button>
+              <button class="danger" id="declineIncomingCall" type="button">Decline</button>
+            </div>
+          </div>
+          <div class="grid">
+            <div><p class="muted">Your camera</p><video id="localCallVideo" autoplay muted playsinline class="call-video"></video></div>
+            <div><p class="muted">Other participant</p><video id="remoteCallVideo" autoplay playsinline class="call-video"></video></div>
+          </div>
+          <p class="muted" id="callStatus">Call ready when a private conversation is accepted.</p>
+        </div>     </div>
     </div>
   </section>
 
