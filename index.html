@@ -478,6 +478,23 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   .nx-buyer-wallet{padding:5px 6px}
 }
 
+
+/* NEXORA role workspaces — shared enterprise shell */
+.nx-role-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:24px;border:1px solid var(--nx-line);border-radius:18px;background:linear-gradient(120deg,#10243a,#174f78);color:#fff;margin:0 0 20px}
+.nx-role-hero h1{font-size:clamp(23px,3vw,30px);margin:5px 0 8px;color:#fff}
+.nx-role-hero p{margin:0;color:#dceafa;line-height:1.65;max-width:680px}
+.nx-role-eyebrow{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#8de5ce}
+.nx-role-hero-mark{width:54px;height:54px;display:grid;place-items:center;border-radius:15px;background:#ffffff18;border:1px solid #ffffff35;font-size:25px;flex:0 0 auto}
+.nx-role-shortcuts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.nx-role-shortcuts a{display:inline-flex;align-items:center;padding:9px 13px;border:1px solid var(--nx-line);border-radius:10px;background:#fff;color:var(--nx-ink);font-size:13px;font-weight:700;text-decoration:none}
+.nx-role-shortcuts a:hover{border-color:var(--nx-brand);color:var(--nx-brand)}
+.nx-porter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:18px 0}
+.nx-porter-module{padding:18px;border:1px solid var(--nx-line);border-radius:14px;background:#fff}
+.nx-porter-module h3{margin:8px 0 6px;font-size:16px}
+.nx-porter-module p{margin:0;color:var(--nx-muted);font-size:13px;line-height:1.6}
+.nx-module-status{display:inline-block;margin-top:12px;padding:5px 8px;border-radius:20px;background:#f1f4f7;color:#657487;font-size:11px;font-weight:700}
+@media(max-width:600px){.nx-role-hero{padding:18px}.nx-role-hero-mark{width:44px;height:44px}}
+
 </style>
 </head>
 
@@ -864,7 +881,16 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   </section>
 
   <!-- SELLER DASHBOARD -->
-  <section id="sellerDashboard" class="section hidden">
+  <section id="sellerDashboard" class="section hidden nx-role-workspace">
+    <div class="nx-role-hero">
+      <div><span class="nx-role-eyebrow">NEXORA SELLER CENTER</span><h1>আপনার পাইকারি ব্যবসা পরিচালনা করুন</h1><p>Business Profile, পণ্য তালিকা এবং Buyer Demand—সবকিছু একটি কেন্দ্র থেকে পরিচালনা করুন। Marketplace-এ প্রকাশের আগে Business Profile ও প্রতিটি Product-এর প্রয়োজনীয় Admin approval প্রযোজ্য।</p></div>
+      <div class="nx-role-hero-mark" aria-hidden="true">▣</div>
+    </div>
+    <nav class="nx-role-shortcuts" aria-label="Seller workspace sections">
+      <a href="#businessProfileCard" onclick="event.preventDefault();document.getElementById('businessProfileCard')?.scrollIntoView({behavior:'smooth',block:'start'})">Business Profile</a>
+      <a href="#productForm" onclick="event.preventDefault();document.getElementById('productForm')?.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('productForm')?.classList.remove('hidden')">My Products</a>
+      <a href="#matchedDemands" onclick="event.preventDefault();document.getElementById('matchedDemands')?.scrollIntoView({behavior:'smooth',block:'start'})">Matched Buyer Demands</a>
+    </nav>
     <div class="section-head">
       <h2>Seller Dashboard</h2>
       <span class="tag">Seller Workspace</span>
@@ -938,6 +964,24 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
     </div>
   </section>
 
+
+  <!-- PORTER WORKSPACE — access is limited to active, approved Porter accounts -->
+  <section id="porterDashboard" class="section hidden nx-role-workspace">
+    <div class="nx-role-hero">
+      <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>পরিবহন ও ডেলিভারি ব্যবস্থাপনা</h1><p>পণ্য সংগ্রহ থেকে গন্তব্যে পৌঁছানো পর্যন্ত পরিবহন কার্যক্রম পরিচালনার জন্য Porter Center। Porter অ্যাকাউন্ট Admin অনুমোদনের পর সক্রিয় হয়।</p></div>
+      <div class="nx-role-hero-mark" aria-hidden="true">↗</div>
+    </div>
+    <div class="card">
+      <h3>Porter Workspace প্রস্তুত হচ্ছে</h3>
+      <p class="muted">এই পর্যায়ে Porter-এর জন্য আলাদা কর্মক্ষেত্রের কাঠামো তৈরি করা হয়েছে। বাস্তব কাজ বরাদ্দ, গ্রহণ, পণ্য সংগ্রহ, লাইভ ট্র্যাকিং, ডেলিভারি প্রমাণ এবং পারিশ্রমিকের সুবিধা সংশ্লিষ্ট নিরাপদ workflow ও database প্রস্তুত হওয়ার পর চালু হবে। এখনো কোনো ডেলিভারি কাজ বরাদ্দ বা সম্পন্ন করার সুবিধা চালু নেই।</p>
+    </div>
+    <div class="nx-porter-grid">
+      <article class="nx-porter-module"><span aria-hidden="true">▤</span><h3>কাজের তালিকা</h3><p>অনুমোদিত পরিবহন ও ডেলিভারি কাজ দেখার স্থান</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
+      <article class="nx-porter-module"><span aria-hidden="true">⇄</span><h3>কাজ গ্রহণ ও স্ট্যাটাস</h3><p>কাজ গ্রহণ, সংগ্রহ এবং ডেলিভারি অগ্রগতি আপডেট</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
+      <article class="nx-porter-module"><span aria-hidden="true">⌖</span><h3>রুট ও ট্র্যাকিং</h3><p>পণ্য পরিবহনের রুট ও অবস্থান ব্যবস্থাপনা</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
+      <article class="nx-porter-module"><span aria-hidden="true">৳</span><h3>পারিশ্রমিক ও ইতিহাস</h3><p>সম্পন্ন কাজ, ডেলিভারি রেকর্ড এবং পাওনা হিসাব</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
+    </div>
+  </section>
 
   <!-- PRIVATE COMMUNICATIONS -->
   <section id="privateChat" class="section hidden">
