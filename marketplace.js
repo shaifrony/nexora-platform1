@@ -181,7 +181,6 @@
   async function loadProducts() {
     const host = $("productList");
     if (!host || !client()) return;
-    if (!signedIn()) { host.textContent = "অনুমোদিত পণ্য দেখতে আগে লগইন করুন।"; return; }
     host.textContent = "পণ্য লোড হচ্ছে…";
     const { data, error } = await client().from("products")
       .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
