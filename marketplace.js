@@ -502,12 +502,12 @@
     // Clearly labelled visual samples appear only until real approved listings exist.
     if (!state.products.length) {
       const demos = [
-        {name:"Fresh Mango",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
-        {name:"Premium Cotton Fabric",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
-        {name:"Handcrafted Decor",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
-        {name:"Electronic Components",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"}
+        {name:"Fresh Mango",market_category:"wholesale",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
+        {name:"Premium Cotton Fabric",market_category:"wholesale",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
+        {name:"Handcrafted Decor",market_category:"wholesale",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
+        {name:"Electronic Components",market_category:"wholesale",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"}
       ].filter(p =>
-        (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
+        (!buyerCategory || p.market_category === buyerCategory) &&\n        (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
         (!category || p.category === category)
       );
       host.innerHTML = demos.length ? demos.map(p => `<article class="card">
@@ -728,7 +728,7 @@
     try {
       await loadBusinessProfile();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,origin,price,currency,listing_status")
+        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
