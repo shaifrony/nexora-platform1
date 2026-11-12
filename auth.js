@@ -11,6 +11,7 @@
   }
 
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const publicDb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
   let currentUser = null;
   let profile = null;
   let adminStaff = null;
@@ -247,6 +248,20 @@
     document.getElementById("nxProfile").textContent =
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
       " | Status: " + (p.account_status || "অজানা");
+    let workspaceNav = document.getElementById("nxAccountWorkspaceNav");
+    if (!workspaceNav) {
+      workspaceNav = document.createElement("div");
+      workspaceNav.id = "nxAccountWorkspaceNav";
+      workspaceNav.className = "form-actions";
+      document.getElementById("nxProfile").insertAdjacentElement("afterend", workspaceNav);
+    }
+    if (p.role === "buyer" && p.account_status === "active") {
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'buyerDashboard\')">Buyer Dashboard</button><button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>';
+      workspaceNav.classList.remove("hidden");
+    } else {
+      workspaceNav.innerHTML = "";
+      workspaceNav.classList.add("hidden");
+    }
     const isActiveAdmin = p.role === "admin" && p.account_status === "active" && adminStaff?.is_active === true;
     renderMfaPanel();
     admin.classList.toggle("hidden", !isActiveAdmin || !mfaVerified);
@@ -695,5 +710,5 @@
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
-  window.NEXORA_AUTH = { client: db, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; } };
+  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; } };
 })();
