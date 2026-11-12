@@ -172,7 +172,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 body{background:#f4f6f8;color:#263746}
 header{background:#fff;color:#172b3d;padding:13px max(4%,calc((100% - 1280px)/2));box-shadow:0 2px 12px #142b3b12;position:sticky;top:0;z-index:20}
 .logo{color:#142b3b}.brand-sub{color:#718096}
-nav button{background:#f1f4f7;color:#263746}nav button:hover{background:#e5f5f1;color:#087f78}
+nav button{background:#f1f4f7;color:#263746}nav input{width:min(280px,42vw);padding:10px 12px;border:1px solid #d6dee8;border-radius:8px;background:#fbfcfd;font-size:14px}nav button:hover{background:#e5f5f1;color:#087f78}
 .container{max-width:1280px;padding:22px 18px}
 .hero{border-radius:18px;background:linear-gradient(112deg,#102b43 0%,#145a72 58%,#087f78 100%);padding:46px 38px;min-height:275px;box-shadow:0 12px 30px #102b4324}
 .hero h1{font-size:clamp(30px,4vw,46px);max-width:650px;line-height:1.15}
@@ -196,7 +196,7 @@ h2{font-size:24px}
 .product-image{height:180px;object-fit:contain;background:#f7f8fa}
 #productList .card h3{font-size:16px;min-height:38px}
 #productList .price{color:#e65d2f}
-@media(max-width:760px){header{position:relative}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
+@media(max-width:760px){header{position:relative}nav{width:100%}nav input{flex:1;min-width:130px}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
 @media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
 
   #nxAdminManagement .nx-permission-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
@@ -210,14 +210,42 @@ h2{font-size:24px}
 
 <header>
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <nav><button type="button" onclick="showSection('buyerDashboard')">Buyer Dashboard</button><button type="button" onclick="showSection('postDemand')">Post Demand</button><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('nxSignupView')?.classList.add('hidden');document.getElementById('nxLoginView')?.classList.remove('hidden');const h=document.querySelector('#accountSection .section-head h2');if(h)h.textContent='Login';document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
+  <nav>
+    <button type="button" onclick="showSection('market')">Marketplace</button>
+    <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্য অনুসন্ধান করুন…">
+    <button type="button" onclick="showSection('accountSection')">Login / Register</button>
+  </nav>
 </header>
 
 <main class="container">
 
-  <!-- MARKETPLACE -->
+  <!-- PUBLIC WHOLESALE MARKETPLACE -->
   <section id="market" class="section">
-    <div id="productList" class="grid"></div>
+    <div class="section-head">
+      <h2>Marketplace</h2>
+      <span id="productCount" class="muted">Products</span>
+    </div>
+    <div class="grid">
+      <select id="categoryFilter" aria-label="পণ্যের বিভাগ">
+        <option value="">সব বিভাগ</option>
+        <option>Food & Agriculture</option>
+        <option>Textile & Garments</option>
+        <option>Electronics</option>
+        <option>Industrial Products</option>
+        <option>Handicrafts</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div id="productList" class="grid" aria-live="polite"></div>
+
+    <div id="publicDemandBoard" class="section">
+      <div class="section-head">
+        <h2>Public Buyer Demands</h2>
+        <span class="tag">Open Wholesale Requirements</span>
+      </div>
+      <p class="muted">প্রকাশিত ও চলমান পাইকারি চাহিদা সবাই দেখতে পারবেন। Buyer-এর ব্যক্তিগত পরিচয় এখানে প্রকাশ করা হয় না।</p>
+      <div id="demandList" aria-live="polite">প্রকাশ্য চাহিদা লোড হচ্ছে…</div>
+    </div>
   </section>
 
   <!-- ACCOUNT / AUTHENTICATION -->
@@ -474,19 +502,6 @@ h2{font-size:24px}
         </div>
       </form>
     </div>
-  </section>
-
-  <!-- DEMAND BOARD -->
-  <section id="demandBoard" class="section hidden">
-    <div class="section-head">
-      <h2>Public Demand Board</h2>
-      <span class="tag">Open Requirements</span>
-    </div>
-    <p class="muted">
-      এখানে প্রকাশিত ক্রেতাদের চাহিদা সবাই দেখতে পারবেন।
-      নিবন্ধিত Seller-দের জন্য Price Offer সুবিধা থাকবে।
-    </p>
-    <div id="demandList"></div>
   </section>
 
   <!-- SELLER DASHBOARD -->
