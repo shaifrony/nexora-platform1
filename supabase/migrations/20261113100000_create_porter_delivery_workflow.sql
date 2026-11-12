@@ -131,3 +131,117 @@ grant execute on function public.porter_update_delivery_job_status(uuid,text,tex
 
 comment on table public.porter_delivery_jobs is 'Private delivery assignments readable only by the assigned Porter and authorized logistics staff.';
 comment on table public.porter_delivery_job_events is 'Append-only status history for Porter delivery assignments.';
+
+
+create or replace function private.list_active_nexora_porters_for_logistics()
+returns table(porter_id uuid, full_name text)
+language plpgsql
+stable
+security definer
+set search_path=''
+as $function$
+begin
+  if auth.uid() is null or not private.has_nexora_permission('logistics.assign') then
+    raise exception 'Logistics assignment permission with Admin MFA is required';
+  end if;
+  return query
+    select p.id,p.full_name
+    from public.profiles p
+    where p.role='porter' and p.account_status='active'
+    order by p.full_name nulls last,p.id;
+end;
+$function$;
+revoke all on function private.list_active_nexora_porters_for_logistics() from public,anon;
+grant execute on function private.list_active_nexora_porters_for_logistics() to authenticated;
+
+create or replace function public.list_active_nexora_porters_for_logistics()
+returns table(porter_id uuid, full_name text)
+language sql
+security invoker
+set search_path=''
+as $function$
+  select * from private.list_active_nexora_porters_for_logistics();
+$function$;
+revoke all on function public.list_active_nexora_porters_for_logistics() from public,anon;
+grant execute on function public.list_active_nexora_porters_for_logistics() to authenticated;
+
+create or replace function private.admin_assign_porter_delivery_job(
+  p_assigned_porter_id uuid,
+  p_package_description text,
+  p_package_count integer,
+  p_pickup_contact_name text,
+  p_pickup_contact_phone text,
+  p_pickup_address text,
+  p_pickup_city text,
+  p_pickup_country text,
+  p_dropoff_contact_name text,
+  p_dropoff_contact_phone text,
+  p_dropoff_address text,
+  p_dropoff_city text,
+  p_dropoff_country text,
+  p_scheduled_pickup_at timestamptz default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path=''
+as $function$
+declare v_uid uuid:=auth.uid(); v_job_id uuid;
+begin
+  if v_uid is null or not private.has_nexora_permission('logistics.assign') then
+    raise exception 'Logistics assignment permission with Admin MFA is required';
+  end if;
+  if p_package_count is null or p_package_count<1 then raise exception 'Package count must be positive'; end if;
+  if length(btrim(coalesce(p_package_description,'')))<2 then raise exception 'Package description is required'; end if;
+  if not exists(select 1 from public.profiles p where p.id=p_assigned_porter_id and p.role='porter' and p.account_status='active') then
+    raise exception 'Selected Porter is not active';
+  end if;
+  insert into public.porter_delivery_jobs(
+    assigned_porter_id,assigned_by,package_description,package_count,
+    pickup_contact_name,pickup_contact_phone,pickup_address,pickup_city,pickup_country,
+    dropoff_contact_name,dropoff_contact_phone,dropoff_address,dropoff_city,dropoff_country,
+    scheduled_pickup_at
+  ) values (
+    p_assigned_porter_id,v_uid,btrim(p_package_description),p_package_count,
+    nullif(btrim(coalesce(p_pickup_contact_name,'')),''),nullif(btrim(coalesce(p_pickup_contact_phone,'')),''),
+    btrim(p_pickup_address),btrim(p_pickup_city),btrim(p_pickup_country),
+    nullif(btrim(coalesce(p_dropoff_contact_name,'')),''),nullif(btrim(coalesce(p_dropoff_contact_phone,'')),''),
+    btrim(p_dropoff_address),btrim(p_dropoff_city),btrim(p_dropoff_country),
+    p_scheduled_pickup_at
+  ) returning id into v_job_id;
+  return v_job_id;
+end;
+$function$;
+revoke all on function private.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) from public,anon;
+grant execute on function private.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) to authenticated;
+
+create or replace function public.admin_assign_porter_delivery_job(
+  p_assigned_porter_id uuid,
+  p_package_description text,
+  p_package_count integer,
+  p_pickup_contact_name text,
+  p_pickup_contact_phone text,
+  p_pickup_address text,
+  p_pickup_city text,
+  p_pickup_country text,
+  p_dropoff_contact_name text,
+  p_dropoff_contact_phone text,
+  p_dropoff_address text,
+  p_dropoff_city text,
+  p_dropoff_country text,
+  p_scheduled_pickup_at timestamptz default null
+)
+returns uuid
+language sql
+security invoker
+set search_path=''
+as $function$
+  select private.admin_assign_porter_delivery_job(
+    p_assigned_porter_id,p_package_description,p_package_count,
+    p_pickup_contact_name,p_pickup_contact_phone,p_pickup_address,p_pickup_city,p_pickup_country,
+    p_dropoff_contact_name,p_dropoff_contact_phone,p_dropoff_address,p_dropoff_city,p_dropoff_country,
+    p_scheduled_pickup_at
+  );
+$function$;
+revoke all on function public.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) from public,anon;
+grant execute on function public.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) to authenticated;
