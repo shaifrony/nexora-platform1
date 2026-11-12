@@ -430,6 +430,10 @@
     const detailPanel = $("productDetailPanel");
     const requestedSlug = new URLSearchParams(window.location.search).get("product");
     if (requestedSlug && detailPanel) {
+      document.querySelector(".nx-market-hero")?.classList.add("hidden");
+      document.querySelector(".nx-discovery-section")?.classList.add("hidden");
+      document.querySelector(".nx-category-section")?.classList.add("hidden");
+      document.querySelector(".nx-market-section-title")?.classList.add("hidden");
       $("nx-search-panel")?.classList.add("hidden");
       document.querySelector(".nx-search-panel")?.classList.add("hidden");
       host.classList.add("hidden");
@@ -470,6 +474,10 @@
       return;
     }
     if (detailPanel) detailPanel.classList.add("hidden");
+    document.querySelector(".nx-market-hero")?.classList.remove("hidden");
+    document.querySelector(".nx-discovery-section")?.classList.remove("hidden");
+    document.querySelector(".nx-category-section")?.classList.remove("hidden");
+    document.querySelector(".nx-market-section-title")?.classList.remove("hidden");
     document.querySelector(".nx-search-panel")?.classList.remove("hidden");
     host.classList.remove("hidden");
     $("publicDemandBoard")?.classList.remove("hidden");
@@ -1354,6 +1362,11 @@
   const today = new Date();
   const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split("T")[0];
   if ($("requiredDate")) $("requiredDate").min = localToday;
-  if ($("market")) { loadProducts(); loadDemands(); }
-  if ($("servicesMarketplace")) loadServicesMarketplace();
+  const requestedServicePage = new URLSearchParams(window.location.search).get("service");
+  if (requestedServicePage && $("servicesMarketplace")) {
+    window.showSection?.("servicesMarketplace", { history: false });
+  } else {
+    if ($("market")) { loadProducts(); loadDemands(); }
+    if ($("servicesMarketplace")) loadServicesMarketplace();
+  }
 })();
