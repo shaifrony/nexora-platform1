@@ -212,6 +212,8 @@ declare
   v_cleanup_urls text[] := '{}'::text[];
   v_permission text;
   v_listing_id uuid;
+  v_business_id uuid;
+  v_seller_categories text[];
 begin
   if v_actor is null or p_action is null or p_action not in ('approve','reject') then
     raise exception 'Invalid review request' using errcode='22023';
@@ -246,10 +248,17 @@ begin
 
   if v_request.listing_type='product' then
     v_listing_id:=v_request.product_id;
-    select image_urls into v_old_urls from public.products
+    select image_urls,business_id into v_old_urls,v_business_id from public.products
     where id=v_request.product_id and seller_id=v_request.seller_id and listing_status='approved'
     for update;
     if not found then raise exception 'Product is no longer approved or available' using errcode='23514'; end if;
+    select p.seller_categories into v_seller_categories
+    from public.profiles p join public.business_profiles b on b.seller_id=p.id
+    where p.id=v_request.seller_id and p.role='seller' and p.account_status='active'
+      and b.id=v_business_id and b.approval_status='approved';
+    if not found or not (coalesce(v_request.proposed_changes->>'market_category','')=any(coalesce(v_seller_categories,'{}'::text[]))) then
+      raise exception 'Seller or Business eligibility changed; re-verify before approval' using errcode='23514';
+    end if;
     select array(select jsonb_array_elements_text(v_request.proposed_changes->'image_urls')) into v_new_urls;
     if p_action='approve' then
       update public.products set
@@ -267,10 +276,16 @@ begin
     end if;
   else
     v_listing_id:=v_request.service_listing_id;
-    select image_urls into v_old_urls from public.service_listings
+    select image_urls,business_id into v_old_urls,v_business_id from public.service_listings
     where id=v_request.service_listing_id and seller_id=v_request.seller_id and listing_status='approved'
     for update;
     if not found then raise exception 'Service is no longer approved or available' using errcode='23514'; end if;
+    perform 1 from public.profiles p join public.business_profiles b on b.seller_id=p.id
+    where p.id=v_request.seller_id and p.role='seller' and p.account_status='active'
+      and b.id=v_business_id and b.approval_status='approved';
+    if not found then
+      raise exception 'Seller or Business eligibility changed; re-verify before approval' using errcode='23514';
+    end if;
     select array(select jsonb_array_elements_text(v_request.proposed_changes->'image_urls')) into v_new_urls;
     if p_action='approve' then
       update public.service_listings set
