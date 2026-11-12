@@ -651,11 +651,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div id="nxLogged" class="hidden">
         <p id="nxProfile" class="muted"></p>
         <form id="nxRoleRequest">
-          <label>Seller বা Porter হিসেবে কাজ করতে আবেদন করুন</label>
+          <label>Seller হিসেবে কাজ করতে আবেদন করুন</label>
           <select name="requested_role" required>
-            <option value="">অ্যাকাউন্টের ধরন নির্বাচন করুন</option>
             <option value="seller">Seller</option>
-            <option value="porter">Porter</option>
           </select>
           <div class="form-actions"><button class="secondary" type="submit">আবেদন পাঠান</button></div>
         </form>
@@ -723,7 +721,6 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <select name="role" required>
             <option value="buyer">Buyer</option>
             <option value="seller">Seller</option>
-            <option value="porter">Porter</option>
           </select>
           <div class="form-actions"><button class="primary" type="submit">Create Account</button></div>
           <div class="nx-social-divider">অথবা</div>
@@ -757,7 +754,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <div class="form-actions"><button class="primary" type="submit">Save Admin Settings</button></div>
         </form>
         <h4>নিরাপদ Test Account</h4>
-        <p class="muted">শুধু পরীক্ষার জন্য। Reserved example.com ঠিকানা ব্যবহার করুন; এই অ্যাকাউন্টগুলো বাস্তব ইমেইল পাঠাবে না। Buyer, Seller ও Porter role পরীক্ষা করা যাবে।</p>
+        <p class="muted">শুধু পরীক্ষার জন্য। Reserved example.com ঠিকানা ব্যবহার করুন; এই অ্যাকাউন্টগুলো বাস্তব ইমেইল পাঠাবে না। Buyer ও Seller role পরীক্ষা করা যাবে। Transport Provider enrollment আলাদা প্রক্রিয়া হবে.</p>
         <form id="nxTestAccountForm" class="card">
           <label>Test Email *</label>
           <input name="email" type="email" required pattern="nexora-test\+[^@]+@example\.com" placeholder="nexora-test+buyer@example.com">
@@ -767,7 +764,6 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <select name="role" required>
             <option value="buyer">Buyer</option>
             <option value="seller">Seller</option>
-            <option value="porter">Porter</option>
           </select>
           <label>পরীক্ষার নাম</label>
           <input name="full_name" maxlength="150" value="NEXORA Test User">
@@ -788,7 +784,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <p class="muted">Admin কার্যক্রমের রেকর্ড। সংবেদনশীল তথ্য সীমিতভাবে দেখানো হবে।</p>
         <div id="nxAdminAuditLogs" class="muted">Audit Log অনুমতি যাচাই হচ্ছে…</div>
       </div>
-      <section id="nxAdminLogistics" class="card">
+      <section id="nxAdminLogistics" class="card hidden" aria-hidden="true">
         <h4>Logistics & Porter Assignment</h4>
         <p class="muted">অনুমোদিত Logistics permission থাকলে সক্রিয় Porter-কে ডেলিভারি কাজ বরাদ্দ করতে পারবেন। প্রতিটি কাজের সংগ্রহ ও গন্তব্যের যোগাযোগের তথ্য শুধু সংশ্লিষ্ট Porter ও অনুমোদিত Logistics Admin দেখতে পারবেন।</p>
         <form id="nxAdminPorterJobForm" class="grid">
@@ -1087,8 +1083,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   </section>
 
 
-  <!-- PORTER WORKSPACE — access is limited to active, approved Porter accounts -->
-  <section id="porterDashboard" class="section hidden nx-role-workspace">
+  <!-- LEGACY PORTER WORKSPACE — disabled pending Transport Provider refactor -->
+  <section id="porterDashboard" class="section hidden nx-role-workspace" aria-hidden="true">
     <div class="nx-role-hero">
       <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>পরিবহন ও ডেলিভারি ব্যবস্থাপনা</h1><p>পণ্য সংগ্রহ থেকে গন্তব্যে পৌঁছানো পর্যন্ত পরিবহন কার্যক্রম পরিচালনার জন্য Porter Center। Porter অ্যাকাউন্ট Admin অনুমোদনের পর সক্রিয় হয়।</p></div>
       <div class="nx-role-hero-mark" aria-hidden="true">↗</div>
