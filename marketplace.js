@@ -351,7 +351,8 @@
         <p class="price"><strong>পাইকারি মূল্য:</strong> ${esc(selected.price)} ${esc(selected.currency)}</p>
         <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
-        <div class="form-actions"><button class="primary" type="button" onclick="showSection('accountSection')">Login / Register করে Inquiry করুন</button></div>
+        <div class="form-actions"><button class="primary" type="button" onclick="showSection('accountSection')">Login / Register</button></div>
+        <p class="muted">পণ্যভিত্তিক Inquiry পাঠানোর সুবিধা পরবর্তী ধাপে যুক্ত করা হবে।</p>
       `;
       return;
     }
