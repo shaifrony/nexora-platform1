@@ -425,13 +425,27 @@
   }
   document.getElementById("nxRequests")?.addEventListener("click", async e => {
     const b = e.target.closest("button[data-id]");
-    if (!b || profile?.role !== "admin" || profile?.account_status !== "active" || adminStaff?.admin_level !== "super_admin" || adminStaff?.is_active !== true) return;
-    b.disabled = true;
-    const { error } = await db.rpc("review_role_request", {
-      request_id: b.dataset.id, decision: b.dataset.decision
-    });
-    if (error) say("সিদ্ধান্ত সংরক্ষণ হয়নি: " + error.message);
-    else { say("আবেদনের সিদ্ধান্ত সংরক্ষিত হয়েছে।", true); await loadRequests(); }
+    if (!b || profile?.role !== "admin" || profile?.account_status !== "active" ||
+        adminStaff?.admin_level !== "super_admin" || adminStaff?.is_active !== true) return;
+    const decision = b.dataset.decision;
+    if (!["approved", "rejected"].includes(decision)) return;
+    const actionLabel = decision === "approved" ? "অনুমোদন" : "প্রত্যাখ্যান";
+    if (!window.confirm("আপনি কি এই Role আবেদনটি " + actionLabel + " করতে নিশ্চিত? এই সিদ্ধান্ত আবেদনকারীর অ্যাকাউন্টে প্রভাব ফেলবে।")) return;
+    const row = b.closest(".offer");
+    const buttons = row?.querySelectorAll("button[data-id]") || [b];
+    buttons.forEach(button => { button.disabled = true; });
+    say("");
+    try {
+      const { error } = await db.rpc("review_role_request", {
+        request_id: b.dataset.id, decision
+      });
+      if (error) throw error;
+      say("আবেদনের সিদ্ধান্ত সংরক্ষিত হয়েছে।", true);
+      await loadRequests();
+    } catch (err) {
+      say("সিদ্ধান্ত সংরক্ষণ হয়নি: " + (err.message || "অজানা সমস্যা"));
+      buttons.forEach(button => { button.disabled = false; });
+    }
   });
 
   // Keep database reads outside the Auth callback to avoid holding the Auth lock.
