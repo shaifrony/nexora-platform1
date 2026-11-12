@@ -64,6 +64,40 @@ using (
   )
 );
 
+create or replace function public.get_listing_review_summary(
+  p_listing_type text,
+  p_listing_id uuid
+)
+returns table (
+  review_count bigint,
+  average_rating numeric,
+  rating_1 bigint,
+  rating_2 bigint,
+  rating_3 bigint,
+  rating_4 bigint,
+  rating_5 bigint
+)
+language sql
+stable
+security invoker
+set search_path = pg_catalog, public
+as $
+  select
+    count(*)::bigint,
+    round(avg(r.rating)::numeric,1),
+    count(*) filter (where r.rating=1)::bigint,
+    count(*) filter (where r.rating=2)::bigint,
+    count(*) filter (where r.rating=3)::bigint,
+    count(*) filter (where r.rating=4)::bigint,
+    count(*) filter (where r.rating=5)::bigint
+  from public.listing_reviews r
+  where r.listing_type=p_listing_type
+    and r.listing_id=p_listing_id
+    and r.review_status='published';
+$;
+revoke all on function public.get_listing_review_summary(text,uuid) from public, anon;
+grant execute on function public.get_listing_review_summary(text,uuid) to authenticated;
+
 create or replace function public.get_my_review_eligibility(
   p_listing_type text,
   p_listing_id uuid
