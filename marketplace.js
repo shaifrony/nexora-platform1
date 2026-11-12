@@ -1509,32 +1509,58 @@
     await loadSellerServices();await loadSellerEditRequests();
   }
 
+  const listingHistoryLabels={
+    product_name:"পণ্যের নাম",service_name:"সেবার নাম",category:"পণ্যের বিভাগ",
+    market_category:"বিক্রয় ধরন",service_category:"সেবার বিভাগ",description:"বিবরণ",
+    origin:"Origin",specifications_quality:"Specifications & Quality",price:"মূল্য",
+    price_amount:"সেবার মূল্য",currency:"Currency",image_urls:"ছবি",
+    country:"দেশ",city:"শহর",service_area:"সেবার এলাকা",price_basis:"মূল্য নির্ধারণ",
+    availability:"Availability"
+  };
+  function listingHistoryValue(key,value){
+    if(value===null||value===undefined||value==="")return "—";
+    if(key==="image_urls")return Array.isArray(value)?value.length+"টি ছবি":String(value);
+    if(typeof value==="object")return JSON.stringify(value);
+    return String(value);
+  }
+  function listingHistorySnapshot(data){
+    const obj=data||{};
+    const rows=Object.entries(listingHistoryLabels).filter(([key])=>Object.prototype.hasOwnProperty.call(obj,key))
+      .map(([key,label])=>'<tr><th>'+esc(label)+'</th><td>'+esc(listingHistoryValue(key,obj[key]))+'</td></tr>').join("");
+    const images=Array.isArray(obj.image_urls)&&obj.image_urls.length
+      ?'<div class="nx-upload-preview">'+obj.image_urls.map(url=>'<img src="'+esc(url)+'" alt="Listing history image" loading="lazy">').join("")+'</div>':"";
+    return '<div class="table-wrap"><table class="nx-history-table"><tbody>'+rows+'</tbody></table></div>'+images;
+  }
+  function listingHistoryTimeline(events){
+    const names={submitted:"Seller পরিবর্তনের আবেদন জমা দিয়েছেন",approved:"Admin পরিবর্তন অনুমোদন করেছেন",rejected:"Admin পরিবর্তন প্রত্যাখ্যান করেছেন"};
+    return '<ol class="nx-history-timeline">'+(events||[]).map(ev=>'<li><strong>'+esc(names[ev.event_type]||ev.event_type)+'</strong><small>'+esc(new Date(ev.created_at).toLocaleString("bn-BD"))+' · '+(ev.actor_role==="seller"?"Seller":ev.actor_role==="admin"?"Admin":"System")+'</small>'+(ev.reason?'<p>'+esc(ev.reason)+'</p>':'')+'</li>').join("")+'</ol>';
+  }
   async function loadSellerEditRequests(){
     const host=$("nxSellerEditRequests");if(!host)return;
     if(!signedIn()||!activeSeller()){host.textContent="Seller হিসেবে লগইন করলে Change Request দেখা যাবে।";return;}
     try{
       const {data,error}=await client().from("listing_edit_requests")
-        .select("id,listing_type,product_id,service_listing_id,status,review_reason,created_at")
+        .select("id,listing_type,product_id,service_listing_id,status,review_reason,created_at,reviewed_at,original_data,proposed_changes")
         .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(30);
       if(error)throw error;
+      const ids=(data||[]).map(r=>r.id);
+      let events=[];
+      if(ids.length){
+        const result=await client().from("listing_edit_request_events")
+          .select("id,request_id,event_type,actor_role,reason,created_at").in("request_id",ids)
+          .order("created_at",{ascending:true});
+        if(result.error)throw result.error;events=result.data||[];
+      }
       const labels={pending:"Admin Review-এ আছে",approved:"পরিবর্তন অনুমোদিত",rejected:"পরিবর্তন প্রত্যাখ্যাত"};
-      host.innerHTML=(data||[]).map(r=>'<article class="offer"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product":"Service")+'</strong><span class="tag">'+esc(labels[r.status]||r.status)+'</span></div><small>'+esc(new Date(r.created_at).toLocaleString("bn-BD"))+'</small>'+(r.review_reason?'<p class="muted">Admin Note: '+esc(r.review_reason)+'</p>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো Listing Change Request নেই।</p>';
-    }catch(err){host.textContent="Change Request লোড হয়নি: "+err.message;}
+      host.innerHTML=(data||[]).map(r=>{
+        const timeline=events.filter(e=>e.request_id===r.id);
+        return '<article class="offer nx-history-card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product":"Service")+'</strong><span class="tag">'+esc(labels[r.status]||r.status)+'</span></div><small>Request: '+esc(r.id)+' · '+esc(new Date(r.created_at).toLocaleString("bn-BD"))+'</small><details><summary>আগের তথ্য ও প্রস্তাবিত তথ্য দেখুন</summary><h5>আগের তথ্য</h5>'+listingHistorySnapshot(r.original_data)+'<h5>প্রস্তাবিত তথ্য</h5>'+listingHistorySnapshot(r.proposed_changes)+'</details><details><summary>সম্পূর্ণ History ('+timeline.length+')</summary>'+listingHistoryTimeline(timeline)+'</details>'+(r.review_reason?'<p class="muted">Admin Note: '+esc(r.review_reason)+'</p>':'')+'</article>';
+      }).join("")||'<p class="muted">এখনো কোনো Listing Change Request নেই।</p>';
+    }catch(err){host.textContent="Change Request History লোড হয়নি: "+err.message;}
   }
 
   function listingEditChangeMarkup(request){
-    const c=request.proposed_changes||{},fields=request.listing_type==="product"?[
-      ["পণ্যের নাম","product_name"],["বিক্রয় ধরন","market_category"],["পণ্যের বিভাগ","category"],
-      ["বিবরণ","description"],["Origin","origin"],["Specifications","specifications_quality"],
-      ["মূল্য","price"],["Currency","currency"]
-    ]:[
-      ["সেবার নাম","service_name"],["সেবার বিভাগ","service_category"],["বিবরণ","description"],
-      ["দেশ","country"],["শহর","city"],["সেবার এলাকা","service_area"],
-      ["মূল্য নির্ধারণ","price_basis"],["মূল্য","price_amount"],["Currency","currency"],["Availability","availability"]
-    ];
-    const rows=fields.map(([label,key])=>'<p><b>'+esc(label)+':</b> '+esc(c[key]===null||c[key]===undefined||c[key]===""?"—":String(c[key]))+'</p>').join("");
-    const images=Array.isArray(c.image_urls)?'<div class="nx-upload-preview">'+c.image_urls.map(url=>'<img src="'+esc(url)+'" alt="প্রস্তাবিত ছবি" loading="lazy">').join("")+'</div>':"";
-    return rows+images;
+    return '<div class="nx-history-compare"><section><h5>বর্তমান প্রকাশিত তথ্য</h5>'+listingHistorySnapshot(request.original_data)+'</section><section><h5>Seller-এর প্রস্তাবিত তথ্য</h5>'+listingHistorySnapshot(request.proposed_changes)+'</section></div>';
   }
 
   async function loadAdminListingEditRequests(){
@@ -1545,11 +1571,18 @@
     host.innerHTML='<p class="muted">পরিবর্তনের আবেদন লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("listing_edit_requests")
-        .select("id,listing_type,product_id,service_listing_id,seller_id,proposed_changes,created_at,status")
+        .select("id,listing_type,product_id,service_listing_id,seller_id,original_data,proposed_changes,created_at,status")
         .eq("status","pending").order("created_at",{ascending:true}).limit(100);
       if(error)throw error;
-      host.innerHTML=(data||[]).map(r=>'<article class="card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product Change Request":"Service Change Request")+'</strong><span class="tag">Pending Review</span></div><small>Request ID: '+esc(r.id)+'</small>'+listingEditChangeMarkup(r)+'<div class="form-actions"><button class="primary" type="button" data-listing-edit-review="approve" data-request-id="'+esc(r.id)+'">Approve & Publish Changes</button><button class="danger" type="button" data-listing-edit-review="reject" data-request-id="'+esc(r.id)+'">Reject</button></div></article>').join("")||'<p class="muted">কোনো Pending Listing Change Request নেই।</p>';
-    }catch(err){host.textContent="Change Request লোড হয়নি: "+err.message;}
+      const ids=(data||[]).map(r=>r.id);let events=[];
+      if(ids.length){
+        const result=await client().from("listing_edit_request_events")
+          .select("id,request_id,event_type,actor_role,reason,created_at").in("request_id",ids)
+          .order("created_at",{ascending:true});
+        if(result.error)throw result.error;events=result.data||[];
+      }
+      host.innerHTML=(data||[]).map(r=>'<article class="card nx-history-card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product Change Request":"Service Change Request")+'</strong><span class="tag">Pending Review</span></div><small>Request ID: '+esc(r.id)+' · Seller: '+esc(r.seller_id)+'</small>'+listingEditChangeMarkup(r)+'<details><summary>Request Timeline</summary>'+listingHistoryTimeline(events.filter(e=>e.request_id===r.id))+'</details><div class="form-actions"><button class="primary" type="button" data-listing-edit-review="approve" data-request-id="'+esc(r.id)+'">Approve & Publish Changes</button><button class="danger" type="button" data-listing-edit-review="reject" data-request-id="'+esc(r.id)+'">Reject</button></div></article>').join("")||'<p class="muted">কোনো Pending Listing Change Request নেই।</p>';
+    }catch(err){host.textContent="Change Request History লোড হয়নি: "+err.message;}
   }
 
   async function reviewListingEditRequest(id,action){
