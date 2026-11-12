@@ -438,7 +438,7 @@
       }).join("");
     } else businessHost.textContent="এই বিভাগের ব্যবসা দেখার অনুমতি নেই।";
 
-    if(can("products.view")||can("products.suspend")||can("products.restore")||can("products.cancel")) {
+    if(can("products.view")||can("products.suspend")||can("products.restore")) {
       const {data,error}=await db.from("products").select("id,product_code,product_name,category,listing_status,created_at").order("created_at",{ascending:false}).limit(20);
       if(error) productsHost.textContent="পণ্যের তালিকা লোড হয়নি: "+error.message;
       else if(!data?.length) productsHost.textContent="এখনো কোনো পণ্য জমা হয়নি।";
