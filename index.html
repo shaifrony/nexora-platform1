@@ -34,7 +34,20 @@ header{
   flex-wrap:wrap;
   gap:12px;
 }
-.logo{font-size:25px;font-weight:800;letter-spacing:2px}
+.logo{font-size:25px;font-weight:800;letter-spacing:2px;display:flex;align-items:center;gap:9px}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#36d6a8,#1769aa);display:inline-grid;place-items:center;color:#fff;font-size:20px;letter-spacing:0;box-shadow:0 4px 12px #0002}
+.hero{position:relative;overflow:hidden}
+.hero-kicker{display:inline-block;background:#ffffff20;border:1px solid #ffffff45;border-radius:30px;padding:7px 12px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.home-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:20px 0 28px}
+.home-tool{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px;box-shadow:0 3px 12px #10243a08}
+.home-tool h3{margin:0 0 8px;color:var(--navy);font-size:17px}
+.home-tool p{margin:0 0 13px}
+.home-tool .tool-icon{font-size:23px;margin-bottom:10px}
+.promo-strip{background:#e8f6f2;border:1px solid #ccebe1;border-radius:13px;padding:17px 19px;margin:18px 0 26px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.promo-strip h3{margin:0 0 5px;color:#075c49}
+.brand-sub{font-size:10px;letter-spacing:1.5px;color:#dceafa;font-weight:600}
+@media(max-width:600px){.hero{padding:27px 18px}.home-tool{padding:15px}}
 .logo span{color:#36d6a8}
 nav{display:flex;gap:8px;flex-wrap:wrap}
 button{
@@ -145,36 +158,43 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 <body>
 
 <header>
-  <div class="logo">NEX<span>ORA</span></div>
+  <div class="logo" onclick="showSection('market')" style="cursor:pointer"><span class="logo-mark">N</span><span>NEX<span>ORA</span><small class="brand-sub" style="display:block">GLOBAL TRADE NETWORK</small></span></div>
   <nav>
-    <button onclick="showSection('market')">Marketplace</button>
+    <button onclick="showSection('market')">Home / Marketplace</button>
     <button onclick="showSection('demandBoard')">Demand Board</button>
     <button onclick="showSection('postDemand')">Post a Demand</button>
     <button onclick="showSection('sellerDashboard')">Seller Account</button>
     <button onclick="showSection('privateChat')">Chat & Calls</button>
+    <button onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Login / Register</button>
   </nav>
 </header>
 
 <main class="container">
 
-  <section class="hero">
+  <section id="homeIntro" class="hero">
+    <span class="hero-kicker">B2B GLOBAL TRADE MARKETPLACE</span>
     <h1>Connect. Trade. Grow.</h1>
-    <p>
-      NEXORA একটি B2B Global Trade Marketplace।
-      ক্রেতা ও বিক্রেতাদের মধ্যে আন্তর্জাতিক বাণিজ্যের সংযোগ তৈরি করাই আমাদের লক্ষ্য।
-    </p>
-    <button class="primary" onclick="showSection('postDemand')">
-      Post Your Requirement
-    </button>
-    <button class="light" onclick="showSection('market')">
-      Explore Products
-    </button>
+    <p>NEXORA-তে দেশ-বিদেশের ক্রেতা ও বিক্রেতাদের খুঁজুন, পণ্য আবিষ্কার করুন এবং আপনার ব্যবসার জন্য নতুন বাণিজ্যিক সুযোগ তৈরি করুন।</p>
+    <div class="hero-actions">
+      <button class="primary" onclick="showSection('market')">Explore Products</button>
+      <button class="light" onclick="showSection('postDemand')">Post Your Requirement</button>
+      <button class="light" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Login / Register</button>
+    </div>
+  </section>
+  <section class="home-tools">
+    <article class="home-tool"><div class="tool-icon">🔎</div><h3>পণ্য খুঁজুন</h3><p class="muted">বিভিন্ন ক্যাটাগরির পণ্য দেখুন এবং প্রয়োজনীয় পণ্য অনুসন্ধান করুন।</p><button class="secondary" onclick="showSection('market')">Browse Products</button></article>
+    <article class="home-tool"><div class="tool-icon">🧾</div><h3>পণ্যের চাহিদা জানান</h3><p class="muted">পছন্দের পণ্য না পেলে আপনার চাহিদা ও প্রয়োজনের তারিখ জানান।</p><button class="primary" onclick="showSection('postDemand')">Post a Demand</button></article>
+    <article class="home-tool"><div class="tool-icon">🏪</div><h3>বিক্রেতা হিসেবে যোগ দিন</h3><p class="muted">আপনার ব্যবসার পরিচিতি তৈরি করুন এবং পণ্য তালিকাভুক্তির আবেদন করুন।</p><button class="secondary" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Create Account</button></article>
+  </section>
+  <section class="promo-strip">
+    <div><h3>আপনার প্রয়োজনীয় পণ্য খুঁজে পাচ্ছেন না?</h3><p class="muted">NEXORA-তে চাহিদা পোস্ট করুন—প্রাসঙ্গিক বিক্রেতারা আপনার সঙ্গে যোগাযোগের সুযোগ পাবেন।</p></div>
+    <button class="primary" onclick="showSection('postDemand')">Get Product Support</button>
   </section>
 
   <!-- MARKETPLACE -->
   <section id="market" class="section">
     <div class="section-head">
-      <h2>Global Marketplace</h2>
+      <h2>Featured & Available Products</h2>
       <span class="muted" id="productCount"></span>
     </div>
 
@@ -422,7 +442,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 </main>
 
 <footer>
-  <div class="logo">NEX<span>ORA</span></div>
+  <div class="logo"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
   <p>Connecting Buyers & Sellers Across Borders</p>
   <p class="muted">NEXORA Global Trade Marketplace</p>
 </footer>
