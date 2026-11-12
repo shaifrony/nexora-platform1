@@ -285,6 +285,44 @@ nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visi
  *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
 }
 
+
+/* NEXORA visible marketplace redesign — hero, category discovery and wholesale storefront */
+.nx-market-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;min-height:340px;overflow:hidden;padding:38px 42px;margin:8px 0 30px;border-radius:22px;background:linear-gradient(115deg,#0b2238 0%,#104e65 58%,#087f78 100%);color:#fff;box-shadow:0 18px 40px #102b4326}
+.nx-market-hero:before{content:"";position:absolute;width:430px;height:430px;border:1px solid #ffffff18;border-radius:50%;right:5%;top:-45%;z-index:-1}
+.nx-market-hero-copy{align-self:center;max-width:650px}
+.nx-market-eyebrow{display:block;color:#69ddc0;font-size:10px;letter-spacing:2px;font-weight:800;margin-bottom:10px}
+.nx-market-hero h1{font-size:clamp(32px,4.3vw,50px);line-height:1.14;letter-spacing:-1.3px;margin:0 0 14px;color:#fff}
+.nx-market-hero h1 em{font-style:normal;color:#7ce0c7}
+.nx-market-hero p{max-width:570px;color:#d6e8ee;font-size:15px;line-height:1.8;margin:0}
+.nx-market-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:23px}
+.nx-market-hero-actions button{padding:13px 18px;border-radius:9px}
+.nx-hero-primary{background:#f47b45;color:white}.nx-hero-primary:hover{background:#e96832}
+.nx-hero-secondary{background:#ffffff14;color:white;border:1px solid #ffffff55}
+.nx-market-benefits{display:flex;gap:17px;flex-wrap:wrap;margin-top:22px;color:#d4eee8;font-size:11px;font-weight:600}
+.nx-market-hero-art{position:relative;min-height:245px;display:grid;place-items:center}
+.nx-orbit{position:absolute;border:1px solid #ffffff24;border-radius:50%;width:270px;height:270px}
+.nx-orbit-two{width:205px;height:205px;border-style:dashed}
+.nx-hero-box{position:absolute;display:grid;place-items:center;font-weight:900;box-shadow:0 20px 45px #001a2a55}
+.nx-box-back{width:145px;height:145px;border-radius:27px;background:linear-gradient(145deg,#f6a46d,#d75b3e);transform:translate(43px,-25px) rotate(12deg);font-size:68px;color:#fff8}
+.nx-box-front{width:165px;height:165px;border-radius:25px;background:linear-gradient(145deg,#fff,#dcefe9);color:#12364a;font-size:30px;transform:translate(-17px,23px);display:flex;flex-direction:column;gap:5px}
+.nx-box-front span{font-size:8px;letter-spacing:2px;color:#0b8b78}
+.nx-float-chip{position:absolute;padding:9px 13px;border-radius:9px;background:#fff;color:#16465a;font-size:10px;font-weight:900;letter-spacing:1px;box-shadow:0 8px 22px #001a2a30}
+.nx-chip-top{top:14%;right:3%}.nx-chip-bottom{bottom:7%;left:2%}
+.nx-category-section{margin:0 0 34px;padding:22px 22px 24px;background:#fff;border:1px solid #e7edf1;border-radius:17px;box-shadow:0 6px 22px #172b3d08}
+.nx-category-heading,.nx-market-section-title{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:16px}
+.nx-category-heading h3{margin:0;color:#172b3d;font-size:21px}
+.nx-category-rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.nx-category-rail button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;min-height:125px;padding:15px 13px;border:1px solid #e6edf1;border-radius:13px;background:#fbfcfd;color:#243b4c;transition:.18s}
+.nx-category-rail button:hover{border-color:#8ccfc0;background:#f0faf7;transform:translateY(-3px)}
+.nx-category-rail button>span{display:grid;place-items:center;width:39px;height:39px;border-radius:11px;background:#e8f5f1;font-size:21px}
+.nx-category-rail button b{font-size:12px;line-height:1.35}
+.nx-category-rail button small{font-size:11px;color:#718096}
+.nx-market-section-title{margin:5px 0 16px;padding:0 2px}
+.nx-market-section-title h2{margin:0;font-size:25px}
+.nx-market-section-title .nx-market-eyebrow{margin-bottom:5px}
+@media(max-width:850px){.nx-market-hero{grid-template-columns:1fr .65fr;padding:30px 25px}.nx-category-rail{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.nx-market-hero{grid-template-columns:1fr;padding:26px 21px;min-height:0}.nx-market-hero-art{min-height:190px;margin-top:5px}.nx-orbit{width:205px;height:205px}.nx-orbit-two{width:155px;height:155px}.nx-box-back{width:105px;height:105px;font-size:48px}.nx-box-front{width:125px;height:125px;font-size:23px}.nx-market-benefits{gap:9px}.nx-category-section{padding:17px 12px}.nx-category-heading{align-items:flex-start;flex-direction:column}.nx-category-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-category-rail button{min-height:112px;padding:12px}.nx-market-section-title{align-items:flex-start;flex-direction:column}.nx-market-section-title h2{font-size:21px}}
+
 </style>
 </head>
 
@@ -310,6 +348,35 @@ nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visi
       <h2>Marketplace</h2>
       <span id="productCount" class="muted">Products</span>
     </div>
+    <section class="nx-market-hero" aria-label="Wholesale sourcing">
+      <div class="nx-market-hero-copy">
+        <span class="nx-market-eyebrow">NEXORA WHOLESALE MARKETPLACE</span>
+        <h1>বিশ্বস্ত উৎস থেকে<br><em>পাইকারি পণ্য সংগ্রহ</em></h1>
+        <p>ব্যবসার জন্য পণ্য খুঁজুন, সরবরাহকারীর সঙ্গে যোগাযোগ করুন এবং আপনার প্রয়োজন প্রকাশ করুন—এক জায়গায়।</p>
+        <div class="nx-market-hero-actions">
+          <button type="button" class="nx-hero-primary" onclick="document.getElementById('productSearch')?.focus();document.getElementById('productSearch')?.scrollIntoView({behavior:'smooth',block:'center'})">পণ্য খুঁজুন <span aria-hidden="true">→</span></button>
+          <button type="button" class="nx-hero-secondary" onclick="document.getElementById('publicDemandBoard')?.scrollIntoView({behavior:'smooth',block:'center'})">ক্রেতার চাহিদা দেখুন</button>
+        </div>
+        <div class="nx-market-benefits"><span>● পাইকারি বাজার</span><span>● অনুমোদিত পণ্য</span><span>● Buyer privacy</span></div>
+      </div>
+      <div class="nx-market-hero-art" aria-hidden="true">
+        <div class="nx-orbit nx-orbit-one"></div><div class="nx-orbit nx-orbit-two"></div>
+        <div class="nx-hero-box nx-box-back">N</div><div class="nx-hero-box nx-box-front">NEXORA<span>GLOBAL TRADE</span></div>
+        <div class="nx-float-chip nx-chip-top">WHOLESALE</div><div class="nx-float-chip nx-chip-bottom">B2B SOURCING</div>
+      </div>
+    </section>
+    <section class="nx-category-section" aria-label="পণ্যের বিভাগ">
+      <div class="nx-category-heading"><div><span class="nx-market-eyebrow">DISCOVER BY CATEGORY</span><h3>জনপ্রিয় পণ্য বিভাগ</h3></div><span class="muted">আপনার প্রয়োজনীয় পণ্য খুঁজুন</span></div>
+      <div class="nx-category-rail">
+        <button type="button" data-nx-category="Food & Agriculture"><span>🌾</span><b>Food & Agriculture</b><small>খাদ্য ও কৃষিপণ্য</small></button>
+        <button type="button" data-nx-category="Textile & Garments"><span>🧵</span><b>Textile & Garments</b><small>বস্ত্র ও পোশাক</small></button>
+        <button type="button" data-nx-category="Electronics"><span>⚙️</span><b>Electronics</b><small>ইলেকট্রনিক্স</small></button>
+        <button type="button" data-nx-category="Industrial Products"><span>🏭</span><b>Industrial</b><small>শিল্পপণ্য</small></button>
+        <button type="button" data-nx-category="Handicrafts"><span>🪡</span><b>Handicrafts</b><small>হস্তশিল্প</small></button>
+        <button type="button" data-nx-category="Other"><span>📦</span><b>Other Products</b><small>অন্যান্য পণ্য</small></button>
+      </div>
+    </section>
+    <div class="nx-market-section-title"><div><span class="nx-market-eyebrow">EXPLORE SUPPLIERS</span><h2>পাইকারি পণ্য আবিষ্কার করুন</h2></div><span class="muted">পণ্য বাছাই ও অনুসন্ধান করুন</span></div>
     <div id="productDetailPanel" class="card hidden" aria-live="polite"></div>
     <div class="nx-search-panel">
       <div class="nx-search-toolbar">
