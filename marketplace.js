@@ -371,7 +371,7 @@
         <p class="price"><strong>পাইকারি মূল্য:</strong> ${esc(selected.price)} ${esc(selected.currency)}</p>
         <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
-        <div class="form-actions"><button class="primary" type="button" onclick="showSection('accountSection')">Login / Register</button></div>
+        
         <div id="productInquiryArea" class="card"><h3>পণ্য সম্পর্কে জানতে চান?</h3><p class="muted">Buyer হিসেবে লগইন করে Seller-এর কাছে যোগাযোগের অনুরোধ পাঠান। Seller গ্রহণ না করা পর্যন্ত ব্যক্তিগত চ্যাট শুরু হবে না।</p><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
       `;
       const controls = $("productInquiryControls");
