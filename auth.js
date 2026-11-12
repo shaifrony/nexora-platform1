@@ -67,13 +67,15 @@
     if (pending.error) throw pending.error;
     pendingRoleRequest = pending.data || null;
     adminStaff = null;
-    if (profile?.role === "admin" && profile?.account_status === "active") {
-      const staff = await db.from("admin_staff")
-        .select("admin_code,admin_level,department_key,is_active")
-        .eq("user_id", currentUser.id).maybeSingle();
-      if (staff.error) throw staff.error;
-      adminStaff = staff.data;
-    }
+  }
+  async function loadAdminStaff() {
+    adminStaff = null;
+    if (!currentUser || !mfaVerified || profile?.role !== "admin" || profile?.account_status !== "active") return;
+    const staff = await db.from("admin_staff")
+      .select("admin_code,admin_level,department_key,is_active")
+      .eq("user_id", currentUser.id).maybeSingle();
+    if (staff.error) throw staff.error;
+    adminStaff = staff.data;
   }
   function ensureMfaPanel() {
     let panel = document.getElementById("nxMfaPanel");
@@ -88,7 +90,7 @@
     return panel;
   }
   async function refreshMfaState() {
-    mfaVerified = false; mfaFactors = []; mfaAssurance = null;
+    mfaVerified = false; mfaFactors = []; mfaUnverifiedFactors = []; mfaAssurance = null;
     if (!currentUser) return;
     const [assurance, factors] = await Promise.all([
       db.auth.mfa.getAuthenticatorAssuranceLevel(),
@@ -265,8 +267,12 @@
     currentUser = session?.user || null;
     try {
       await loadProfile();
-      if (currentUser && profile && profile.account_status === "active" && !recoveryMode) await refreshMfaState();
-      else { mfaVerified=false; mfaFactors=[]; }
+      if (currentUser && profile && profile.account_status === "active" && !recoveryMode) {
+        await refreshMfaState();
+        if (mfaVerified) await loadAdminStaff();
+      } else {
+        mfaVerified=false; mfaFactors=[]; mfaUnverifiedFactors=[]; mfaAssurance=null; adminStaff=null;
+      }
       if (currentUser && profile && profile.account_status !== "active" && !recoveryMode) {
         await db.auth.signOut({ scope: "global" });
         currentUser = null; profile = null; adminStaff = null;
