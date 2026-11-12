@@ -371,6 +371,14 @@ body.nx-demand-only-active main.container{max-width:none;padding:1px 18px 40px}
 body.nx-demand-only-active #postDemand{display:block!important}
 @media(max-width:600px){.nx-demand-only{margin:12px auto 32px;padding:0 8px}.nx-demand-page-heading{padding:22px 18px}.nx-demand-page-heading h1{font-size:25px}.nx-demand-form-card{padding:16px 13px}.nx-demand-form-card .form-actions button{width:100%}}
 
+
+/* Consistent back navigation on every internal page; homepage stays uncluttered */
+.nx-page-back-row{display:flex;align-items:center;margin:0 0 14px}
+.nx-page-back-button{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #dce5ec;border-radius:9px;background:#fff;color:#244157;font-size:13px;font-weight:700;box-shadow:0 2px 8px #10243a0a}
+.nx-page-back-button:hover{background:#f1f8f7;border-color:#a9d8cc;color:#087f78}
+.nx-page-back-button span{font-size:18px;line-height:1}
+body.nx-demand-only-active .nx-page-back-row{margin:0 0 12px}
+@media(max-width:600px){.nx-page-back-row{margin-bottom:10px}.nx-page-back-button{padding:8px 12px}}
 </style>
 </head>
 
