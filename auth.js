@@ -20,6 +20,12 @@
     #nexoraAccount .nx-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px; }
     #nexoraAccount .nx-message { padding:10px;border-radius:8px;background:#f3f6fa;margin-top:10px;white-space:pre-wrap; }
     #nexoraAccount button:disabled { opacity:.55;cursor:not-allowed; }
+    #nexoraAccount .nx-social-divider{display:flex;align-items:center;gap:10px;color:#718096;font-size:12px;margin:15px 0}
+    #nexoraAccount .nx-social-divider:before,#nexoraAccount .nx-social-divider:after{content:"";height:1px;background:#e3e9f0;flex:1}
+    #nexoraAccount .nx-social-buttons{display:grid;grid-template-columns:1fr;gap:9px}
+    #nexoraAccount .nx-social-buttons button{width:100%;border:1px solid #d6dee8;background:#fff;color:#243449}
+    #nexoraAccount .nx-social-buttons .nx-yahoo{color:#6001d2}
+    #nexoraAccount .nx-google-mark{font-weight:800;color:#4285f4;margin-right:8px;font-size:16px}
   `;
   document.head.appendChild(style);
 
