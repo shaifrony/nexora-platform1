@@ -251,6 +251,7 @@ h2{font-size:24px}
               <button class="primary" type="submit">Login</button>
               <button class="secondary nx-signup-open" type="button" onclick="document.getElementById('nxLoginView').classList.add('hidden');document.getElementById('nxSignupView').classList.remove('hidden');document.querySelector('#accountSection .section-head h2').textContent='Create Account'">Sign Up</button>
             </div>
+            <p style="margin:12px 0 0;text-align:right"><button class="light" id="nxForgotOpen" type="button" style="padding:5px 0;background:transparent;color:var(--blue)">Forgot Password?</button></p>
             <div class="nx-social-divider">অথবা</div>
             <div class="nx-social-buttons">
               <button type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
@@ -261,7 +262,28 @@ h2{font-size:24px}
       </div>
 
       <!-- Password recovery view -->
-      </form>
+      <div id="nxForgotView" class="card hidden">
+        <h3>Reset Password</h3>
+        <p class="muted">আপনার অ্যাকাউন্টের ইমেইল দিন। পাসওয়ার্ড রিসেট করার লিংক পাঠানো হবে।</p>
+        <form id="nxForgotForm">
+          <label>Email *</label>
+          <input name="email" type="email" autocomplete="email" required>
+          <div class="form-actions">
+            <button class="primary" type="submit">Send Reset Link</button>
+            <button class="light" id="nxForgotBack" type="button">Back to Login</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="nxPasswordRecoveryView" class="card hidden">
+        <h3>Set a New Password</h3>
+        <form id="nxPasswordRecoveryForm">
+          <label>New Password *</label>
+          <input name="password" type="password" minlength="8" autocomplete="new-password" required>
+          <label>Confirm New Password *</label>
+          <input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
+          <div class="form-actions"><button class="primary" type="submit">Update Password</button></div>
+        </form>
       </div>
 
       <!-- Registration opens as a separate view; its fields are not shown on the Login view -->
