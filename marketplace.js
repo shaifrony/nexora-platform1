@@ -1,7 +1,7 @@
 /* NEXORA Marketplace — Supabase-backed MVP */
 (() => {
   "use strict";
-  const state = { products: [], demands: [], business: null, businessMap: new Map(), offers: {} };
+  const state = { products: [], demands: [], buyerDemands: [], business: null, businessMap: new Map(), offers: {} };
   const $ = (id) => document.getElementById(id);
   const client = () => window.NEXORA_AUTH?.client;
   const user = () => window.NEXORA_AUTH?.user;
@@ -200,7 +200,7 @@
   }
 
   window.showSection = function(id) {
-    if (id === "postDemand" && !(signedIn() && activeBuyer())) {
+    if (["postDemand","buyerDashboard"].includes(id) && !(signedIn() && activeBuyer())) {
       document.querySelectorAll("main section.section").forEach(s => s.classList.add("hidden"));
       $("accountSection")?.classList.remove("hidden");
       const hint = $("nxCurrent");
@@ -214,6 +214,7 @@
     if (id === "market") loadProducts();
     if (id === "accountSection") loadAdminActions();
     if (id === "demandBoard") loadDemands();
+    if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -369,6 +370,99 @@
     }).join("") : '<div class="card">কোনো অনুমোদিত পণ্য পাওয়া যায়নি।</div>';
   }
 
+  async function loadBuyerDashboard() {
+    const host = $("buyerDemandList");
+    if (!host) return;
+    if (!signedIn() || !activeBuyer()) {
+      host.textContent = "Buyer Dashboard ব্যবহার করতে সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।";
+      return;
+    }
+    host.textContent = "আপনার চাহিদা লোড হচ্ছে…";
+    try {
+      const { data, error } = await client().from("buyer_demands")
+        .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
+        .eq("buyer_id", user().id).order("created_at", { ascending: false });
+      if (error) throw error;
+      state.buyerDemands = data || [];
+      const ids = state.buyerDemands.map(d => d.id);
+      let offers = [];
+      if (ids.length) {
+        const result = await client().from("seller_offers")
+          .select("id,demand_id,offer_price,currency,available_quantity,message,offer_status,created_at")
+          .in("demand_id", ids).order("created_at", { ascending: false });
+        if (result.error) throw result.error;
+        offers = result.data || [];
+      }
+      renderBuyerDashboard(offers);
+    } catch (err) {
+      host.textContent = "Buyer Dashboard লোড হয়নি: " + (err.message || "অজানা সমস্যা");
+    }
+  }
+
+  function renderBuyerDashboard(offers) {
+    const host = $("buyerDemandList");
+    const demands = state.buyerDemands || [];
+    const offerMap = new Map();
+    (offers || []).forEach(o => {
+      if (!offerMap.has(o.demand_id)) offerMap.set(o.demand_id, []);
+      offerMap.get(o.demand_id).push(o);
+    });
+    if ($("buyerDemandTotal")) $("buyerDemandTotal").textContent = String(demands.length);
+    if ($("buyerDemandOpen")) $("buyerDemandOpen").textContent = String(demands.filter(d => d.demand_status === "open").length);
+    if ($("buyerOfferTotal")) $("buyerOfferTotal").textContent = String((offers || []).length);
+    if (!host) return;
+    if (!demands.length) {
+      host.innerHTML = '<div class="offer">আপনি এখনো কোনো Buyer Demand পোস্ট করেননি। নতুন চাহিদা পোস্ট করে শুরু করুন।</div>';
+      return;
+    }
+    const labels = { open: "চলমান", closed: "বন্ধ", cancelled: "বাতিল" };
+    host.innerHTML = demands.map(d => {
+      const list = offerMap.get(d.id) || [];
+      const offerHTML = list.length ? list.map(o =>
+        '<div class="offer"><strong>বিক্রেতার Price Offer</strong>' +
+        '<p class="price">' + esc(o.offer_price) + ' ' + esc(o.currency) + '</p>' +
+        '<p class="muted">সরবরাহযোগ্য পরিমাণ: ' + esc(o.available_quantity) + '</p>' +
+        (o.message ? '<p class="muted">' + esc(o.message) + '</p>' : '') +
+        '<p class="muted">Offer Status: ' + esc(o.offer_status) + '</p></div>'
+      ).join("") : '<p class="muted">এখনো কোনো Price Offer আসেনি।</p>';
+      const actions = d.demand_status === "open" ?
+        '<div class="form-actions"><button class="light" type="button" data-demand-status="closed" data-demand-id="' + esc(d.id) + '">চাহিদা বন্ধ করুন</button>' +
+        '<button class="danger" type="button" data-demand-status="cancelled" data-demand-id="' + esc(d.id) + '">চাহিদা বাতিল করুন</button></div>' : '';
+      return '<article class="card"><div class="section-head"><div><span class="tag">' + esc(d.category) +
+        '</span><span class="tag">' + esc(labels[d.demand_status] || d.demand_status) + '</span></div><strong>' +
+        esc(d.demand_code) + '</strong></div><h3>' + esc(d.product_name) + '</h3><p>' + esc(d.description) +
+        '</p><p class="muted"><strong>স্পেসিফিকেশন:</strong> ' + esc(d.specifications_quality || "উল্লেখ করা হয়নি") +
+        '</p><div class="grid"><div><p class="muted">পরিমাণ</p><strong>' + esc(d.required_quantity) +
+        '</strong></div><div><p class="muted">বাজেট</p><strong>' +
+        (d.budget === null ? "উল্লেখ করা হয়নি" : esc(d.budget + " " + d.currency)) +
+        '</strong></div><div><p class="muted">গন্তব্য</p><strong>' + esc(d.destination_city) + ', ' +
+        esc(d.destination_country) + '</strong></div></div><p><span class="demand-date">প্রয়োজনের তারিখ: ' +
+        esc(d.required_date) + '</span></p><p><strong>' + list.length + 'টি Price Offer</strong></p>' +
+        offerHTML + actions + '</article>';
+    }).join("");
+    host.querySelectorAll("button[data-demand-status][data-demand-id]").forEach(button => {
+      button.addEventListener("click", () => updateBuyerDemandStatus(button.dataset.demandId, button.dataset.demandStatus));
+    });
+  }
+
+  async function updateBuyerDemandStatus(demandId, nextStatus) {
+    if (!activeBuyer() || !["closed","cancelled"].includes(nextStatus)) return;
+    const label = nextStatus === "closed" ? "বন্ধ" : "বাতিল";
+    if (!confirm("আপনি কি নিজের এই চাহিদাটি " + label + " করতে চান?")) return;
+    try {
+      const { data, error } = await client().from("buyer_demands").update({ demand_status: nextStatus })
+        .eq("id", demandId).eq("buyer_id", user().id).eq("demand_status", "open")
+        .select("id").maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error("চাহিদাটি পরিবর্তন করা যায়নি। এটি হয়তো ইতোমধ্যে পরিবর্তিত হয়েছে।");
+      say("আপনার চাহিদার অবস্থা আপডেট হয়েছে।", true);
+      await loadBuyerDashboard();
+      if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
+    } catch (err) {
+      say("চাহিদার অবস্থা পরিবর্তন হয়নি: " + err.message);
+    }
+  }
+
   async function loadDemands() {
     const host = $("demandList");
     if (!host || !client()) return;
@@ -519,7 +613,7 @@
         destination_country: v.country.trim(), destination_city: v.destination.trim(), required_date: v.requiredDate
       });
       if (error) throw error;
-      form.reset(); say("Buyer Demand প্রকাশিত হয়েছে।", true); showSection("demandBoard");
+      form.reset(); say("Buyer Demand প্রকাশিত হয়েছে।", true); showSection("buyerDashboard");
     } catch (err) { say("Demand প্রকাশ হয়নি: " + err.message); }
     finally { setBusy(form, false); }
   });
@@ -534,6 +628,7 @@
     if ($("market") && !$("market").classList.contains("hidden")) await loadProducts();
     if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
     if ($("sellerDashboard") && !$("sellerDashboard").classList.contains("hidden")) await loadSellerDashboard();
+    if ($("buyerDashboard") && !$("buyerDashboard").classList.contains("hidden")) await loadBuyerDashboard();
   });
 
   const today = new Date();
