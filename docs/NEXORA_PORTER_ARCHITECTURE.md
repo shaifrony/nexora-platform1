@@ -111,3 +111,32 @@ Do not invent answers for:
 - Pricing, route optimization, GPS tracking, insurance, customs, or settlement integrations.
 
 These require product/legal/operational decisions before implementation.
+
+## 8. Implementation progress (2026-11-13)
+
+Completed on `nexora-development`:
+- Removed Porter from public signup and test-account role selectors.
+- Added client-side allowlists so signup/test-account requests accept only Buyer or Seller.
+- Removed Porter from role-request submission and active workspace navigation.
+- Blocked access to the legacy Porter dashboard.
+- Hid the legacy Admin Porter assignment panel and paused its legacy data loading.
+- Replaced the old un-applied Porter-as-profile migration with an explicit no-op warning.
+- Added staged migration `supabase/migrations/20261113180000_transport_provider_vehicle_model.sql`:
+  - narrows profile roles to Buyer/Seller/Admin;
+  - narrows role requests to Seller only;
+  - creates private `transport_providers` and `transport_vehicles` tables;
+  - allows one provider to register multiple vehicles;
+  - adds owner/admin RLS policies and protected review fields.
+
+Verification:
+- Staged SQL executed inside a transaction and rolled back successfully.
+- Follow-up check confirmed the new tables do not exist in the hosted database.
+- Hosted database still has zero Porter-role profiles and the existing pending Seller request remains intact.
+- No live migration, deployment, paid resource, or production-branch change was performed.
+
+Still pending:
+- Provider application form and multi-vehicle UI.
+- Admin provider/vehicle review interface and audited review RPCs.
+- New delivery-job schema referencing provider + vehicle.
+- Private document/image Storage policies and upload flow.
+- End-to-end browser and RLS negative-case tests.
