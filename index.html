@@ -152,6 +152,39 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   .container{padding:16px 12px}
   nav button{padding:9px 10px;font-size:12px}
 }
+
+/* NEXORA MARKETPLACE HOMEPAGE REDESIGN */
+:root{--orange:#f26b38;--teal:#087f78;--ink:#172b3d}
+body{background:#f4f6f8;color:#263746}
+header{background:#fff;color:#172b3d;padding:13px max(4%,calc((100% - 1280px)/2));box-shadow:0 2px 12px #142b3b12;position:sticky;top:0;z-index:20}
+.logo{color:#142b3b}.brand-sub{color:#718096}
+nav button{background:#f1f4f7;color:#263746}nav button:hover{background:#e5f5f1;color:#087f78}
+.container{max-width:1280px;padding:22px 18px}
+.hero{border-radius:18px;background:linear-gradient(112deg,#102b43 0%,#145a72 58%,#087f78 100%);padding:46px 38px;min-height:275px;box-shadow:0 12px 30px #102b4324}
+.hero h1{font-size:clamp(30px,4vw,46px);max-width:650px;line-height:1.15}
+.hero p{max-width:650px;font-size:16px}
+.hero:after{content:"GLOBAL SOURCING  •  VERIFIED BUSINESS  •  CROSS-BORDER TRADE";display:block;margin-top:26px;color:#d2f5ec;font-size:11px;letter-spacing:1.4px;font-weight:700}
+.hero-actions button{padding:13px 19px}
+.home-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+.home-tool{border-radius:15px;padding:22px;border-top:3px solid #0b9875}
+.home-tool .tool-icon{font-size:28px}
+.promo-strip{background:linear-gradient(90deg,#fff3e9,#fff);border-color:#ffe0c8}
+.section{margin:32px 0}
+.section-head{border-bottom:1px solid #e4eaf0;padding-bottom:13px}
+h2{font-size:24px}
+#market{background:#fff;padding:22px;border-radius:18px;border:1px solid #e6ebf0}
+#market .grid:first-of-type{grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:10px}
+#productSearch{padding:15px 18px;border-radius:10px;background:#fbfcfd}
+#categoryFilter{padding:15px;border-radius:10px}
+#productList{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+#productList .card{padding:12px;border-radius:13px;transition:transform .18s,box-shadow .18s}
+#productList .card:hover{transform:translateY(-3px);box-shadow:0 10px 24px #172b3d16}
+.product-image{height:180px;object-fit:contain;background:#f7f8fa}
+#productList .card h3{font-size:16px;min-height:38px}
+#productList .price{color:#e65d2f}
+@media(max-width:760px){header{position:relative}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
+@media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
+
 </style>
 </head>
 
@@ -182,6 +215,22 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
     </div>
   </section>
   <section class="home-tools">
+    <article class="home-tool"><div class="tool-icon">🌐</div><h3>Global Marketplace</h3><p class="muted">দেশ-বিদেশের অনুমোদিত ব্যবসা ও পণ্য এক জায়গায় খুঁজুন।</p><button class="secondary" onclick="showSection('market')">Explore Marketplace</button></article>
+    <article class="home-tool"><div class="tool-icon">📋</div><h3>Buyer Demand Board</h3><p class="muted">আপনার প্রয়োজন, পরিমাণ, বাজেট ও প্রয়োজনের তারিখ প্রকাশ করুন।</p><button class="primary" onclick="showSection('postDemand')">Post Requirement</button></article>
+    <article class="home-tool"><div class="tool-icon">🏭</div><h3>Grow as a Supplier</h3><p class="muted">ব্যবসার প্রোফাইল তৈরি করে আন্তর্জাতিক ক্রেতার কাছে পৌঁছান।</p><button class="secondary" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Become a Seller</button></article>
+  </section>
+  <section class="section" aria-label="Trade categories">
+    <div class="section-head"><h2>Explore Trade Categories</h2><span class="muted">Find products by industry</span></div>
+    <div class="grid">
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Food & Agriculture';showSection('market');renderProducts()">🌾 Food & Agriculture</button>
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Textile & Garments';showSection('market');renderProducts()">🧵 Textile & Garments</button>
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Electronics';showSection('market');renderProducts()">🔌 Electronics</button>
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Industrial Products';showSection('market');renderProducts()">⚙️ Industrial Products</button>
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Handicrafts';showSection('market');renderProducts()">🧺 Handicrafts</button>
+      <button class="light" onclick="document.getElementById('categoryFilter').value='Other';showSection('market');renderProducts()">📦 Other Products</button>
+    </div>
+  </section>
+  <section class="promo-strip">
     <article class="home-tool"><div class="tool-icon">🔎</div><h3>পণ্য খুঁজুন</h3><p class="muted">বিভিন্ন ক্যাটাগরির পণ্য দেখুন এবং প্রয়োজনীয় পণ্য অনুসন্ধান করুন।</p><button class="secondary" onclick="showSection('market')">Browse Products</button></article>
     <article class="home-tool"><div class="tool-icon">🧾</div><h3>পণ্যের চাহিদা জানান</h3><p class="muted">পছন্দের পণ্য না পেলে আপনার চাহিদা ও প্রয়োজনের তারিখ জানান।</p><button class="primary" onclick="showSection('postDemand')">Post a Demand</button></article>
     <article class="home-tool"><div class="tool-icon">🏪</div><h3>বিক্রেতা হিসেবে যোগ দিন</h3><p class="muted">আপনার ব্যবসার পরিচিতি তৈরি করুন এবং পণ্য তালিকাভুক্তির আবেদন করুন।</p><button class="secondary" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Create Account</button></article>
