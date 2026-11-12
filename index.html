@@ -196,9 +196,20 @@ h2{font-size:24px}
 .product-image{height:180px;object-fit:contain;background:#f7f8fa}
 #productList .card h3{font-size:16px;min-height:38px}
 #productList .price{color:#e65d2f}
-.nx-search-nav{display:inline-flex;align-items:center;gap:7px}
-.nx-search-nav span{font-size:20px;line-height:1}
-.nx-market-tools{grid-template-columns:minmax(0,2fr) minmax(190px,1fr)!important;gap:10px}
+.nx-search-panel{display:grid;gap:10px;margin-bottom:18px}
+.nx-search-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:10px}
+.nx-search-main input,.nx-search-main select{min-width:0}
+.nx-advanced-search{border:1px solid #e3e9f0;border-radius:11px;background:#f8fafc;padding:0 14px}
+.nx-advanced-search summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 0;font-weight:700;color:#1769aa}
+.nx-advanced-search summary::-webkit-details-marker{display:none}
+.nx-advanced-search summary:after{content:"＋";margin-left:auto;font-size:18px}
+.nx-advanced-search[open] summary:after{content:"−"}
+.nx-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;padding:4px 0 12px}
+.nx-filter-grid label{margin:7px 0 5px;font-size:12px}
+.nx-filter-grid input,.nx-filter-grid select{padding:10px;font-size:13px}
+.nx-filter-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 0 13px}
+.nx-filter-actions button{padding:9px 13px}
+#filterHint{font-size:12px}
 .nx-public-demands{margin-top:22px;padding:16px 18px;background:#f8fafc;border:1px solid #e6ebf0;border-radius:14px}
 .nx-public-demands .section-head{margin-bottom:10px;padding-bottom:8px}
 .nx-public-demands .section-head h2{font-size:19px}
@@ -212,7 +223,9 @@ h2{font-size:24px}
 .demand-card .demand-description{font-size:12px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media(max-width:760px){header{position:relative}nav{width:100%}nav input{flex:1;min-width:130px}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
 @media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
-@media(max-width:600px){.nx-market-tools{grid-template-columns:1fr!important}.nx-public-demands{padding:12px}.nx-demand-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.nx-search-main{grid-template-columns:1fr}.nx-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nx-public-demands{padding:12px}.nx-demand-grid{grid-template-columns:1fr}}
+@media(max-width:390px){.nx-filter-grid{grid-template-columns:1fr}}
 
   #nxAdminManagement .nx-permission-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
   #nxAdminManagement .nx-permission-option{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin:0;font-weight:400}
@@ -227,7 +240,6 @@ h2{font-size:24px}
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
   <nav aria-label="প্রধান নেভিগেশন">
     <button type="button" onclick="showSection('market')">Marketplace</button>
-    <button type="button" class="nx-search-nav" onclick="document.getElementById('market').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.getElementById('productSearch').focus(),250)"><span aria-hidden="true">⌕</span> Search</button>
     <button type="button" onclick="showSection('accountSection')">Login / Register</button>
   </nav>
 </header>
@@ -240,17 +252,31 @@ h2{font-size:24px}
       <h2>Marketplace</h2>
       <span id="productCount" class="muted">Products</span>
     </div>
-    <div class="grid nx-market-tools">
-      <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
-      <select id="categoryFilter" aria-label="পণ্যের বিভাগ">
-        <option value="">সব বিভাগ</option>
-        <option>Food & Agriculture</option>
-        <option>Textile & Garments</option>
-        <option>Electronics</option>
-        <option>Industrial Products</option>
-        <option>Handicrafts</option>
-        <option>Other</option>
-      </select>
+    <div class="nx-search-panel">
+      <div class="nx-search-main">
+        <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
+        <select id="categoryFilter" aria-label="পণ্যের বিভাগ">
+          <option value="">সব বিভাগ</option>
+          <option>Food & Agriculture</option>
+          <option>Textile & Garments</option>
+          <option>Electronics</option>
+          <option>Industrial Products</option>
+          <option>Handicrafts</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <details class="nx-advanced-search">
+        <summary><span>Advanced Filters</span><span class="muted">দাম, মান, দেশ ও বৈশিষ্ট্য অনুযায়ী খুঁজুন</span></summary>
+        <div class="nx-filter-grid">
+          <div><label for="priceMin">সর্বনিম্ন দাম</label><input id="priceMin" type="number" min="0" step="any" placeholder="যেমন 100"></div>
+          <div><label for="priceMax">সর্বোচ্চ দাম</label><input id="priceMax" type="number" min="0" step="any" placeholder="যেমন 500"></div>
+          <div><label for="priceCurrency">মুদ্রা</label><select id="priceCurrency"><option value="">সব মুদ্রা</option><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+          <div><label for="qualityFilter">পণ্যের মান / Quality</label><input id="qualityFilter" type="search" placeholder="যেমন Premium, Grade A"></div>
+          <div><label for="originFilter">উৎপত্তির দেশ</label><input id="originFilter" type="search" placeholder="যেমন Bangladesh"></div>
+          <div><label for="specFilter">Specifications</label><input id="specFilter" type="search" placeholder="পণ্যের বৈশিষ্ট্য"></div>
+        </div>
+        <div class="nx-filter-actions"><button type="button" class="light" id="resetProductFilters">Reset Filters</button><span id="filterHint" class="muted" role="status">একাধিক ফিল্টার একসঙ্গে ব্যবহার করতে পারবেন।</span></div>
+      </details>
     </div>
     <div id="productList" class="grid" aria-live="polite"></div>
 
