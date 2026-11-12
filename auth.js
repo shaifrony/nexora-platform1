@@ -13,6 +13,7 @@
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   let currentUser = null;
   let profile = null;
+  let adminStaff = null;
   let forgotMode = false;
   let recoveryMode = false;
 
@@ -42,12 +43,20 @@
     form.querySelectorAll("button").forEach(b => b.disabled = busy);
   }
   async function loadProfile() {
-    if (!currentUser) { profile = null; return; }
+    if (!currentUser) { profile = null; adminStaff = null; return; }
     const { data, error } = await db.from("profiles")
       .select("id,full_name,role,account_status")
       .eq("id", currentUser.id).maybeSingle();
     if (error) throw error;
     profile = data;
+    adminStaff = null;
+    if (profile?.role === "admin" && profile?.account_status === "active") {
+      const staff = await db.from("admin_staff")
+        .select("admin_code,admin_level,department_key,is_active")
+        .eq("user_id", currentUser.id).maybeSingle();
+      if (staff.error) throw staff.error;
+      adminStaff = staff.data;
+    }
   }
   function render() {
     const current = document.getElementById("nxCurrent");
@@ -91,8 +100,16 @@
     document.getElementById("nxProfile").textContent =
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
       " | Status: " + (p.account_status || "অজানা");
-    admin.classList.toggle("hidden", !(p.role === "admin" && p.account_status === "active"));
-    if (!admin.classList.contains("hidden")) loadRequests();
+    const isActiveAdmin = p.role === "admin" && p.account_status === "active" && adminStaff?.is_active === true;
+    admin.classList.toggle("hidden", !isActiveAdmin);
+    const adminIdentity = document.getElementById("nxAdminIdentity");
+    if (adminIdentity) {
+      const dept = adminStaff?.admin_level === "super_admin" ? "Super Admin" : (adminStaff?.department_key || "Assistant Admin");
+      adminIdentity.textContent = "Admin ID: " + (adminStaff?.admin_code || "—") + " | দায়িত্ব: " + dept;
+    }
+    const requestPanel = document.getElementById("nxRoleRequestsPanel");
+    if (requestPanel) requestPanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
+    if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadRequests();
   }
   async function sync(session) {
     currentUser = session?.user || null;
@@ -254,7 +271,7 @@
   }
   document.getElementById("nxRequests")?.addEventListener("click", async e => {
     const b = e.target.closest("button[data-id]");
-    if (!b || profile?.role !== "admin" || profile?.account_status !== "active") return;
+    if (!b || profile?.role !== "admin" || profile?.account_status !== "active" || adminStaff?.admin_level !== "super_admin" || adminStaff?.is_active !== true) return;
     b.disabled = true;
     const { error } = await db.rpc("review_role_request", {
       request_id: b.dataset.id, decision: b.dataset.decision
@@ -273,5 +290,5 @@
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
-  window.NEXORA_AUTH = { client: db, get user() { return currentUser; }, get profile() { return profile; } };
+  window.NEXORA_AUTH = { client: db, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; } };
 })();
