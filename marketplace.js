@@ -53,11 +53,27 @@
     const allowed = new Set((grants || []).map(g => g.permission_key));
     const productActions = ["products.suspend","products.restore","products.cancel"].some(k => allowed.has(k));
     const businessActions = allowed.has("businesses.suspend");
-    if (!productActions && !businessActions) { host.classList.add("hidden"); return; }
+    const userActions = ["users.view","users.suspend","users.restore","users.cancel"].some(k => allowed.has(k));
+    if (!productActions && !businessActions && !userActions) { host.classList.add("hidden"); return; }
     host.classList.remove("hidden");
-    host.innerHTML = '<hr><h3>Assigned Moderation Tasks</h3><div id="nxAssistantProductActions">পণ্য লোড হচ্ছে…</div><div id="nxAssistantBusinessActions">ব্যবসা লোড হচ্ছে…</div>';
+    host.innerHTML = '<hr><h3>Assigned Tasks</h3><div id="nxAssistantUserActions"></div><div id="nxAssistantProductActions"></div><div id="nxAssistantBusinessActions"></div>';
+    const userHost = $("nxAssistantUserActions");
     const productHost = $("nxAssistantProductActions");
     const businessHost = $("nxAssistantBusinessActions");
+    if (userActions) {
+      userHost.textContent = "ব্যবহারকারী লোড হচ্ছে…";
+      const { data, error } = await client().from("profiles")
+        .select("id,full_name,role,account_status,created_at")
+        .in("role",["buyer","seller","porter"]).order("created_at",{ascending:false}).limit(100);
+      if (error) userHost.textContent = "ব্যবহারকারী লোড হয়নি: " + error.message;
+      else userHost.innerHTML = '<h4>User Management</h4>' + ((data||[]).map(u => {
+        const buttons=[];
+        if (allowed.has("users.suspend") && u.account_status==="active") buttons.push('<button class="danger" data-user-id="'+esc(u.id)+'" data-user-action="suspend">Suspend</button>');
+        if (allowed.has("users.restore") && u.account_status==="suspended") buttons.push('<button class="primary" data-user-id="'+esc(u.id)+'" data-user-action="restore">Restore</button>');
+        if (allowed.has("users.cancel") && u.account_status==="active") buttons.push('<button class="danger" data-user-id="'+esc(u.id)+'" data-user-action="cancel">Cancel</button>');
+        return '<div class="offer"><b>'+esc(u.full_name||"নাম দেওয়া হয়নি")+'</b><p class="muted">Role: '+esc(u.role)+' | Status: '+esc(u.account_status)+'</p><div class="form-actions">'+buttons.join("")+'</div></div>';
+      }).join("") || "কোনো Buyer, Seller বা Porter অ্যাকাউন্ট পাওয়া যায়নি।");
+    }
     if (productActions) {
       const { data, error } = await client().from("products")
         .select("id,product_code,product_name,listing_status")
@@ -82,6 +98,28 @@
   }
 
   async function handleAssistantModeration(e) {
+    const userButton = e.target.closest("button[data-user-action]");
+    if (userButton) {
+      const staff = window.NEXORA_AUTH?.adminStaff;
+      if (profile()?.role !== "admin" || profile()?.account_status !== "active" || staff?.admin_level !== "assistant_admin" || staff?.is_active !== true) return;
+      const reason = prompt("এই User Management পদক্ষেপের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):", "");
+      if (!reason || reason.trim().length < 5) return say("কারণ না দিলে কাজটি করা যাবে না।");
+      userButton.disabled = true;
+      try {
+        const { error } = await client().rpc("manage_nexora_user", {
+          p_user_id: userButton.dataset.userId,
+          p_action: userButton.dataset.userAction,
+          p_reason: reason.trim()
+        });
+        if (error) throw error;
+        say("ব্যবহারকারীর অ্যাকাউন্টের অবস্থা আপডেট হয়েছে।", true);
+        await loadAdminActions();
+      } catch (err) {
+        userButton.disabled = false;
+        say("User Management কাজটি করা যায়নি: " + err.message);
+      }
+      return;
+    }
     const button = e.target.closest("button[data-mod-type]");
     if (!button) return;
     const staff = window.NEXORA_AUTH?.adminStaff;
