@@ -354,6 +354,23 @@ body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
 .nx-contact-seller-button{min-width:190px}
 @media(max-width:600px){.nx-chat-topbar{padding:9px 6px}.nx-chat-call-button{width:38px;height:38px}}
 
+
+/* Focused standalone Buyer Demand page */
+.nx-demand-only{max-width:820px;margin:24px auto 60px;padding:0 18px}
+.nx-demand-page-heading{margin:0 0 22px;padding:26px 28px;border-radius:16px;background:linear-gradient(115deg,#102b43,#087f78);color:#fff}
+.nx-demand-eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:800;color:#9debd8}
+.nx-demand-page-heading h1{margin:8px 0;font-size:30px;color:#fff}
+.nx-demand-page-heading p{margin:0;color:#e0f1ef;font-size:14px}
+.nx-demand-form-card{padding:24px;background:#fff;border:1px solid #e4eaf0;border-radius:16px;box-shadow:0 10px 30px #172b3d0c}
+.nx-demand-form-card form>label{margin-top:18px}
+.nx-demand-form-card .grid{gap:8px 16px}
+.nx-demand-form-card .form-actions{justify-content:flex-end}
+.nx-demand-form-card .form-actions button{min-width:170px;padding:13px 20px}
+body.nx-demand-only-active>header{display:none!important}
+body.nx-demand-only-active main.container{max-width:none;padding:1px 18px 40px}
+body.nx-demand-only-active #postDemand{display:block!important}
+@media(max-width:600px){.nx-demand-only{margin:12px auto 32px;padding:0 8px}.nx-demand-page-heading{padding:22px 18px}.nx-demand-page-heading h1{font-size:25px}.nx-demand-form-card{padding:16px 13px}.nx-demand-form-card .form-actions button{width:100%}}
+
 </style>
 </head>
 
@@ -668,19 +685,15 @@ body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
     </div>
   </section>
 
-  <!-- POST DEMAND -->
-  <section id="postDemand" class="section hidden">
-    <div class="section-head">
-      <h2>Post a Demand</h2>
-      <span class="tag">Buyer Section</span>
+  <!-- POST DEMAND: focused standalone form only -->
+  <section id="postDemand" class="section hidden nx-demand-only">
+    <div class="nx-demand-page-heading">
+      <span class="nx-demand-eyebrow">NEXORA • BUYER REQUIREMENT</span>
+      <h1>Post a Demand</h1>
+      <p>আপনার প্রয়োজনীয় পণ্যের চাহিদা জমা দিন</p>
     </div>
-
-    <div class="card">
-      <p class="muted">
-        আপনার পণ্যের চাহিদা প্রকাশ করুন। প্রাসঙ্গিক বিক্রেতারা আপনার চাহিদার বিপরীতে দাম প্রস্তাব করতে পারবেন।
-      </p>
-
-      <form id="demandForm">
+    <div class="nx-demand-form-card">
+<form id="demandForm">
         <div class="grid">
           <div>
             <label>পণ্যের নাম *</label>
@@ -744,7 +757,6 @@ body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
 
         <div class="form-actions">
           <button class="primary" type="submit">Publish Demand</button>
-          <button class="light" type="reset">Reset</button>
         </div>
       </form>
     </div>
