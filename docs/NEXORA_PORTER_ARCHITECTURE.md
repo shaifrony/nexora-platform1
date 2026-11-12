@@ -149,3 +149,37 @@ Still pending:
 - Private document/image Storage policies and upload flow.
 - End-to-end browser and RLS negative-case tests.
 
+
+
+## 9. Admin Transport Provider / Vehicle review (2026-11-13)
+
+Completed on `nexora-development`:
+- Added Admin Console queue for Transport Provider applications and their registered Vehicles.
+- Queue shows the Provider's submitted business/contact/operating details to authorized Admins and lists each linked Vehicle independently.
+- Added review actions:
+  - Pending: approve, reject, suspend
+  - Approved: suspend
+  - Rejected or suspended: re-approve
+- Reject and suspend require a reason of at least five characters; reasons are capped at 1,000 characters.
+- Added staged migration `supabase/migrations/20261113200000_transport_provider_admin_review.sql`:
+  - private `SECURITY DEFINER` review functions with empty search path;
+  - explicit authenticated-user, active Admin membership, AAL2 and `logistics.assign` checks;
+  - public invoker-rights RPC wrappers for PostgREST;
+  - atomic status update plus `admin_audit_logs` insertion;
+  - restricted execution grants (authenticated only);
+  - Provider and Vehicle status-transition validation;
+  - Vehicle approval is blocked until its parent Provider is approved.
+- Admin review queue reads use existing `logistics.view` permission helper; review RPCs require `logistics.assign`. The currently configured Super Admin path is supported. Assistant Admin logistics grants are not yet present in the live permission catalog.
+
+Verification:
+- Full `auth.js` and `transport-provider.js` passed JavaScript syntax compilation.
+- The new SQL functions and grants were executed inside a transaction and rolled back; no migration was applied.
+- Read-only hosted DB check confirms `transport_providers`, `transport_vehicles`, and both review RPCs are still absent.
+- No production deployment, paid resource, or `main` branch change.
+
+Still pending:
+- Browser/UI test with an Admin AAL2 session and real Provider/Vehicle test records.
+- Apply both staged Transport migrations only after explicit approval and a safe test environment.
+- Add Logistics permission catalog entries and assignable department policy before enabling Assistant Admin logistics review.
+- Enforce both Provider and Vehicle approved statuses in the eventual delivery-assignment workflow.
+- Private document/image Storage policies and upload flow.
