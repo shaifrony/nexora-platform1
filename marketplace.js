@@ -376,6 +376,8 @@
         
         <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
       `;
+      const contactArea = $("productInquiryArea");
+      if (contactArea) contactArea.classList.toggle("hidden", !(activeBuyer() && signedIn()));
       const controls = $("productInquiryControls");
       if (controls && activeBuyer() && signedIn()) {
         controls.innerHTML = '<button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
