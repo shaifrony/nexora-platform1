@@ -507,7 +507,8 @@
         {name:"Handcrafted Decor",market_category:"wholesale",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
         {name:"Electronic Components",market_category:"wholesale",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"}
       ].filter(p =>
-        (!buyerCategory || p.market_category === buyerCategory) &&\n        (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
+        (!buyerCategory || p.market_category === buyerCategory) &&
+        (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
         (!category || p.category === category)
       );
       host.innerHTML = demos.length ? demos.map(p => `<article class="card">
