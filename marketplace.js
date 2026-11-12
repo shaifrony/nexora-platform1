@@ -319,25 +319,27 @@
     await loadDemands();
   }
 
-  async function submitProductInquiry(e, product) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    if (!activeBuyer() || !signedIn()) return say("Inquiry পাঠাতে সক্রিয় Buyer হিসেবে লগইন করুন।");
-    if (!product || product.listing_status !== "approved") return say("এই পণ্যটি বর্তমানে Inquiry গ্রহণ করছে না।");
-    const message = String(new FormData(form).get("message") || "").trim();
+  async function startProductChat(product) {
+    if (!activeBuyer() || !signedIn()) return;
+    if (!product || product.listing_status !== "approved") return say("এই পণ্যটি বর্তমানে যোগাযোগের অনুরোধ গ্রহণ করছে না।");
+    const button = $("productContactSeller");
     const status = $("productInquiryStatus");
-    const buttons = form.querySelectorAll("button");
-    buttons.forEach(b => b.disabled = true);
+    if (button) { button.disabled = true; button.textContent = "Chat প্রস্তুত হচ্ছে…"; }
     try {
-      const { error } = await client().rpc("create_product_inquiry", { p_product_id: product.id, p_message: message || null });
+      const { data, error } = await client().rpc("create_product_inquiry", {
+        p_product_id: product.id,
+        p_message: null
+      });
       if (error) throw error;
-      if (status) status.textContent = "Inquiry পাঠানো হয়েছে। Seller গ্রহণ করলে Private Chat চালু হবে।";
-      form.reset();
-      say("Seller-এর কাছে Inquiry পাঠানো হয়েছে।", true);
+      const conversationId = typeof data === "string" ? data : data?.conversation_id || data?.id;
+      if (!conversationId) throw new Error("Chat conversation ID পাওয়া যায়নি।");
+      if (typeof window.NEXORA_OPEN_CONVERSATION !== "function") throw new Error("Chat এখন প্রস্তুত নয়।");
+      await window.NEXORA_OPEN_CONVERSATION(conversationId);
     } catch (err) {
-      if (status) status.textContent = "Inquiry পাঠানো যায়নি: " + (err.message || "অজানা সমস্যা");
-      say("Inquiry পাঠানো যায়নি: " + (err.message || "অজানা সমস্যা"));
-    } finally { buttons.forEach(b => b.disabled = false); }
+      if (status) status.textContent = "Chat খোলা যায়নি: " + (err.message || "অজানা সমস্যা");
+      say("Chat খোলা যায়নি: " + (err.message || "অজানা সমস্যা"));
+      if (button) { button.disabled = false; button.innerHTML = '<span aria-hidden="true">▣</span> Chat with Seller'; }
+    }
   }
   function renderProducts() {
     const businessMap = state.businessMap;
@@ -372,16 +374,13 @@
         <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
-        <div id="productInquiryArea" class="card"><h3>পণ্য সম্পর্কে জানতে চান?</h3><p class="muted">Buyer হিসেবে লগইন করে Seller-এর কাছে যোগাযোগের অনুরোধ পাঠান। Seller গ্রহণ না করা পর্যন্ত ব্যক্তিগত চ্যাট শুরু হবে না।</p><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
+        <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
       `;
       const controls = $("productInquiryControls");
-      if (controls) {
-        if (!signedIn()) controls.innerHTML = '<button class="primary" type="button" id="productInquiryLogin">Buyer Login / Register</button>';
-        else if (!activeBuyer()) controls.textContent = "এই সুবিধা ব্যবহার করতে সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।";
-        else controls.innerHTML = '<form id="productInquiryForm"><label>আপনার বার্তা (ঐচ্ছিক)</label><textarea name="message" maxlength="500" placeholder="পরিমাণ, গুণগত মান বা পণ্য সম্পর্কে কী জানতে চান লিখুন"></textarea><div class="form-actions"><button class="primary" type="submit">Seller-এর কাছে Inquiry পাঠান</button></div></form>';
+      if (controls && activeBuyer() && signedIn()) {
+        controls.innerHTML = '<button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
       }
-      $("productInquiryForm")?.addEventListener("submit", e => submitProductInquiry(e, selected));
-      $("productInquiryLogin")?.addEventListener("click", () => showSection("accountSection"));
+      $("productContactSeller")?.addEventListener("click", () => startProductChat(selected));
       return;
     }
     if (detailPanel) detailPanel.classList.add("hidden");
