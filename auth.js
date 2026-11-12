@@ -350,13 +350,17 @@
     const form = e.currentTarget;
     setBusy(form, true); say("");
     const f = new FormData(form);
+    const requestedSignupRole = String(f.get("role") || "buyer");
+    if (!["buyer","seller"].includes(requestedSignupRole)) {
+      return say("শুধু Buyer বা Seller অ্যাকাউন্ট তৈরি করা যাবে। Transport Provider-এর জন্য আলাদা আবেদন ব্যবস্থা থাকবে।");
+    }
     try {
       const { data, error } = await db.auth.signUp({
         email: String(f.get("email")).trim(),
         password: String(f.get("password")),
         options: { data: {
           full_name: String(f.get("full_name")).trim(),
-          role: String(f.get("role"))
+          role: requestedSignupRole
         } }
       });
       if (error) throw error;
@@ -477,6 +481,9 @@
       role: String(f.get("role") || "buyer"),
       full_name: String(f.get("full_name") || "NEXORA Test User").trim()
     };
+    if (!["buyer","seller"].includes(payload.role)) {
+      return say("Test Account-এর জন্য শুধু Buyer বা Seller Role ব্যবহার করা যাবে।");
+    }
     if (!/^nexora-test\+[^@]+@example\.com$/i.test(payload.email)) {
       return say("শুধু nexora-test+label@example.com ঠিকানা ব্যবহার করুন।");
     }
