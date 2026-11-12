@@ -16,7 +16,7 @@ where role = 'seller' and coalesce(cardinality(seller_categories), 0) = 0;
 
 alter table public.profiles drop constraint if exists profiles_market_categories_check;
 alter table public.profiles add constraint profiles_market_categories_check check (
-  (role = 'buyer' and buyer_category in ('wholesale','retail') and seller_categories = '{}'::text[])
+  (role = 'buyer' and buyer_category is not null and buyer_category in ('wholesale','retail') and seller_categories = '{}'::text[])
   or
   (role = 'seller' and buyer_category is null and cardinality(seller_categories) between 1 and 2
     and seller_categories <@ array['wholesale','retail']::text[])
@@ -108,7 +108,7 @@ begin
       raise exception 'Account role, status and Seller category entitlements cannot be changed by the account owner';
     end if;
     if old.role = 'buyer' then
-      if new.buyer_category not in ('wholesale','retail') then
+      if new.buyer_category is null or new.buyer_category not in ('wholesale','retail') then
         raise exception 'Invalid Buyer market category';
       end if;
     elsif new.buyer_category is distinct from old.buyer_category then
@@ -124,6 +124,8 @@ drop trigger if exists profiles_guard_market_categories on public.profiles;
 create trigger profiles_guard_market_categories
 before update on public.profiles
 for each row execute function private.guard_profile_market_categories();
+
+grant update (buyer_category) on public.profiles to authenticated;
 
 comment on column public.profiles.buyer_category is 'Active marketplace category for Buyer accounts: wholesale or retail.';
 comment on column public.profiles.seller_categories is 'Allowed marketplace categories for Seller accounts: wholesale, retail, or both.';
