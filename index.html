@@ -210,7 +210,7 @@ h2{font-size:24px}
 
 <header>
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <nav><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('nxSignupView')?.classList.add('hidden');document.getElementById('nxLoginView')?.classList.remove('hidden');const h=document.querySelector('#accountSection .section-head h2');if(h)h.textContent='Login';document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
+  <nav><button type="button" onclick="showSection('buyerDashboard')">Buyer Dashboard</button><button type="button" onclick="showSection('postDemand')">Post Demand</button><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('nxSignupView')?.classList.add('hidden');document.getElementById('nxLoginView')?.classList.remove('hidden');const h=document.querySelector('#accountSection .section-head h2');if(h)h.textContent='Login';document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
 </header>
 
 <main class="container">
@@ -373,6 +373,27 @@ h2{font-size:24px}
     </div>
   </section>
 
+  <!-- BUYER DASHBOARD -->
+  <section id="buyerDashboard" class="section hidden">
+    <div class="section-head">
+      <h2>Buyer Dashboard</h2>
+      <span class="tag">আপনার পাইকারি চাহিদা</span>
+    </div>
+    <div class="grid">
+      <div class="card"><p class="muted">মোট চাহিদা</p><h2 id="buyerDemandTotal">০</h2></div>
+      <div class="card"><p class="muted">চলমান চাহিদা</p><h2 id="buyerDemandOpen">০</h2></div>
+      <div class="card"><p class="muted">মোট Price Offer</p><h2 id="buyerOfferTotal">০</h2></div>
+    </div>
+    <div class="card">
+      <div class="section-head">
+        <h3>আমার Buyer Demands</h3>
+        <button class="primary" type="button" onclick="showSection('postDemand')">+ নতুন চাহিদা পোস্ট</button>
+      </div>
+      <p class="muted">এখানে শুধু আপনার নিজের জমা দেওয়া চাহিদা ও সেগুলোর Price Offer দেখা যাবে। অন্য Buyer-এর ব্যক্তিগত তথ্য দেখানো হবে না।</p>
+      <div id="buyerDemandList" aria-live="polite">আপনার চাহিদা লোড হচ্ছে…</div>
+    </div>
+  </section>
+
   <!-- POST DEMAND -->
   <section id="postDemand" class="section hidden">
     <div class="section-head">
@@ -417,8 +438,8 @@ h2{font-size:24px}
             <input name="quantity" required placeholder="যেমন: 5000 KG">
           </div>
           <div>
-            <label>বাজেট *</label>
-            <input name="budget" required placeholder="যেমন: 5000">
+            <label>বাজেট (ঐচ্ছিক)</label>
+            <input name="budget" type="number" min="0" step="0.01" placeholder="যেমন: 5000">
           </div>
           <div>
             <label>মুদ্রা *</label>
