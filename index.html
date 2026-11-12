@@ -597,6 +597,59 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-logistics-disclaimer{margin:16px 2px;color:#718096;font-size:12px}
 @media(max-width:850px){.nx-discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-discovery-card{min-height:190px}}
 @media(max-width:560px){.nx-discovery-section{padding:17px 12px;border-radius:16px}.nx-discovery-grid{gap:9px}.nx-discovery-card{min-height:170px;padding:13px;border-radius:13px}.nx-discovery-art{width:46px;height:46px;font-size:25px}.nx-discovery-copy strong{font-size:16px}.nx-discovery-copy em{font-size:12px}.nx-logistics-discovery-grid{grid-template-columns:1fr}.nx-logistics-discovery-card{padding:18px}}
+
+/* Product and service cards — image-led marketplace grid */
+.nx-product-card{padding:0!important;margin:0!important;overflow:hidden;border:1px solid #e5ebef!important;border-radius:16px!important;box-shadow:0 5px 20px rgba(18,42,60,.06)!important;transition:transform .2s,box-shadow .2s}
+.nx-product-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(18,42,60,.12)!important}
+.nx-product-card-media{position:relative;display:grid;place-items:center;height:205px;overflow:hidden;background:linear-gradient(145deg,#eef5f4,#e6edf3);text-decoration:none}
+.nx-product-card-media .product-image{height:100%;width:100%;object-fit:cover;border-radius:0;background:transparent;transition:transform .35s}
+.nx-product-card:hover .nx-product-card-media .product-image{transform:scale(1.035)}
+.nx-product-image-fallback{font-size:60px}
+.nx-product-market-badge{position:absolute;left:12px;top:12px;padding:6px 9px;border-radius:20px;background:#ffffffed;color:#176a63;font-size:9px;font-weight:900;letter-spacing:.7px;box-shadow:0 3px 10px #10243a12}
+.nx-product-card-body{padding:15px 16px 14px}
+.nx-product-card-body h3{margin:8px 0;font-size:17px;line-height:1.4}
+.nx-product-card-body h3 a,.nx-service-card h3 a{color:#17364a;text-decoration:none}
+.nx-product-card-body h3 a:hover,.nx-service-card h3 a:hover{color:#087f78}
+.nx-product-description{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px;margin:7px 0}
+.nx-product-origin{margin:8px 0;font-size:11px}
+.nx-product-card-footer,.nx-service-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid #edf1f4}
+.nx-product-card-footer .price{margin:0;font-size:17px}
+.nx-product-detail-link,.nx-service-card-footer a{color:#087f78;font-size:12px;font-weight:800;text-decoration:none}
+.nx-product-business{margin:9px 0 0;font-size:10px}
+.nx-demo-product-card .nx-product-card-body{padding-top:12px}
+.nx-empty-market{grid-column:1/-1}
+.nx-service-grid{grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:16px}
+.nx-service-card{padding:0!important;margin:0!important;overflow:hidden;border:1px solid #e4eaf0!important;border-radius:16px!important;box-shadow:0 5px 20px rgba(18,42,60,.055)!important;transition:transform .2s,box-shadow .2s}
+.nx-service-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(18,42,60,.12)!important}
+.nx-service-card-art{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:142px;background:linear-gradient(135deg,#e7f4ef,#dce9f4);text-decoration:none}
+.nx-service-card-art:before,.nx-service-card-art:after{content:"";position:absolute;border:1px solid #ffffffb5;border-radius:50%;width:150px;height:150px}
+.nx-service-card-art:after{width:110px;height:110px;border-style:dashed}
+.nx-service-card-art>span{z-index:1;display:grid;place-items:center;width:65px;height:65px;border-radius:20px;background:#ffffffc9;font-size:34px;box-shadow:0 7px 18px #17364a12}
+.nx-service-card-art small{z-index:1;font-size:9px;font-weight:900;letter-spacing:1.5px;color:#52717b}
+.nx-service-card-body{padding:15px}
+.nx-service-card-body h3{margin:8px 0;font-size:17px;line-height:1.4}
+.nx-service-card-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:58px;color:#627487;font-size:12px;line-height:1.6}
+.nx-service-card-footer{margin:12px 0 8px;font-size:12px}
+.nx-service-card-footer strong{color:#173f50}
+.nx-service-card-body>small{font-size:10px}
+.nx-service-detail-panel{padding:clamp(16px,3vw,30px);border:1px solid #e3eaf0;border-radius:18px;background:#fff;box-shadow:0 7px 24px #10243a0b}
+.nx-back-link{display:inline-flex;margin-bottom:18px;color:#087f78;font-size:13px;font-weight:800;text-decoration:none}
+.nx-service-detail-hero{display:flex;align-items:center;gap:18px;padding:22px;border-radius:15px;background:linear-gradient(120deg,#10243a,#17617a);color:#fff}
+.nx-service-detail-icon{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;border-radius:20px;background:#ffffff1c;font-size:38px}
+.nx-service-detail-kicker{display:block;margin:4px 0;color:#70ddc2;font-size:9px;font-weight:900;letter-spacing:1.5px}
+.nx-service-detail-hero h1{margin:4px 0;color:#fff;font-size:clamp(22px,4vw,32px)}
+.nx-service-detail-hero p{margin:4px 0;color:#d6e8ef;font-size:13px}
+.nx-service-detail-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr);gap:16px;margin-top:18px}
+.nx-service-detail-main,.nx-service-detail-aside{padding:18px;border:1px solid #e7edf1;border-radius:13px}
+.nx-service-detail-main h2,.nx-service-detail-main h3{margin:0 0 10px;color:#17364a}
+.nx-service-detail-main h3{margin-top:20px;font-size:15px}
+.nx-service-detail-main p{color:#5e7182;line-height:1.8;font-size:14px}
+.nx-service-detail-aside{background:#f7fafb}
+.nx-service-detail-aside strong{display:block;margin:6px 0 12px;color:#087f78;font-size:19px;line-height:1.5}
+.nx-service-detail-aside small{display:block;color:#718096;font-size:10px}
+.nx-service-detail-aside p{margin-top:18px;color:#687c8a;font-size:11px;line-height:1.7}
+@media(max-width:600px){.nx-product-card-media{height:155px}.nx-product-card-body{padding:12px}.nx-product-card-body h3,.nx-service-card-body h3{font-size:15px}.nx-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nx-service-card-art{min-height:112px}.nx-service-card-art>span{width:50px;height:50px;font-size:26px}.nx-service-card-body{padding:11px}.nx-service-card-description{font-size:11px;min-height:65px}.nx-service-detail-hero{align-items:flex-start;padding:16px;gap:12px}.nx-service-detail-icon{flex-basis:55px;width:55px;height:55px;font-size:28px}.nx-service-detail-grid{grid-template-columns:1fr}.nx-service-detail-main,.nx-service-detail-aside{padding:14px}}
+@media(max-width:360px){.nx-service-grid{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -1114,7 +1167,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div><span class="nx-market-eyebrow">NEXORA SERVICES</span><h2>সেবা মার্কেটপ্লেস</h2><p class="muted">আপনার এলাকার প্রয়োজনীয় সেবাদাতা খুঁজুন।</p></div>
       <span id="nxServiceCount" class="muted">সেবা</span>
     </div>
-    <div class="card">
+    <div class="card" id="nxServiceFilters">
       <div class="grid">
         <label>সেবা খুঁজুন<input id="nxServiceSearch" type="search" placeholder="যেমন: গৃহশিক্ষক, প্লাম্বার, মেকানিক"></label>
         <label>সেবার বিভাগ<select id="nxServiceCategoryFilter"><option value="">সব বিভাগ</option><option value="household">গৃহস্থালি সেবা</option><option value="tutoring">শিক্ষা ও টিউশন</option><option value="plumbing">প্লাম্বিং</option><option value="electrical">ইলেকট্রিক্যাল</option><option value="mechanic">মেকানিক ও মেরামত</option><option value="appliance_repair">ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত</option><option value="it_support">আইটি ও কম্পিউটার</option><option value="beauty_laundry">বিউটি ও লন্ড্রি</option><option value="other">অন্যান্য</option></select></label>
@@ -1122,7 +1175,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       </div>
       <p class="muted">সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা এখানে প্রকাশ করা হয় না।</p>
     </div>
-    <div id="nxServiceList" class="grid"><p class="muted">সেবা লোড হচ্ছে…</p></div>
+    <div id="nxServiceDetailPanel" class="nx-service-detail-panel hidden" aria-live="polite"></div>
+    <div id="nxServiceList" class="grid nx-service-grid"><p class="muted">সেবা লোড হচ্ছে…</p></div>
   </section>
 
   <!-- TRANSPORT & LOGISTICS DISCOVERY -->
