@@ -19,6 +19,7 @@
   let recoveryMode = false;
   let mfaVerified = false;
   let mfaFactors = [];
+  let mfaUnverifiedFactors = [];
   let mfaPendingFactor = null;
   let mfaChallengeId = null;
   let mfaChallengeFactorId = null;
@@ -97,6 +98,7 @@
     if (factors.error) throw factors.error;
     mfaAssurance = assurance.data || null;
     mfaFactors = (factors.data?.totp || []).filter(x => x.status === "verified");
+    mfaUnverifiedFactors = (factors.data?.totp || []).filter(x => x.status === "unverified");
     mfaVerified = mfaAssurance?.currentLevel === "aal2";
   }
   function renderMfaPanel() {
@@ -125,6 +127,8 @@
       panel.insertAdjacentHTML("beforeend", '<label>Authenticator-এর ৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyEnroll" type="button">MFA সক্রিয় করুন</button>');
     } else if (mfaChallengeId) {
       panel.insertAdjacentHTML("beforeend", '<p>Authenticator App থেকে বর্তমান ৬ সংখ্যার কোড লিখুন।</p><label>৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyLogin" type="button">কোড যাচাই করুন</button>');
+    } else if (!hasFactor && mfaUnverifiedFactors.length) {
+      panel.insertAdjacentHTML("beforeend", '<p>আগের MFA setup অসম্পূর্ণ। Authenticator App-এ QR স্ক্যান করা থাকলে কোড যাচাই করে সেটআপ শেষ করুন।</p><button class="primary" id="nxMfaResumeEnroll" type="button">MFA Setup চালিয়ে যান</button>');
     } else if (hasFactor && mfaVerified && !isAdminRole) {
       panel.insertAdjacentHTML("beforeend", '<p role="status">MFA সক্রিয় আছে। আপনার অ্যাকাউন্টে Authenticator App যুক্ত রয়েছে।</p><button class="light" id="nxMfaDisable" type="button">MFA বন্ধ করুন</button>');
     } else if (hasFactor) {
@@ -137,7 +141,7 @@
     panel.appendChild(error);
   }
   document.addEventListener("click", async e => {
-    const button = e.target.closest("#nxMfaEnroll,#nxMfaVerifyEnroll,#nxMfaStartChallenge,#nxMfaVerifyLogin,#nxMfaDisable");
+    const button = e.target.closest("#nxMfaEnroll,#nxMfaVerifyEnroll,#nxMfaStartChallenge,#nxMfaVerifyLogin,#nxMfaDisable,#nxMfaResumeEnroll");
     if (!button) return;
     button.disabled = true;
     const showError = err => { const n=document.getElementById("nxMfaError"); if(n) n.textContent="MFA কাজ সম্পন্ন হয়নি: "+(err.message||String(err)); };
@@ -153,8 +157,9 @@
         const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"NEXORA Authenticator"});
         if(error) throw error;
         mfaPendingFactor=data; mfaChallengeId=null; renderMfaPanel();
-      } else if (button.id === "nxMfaStartChallenge") {
-        const factorId=mfaFactors[0]?.id; if(!factorId) throw new Error("Verified Authenticator পাওয়া যায়নি।");
+      } else if (button.id === "nxMfaStartChallenge" || button.id === "nxMfaResumeEnroll") {
+        const factorId=button.id === "nxMfaResumeEnroll" ? mfaUnverifiedFactors[0]?.id : mfaFactors[0]?.id;
+        if(!factorId) throw new Error("Authenticator পাওয়া যায়নি।");
         const {data,error}=await db.auth.mfa.challenge({factorId}); if(error) throw error;
         mfaChallengeFactorId=factorId; mfaChallengeId=data.id; renderMfaPanel();
       } else {
