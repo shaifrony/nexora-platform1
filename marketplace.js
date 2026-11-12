@@ -893,7 +893,7 @@
         .eq("seller_id",user().id).order("created_at",{ascending:false});
       if(error)throw error;
       if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
-      host.innerHTML=data.map(s=>'<article class="card"><div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button>':'')+'</article>').join("");
+      host.innerHTML=data.map(s=>'<article class="card">'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button>':'')+'</article>').join("");
       host.querySelectorAll("[data-delete-service]").forEach(b=>b.addEventListener("click",()=>deleteService(b.dataset.deleteService)));
     }catch(err){host.innerHTML='<p class="muted">সেবা তালিকা লোড হয়নি: '+esc(err.message)+'</p>';}
   }
@@ -914,10 +914,10 @@
     host.innerHTML='<p class="muted">সেবা আবেদন লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("service_listings")
-        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,seller_id")
+        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,seller_id,image_urls")
         .in("listing_status",["pending","approved"]).order("created_at",{ascending:true}).limit(100);
       if(error)throw error;
-      host.innerHTML=(data||[]).map(s=>'<article class="card"><div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(s.listing_status)+'</span></div><p>'+esc(s.description)+'</p><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc([s.city,s.country].join(", "))+'</p><p class="muted">'+esc(servicePriceLabels[s.price_basis]||s.price_basis)+' '+(s.price_amount!==null?esc(s.price_amount)+" "+esc(s.currency):"")+'</p>'+(s.listing_status==="pending"?'<div class="grid"><button class="primary" type="button" data-service-review="approve" data-service-id="'+esc(s.id)+'">Approve</button><button class="danger" type="button" data-service-review="reject" data-service-id="'+esc(s.id)+'">Reject</button></div>':'')+'</article>').join("")||'<p class="muted">কোনো Pending সেবা নেই।</p>';
+      host.innerHTML=(data||[]).map(s=>'<article class="card">'+(s.image_urls?.length?'<div class="nx-upload-preview">'+s.image_urls.map(url=>'<img src="'+esc(url)+'" alt="'+esc(s.service_name)+'" loading="lazy">').join('')+'</div>':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(s.listing_status)+'</span></div><p>'+esc(s.description)+'</p><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc([s.city,s.country].join(", "))+'</p><p class="muted">'+esc(servicePriceLabels[s.price_basis]||s.price_basis)+' '+(s.price_amount!==null?esc(s.price_amount)+" "+esc(s.currency):"")+'</p>'+(s.listing_status==="pending"?'<div class="grid"><button class="primary" type="button" data-service-review="approve" data-service-id="'+esc(s.id)+'">Approve</button><button class="danger" type="button" data-service-review="reject" data-service-id="'+esc(s.id)+'">Reject</button></div>':'')+'</article>').join("")||'<p class="muted">কোনো Pending সেবা নেই।</p>';
       host.querySelectorAll("[data-service-review]").forEach(b=>b.addEventListener("click",()=>reviewService(b.dataset.serviceId,b.dataset.serviceReview)));
     }catch(err){host.textContent="সেবা পর্যালোচনা লোড হয়নি: "+err.message;}
   }
@@ -979,7 +979,7 @@
       await loadBusinessProfile();
       await loadSellerServices();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status")
+        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -999,6 +999,7 @@
       productHost.innerHTML = products.length ? products.map(p => `
         <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
           <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
+          ${p.image_urls?.[0]?'<img class="product-image" src="'+esc(p.image_urls[0])+'" alt="'+esc(p.product_name)+'" loading="lazy">':''}
           <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
