@@ -323,12 +323,30 @@
     const businessMap = state.businessMap;
     const host = $("productList");
     if (!host) return;
-    const search = ($("productSearch")?.value || "").toLowerCase();
+    const search = ($("productSearch")?.value || "").trim().toLowerCase();
     const category = $("categoryFilter")?.value || "";
-    const rows = state.products.filter(p =>
-      (p.product_name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
-      (!category || p.category === category)
-    );
+    const minRaw = $("priceMin")?.value || "";
+    const maxRaw = $("priceMax")?.value || "";
+    const currency = $("priceCurrency")?.value || "";
+    const quality = ($("qualityFilter")?.value || "").trim().toLowerCase();
+    const origin = ($("originFilter")?.value || "").trim().toLowerCase();
+    const spec = ($("specFilter")?.value || "").trim().toLowerCase();
+    const min = minRaw === "" ? null : Number(minRaw);
+    const max = maxRaw === "" ? null : Number(maxRaw);
+    const rows = state.products.filter(p => {
+      const searchable = [p.product_name,p.description,p.origin,p.specifications_quality].join(" ").toLowerCase();
+      const productPrice = Number(p.price);
+      const productCurrency = String(p.currency || "").toUpperCase();
+      const matchesPrice = (min === null || (Number.isFinite(productPrice) && productPrice >= min)) &&
+        (max === null || (Number.isFinite(productPrice) && productPrice <= max)) &&
+        (!currency || productCurrency === currency);
+      return searchable.includes(search) &&
+        (!category || p.category === category) &&
+        matchesPrice &&
+        (!quality || String(p.specifications_quality || "").toLowerCase().includes(quality)) &&
+        (!origin || String(p.origin || "").toLowerCase().includes(origin)) &&
+        (!spec || String(p.specifications_quality || "").toLowerCase().includes(spec));
+    });
     if ($("productCount")) $("productCount").textContent = rows.length + " Products";
 
     // Clearly labelled visual samples appear only until real approved listings exist.
@@ -604,8 +622,16 @@
     finally { setBusy(form, false); }
   });
 
-  $("productSearch")?.addEventListener("input", () => renderProducts());
-  $("categoryFilter")?.addEventListener("change", () => renderProducts());
+  ["productSearch","categoryFilter","priceMin","priceMax","priceCurrency","qualityFilter","originFilter","specFilter"].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => renderProducts());
+  });
+  $("resetProductFilters")?.addEventListener("click", () => {
+    ["productSearch","priceMin","priceMax","qualityFilter","originFilter","specFilter"].forEach(id => { if ($(id)) $(id).value = ""; });
+    ["categoryFilter","priceCurrency"].forEach(id => { if ($(id)) $(id).value = ""; });
+    renderProducts();
+  });
   $("nxAdmin")?.addEventListener("click", handleAssistantModeration);
   window.addEventListener("nexora:auth-change", async () => {
     state.business = null;
