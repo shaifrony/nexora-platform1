@@ -561,6 +561,42 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-porter-history-item p{margin:4px 0 0;font-size:12px;color:#718096;line-height:1.5}
 .nx-porter-history-item time{font-size:11px;color:#718096;white-space:nowrap}
 @media(max-width:520px){.nx-porter-history-item{display:block}.nx-porter-history-item time{display:block;margin-top:6px}}
+
+/* NEXORA unified marketplace discovery design */
+.nx-discovery-section{margin:0 0 34px;padding:24px;background:#fff;border:1px solid #e7edf1;border-radius:20px;box-shadow:0 8px 26px rgba(23,43,61,.055)}
+.nx-discovery-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.nx-discovery-heading h2{margin:0;color:#172b3d;font-size:clamp(22px,3vw,28px);letter-spacing:-.5px}
+.nx-discovery-heading p{margin:6px 0 0;color:#718096;font-size:13px}
+.nx-discovery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.nx-discovery-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-width:0;min-height:220px;overflow:hidden;padding:17px;text-align:left;border:1px solid transparent;border-radius:16px;color:#17364a;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+.nx-discovery-card:after{content:"";position:absolute;z-index:-1;width:150px;height:150px;right:-48px;top:-48px;border:1px solid #ffffff9c;border-radius:50%;box-shadow:0 0 0 18px #ffffff24,0 0 0 38px #ffffff18}
+.nx-discovery-card:hover{transform:translateY(-4px);box-shadow:0 14px 26px rgba(18,47,64,.12);border-color:#b9d8d2}
+.nx-discovery-wholesale{background:linear-gradient(145deg,#e9f4f1,#d7eae4)}
+.nx-discovery-retail{background:linear-gradient(145deg,#fff1e8,#fbe2d3)}
+.nx-discovery-services{background:linear-gradient(145deg,#edf0ff,#dfe5ff)}
+.nx-discovery-logistics{background:linear-gradient(145deg,#e8f2fb,#d7e8f7)}
+.nx-discovery-art{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#ffffffb8;font-size:31px;box-shadow:0 7px 17px #17364a12}
+.nx-discovery-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.nx-discovery-copy small{font-size:9px;letter-spacing:1.1px;font-weight:900;color:#5e7884}
+.nx-discovery-copy strong{font-size:clamp(16px,1.8vw,21px);line-height:1.2;color:#153449}
+.nx-discovery-copy em{font-size:13px;font-style:normal;color:#506779}
+.nx-discovery-copy>span{margin-top:7px;font-size:11px;font-weight:800;color:#087f78}
+.nx-discovery-note{margin:15px 2px 0;color:#718096;font-size:11px}
+.nx-logistics-market{max-width:1100px;margin:0 auto}
+.nx-logistics-page-hero{padding:clamp(24px,5vw,46px);margin:8px 0 22px;border-radius:20px;background:linear-gradient(120deg,#10243a,#17617a);color:#fff}
+.nx-logistics-page-hero h1{margin:0 0 12px;font-size:clamp(27px,4vw,42px);color:#fff}
+.nx-logistics-page-hero h1 em{font-style:normal;color:#80e2ca}
+.nx-logistics-page-hero p{max-width:700px;margin:0;color:#d7e8ef;line-height:1.8}
+.nx-logistics-discovery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.nx-logistics-discovery-card{padding:24px;border:1px solid #e1e9ef;border-radius:17px;background:#fff;box-shadow:0 7px 22px #10243a09}
+.nx-logistics-discovery-card h2{margin:12px 0 8px;font-size:21px;color:#17364a}
+.nx-logistics-discovery-card p,.nx-logistics-discovery-card li{font-size:13px;line-height:1.7;color:#607386}
+.nx-logistics-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#eef6f8;font-size:30px;margin-bottom:15px}
+.nx-logistics-bulk .nx-logistics-icon{background:#e7f2fb}.nx-logistics-local .nx-logistics-icon{background:#fff0e7}
+.nx-logistics-status{display:inline-flex;margin-top:10px;padding:7px 10px;border-radius:20px;background:#f1f4f7;color:#607386;font-size:11px;font-weight:800}
+.nx-logistics-disclaimer{margin:16px 2px;color:#718096;font-size:12px}
+@media(max-width:850px){.nx-discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-discovery-card{min-height:190px}}
+@media(max-width:560px){.nx-discovery-section{padding:17px 12px;border-radius:16px}.nx-discovery-grid{gap:9px}.nx-discovery-card{min-height:170px;padding:13px;border-radius:13px}.nx-discovery-art{width:46px;height:46px;font-size:25px}.nx-discovery-copy strong{font-size:16px}.nx-discovery-copy em{font-size:12px}.nx-logistics-discovery-grid{grid-template-columns:1fr}.nx-logistics-discovery-card{padding:18px}}
 </style>
 </head>
 
@@ -586,22 +622,42 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <h2>Marketplace</h2>
       <span id="productCount" class="muted">Products</span>
     </div>
-    <section class="nx-market-hero" aria-label="Wholesale sourcing">
+    <section class="nx-market-hero" aria-label="NEXORA marketplace">
       <div class="nx-market-hero-copy">
-        <span class="nx-market-eyebrow">NEXORA WHOLESALE MARKETPLACE</span>
-        <h1>বিশ্বস্ত উৎস থেকে<br><em>পাইকারি পণ্য সংগ্রহ</em></h1>
-        <p>ব্যবসার জন্য পাইকারি পণ্য খুঁজুন, পণ্যের তথ্য ও দাম তুলনা করুন এবং সরবরাহকারীর সঙ্গে যোগাযোগ করুন।</p>
+        <span class="nx-market-eyebrow">NEXORA • ONE PLATFORM, MANY POSSIBILITIES</span>
+        <h1>পণ্য, সেবা ও ব্যবসার সমাধান<br><em>এক জায়গায়, সহজে</em></h1>
+        <p>পাইকারি ও খুচরা পণ্য খুঁজুন, প্রয়োজনীয় সেবা নিন এবং ব্যবসার পরিবহন ও লজিস্টিকস সমাধানের সঙ্গে যুক্ত হোন।</p>
         <div class="nx-market-hero-actions">
           <button type="button" class="nx-hero-primary" onclick="document.getElementById('productSearch')?.focus();document.getElementById('productSearch')?.scrollIntoView({behavior:'smooth',block:'center'})">পণ্য খুঁজুন <span aria-hidden="true">→</span></button>
           <button type="button" class="nx-hero-secondary" onclick="document.getElementById('publicDemandBoard')?.scrollIntoView({behavior:'smooth',block:'center'})">ক্রেতার চাহিদা দেখুন</button>
         </div>
-        <div class="nx-market-benefits"><span>● পাইকারি বাজার</span><span>● অনুমোদিত পণ্য</span><span>● Buyer privacy</span></div>
+        <div class="nx-market-benefits"><span>● Wholesale & Retail</span><span>● Services</span><span>● Transport & Logistics</span></div>
       </div>
       <div class="nx-market-hero-art" aria-hidden="true">
         <div class="nx-orbit nx-orbit-one"></div><div class="nx-orbit nx-orbit-two"></div>
         <div class="nx-hero-box nx-box-back">N</div><div class="nx-hero-box nx-box-front">NEXORA<span>GLOBAL TRADE</span></div>
-        <div class="nx-float-chip nx-chip-top">WHOLESALE</div><div class="nx-float-chip nx-chip-bottom">B2B SOURCING</div>
+        <div class="nx-float-chip nx-chip-top">WHOLESALE • RETAIL</div><div class="nx-float-chip nx-chip-bottom">SERVICES • LOGISTICS</div>
       </div>
+    </section>
+    <section class="nx-discovery-section" aria-label="Explore NEXORA">
+      <div class="nx-discovery-heading">
+        <div><span class="nx-market-eyebrow">EXPLORE NEXORA</span><h2>আপনি কী খুঁজছেন?</h2><p>আপনার প্রয়োজন অনুযায়ী একটি বিভাগ বেছে নিন।</p></div>
+      </div>
+      <div class="nx-discovery-grid">
+        <button type="button" class="nx-discovery-card nx-discovery-wholesale" onclick="showSection('market')">
+          <span class="nx-discovery-art" aria-hidden="true">📦</span><span class="nx-discovery-copy"><small>BUSINESS BUYING</small><strong>Wholesale</strong><em>পাইকারি পণ্য</em><span>বাল্কে পণ্য সংগ্রহ করুন →</span></span>
+        </button>
+        <button type="button" class="nx-discovery-card nx-discovery-retail" onclick="showSection('market')">
+          <span class="nx-discovery-art" aria-hidden="true">🛍️</span><span class="nx-discovery-copy"><small>EVERYDAY SHOPPING</small><strong>Retail</strong><em>খুচরা পণ্য</em><span>প্রয়োজনীয় পণ্য খুঁজুন →</span></span>
+        </button>
+        <button type="button" class="nx-discovery-card nx-discovery-services" onclick="showSection('servicesMarketplace')">
+          <span class="nx-discovery-art" aria-hidden="true">🧰</span><span class="nx-discovery-copy"><small>FIND PROFESSIONALS</small><strong>Services</strong><em>বিভিন্ন সেবা</em><span>দক্ষ সেবাদাতা খুঁজুন →</span></span>
+        </button>
+        <button type="button" class="nx-discovery-card nx-discovery-logistics" onclick="showSection('transportLogistics')">
+          <span class="nx-discovery-art" aria-hidden="true">🚚</span><span class="nx-discovery-copy"><small>MOVE WITH CONFIDENCE</small><strong>Transport & Logistics</strong><em>পরিবহন ও ডেলিভারি</em><span>লজিস্টিকস সমাধান দেখুন →</span></span>
+        </button>
+      </div>
+      <p class="nx-discovery-note">Buyer অ্যাকাউন্ট থেকে Dashboard-এ Wholesale ও Retail ক্যাটাগরি পরিবর্তন করা যাবে।</p>
     </section>
     <section class="nx-category-section" aria-label="পণ্যের বিভাগ">
       <div class="nx-category-heading"><div><span class="nx-market-eyebrow">DISCOVER BY CATEGORY</span><h3>জনপ্রিয় পণ্য বিভাগ</h3></div><span class="muted">আপনার প্রয়োজনীয় পণ্য খুঁজুন</span></div>
@@ -614,7 +670,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <button type="button" data-nx-category="Other"><span>📦</span><b>Other Products</b><small>অন্যান্য পণ্য</small></button>
       </div>
     </section>
-    <div class="nx-market-section-title"><div><span class="nx-market-eyebrow">EXPLORE SUPPLIERS</span><h2>পাইকারি পণ্য আবিষ্কার করুন</h2></div><span class="muted">পণ্য বাছাই ও অনুসন্ধান করুন</span></div>
+    <div class="nx-market-section-title"><div><span class="nx-market-eyebrow">EXPLORE SUPPLIERS</span><h2>পণ্য আবিষ্কার করুন</h2></div><span class="muted">পণ্য বাছাই ও অনুসন্ধান করুন</span></div>
     <div id="productDetailPanel" class="card hidden" aria-live="polite"></div>
     <div class="nx-search-panel">
       <div class="nx-search-toolbar">
@@ -643,7 +699,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 
     <div id="publicDemandBoard" class="section nx-public-demands">
       <div class="section-head">
-        <div><h2>Buyer Demands</h2><p class="muted">প্রকাশ্য পাইকারি চাহিদা</p></div>
+        <div><h2>Buyer Demands</h2><p class="muted">ক্রেতাদের প্রকাশ্য পণ্যের চাহিদা</p></div>
         <span class="tag">Public</span>
       </div>
       <div id="demandList" class="nx-demand-grid" aria-live="polite">প্রকাশ্য চাহিদা লোড হচ্ছে…</div>
@@ -1066,6 +1122,32 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <p class="muted">সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা এখানে প্রকাশ করা হয় না।</p>
     </div>
     <div id="nxServiceList" class="grid"><p class="muted">সেবা লোড হচ্ছে…</p></div>
+  </section>
+
+  <!-- TRANSPORT & LOGISTICS DISCOVERY -->
+  <section id="transportLogistics" class="section hidden nx-logistics-market">
+    <div class="nx-logistics-page-hero">
+      <span class="nx-market-eyebrow">NEXORA TRANSPORT & LOGISTICS</span>
+      <h1>পণ্য পৌঁছে দিন <em>সঠিক গন্তব্যে</em></h1>
+      <p>বড় চালানের পরিবহন থেকে স্থানীয় ডেলিভারি—দুই ধরনের লজিস্টিকস সেবার জন্য NEXORA-এর কাঠামো তৈরি হচ্ছে।</p>
+    </div>
+    <div class="nx-logistics-discovery-grid">
+      <article class="nx-logistics-discovery-card nx-logistics-bulk">
+        <span class="nx-logistics-icon">🚢</span><span class="nx-market-eyebrow">WHOLESALE LOGISTICS</span>
+        <h2>পাইকারি পরিবহন ও আন্তর্জাতিক শিপিং</h2>
+        <p>কুরিয়ার কোম্পানি, কার্গো, ফ্রেইট ফরওয়ার্ডার, শিপিং কোম্পানি, ট্রাক ও কনটেইনার পরিবহন।</p>
+        <ul><li>দেশীয় ও আন্তর্জাতিক চালান</li><li>বাল্ক কার্গো ও ফ্রেইট</li><li>এয়ার, সি ও ল্যান্ড ট্রান্সপোর্ট</li></ul>
+        <span class="nx-logistics-status">পরবর্তী ধাপে সেবাদাতা তালিকা চালু হবে</span>
+      </article>
+      <article class="nx-logistics-discovery-card nx-logistics-local">
+        <span class="nx-logistics-icon">🛵</span><span class="nx-market-eyebrow">RETAIL DELIVERY</span>
+        <h2>স্থানীয় কুরিয়ার ও ডেলিভারি</h2>
+        <p>একই শহরের মধ্যে পণ্য সংগ্রহ, দ্রুত ডেলিভারি এবং ব্যক্তিগত ডেলিভারি পার্টনার।</p>
+        <ul><li>লোকাল কুরিয়ার সার্ভিস</li><li>মোটরবাইক ও সাইকেল ডেলিভারি</li><li>Pickup ও doorstep delivery</li></ul>
+        <span class="nx-logistics-status">পরবর্তী ধাপে সেবাদাতা তালিকা চালু হবে</span>
+      </article>
+    </div>
+    <p class="nx-logistics-disclaimer">এটি বিভাগ পরিচিতি পৃষ্ঠা। এখানে এখনো বাস্তব বুকিং, মূল্য বা Provider availability চালু হয়নি।</p>
   </section>
 
   <!-- SELLER DASHBOARD -->
