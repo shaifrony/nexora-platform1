@@ -379,6 +379,15 @@ body.nx-demand-only-active #postDemand{display:block!important}
 .nx-page-back-button span{font-size:18px;line-height:1}
 body.nx-demand-only-active .nx-page-back-row{margin:0 0 12px}
 @media(max-width:600px){.nx-page-back-row{margin-bottom:10px}.nx-page-back-button{padding:8px 12px}}
+
+/* Buyer account menu: single three-dot entry, all account actions inside */
+.nx-buyer-shell-actions{display:flex;align-items:center;justify-content:flex-end}
+.nx-account-menu-trigger{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #dce5ec;color:#172b3d;font-size:27px;line-height:1;font-weight:800;box-shadow:0 3px 12px rgba(16,36,58,.08)}
+.nx-account-menu-trigger:hover,.nx-account-menu-trigger[aria-expanded="true"]{background:#edf8f5;border-color:#83cdbb;color:#087f78}
+.nx-profile-dropdown{width:248px;padding:8px;border-radius:14px}
+.nx-profile-dropdown>button{min-height:42px;padding:11px 12px;font-size:14px}
+.nx-profile-dropdown .nx-profile-logout{margin-top:6px;padding-top:12px}
+@media(max-width:600px){.nx-account-menu-trigger{width:42px;height:42px;min-width:42px}}
 </style>
 </head>
 
@@ -625,22 +634,16 @@ body.nx-demand-only-active .nx-page-back-row{margin:0 0 12px}
     <div class="nx-buyer-shellbar">
       <div class="nx-buyer-brand"><span class="nx-buyer-brandmark">N</span><span>NEXORA <small>BUYER CENTER</small></span></div>
       <div class="nx-buyer-shell-actions">
-        <button type="button" class="nx-buyer-icon-action" onclick="showSection('privateChat')" aria-label="Messages">✉ <span>Messages</span></button>
         <div id="nxBuyerProfileMenu" class="nx-profile-wrap">
-          <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
-            <span id="nxBuyerAvatar" class="nx-avatar">B</span><span class="nx-profile-label"><strong id="nxBuyerHeaderName">Buyer</strong><small>Buyer Account</small></span><span aria-hidden="true">⌄</span>
+          <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle nx-account-menu-trigger" aria-label="Buyer account menu" title="Account menu" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
+            <span aria-hidden="true">⋮</span>
           </button>
-          <div id="nxBuyerProfileDropdown" class="nx-profile-dropdown hidden">
+          <div id="nxBuyerProfileDropdown" class="nx-profile-dropdown hidden" role="menu" aria-label="Buyer account menu">
             <div class="nx-profile-summary"><span id="nxBuyerMenuAvatar" class="nx-avatar nx-avatar-large">B</span><span><strong id="nxBuyerMenuName">Buyer</strong><small>Buyer Account</small></span></div>
-            <button type="button" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Profile & Account</button>
-            <button type="button" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'});toggleBuyerProfileMenu(false)">My Demands</button>
-            <button type="button" onclick="showSection('privateChat');toggleBuyerProfileMenu(false)">Messages & Inquiries</button>
-            <button type="button" onclick="showBuyerComingSoon('Payment Methods')">Payment Methods</button>
-            <button type="button" onclick="showBuyerComingSoon('My Orders')">My Orders</button>
-            <button type="button" onclick="showBuyerComingSoon('Saved Products')">Saved Products</button>
-            <button type="button" onclick="showBuyerComingSoon('Notifications')">Notifications</button>
-            <button type="button" onclick="showBuyerComingSoon('Security')">Security</button>
-            <button type="button" class="nx-profile-logout" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
+            <button type="button" role="menuitem" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Profile</button>
+            <button type="button" role="menuitem" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'});toggleBuyerProfileMenu(false)">My Demands</button>
+            <button type="button" role="menuitem" onclick="showSection('privateChat');toggleBuyerProfileMenu(false)">Messages</button>
+            <button type="button" role="menuitem" class="nx-profile-logout" onclick="toggleBuyerProfileMenu(false);document.getElementById('nxLogout')?.click()">Logout</button>
           </div>
         </div>
       </div>
@@ -654,9 +657,6 @@ body.nx-demand-only-active .nx-page-back-row{margin:0 0 12px}
         <button type="button" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'})">▤ <span>My Demands</span></button>
         <button type="button" onclick="showSection('postDemand')">＋ <span>Post a Demand</span></button>
         <button type="button" onclick="showSection('privateChat')">✉ <span>Messages</span></button>
-        <div class="nx-buyer-side-divider"></div>
-        <div class="nx-buyer-side-label">ACCOUNT</div>
-        <button type="button" onclick="showSection('accountSection')">⚙ <span>Account Settings</span></button>
         <div class="nx-buyer-help"><strong>Need sourcing help?</strong><p>পণ্য খুঁজতে বা Seller-এর সঙ্গে যোগাযোগ করতে Marketplace ব্যবহার করুন।</p><button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})">Explore products</button></div>
       </aside>
 
