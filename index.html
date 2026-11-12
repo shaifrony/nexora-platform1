@@ -153,6 +153,16 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   nav button{padding:9px 10px;font-size:12px}
 }
 
+
+/* NEXORA LOGIN / REGISTRATION LAYOUT */
+.nx-auth-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:stretch}
+.nx-auth-panel{margin:0;min-width:0}
+.nx-auth-panel h3{margin:0 0 12px;color:var(--navy)}
+.nx-signup-entry{display:flex;flex-direction:column;justify-content:center;align-items:flex-start;min-height:300px;background:linear-gradient(145deg,#f7fbff,#edf7f4)}
+.nx-signup-open{min-width:150px;margin-top:12px}
+.nx-signup-form{max-width:680px;margin:0 auto}
+@media(max-width:650px){.nx-auth-layout{grid-template-columns:1fr}.nx-signup-entry{min-height:180px}}
+
 /* NEXORA MARKETPLACE HOMEPAGE REDESIGN */
 :root{--orange:#f26b38;--teal:#087f78;--ink:#172b3d}
 body{background:#f4f6f8;color:#263746}
@@ -204,7 +214,7 @@ h2{font-size:24px}
 
   <!-- ACCOUNT / AUTHENTICATION -->
   <section id="accountSection" class="section hidden">
-    <div class="section-head"><h2>Login / Register</h2></div>
+    <div class="section-head"><h2>Login</h2></div>
     <div class="card">
       <p id="nxCurrent" class="muted" aria-live="polite">আপনি লগইন করেননি।</p>
       <p id="nxMessage" class="muted" role="status" aria-live="polite"></p>
@@ -221,20 +231,36 @@ h2{font-size:24px}
         </form>
         <button id="nxLogout" class="danger" type="button">Logout</button>
       </div>
-      <div class="grid">
-        <form id="nxLogin" class="card">
-          <h3>Login</h3>
-          <label>Email *</label><input name="email" type="email" autocomplete="email" required>
-          <label>Password *</label><input name="password" type="password" autocomplete="current-password" required>
-          <div class="form-actions"><button class="primary" type="submit">Login</button></div>
-          <div class="nx-social-divider">অথবা</div>
-          <div class="nx-social-buttons">
-            <button class="nx-google" type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
-            <button class="nx-yahoo" type="button" data-oauth-provider="custom:yahoo">Continue with Yahoo</button>
-          </div>
-        </form>
-        <form id="nxSignup" class="card">
-          <h3>Register</h3>
+
+      <!-- Initial account view: Login on the left, Sign Up button only on the right -->
+      <div id="nxLoginView" class="nx-auth-layout">
+        <div id="nxLoginPanel" class="card nx-auth-panel">
+          <form id="nxLogin">
+            <h3>Login</h3>
+            <label>Email *</label><input name="email" type="email" autocomplete="email" required>
+            <label>Password *</label><input name="password" type="password" autocomplete="current-password" required>
+            <div class="form-actions"><button class="primary" type="submit">Login</button></div>
+            <div class="nx-social-divider">অথবা</div>
+            <div class="nx-social-buttons">
+              <button class="nx-google" type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
+              <button class="nx-yahoo" type="button" data-oauth-provider="custom:yahoo">Continue with Yahoo</button>
+            </div>
+          </form>
+        </div>
+        <div id="nxSignupEntry" class="card nx-auth-panel nx-signup-entry">
+          <h3>নতুন ব্যবহারকারী?</h3>
+          <p class="muted">NEXORA-তে নতুন অ্যাকাউন্ট তৈরি করতে Sign Up বাটনে চাপ দিন।</p>
+          <button class="primary nx-signup-open" type="button" onclick="document.getElementById('nxLoginView').classList.add('hidden');document.getElementById('nxSignupView').classList.remove('hidden');document.querySelector('#accountSection .section-head h2').textContent='Create Account'">Sign Up</button>
+        </div>
+      </div>
+
+      <!-- Registration opens as a separate view; its fields are not shown on the Login view -->
+      <div id="nxSignupView" class="hidden">
+        <div class="section-head">
+          <h3>Create Your NEXORA Account</h3>
+          <button class="light" type="button" onclick="document.getElementById('nxSignupView').classList.add('hidden');document.getElementById('nxLoginView').classList.remove('hidden');document.querySelector('#accountSection .section-head h2').textContent='Login'">Back to Login</button>
+        </div>
+        <form id="nxSignup" class="card nx-signup-form">
           <label>আপনার নাম *</label><input name="full_name" required autocomplete="name">
           <label>Email *</label><input name="email" type="email" required autocomplete="email">
           <label>Password *</label><input name="password" type="password" minlength="8" required autocomplete="new-password">
@@ -244,7 +270,7 @@ h2{font-size:24px}
             <option value="seller">Seller</option>
             <option value="porter">Porter</option>
           </select>
-          <div class="form-actions"><button class="primary" type="submit">Register</button></div>
+          <div class="form-actions"><button class="primary" type="submit">Create Account</button></div>
           <div class="nx-social-divider">অথবা</div>
           <div class="nx-social-buttons">
             <button class="nx-google" type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
