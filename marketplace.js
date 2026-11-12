@@ -515,34 +515,33 @@
         (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
         (!category || p.category === category)
       );
-      host.innerHTML = demos.length ? demos.map(p => `<article class="card">
-        <img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">
-        <span class="tag">DEMO • নমুনা বিজ্ঞাপন</span>
-        <span class="tag">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")}</span>
-        <span class="tag">${esc(p.category)}</span>
-        <h3>${esc(p.name)}</h3>
-        <p class="muted">${esc(p.description)}</p>
-        <p class="muted">Origin: ${esc(p.origin)}</p>
-        <p class="price">দাম জানতে যোগাযোগ করুন</p>
+      host.innerHTML = demos.length ? demos.map(p => `<article class="card product-card nx-product-card nx-demo-product-card">
+        <div class="nx-product-card-media nx-demo-media"><img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'"><span class="nx-product-market-badge">${esc(p.market_category === "retail" ? "RETAIL" : "WHOLESALE")}</span></div>
+        <div class="nx-product-card-body"><span class="tag">DEMO • নমুনা বিজ্ঞাপন</span><span class="tag">${esc(p.category)}</span>
+        <h3>${esc(p.name)}</h3><p class="muted nx-product-description">${esc(p.description)}</p>
+        <p class="muted nx-product-origin">📍 ${esc(p.origin)}</p><p class="price">দাম জানতে যোগাযোগ করুন</p></div>
       </article>`).join("") : '<div class="card">কোনো নমুনা পণ্য মেলেনি।</div>';
       return;
     }
 
     host.innerHTML = rows.length ? rows.map(p => {
       const b = businessMap.get(p.business_id);
-      const image = (p.image_urls || [])[0];
-      return `<article class="card">
-        ${image ? `<img class="product-image" src="${esc(image)}" alt="Product image" onerror="this.style.display='none'">` : ""}
-        <span class="tag">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")}</span><span class="tag">${esc(p.category)}</span>
-        <h3><a href="?product=${esc(encodeURIComponent(p.slug))}">${esc(p.product_name)}</a></h3><p class="muted">${esc(p.description)}</p>
-        <p><a href="?product=${esc(encodeURIComponent(p.slug))}">পণ্যের বিস্তারিত দেখুন →</a></p>
-        <p class="muted">Origin: ${esc(p.origin)}</p>
-        <p class="muted">Business: ${esc(b?.display_name || "Approved Seller")}</p>
-        <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
-        <p class="muted">Product ID: ${esc(p.product_code)}</p>
-        <p class="muted">Permanent URL slug: ${esc(p.slug)}</p>
+      const image = (p.image_urls || []).find(Boolean);
+      return `<article class="card product-card nx-product-card">
+        <a class="nx-product-card-media" href="?product=${encodeURIComponent(p.slug)}" aria-label="${esc(p.product_name)} বিস্তারিত দেখুন">
+          ${image ? `<img class="product-image" src="${esc(image)}" alt="${esc(p.product_name)}" loading="lazy" onerror="this.style.display='none'">` : '<span class="nx-product-image-fallback" aria-hidden="true">📦</span>'}
+          <span class="nx-product-market-badge">${esc(p.market_category === "retail" ? "RETAIL" : "WHOLESALE")}</span>
+        </a>
+        <div class="nx-product-card-body">
+          <span class="tag">${esc(p.category)}</span>
+          <h3><a href="?product=${encodeURIComponent(p.slug)}">${esc(p.product_name)}</a></h3>
+          <p class="muted nx-product-description">${esc(p.description || "বিস্তারিত জানতে পণ্যটি দেখুন।")}</p>
+          <p class="muted nx-product-origin">📍 ${esc(p.origin || "উৎপত্তি উল্লেখ নেই")}</p>
+          <div class="nx-product-card-footer"><strong class="price">${esc(p.price)} ${esc(p.currency)}</strong><a class="nx-product-detail-link" href="?product=${encodeURIComponent(p.slug)}">বিস্তারিত দেখুন <span aria-hidden="true">→</span></a></div>
+          <p class="muted nx-product-business">Business: ${esc(b?.display_name || "Approved Seller")}</p>
+        </div>
       </article>`;
-    }).join("") : '<div class="card">কোনো অনুমোদিত পণ্য পাওয়া যায়নি।</div>';
+    }).join("") : '<div class="card nx-empty-market">কোনো অনুমোদিত পণ্য পাওয়া যায়নি।</div>';
   }
 
   async function loadBuyerDashboardProducts() {
@@ -732,10 +731,50 @@
     negotiable:"আলোচনা সাপেক্ষে",per_hour:"প্রতি ঘণ্টা",per_day:"প্রতি দিন",
     per_visit:"প্রতি ভিজিট",per_job:"প্রতি কাজ",per_month:"প্রতি মাস"
   };
+  const serviceCategoryIcons = {
+    household:"🧹",tutoring:"📚",plumbing:"🔧",electrical:"⚡",mechanic:"🛠️",
+    appliance_repair:"🧰",it_support:"💻",beauty_laundry:"✨",other:"🧑‍🔧"
+  };
   function renderServiceCards(rows,host) {
     if(!host)return;
-    if(!rows.length){host.innerHTML='<div class="card muted">এই অনুসন্ধানে কোনো অনুমোদিত সেবা পাওয়া যায়নি।</div>';return;}
-    host.innerHTML=rows.map(s=>'<article class="card"><span class="tag">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+'</span><h3>'+esc(s.service_name)+'</h3><p>'+esc(s.description)+'</p><p class="muted">এলাকা: '+esc(s.service_area)+' · '+esc([s.city,s.country].filter(Boolean).join(", "))+'</p><p class="price">'+(s.price_amount!==null&&s.price_amount!==undefined?esc(s.price_amount.toLocaleString("en-US"))+" "+esc(s.currency)+" · ":"")+esc(servicePriceLabels[s.price_basis]||"আলোচনা সাপেক্ষে")+'</p><p class="muted">সময়: '+esc(s.availability||"সেবাদাতার সঙ্গে আলোচনা করুন")+'</p><small class="muted">Service ID: '+esc(s.service_code)+'</small></article>').join("");
+    const detailPanel=$("nxServiceDetailPanel");
+    const requestedService=new URLSearchParams(window.location.search).get("service");
+    const selected=requestedService?(state.services||[]).find(s=>s.service_code===requestedService):null;
+    if(requestedService){
+      host.classList.add("hidden");
+      $("nxServiceFilters")?.classList.add("hidden");
+      if(detailPanel){
+        detailPanel.classList.remove("hidden");
+        if(!selected){
+          detailPanel.innerHTML='<p class="muted">সেবাটি পাওয়া যায়নি অথবা বর্তমানে অনুমোদিত নয়।</p><a class="nx-back-link" href="'+esc(window.location.pathname)+'">← সেবা মার্কেটপ্লেসে ফিরে যান</a>';
+        }else{
+          const amount=selected.price_amount!==null&&selected.price_amount!==undefined?esc(Number(selected.price_amount).toLocaleString("en-US"))+" "+esc(selected.currency)+" · ":"";
+          detailPanel.innerHTML=`
+            <a class="nx-back-link" href="${esc(window.location.pathname)}">← সব সেবা দেখুন</a>
+            <div class="nx-service-detail-hero">
+              <span class="nx-service-detail-icon" aria-hidden="true">${serviceCategoryIcons[selected.service_category]||"🧰"}</span>
+              <div><span class="tag">${esc(serviceCategoryLabels[selected.service_category]||selected.service_category)}</span><span class="nx-service-detail-kicker">NEXORA SERVICE</span><h1>${esc(selected.service_name)}</h1><p>${esc([selected.service_area,selected.city,selected.country].filter(Boolean).join(", "))}</p></div>
+            </div>
+            <div class="nx-service-detail-grid">
+              <section class="nx-service-detail-main"><h2>সেবার বিবরণ</h2><p>${esc(selected.description)}</p><h3>সেবার এলাকা</h3><p>${esc([selected.service_area,selected.city,selected.country].filter(Boolean).join(", ")||"তথ্য দেওয়া হয়নি")}</p><h3>সময় ও Availability</h3><p>${esc(selected.availability||"সেবাদাতার সঙ্গে আলোচনা করুন")}</p></section>
+              <aside class="nx-service-detail-aside"><span class="nx-service-detail-kicker">PRICE</span><strong>${amount}${esc(servicePriceLabels[selected.price_basis]||"আলোচনা সাপেক্ষে")}</strong><small>Service ID: ${esc(selected.service_code)}</small><p>সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা প্রকাশ করা হয় না। যোগাযোগের সুবিধা চালু হলে এই পৃষ্ঠা থেকে অনুরোধ করা যাবে।</p></aside>
+            </div>`;
+        }
+      }
+      return;
+    }
+    $("nxServiceFilters")?.classList.remove("hidden");
+    if(detailPanel)detailPanel.classList.add("hidden");
+    host.classList.remove("hidden");
+    if(!rows.length){host.innerHTML='<div class="card muted nx-empty-market">এই অনুসন্ধানে কোনো অনুমোদিত সেবা পাওয়া যায়নি।</div>';return;}
+    host.innerHTML=rows.map(s=>{
+      const icon=serviceCategoryIcons[s.service_category]||"🧰";
+      const amount=s.price_amount!==null&&s.price_amount!==undefined?esc(Number(s.price_amount).toLocaleString("en-US"))+" "+esc(s.currency)+" · ":"";
+      return `<article class="card nx-service-card">
+        <a class="nx-service-card-art" href="?service=${encodeURIComponent(s.service_code)}" aria-label="${esc(s.service_name)} বিস্তারিত দেখুন"><span aria-hidden="true">${icon}</span><small>NEXORA SERVICES</small></a>
+        <div class="nx-service-card-body"><span class="tag">${esc(serviceCategoryLabels[s.service_category]||s.service_category)}</span><h3><a href="?service=${encodeURIComponent(s.service_code)}">${esc(s.service_name)}</a></h3><p class="nx-service-card-description">${esc(s.description)}</p><p class="muted">📍 ${esc([s.service_area,s.city,s.country].filter(Boolean).join(", "))}</p><div class="nx-service-card-footer"><strong>${amount}${esc(servicePriceLabels[s.price_basis]||"আলোচনা সাপেক্ষে")}</strong><a href="?service=${encodeURIComponent(s.service_code)}">বিস্তারিত <span aria-hidden="true">→</span></a></div><small class="muted">Service ID: ${esc(s.service_code)}</small></div>
+      </article>`;
+    }).join("");
   }
   async function loadServicesMarketplace() {
     const host=$("nxServiceList"); if(!host)return;
