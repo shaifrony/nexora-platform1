@@ -202,7 +202,7 @@ h2{font-size:24px}
 
 <header>
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <nav><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
+  <nav><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('nxSignupView')?.classList.add('hidden');document.getElementById('nxLoginView')?.classList.remove('hidden');const h=document.querySelector('#accountSection .section-head h2');if(h)h.textContent='Login';document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
 </header>
 
 <main class="container">
