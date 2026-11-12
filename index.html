@@ -111,6 +111,8 @@ input:focus,select:focus,textarea:focus{
   margin:3px;
 }
 .price{font-size:19px;font-weight:800;color:var(--green)}
+.chat-messages{height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f7f9fc;border:1px solid var(--border);border-radius:10px;margin:12px 0}
+.chat-person,.chat-thread{display:block;width:100%;text-align:left;margin:6px 0}
 .product-image{
   width:100%;height:150px;object-fit:cover;
   border-radius:9px;background:#edf1f5;
@@ -148,6 +150,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
     <button onclick="showSection('demandBoard')">Demand Board</button>
     <button onclick="showSection('postDemand')">Post a Demand</button>
     <button onclick="showSection('sellerDashboard')">Seller Account</button>
+    <button onclick="showSection('privateChat')">Chat & Calls</button>
   </nav>
 </header>
 
@@ -360,6 +363,45 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
     </div>
   </section>
 
+
+  <!-- PRIVATE COMMUNICATIONS -->
+  <section id="privateChat" class="section hidden">
+    <div class="section-head">
+      <h2>Private Chat & Communications</h2>
+      <span class="tag">Private • Invitation Required</span>
+    </div>
+    <div id="chatNotice" class="muted" aria-live="polite"></div>
+    <div id="chatLoginHint" class="card hidden">ব্যক্তিগত Chat ব্যবহার করতে আগে লগইন করুন।</div>
+    <div id="chatWorkspace" class="grid hidden">
+      <div class="card">
+        <h3>New Conversation</h3>
+        <p class="muted">ব্যবহারকারী নির্বাচন করলে যোগাযোগের অনুরোধ যাবে। গ্রহণ না করা পর্যন্ত বার্তা পাঠানো যাবে না।</p>
+        <div id="chatDirectory">ব্যবহারকারী তালিকা লোড হচ্ছে…</div>
+        <hr>
+        <h3>Your Conversations</h3>
+        <div id="chatConversationList">চ্যাট লোড হচ্ছে…</div>
+      </div>
+      <div class="card">
+        <h3 id="chatCurrentTitle">একটি Conversation নির্বাচন করুন</h3>
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        <form id="chatComposer" class="hidden">
+          <label>Message</label>
+          <textarea name="body" required maxlength="10000" placeholder="আপনার বার্তা লিখুন…"></textarea>
+          <div class="form-actions">
+            <button class="primary" type="submit">Send</button>
+            <label class="light" for="chatFile" style="padding:11px 14px;border-radius:8px;cursor:pointer">Attach File / Image</label>
+            <input id="chatFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,.docx,.xlsx" class="hidden">
+          </div>
+          <p class="muted">সর্বোচ্চ ফাইল ২০ MB। অনুমোদিত: JPG, PNG, WebP, PDF, TXT, DOCX, XLSX।</p>
+        </form>
+        <div class="offer">
+          <strong>Audio / Video Calling</strong>
+          <p class="muted">Call session ও নিরাপদ signaling-এর Database প্রস্তুত করা হচ্ছে। লাইভ অডিও/ভিডিও চালুর আগে WebRTC media, TURN connectivity এবং দুই-পক্ষের ডিভাইস পরীক্ষা বাকি।</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -371,6 +413,7 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 <script src="marketplace.js"></script>
+<script src="chat.js"></script>
 
 </body>
 </html>
