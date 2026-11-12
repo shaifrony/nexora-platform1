@@ -662,6 +662,16 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 #productDetailPanel.nx-product-detail-panel>.nx-product-contact{margin-top:24px;padding:18px;border:1px solid #dcebe6;border-radius:14px;background:#f6fbf9}
 #productDetailPanel.nx-product-detail-panel>.nx-product-contact h3{margin:0 0 12px}
 @media(max-width:600px){#productDetailPanel.nx-product-detail-panel .product-image{height:170px}}
+
+/* Seller listing image uploads */
+.nx-upload-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin:10px 0 16px}
+.nx-upload-preview:empty{display:none}
+.nx-upload-preview figure{position:relative;margin:0;border:1px solid #e1e8ee;border-radius:10px;overflow:hidden;background:#f7fafb}
+.nx-upload-preview img{display:block;width:100%;height:92px;object-fit:cover}
+.nx-upload-preview figcaption{padding:5px 6px;font-size:10px;color:#536575;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nx-upload-preview button{position:absolute;top:5px;right:5px;padding:4px 7px;border-radius:20px;background:#fff;color:#b42318;box-shadow:0 1px 6px #0002;font-size:11px}
+.nx-service-card-art .nx-service-uploaded-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nx-service-detail-image{width:100%;max-height:300px;object-fit:cover;border-radius:14px;margin-bottom:14px}
 </style>
 </head>
 
@@ -1264,6 +1274,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <label>মূল্য (ঐচ্ছিক)<input name="price_amount" type="number" min="0" step="0.01" placeholder="৳"></label>
         </div>
         <label>মুদ্রা<select name="currency"><option value="BDT">BDT</option></select></label>
+        <label>সেবার ছবি আপলোড করুন (সর্বোচ্চ ৩টি, প্রতিটি ৫ MB)</label>
+        <input name="service_image_files" id="nxServiceImageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+        <div id="nxServiceImagePreview" class="nx-upload-preview" aria-live="polite"></div>
         <label>সেবা দেওয়ার সময় / Availability<input name="availability" maxlength="300" placeholder="যেমন: প্রতিদিন সকাল ৯টা–সন্ধ্যা ৬টা"></label>
         <div class="form-actions"><button class="primary" type="submit">সেবা Admin Review-এ পাঠান</button></div>
       </form>
@@ -1314,7 +1327,10 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <option>Other</option>
         </select>
 
-        <label>Product Images (Image URLs, one per line)</label>
+        <label>পণ্যের ছবি আপলোড করুন (সর্বোচ্চ ৫টি, প্রতিটি ৫ MB)</label>
+        <input name="image_files" id="nxProductImageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+        <div id="nxProductImagePreview" class="nx-upload-preview" aria-live="polite"></div>
+        <label>অথবা বাইরের Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label>
         <textarea name="images" placeholder="https://example.com/image.jpg"></textarea>
 
         <label>Product Description *</label>
