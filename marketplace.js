@@ -180,16 +180,29 @@
 
   async function loadProducts() {
     const host = $("productList");
-    if (!host || !client()) return;
+    if (!host) return;
     host.textContent = "পণ্য লোড হচ্ছে…";
+    // Always keep the homepage populated with clearly labelled sample ads,
+    // even if the visitor has no session or the database is temporarily unavailable.
+    if (!client()) {
+      state.products = [];
+      renderProducts();
+      return;
+    }
     const { data, error } = await client().from("products")
       .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
       .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
-    if (error) { host.textContent = "পণ্য লোড হয়নি: " + error.message; return; }
+    if (error) {
+      console.error("NEXORA products could not be loaded:", error.message);
+      state.products = [];
+      renderProducts();
+      return;
+    }
     state.products = data || [];
-    const { data: businesses } = await client().from("public_businesses")
+    const { data: businesses, error: businessError } = await client().from("public_businesses")
       .select("business_id,display_name,country,city");
+    if (businessError) console.warn("NEXORA public business names unavailable:", businessError.message);
     state.businessMap = new Map((businesses || []).map(b => [b.business_id, b]));
     renderProducts();
   }
