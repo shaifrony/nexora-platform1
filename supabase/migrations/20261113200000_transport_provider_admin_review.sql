@@ -25,7 +25,7 @@ begin
       using errcode='42501';
   end if;
 
-  if p_action not in ('approve','reject','suspend') then
+  if p_action is null or p_action not in ('approve','reject','suspend') then
     raise exception 'Unsupported provider review action' using errcode='22023';
   end if;
   if p_action in ('reject','suspend') and length(btrim(coalesce(p_reason,''))) < 5 then
@@ -67,8 +67,9 @@ begin
   if v_old_status = 'suspended' and p_action = 'suspend' then
     raise exception 'Provider is already suspended' using errcode='22023';
   end if;
-  if v_old_status = 'approved' and p_action = 'reject' then
-    raise exception 'Suspend an approved Provider instead of rejecting it' using errcode='22023';
+  if (v_old_status='approved' and p_action<>'suspend')
+     or (v_old_status in ('rejected','suspended') and p_action<>'approve') then
+    raise exception 'Invalid Provider status transition' using errcode='22023';
   end if;
 
   update public.transport_providers
@@ -166,8 +167,9 @@ begin
   if v_old_status = v_new_status then
     raise exception 'Vehicle already has this status' using errcode='22023';
   end if;
-  if v_old_status = 'approved' and p_action = 'reject' then
-    raise exception 'Suspend an approved Vehicle instead of rejecting it' using errcode='22023';
+  if (v_old_status='approved' and p_action<>'suspend')
+     or (v_old_status in ('rejected','suspended') and p_action<>'approve') then
+    raise exception 'Invalid Vehicle status transition' using errcode='22023';
   end if;
 
   update public.transport_vehicles
