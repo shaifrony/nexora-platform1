@@ -103,6 +103,7 @@
       host.innerHTML='<div class="offer">এই ব্যবহারকারী আপনার সঙ্গে যোগাযোগ করতে চান। গ্রহণ করলে চ্যাট শুরু হবে।<div class="form-actions"><button class="primary" id="acceptChatInvite">Accept</button><button class="danger" id="declineChatInvite">Decline</button></div></div>';
       $("chatComposer").classList.add("hidden");
       $("chatCallPanel")?.classList.add("hidden");
+      $("nxChatCallActions")?.classList.add("hidden");
       $("acceptChatInvite").onclick=()=>respondInvite(id,"accepted");
       $("declineChatInvite").onclick=()=>respondInvite(id,"declined");
       return;
@@ -112,6 +113,7 @@
     head.textContent="Private Chat • "+others.length+" participant(s)";
     $("chatComposer").classList.remove("hidden");
     $("chatCallPanel")?.classList.remove("hidden");
+    $("nxChatCallActions")?.classList.remove("hidden");
     await loadMessages(id);
     state.channel=db().channel("nexora-chat-"+id)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+id},payload=>{
