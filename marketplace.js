@@ -507,14 +507,18 @@
         .eq("review_status","published").order("created_at",{ascending:false}).limit(30);
       if(error)throw error;
       const rows=data||[];
-      const average=rows.length?rows.reduce((sum,r)=>sum+Number(r.rating),0)/rows.length:0;
+      const summaryResult=await client().rpc("get_listing_review_summary",{p_listing_type:listingType,p_listing_id:listingId});
+      if(summaryResult.error)throw summaryResult.error;
+      const summaryData=Array.isArray(summaryResult.data)?summaryResult.data[0]:null;
+      const reviewCount=Number(summaryData?.review_count||0);
+      const average=Number(summaryData?.average_rating||0);
       let eligibility={can_review:false,already_reviewed:false};
       if(activeBuyer()&&signedIn()){
         const result=await client().rpc("get_my_review_eligibility",{p_listing_type:listingType,p_listing_id:listingId});
         if(!result.error&&Array.isArray(result.data)&&result.data[0])eligibility=result.data[0];
       }
-      const summary=rows.length
-        ? '<div class="nx-review-summary"><strong>★ '+average.toFixed(1)+'/5</strong><span>'+rows.length+'টি Verified Review</span></div>'
+      const summary=reviewCount
+        ? '<div class="nx-review-summary"><strong>★ '+average.toFixed(1)+'/5</strong><span>'+reviewCount+'টি Verified Review</span></div>'
         : '<p class="muted">এখনো কোনো Verified Review নেই।';
       const cards=rows.map(r=>'<article class="nx-review-card"><div class="nx-review-card-top"><strong>'+esc(r.reviewer_label||"Verified Buyer")+'</strong><span class="nx-review-stars" aria-label="'+Number(r.rating)+' out of 5 stars">'+('★'.repeat(Number(r.rating)))+('☆'.repeat(5-Number(r.rating)))+'</span></div>'+(r.review_title?'<h4>'+esc(r.review_title)+'</h4>':'')+'<p>'+esc(r.review_body)+'</p><small class="muted">'+new Date(r.created_at).toLocaleDateString('bn-BD')+(r.purchased_quantity?' · ক্রয়ের পরিমাণ: '+esc(r.purchased_quantity):'')+'</small></article>').join("");
       const form=eligibility.can_review
