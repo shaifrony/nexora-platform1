@@ -247,6 +247,36 @@
     else { await sync(null); say("লগআউট সম্পন্ন।", true); }
   });
 
+  const testAccountForm = document.getElementById("nxTestAccountForm");
+  testAccountForm?.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (adminStaff?.admin_level !== "super_admin" || profile?.role !== "admin" || profile?.account_status !== "active") {
+      return say("শুধু সক্রিয় Super Admin Test Account তৈরি করতে পারবেন।");
+    }
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const payload = {
+      email: String(f.get("email") || "").trim(),
+      password: String(f.get("password") || ""),
+      role: String(f.get("role") || "buyer"),
+      full_name: String(f.get("full_name") || "NEXORA Test User").trim()
+    };
+    if (!/^nexora-test\\+[^@]+@example\\.com$/i.test(payload.email)) {
+      return say("শুধু nexora-test+label@example.com ঠিকানা ব্যবহার করুন।");
+    }
+    if (payload.password.length < 12) return say("অস্থায়ী পাসওয়ার্ড কমপক্ষে ১২ অক্ষরের হতে হবে।");
+    setBusy(form, true); say("");
+    try {
+      const { data, error } = await db.functions.invoke("nexora-create-test-account", { body: payload });
+      if (error) throw error;
+      say("Test Account তৈরি হয়েছে: " + data.user.email + " | Role: " + data.user.role +
+        " | Status: " + data.user.account_status + " | ID: " + data.user.id, true);
+      form.reset();
+    } catch (err) {
+      say("Test Account তৈরি হয়নি: " + (err.message || "অজানা সমস্যা"));
+    } finally { setBusy(form, false); }
+  });
+
   const roleRequestForm = document.getElementById("nxRoleRequest");
   roleRequestForm?.addEventListener("submit", async e => {
     e.preventDefault();
