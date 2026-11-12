@@ -505,7 +505,9 @@
         {name:"Fresh Mango",market_category:"wholesale",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
         {name:"Premium Cotton Fabric",market_category:"wholesale",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
         {name:"Handcrafted Decor",market_category:"wholesale",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
-        {name:"Electronic Components",market_category:"wholesale",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"}
+        {name:"Electronic Components",market_category:"wholesale",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"},
+        {name:"Retail Cotton T-Shirt",market_category:"retail",category:"Textile & Garments",description:"খুচরা বিক্রয়ের জন্য নমুনা টি-শার্ট বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
+        {name:"Retail Home Decor",market_category:"retail",category:"Handicrafts",description:"খুচরা ক্রেতাদের জন্য নমুনা ঘর সাজানোর পণ্য।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"}
       ].filter(p =>
         (!buyerCategory || p.market_category === buyerCategory) &&
         (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
@@ -514,6 +516,7 @@
       host.innerHTML = demos.length ? demos.map(p => `<article class="card">
         <img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">
         <span class="tag">DEMO • নমুনা বিজ্ঞাপন</span>
+        <span class="tag">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")}</span>
         <span class="tag">${esc(p.category)}</span>
         <h3>${esc(p.name)}</h3>
         <p class="muted">${esc(p.description)}</p>
@@ -747,29 +750,33 @@
 
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
-        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.product_code,p.origin].join(" ").toLowerCase())}">
+        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
           <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
           ${p.listing_status === "pending" ? `<button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button>` : ""}
-        </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে আপনার প্রথম পাইকারি পণ্য যোগ করুন।</p>';
+        </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
 
       const applyProductFilters = () => {
         const query = String($("nxSellerProductSearch")?.value || "").trim().toLowerCase();
         const selectedStatus = $("nxSellerProductStatus")?.value || "all";
+        const selectedMarketCategory = $("nxSellerProductMarketFilter")?.value || "all";
         productHost.querySelectorAll("[data-seller-product]").forEach(card => {
           const matchesText = !query || (card.dataset.search || "").includes(query);
           const matchesStatus = selectedStatus === "all" || card.dataset.status === selectedStatus ||
             (selectedStatus === "rejected" && ["rejected","declined"].includes(card.dataset.status));
-          card.hidden = !(matchesText && matchesStatus);
+          const matchesMarketCategory = selectedMarketCategory === "all" || card.dataset.marketCategory === selectedMarketCategory;
+          card.hidden = !(matchesText && matchesStatus && matchesMarketCategory);
         });
       };
       const productSearch = $("nxSellerProductSearch");
       const productStatus = $("nxSellerProductStatus");
+      const productMarketFilter = $("nxSellerProductMarketFilter");
       if (productSearch) productSearch.oninput = applyProductFilters;
       if (productStatus) productStatus.onchange = applyProductFilters;
+      if (productMarketFilter) productMarketFilter.onchange = applyProductFilters;
       applyProductFilters();
 
       const matchedHost = $("matchedDemands");
