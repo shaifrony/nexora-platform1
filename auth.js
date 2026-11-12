@@ -36,6 +36,14 @@
         <form id="nxSignup">
           <h3>নতুন অ্যাকাউন্ট</h3>
           <label>পূর্ণ নাম</label><input name="full_name" required autocomplete="name">
+          <label>অ্যাকাউন্টের ধরন</label>
+          <select name="role" required>
+            <option value="">ধরন নির্বাচন করুন</option>
+            <option value="buyer">Buyer — ক্রেতা</option>
+            <option value="seller">Seller — বিক্রেতা</option>
+            <option value="porter">Porter — পরিবহনকারী</option>
+          </select>
+          <p class="muted">Buyer ও Seller নিবন্ধনের পর ব্যবহার করতে পারবেন; Seller-এর ব্যবসা/Listing প্রকাশের আগে Admin অনুমোদন লাগবে। Porter-এর কাজ শুরু করার আগে Admin অনুমোদন লাগবে।</p>
           <label>ইমেইল</label><input name="email" type="email" required autocomplete="email">
           <label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label><input name="password" type="password" minlength="6" required autocomplete="new-password">
           <div class="form-actions"><button class="primary" type="submit">Register</button></div>
@@ -137,7 +145,10 @@
       const { data, error } = await db.auth.signUp({
         email: String(f.get("email")).trim(),
         password: String(f.get("password")),
-        options: { data: { full_name: String(f.get("full_name")).trim() } }
+        options: { data: {
+          full_name: String(f.get("full_name")).trim(),
+          role: String(f.get("role"))
+        } }
       });
       if (error) throw error;
       if (data.session) await sync(data.session);
