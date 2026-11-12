@@ -783,6 +783,45 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <h4>Transport Provider & Vehicle Review</h4>
         <p class="muted">Provider এবং প্রতিটি Vehicle আলাদাভাবে যাচাই করুন। Reject/Suspend করার সময় কারণ লিখতে হবে। সব সিদ্ধান্ত Audit Log-এ সংরক্ষিত হবে।</p>
         <div id="nxAdminTransportQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর আবেদন দেখা যাবে…</div>
+        <h4>Delivery Assignment</h4>
+        <p class="muted">শুধু অনুমোদিত Transport Provider এবং তার অনুমোদিত, বর্তমানে Available Vehicle-এ Delivery Job বরাদ্দ করা যাবে। যোগাযোগের তথ্য Admin এবং সংশ্লিষ্ট Provider-এর জন্য সীমিত।</p>
+        <form id="nxAdminDeliveryForm" class="card hidden">
+          <h5>নতুন Delivery Job তৈরি ও বরাদ্দ</h5>
+          <label>External Reference (ঐচ্ছিক)<input name="external_reference" maxlength="120" placeholder="Order / Shipment Reference"></label>
+          <label>প্যাকেজের বিবরণ *<input name="package_description" minlength="3" maxlength="1000" required></label>
+          <label>প্যাকেজ সংখ্যা *<input name="package_count" type="number" min="1" max="10000" step="1" value="1" required></label>
+          <div class="grid">
+            <label>Transport Provider *<select name="provider_id" id="nxDeliveryProvider" required><option value="">Provider নির্বাচন করুন</option></select></label>
+            <label>Approved Vehicle *<select name="vehicle_id" id="nxDeliveryVehicle" required><option value="">প্রথমে Provider নির্বাচন করুন</option></select></label>
+          </div>
+          <h5>Pickup তথ্য</h5>
+          <div class="grid">
+            <label>যোগাযোগের নাম<input name="pickup_contact_name" maxlength="150"></label>
+            <label>ফোন<input name="pickup_contact_phone" maxlength="40"></label>
+          </div>
+          <label>Pickup Address *<input name="pickup_address" minlength="5" maxlength="1000" required></label>
+          <div class="grid">
+            <label>শহর *<input name="pickup_city" maxlength="120" required></label>
+            <label>দেশ *<input name="pickup_country" maxlength="120" value="Bangladesh" required></label>
+          </div>
+          <h5>Delivery তথ্য</h5>
+          <div class="grid">
+            <label>প্রাপকের নাম<input name="recipient_contact_name" maxlength="150"></label>
+            <label>প্রাপকের ফোন<input name="recipient_contact_phone" maxlength="40"></label>
+          </div>
+          <label>Delivery Address *<input name="delivery_address" minlength="5" maxlength="1000" required></label>
+          <div class="grid">
+            <label>শহর *<input name="delivery_city" maxlength="120" required></label>
+            <label>দেশ *<input name="delivery_country" maxlength="120" value="Bangladesh" required></label>
+          </div>
+          <div class="grid">
+            <label>Pickup সময়<input name="requested_pickup_at" type="datetime-local"></label>
+            <label>Delivery Deadline<input name="delivery_deadline" type="datetime-local"></label>
+          </div>
+          <label>বিশেষ নির্দেশনা<textarea name="special_instructions" maxlength="2000"></textarea></label>
+          <button class="primary" type="submit">Delivery Job তৈরি ও বরাদ্দ করুন</button>
+        </form>
+        <div id="nxAdminDeliveryQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর Delivery Job দেখা যাবে…</div>
         <h4>Admin Audit Log</h4>
         <p class="muted">Admin কার্যক্রমের রেকর্ড। সংবেদনশীল তথ্য সীমিতভাবে দেখানো হবে।</p>
         <div id="nxAdminAuditLogs" class="muted">Audit Log অনুমতি যাচাই হচ্ছে…</div>
