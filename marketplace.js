@@ -213,7 +213,6 @@
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     if (id === "market") loadProducts();
     if (id === "accountSection") loadAdminActions();
-    if (id === "demandBoard") loadDemands();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -317,6 +316,7 @@
     if (businessError) console.warn("NEXORA public business names unavailable:", businessError.message);
     state.businessMap = new Map((businesses || []).map(b => [b.business_id, b]));
     renderProducts();
+    await loadDemands();
   }
 
   function renderProducts() {
@@ -457,7 +457,7 @@
       if (!data) throw new Error("চাহিদাটি পরিবর্তন করা যায়নি। এটি হয়তো ইতোমধ্যে পরিবর্তিত হয়েছে।");
       say("আপনার চাহিদার অবস্থা আপডেট হয়েছে।", true);
       await loadBuyerDashboard();
-      if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
+      if ($("market") && !$("market").classList.contains("hidden")) await loadDemands();
     } catch (err) {
       say("চাহিদার অবস্থা পরিবর্তন হয়নি: " + err.message);
     }
@@ -465,50 +465,34 @@
 
   async function loadDemands() {
     const host = $("demandList");
-    if (!host || !client()) return;
-    if (!signedIn()) { host.textContent = "চাহিদা দেখতে লগইন করুন।"; return; }
-    host.textContent = "চাহিদা লোড হচ্ছে…";
-    const { data, error } = await client().from("buyer_demands")
-      .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status")
-      .eq("demand_status", "open").order("created_at", { ascending: false });
-    if (error) { host.textContent = "চাহিদা লোড হয়নি: " + error.message; return; }
+    const publicDb = window.NEXORA_AUTH?.publicClient;
+    if (!host || !publicDb) return;
+    host.textContent = "প্রকাশ্য চাহিদা লোড হচ্ছে…";
+    const { data, error } = await publicDb.from("buyer_demands")
+      .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
+      .eq("demand_status", "open").order("created_at", { ascending: false }).limit(100);
+    if (error) { host.textContent = "প্রকাশ্য চাহিদা লোড হয়নি: " + error.message; return; }
     state.demands = data || [];
     renderDemands();
   }
 
-  async function renderDemands() {
+  function renderDemands() {
     const host = $("demandList");
     if (!host) return;
-    if (!state.demands.length) { host.innerHTML = '<div class="card">এখনো কোনো খোলা চাহিদা নেই।</div>'; return; }
-    const cards = [];
-    for (const d of state.demands) {
-      const { data: offers } = await client().from("seller_offers")
-        .select("id,seller_id,offer_price,currency,available_quantity,message,offer_status")
-        .eq("demand_id", d.id);
-      const ownOffer = (offers || []).find(o => o.seller_id === user()?.id);
-      const offerHTML = (offers || []).map(o => `<div class="offer">
-        <strong>${o.seller_id === user()?.id ? "আপনার প্রস্তাব" : "Price Offer"}</strong>
-        <p class="price">${esc(o.offer_price)} ${esc(o.currency)}</p>
-        <p class="muted">Available Quantity: ${esc(o.available_quantity)}</p>
-        <p class="muted">${esc(o.message || "")}</p>
-      </div>`).join("");
-      cards.push(`<article class="card">
-        <span class="tag">${esc(d.category)}</span><span class="tag">${esc(d.demand_status)}</span>
-        <h3>${esc(d.product_name)}</h3><p>${esc(d.description)}</p>
-        <p class="muted"><strong>Specifications:</strong> ${esc(d.specifications_quality || "")}</p>
-        <div class="grid">
-          <div><p class="muted">Quantity</p><strong>${esc(d.required_quantity)}</strong></div>
-          <div><p class="muted">Budget</p><strong>${esc(d.budget ?? "Not specified")} ${esc(d.currency)}</strong></div>
-          <div><p class="muted">Destination</p><strong>${esc(d.destination_city)}, ${esc(d.destination_country)}</strong></div>
-        </div>
-        <p><span class="demand-date">Required by: ${esc(d.required_date)}</span></p>
-        <p class="muted">Demand ID: ${esc(d.demand_code)}</p>
-        <p><strong>${(offers || []).length} Price Offer(s)</strong></p>
-        ${offerHTML}
-        ${activeSeller() ? (ownOffer ? '<p class="muted">এই চাহিদায় আপনার Offer জমা আছে।</p>' : `<button class="secondary" type="button" data-offer="${esc(d.id)}">Submit Price Offer</button>`) : ""}
-      </article>`);
-    }
-    host.innerHTML = cards.join("");
+    if (!state.demands.length) { host.innerHTML = '<div class="card">এখনো কোনো প্রকাশ্য খোলা চাহিদা নেই।</div>'; return; }
+    host.innerHTML = state.demands.map(d => `<article class="card">
+      <span class="tag">${esc(d.category)}</span><span class="tag">চলমান চাহিদা</span>
+      <h3>${esc(d.product_name)}</h3><p>${esc(d.description)}</p>
+      <p class="muted"><strong>Specifications & Quality:</strong> ${esc(d.specifications_quality || "উল্লেখ নেই")}</p>
+      <div class="grid">
+        <div><p class="muted">Required Quantity</p><strong>${esc(d.required_quantity)}</strong></div>
+        <div><p class="muted">Budget</p><strong>${d.budget == null ? "Not specified" : esc(d.budget) + " " + esc(d.currency)}</strong></div>
+        <div><p class="muted">Destination</p><strong>${esc(d.destination_city)}, ${esc(d.destination_country)}</strong></div>
+      </div>
+      <p><span class="demand-date">Required by: ${esc(d.required_date)}</span></p>
+      <p class="muted">Demand ID: ${esc(d.demand_code)}</p>
+      ${activeSeller() ? `<button class="secondary" type="button" data-offer="${esc(d.id)}">Submit Price Offer</button>` : ""}
+    </article>`).join("");
     host.querySelectorAll("button[data-offer]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offer)));
   }
 
@@ -634,5 +618,5 @@
   const today = new Date();
   const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split("T")[0];
   if ($("requiredDate")) $("requiredDate").min = localToday;
-  if ($("market")) loadProducts();
+  if ($("market")) { loadProducts(); loadDemands(); }
 })();
