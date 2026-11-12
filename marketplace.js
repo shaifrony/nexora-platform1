@@ -742,8 +742,10 @@
           card.hidden = !(matchesText && matchesStatus);
         });
       };
-      $("nxSellerProductSearch")?.addEventListener("input", applyProductFilters);
-      $("nxSellerProductStatus")?.addEventListener("change", applyProductFilters);
+      const productSearch = $("nxSellerProductSearch");
+      const productStatus = $("nxSellerProductStatus");
+      if (productSearch) productSearch.oninput = applyProductFilters;
+      if (productStatus) productStatus.onchange = applyProductFilters;
       applyProductFilters();
 
       const matchedHost = $("matchedDemands");
