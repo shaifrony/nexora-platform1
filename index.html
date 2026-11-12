@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA | Global Trade Marketplace</title>
+<title>NEXORA</title>
 
 <style>
 :root{
@@ -191,71 +191,15 @@ h2{font-size:24px}
 <body>
 
 <header>
-  <div class="logo" onclick="showSection('market')" style="cursor:pointer"><span class="logo-mark">N</span><span>NEX<span>ORA</span><small class="brand-sub" style="display:block">GLOBAL TRADE NETWORK</small></span></div>
-  <nav>
-    <button onclick="showSection('market')">Home / Marketplace</button>
-    <button onclick="showSection('demandBoard')">Demand Board</button>
-    <button onclick="showSection('postDemand')">Post a Demand</button>
-    <button onclick="showSection('sellerDashboard')">Seller Account</button>
-    <button onclick="showSection('privateChat')">Chat & Calls</button>
-    <button onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Login / Register</button>
-  </nav>
+  <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
+  <nav><button type="button" onclick="document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden');document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Login / Register</button></nav>
 </header>
 
 <main class="container">
 
-  <section id="homeIntro" class="hero">
-    <span class="hero-kicker">B2B GLOBAL TRADE MARKETPLACE</span>
-    <h1>Connect. Trade. Grow.</h1>
-    <p>NEXORA-তে দেশ-বিদেশের ক্রেতা ও বিক্রেতাদের খুঁজুন, পণ্য আবিষ্কার করুন এবং আপনার ব্যবসার জন্য নতুন বাণিজ্যিক সুযোগ তৈরি করুন।</p>
-    <div class="hero-actions">
-      <button class="primary" onclick="showSection('market')">Explore Products</button>
-      <button class="light" onclick="showSection('postDemand')">Post Your Requirement</button>
-      <button class="light" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'});document.querySelectorAll('main .section').forEach(s=>s.classList.add('hidden'));document.getElementById('accountSection')?.classList.remove('hidden')">Login / Register</button>
-    </div>
-  </section>
-  <section class="home-tools">
-    <article class="home-tool"><div class="tool-icon">🌐</div><h3>Global Marketplace</h3><p class="muted">দেশ-বিদেশের অনুমোদিত ব্যবসা ও পণ্য এক জায়গায় খুঁজুন।</p><button class="secondary" onclick="showSection('market')">Explore Marketplace</button></article>
-    <article class="home-tool"><div class="tool-icon">📋</div><h3>Buyer Demand Board</h3><p class="muted">আপনার প্রয়োজন, পরিমাণ, বাজেট ও প্রয়োজনের তারিখ প্রকাশ করুন।</p><button class="primary" onclick="showSection('postDemand')">Post Requirement</button></article>
-    <article class="home-tool"><div class="tool-icon">🏭</div><h3>Grow as a Supplier</h3><p class="muted">ব্যবসার প্রোফাইল তৈরি করে আন্তর্জাতিক ক্রেতার কাছে পৌঁছান।</p><button class="secondary" onclick="document.getElementById('accountSection')?.scrollIntoView({behavior:'smooth'})">Become a Seller</button></article>
-  </section>
-  <section class="section" aria-label="Trade categories">
-    <div class="section-head"><h2>Explore Trade Categories</h2><span class="muted">Find products by industry</span></div>
-    <div class="grid">
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Food & Agriculture';showSection('market');renderProducts()">🌾 Food & Agriculture</button>
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Textile & Garments';showSection('market');renderProducts()">🧵 Textile & Garments</button>
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Electronics';showSection('market');renderProducts()">🔌 Electronics</button>
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Industrial Products';showSection('market');renderProducts()">⚙️ Industrial Products</button>
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Handicrafts';showSection('market');renderProducts()">🧺 Handicrafts</button>
-      <button class="light" onclick="document.getElementById('categoryFilter').value='Other';showSection('market');renderProducts()">📦 Other Products</button>
-    </div>
-  </section>
-  <section class="promo-strip">
-    <div><h3>আপনার প্রয়োজনীয় পণ্য খুঁজে পাচ্ছেন না?</h3><p class="muted">NEXORA-তে চাহিদা পোস্ট করুন—প্রাসঙ্গিক বিক্রেতারা আপনার সঙ্গে যোগাযোগের সুযোগ পাবেন।</p></div>
-    <button class="primary" onclick="showSection('postDemand')">Get Product Support</button>
-  </section>
-
   <!-- MARKETPLACE -->
   <section id="market" class="section">
-    <div class="section-head">
-      <h2>Featured & Available Products</h2>
-      <span class="muted" id="productCount"></span>
-    </div>
-
-    <div class="grid">
-      <input id="productSearch" placeholder="Search products..." oninput="renderProducts()">
-      <select id="categoryFilter" onchange="renderProducts()">
-        <option value="">All Categories</option>
-        <option>Food & Agriculture</option>
-        <option>Textile & Garments</option>
-        <option>Electronics</option>
-        <option>Industrial Products</option>
-        <option>Handicrafts</option>
-        <option>Other</option>
-      </select>
-    </div>
-
-    <div id="productList" class="grid" style="margin-top:18px"></div>
+    <div id="productList" class="grid"></div>
   </section>
 
   <!-- POST DEMAND -->
@@ -485,11 +429,7 @@ h2{font-size:24px}
 
 </main>
 
-<footer>
-  <div class="logo"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <p>Connecting Buyers & Sellers Across Borders</p>
-  <p class="muted">NEXORA Global Trade Marketplace</p>
-</footer>
+
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
