@@ -603,13 +603,13 @@
     const form = e.currentTarget;
     if (!activeBuyer()) return say("চাহিদা প্রকাশ করতে সক্রিয় Buyer হিসেবে লগইন করুন।");
     const v = Object.fromEntries(new FormData(form));
-    if (!Number.isFinite(Number(v.budget)) || Number(v.budget) < 0) return say("সঠিক Budget লিখুন।");
+    if (v.budget !== "" && (!Number.isFinite(Number(v.budget)) || Number(v.budget) < 0)) return say("সঠিক Budget লিখুন।");
     setBusy(form, true);
     try {
       const { error } = await client().from("buyer_demands").insert({
         buyer_id: user().id, product_name: v.name.trim(), category: v.category,
         description: v.description.trim(), specifications_quality: v.specifications.trim(),
-        required_quantity: v.quantity.trim(), budget: Number(v.budget), currency: String(v.currency).toUpperCase(),
+        required_quantity: v.quantity.trim(), budget: v.budget === "" ? null : Number(v.budget), currency: String(v.currency).toUpperCase(),
         destination_country: v.country.trim(), destination_city: v.destination.trim(), required_date: v.requiredDate
       });
       if (error) throw error;
