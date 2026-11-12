@@ -651,6 +651,7 @@
     } else productsHost.textContent="এই বিভাগের পণ্য দেখার অনুমতি নেই।";
 
     await loadAdminTransportQueue(can("logistics.view"),can("logistics.assign"));
+    await loadAdminDeliveryJobs(can("logistics.view"),can("logistics.assign"));
   }
 
   async function loadAdminTransportQueue(canView,canReview) {
@@ -743,6 +744,148 @@
       say("Review সিদ্ধান্ত সংরক্ষণ হয়নি: "+(err.message||"অজানা সমস্যা"));
       button.disabled=false;
     }
+  });
+
+
+  async function loadAdminDeliveryJobs(canView,canAssign) {
+    const host=document.getElementById("nxAdminDeliveryQueue");
+    const form=document.getElementById("nxAdminDeliveryForm");
+    if(!host) return;
+    if(!canView){host.textContent="Delivery Job দেখার অনুমতি নেই।";if(form)form.classList.add("hidden");return;}
+    if(form) form.classList.toggle("hidden",!canAssign);
+    const [jobsRes,providersRes,vehiclesRes]=await Promise.all([
+      db.from("delivery_jobs").select("id,job_reference,external_reference,package_description,package_count,pickup_contact_name,pickup_contact_phone,pickup_address,pickup_city,pickup_country,recipient_contact_name,recipient_contact_phone,delivery_address,delivery_city,delivery_country,requested_pickup_at,delivery_deadline,special_instructions,assigned_provider_id,assigned_vehicle_id,job_status,created_at,assigned_at,cancellation_reason").order("created_at",{ascending:false}).limit(100),
+      db.from("transport_providers").select("id,display_name,city,country,application_status").eq("application_status","approved").order("display_name"),
+      db.from("transport_vehicles").select("id,provider_id,vehicle_type,make_model,registration_number,capacity_value,capacity_unit,is_available,approval_status").eq("approval_status","approved").eq("is_available",true).order("created_at",{ascending:false})
+    ]);
+    const error=jobsRes.error||providersRes.error||vehiclesRes.error;
+    if(error){host.textContent="Delivery Assignment data লোড হয়নি: "+error.message;return;}
+    const jobs=jobsRes.data||[], providers=providersRes.data||[], vehicles=vehiclesRes.data||[];
+    const providerById=new Map(providers.map(x=>[x.id,x]));
+    const vehicleById=new Map(vehicles.map(x=>[x.id,x]));
+    const providerOptions=providers.map(p=>'<option value="'+escapeHtml(p.id)+'">'+escapeHtml(p.display_name)+' — '+escapeHtml(p.city)+', '+escapeHtml(p.country)+'</option>').join("");
+    const fillVehicleSelect=(providerId,select,selectedId)=>{
+      if(!select)return;
+      select.innerHTML='<option value="">গাড়ি নির্বাচন করুন</option>'+vehicles.filter(v=>v.provider_id===providerId).map(v=>'<option value="'+escapeHtml(v.id)+'" '+(v.id===selectedId?'selected':'')+'>'+escapeHtml(v.vehicle_type)+' '+escapeHtml(v.make_model||'')+' — '+escapeHtml(v.registration_number)+'</option>').join("");
+      select.disabled=!providerId||!vehicles.some(v=>v.provider_id===providerId);
+    };
+    const pSelect=document.getElementById("nxDeliveryProvider");
+    const vSelect=document.getElementById("nxDeliveryVehicle");
+    if(pSelect){
+      const previous=pSelect.value;
+      pSelect.innerHTML='<option value="">Provider নির্বাচন করুন</option>'+providerOptions;
+      if(providers.some(p=>p.id===previous))pSelect.value=previous;
+      if(vSelect)fillVehicleSelect(pSelect.value,vSelect,vSelect.value);
+    }
+    if(!jobs.length){host.innerHTML='<p class="muted">এখনো কোনো Delivery Job তৈরি হয়নি।</p>';return;}
+    const statusLabel={assigned:"বরাদ্দ করা হয়েছে",in_transit:"পথে রয়েছে",delivered:"ডেলিভারি সম্পন্ন",cancelled:"বাতিল"};
+    const date=v=>v?escapeHtml(new Date(v).toLocaleString("bn-BD")):"—";
+    host.innerHTML=jobs.map(j=>{
+      const p=providerById.get(j.assigned_provider_id),v=vehicleById.get(j.assigned_vehicle_id);
+      const reassign=canAssign&&j.job_status==="assigned"?`
+        <div class="offer">
+          <strong>Provider / Vehicle পরিবর্তন</strong>
+          <div class="grid">
+            <label>নতুন Provider<select data-job-provider="${escapeHtml(j.id)}"><option value="">Provider নির্বাচন করুন</option>${providers.map(x=>'<option value="'+escapeHtml(x.id)+'" '+(x.id===j.assigned_provider_id?'selected':'')+'>'+escapeHtml(x.display_name)+'</option>').join("")}</select></label>
+            <label>নতুন Vehicle<select data-job-vehicle="${escapeHtml(j.id)}"><option value="">Vehicle নির্বাচন করুন</option>${vehicles.filter(x=>x.provider_id===j.assigned_provider_id).map(x=>'<option value="'+escapeHtml(x.id)+'" '+(x.id===j.assigned_vehicle_id?'selected':'')+'>'+escapeHtml(x.vehicle_type)+' — '+escapeHtml(x.registration_number)+'</option>').join("")}</select></label>
+          </div>
+          <label>পরিবর্তনের কারণ (কমপক্ষে ৫ অক্ষর)<input data-job-reason="${escapeHtml(j.id)}" maxlength="1000" required></label>
+          <button type="button" class="secondary" data-job-reassign="${escapeHtml(j.id)}">Reassign</button>
+        </div>`:"";
+      const cancel=canAssign&&!["delivered","cancelled"].includes(j.job_status)?'<button type="button" class="danger" data-job-cancel="'+escapeHtml(j.id)+'">Delivery Job বাতিল</button>':"";
+      return `
+        <article class="card">
+          <div class="section-head"><div><span class="tag">DELIVERY JOB</span><h4>${escapeHtml(j.job_reference)}</h4></div><span class="tag">${escapeHtml(statusLabel[j.job_status]||j.job_status)}</span></div>
+          <p class="muted">Job ID: ${escapeHtml(j.id)} ${j.external_reference?"· Reference: "+escapeHtml(j.external_reference):""}</p>
+          <p><strong>প্যাকেজ:</strong> ${escapeHtml(j.package_description)} · সংখ্যা: ${escapeHtml(j.package_count)}</p>
+          <p><strong>Pickup:</strong> ${escapeHtml(j.pickup_address)}, ${escapeHtml(j.pickup_city)}, ${escapeHtml(j.pickup_country)}</p>
+          <p class="muted">যোগাযোগ: ${escapeHtml(j.pickup_contact_name||"—")} · ${escapeHtml(j.pickup_contact_phone||"—")}</p>
+          <p><strong>Delivery:</strong> ${escapeHtml(j.delivery_address)}, ${escapeHtml(j.delivery_city)}, ${escapeHtml(j.delivery_country)}</p>
+          <p class="muted">প্রাপক: ${escapeHtml(j.recipient_contact_name||"—")} · ${escapeHtml(j.recipient_contact_phone||"—")}</p>
+          <p class="muted">Pickup সময়: ${date(j.requested_pickup_at)} · Delivery Deadline: ${date(j.delivery_deadline)}</p>
+          <p class="muted">Provider: ${escapeHtml(p?.display_name||j.assigned_provider_id)} · Vehicle: ${escapeHtml(v?(v.vehicle_type+" / "+v.registration_number):j.assigned_vehicle_id)}</p>
+          ${j.special_instructions?'<p class="muted">নির্দেশনা: '+escapeHtml(j.special_instructions)+'</p>':""}
+          ${j.cancellation_reason?'<p class="muted">বাতিলের কারণ: '+escapeHtml(j.cancellation_reason)+'</p>':""}
+          <p class="muted">তৈরি: ${date(j.created_at)} · বরাদ্দ: ${date(j.assigned_at)}</p>
+          ${reassign}<div class="form-actions">${cancel}</div>
+        </article>`;
+    }).join("");
+    host.querySelectorAll("select[data-job-provider]").forEach(sel=>{
+      sel.addEventListener("change",()=>{
+        const id=sel.dataset.jobProvider;
+        const vehicle=host.querySelector('select[data-job-vehicle="'+id+'"]');
+        fillVehicleSelect(sel.value,vehicle,null);
+      });
+    });
+    host.querySelectorAll("button[data-job-reassign]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        const id=btn.dataset.jobReassign;
+        const provider=host.querySelector('select[data-job-provider="'+id+'"]')?.value;
+        const vehicle=host.querySelector('select[data-job-vehicle="'+id+'"]')?.value;
+        const reason=host.querySelector('input[data-job-reason="'+id+'"]')?.value?.trim();
+        if(!provider||!vehicle||!reason||reason.length<5){say("Reassign করার জন্য Provider, Vehicle ও কমপক্ষে ৫ অক্ষরের কারণ দিন।");return;}
+        if(!window.confirm("এই Delivery Job-এর Provider ও Vehicle পরিবর্তন করবেন?"))return;
+        btn.disabled=true;
+        const {error}=await db.rpc("reassign_delivery_job",{p_job_id:id,p_provider_id:provider,p_vehicle_id:vehicle,p_reason:reason});
+        if(error){say("Reassign হয়নি: "+error.message);btn.disabled=false;return;}
+        say("Delivery Job পুনরায় বরাদ্দ হয়েছে এবং Audit Log-এ সংরক্ষিত হয়েছে।",true);
+        await loadAdminDeliveryJobs(canView,canAssign);
+        await loadAdminAuditLogs();
+      });
+    });
+    host.querySelectorAll("button[data-job-cancel]").forEach(btn=>{
+      btn.addEventListener("click",async()=>{
+        const reason=window.prompt("Delivery Job বাতিলের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):","");
+        if(reason===null)return;
+        if(reason.trim().length<5){say("বাতিলের কারণ কমপক্ষে ৫ অক্ষরের হতে হবে।");return;}
+        if(!window.confirm("এই Delivery Job বাতিল করবেন?"))return;
+        btn.disabled=true;
+        const {error}=await db.rpc("cancel_delivery_job",{p_job_id:btn.dataset.jobCancel,p_reason:reason.trim()});
+        if(error){say("বাতিল হয়নি: "+error.message);btn.disabled=false;return;}
+        say("Delivery Job বাতিল হয়েছে এবং Audit Log-এ সংরক্ষিত হয়েছে।",true);
+        await loadAdminDeliveryJobs(canView,canAssign);
+        await loadAdminAuditLogs();
+      });
+    });
+  }
+
+  document.getElementById("nxDeliveryProvider")?.addEventListener("change",async()=>{
+    const p=document.getElementById("nxDeliveryProvider"),v=document.getElementById("nxDeliveryVehicle");
+    if(!p||!v)return;
+    const {data,error}=await db.from("transport_vehicles").select("id,vehicle_type,make_model,registration_number")
+      .eq("provider_id",p.value).eq("approval_status","approved").eq("is_available",true);
+    if(error){say("Vehicle তালিকা লোড হয়নি: "+error.message);return;}
+    v.innerHTML='<option value="">Vehicle নির্বাচন করুন</option>'+(data||[]).map(x=>'<option value="'+escapeHtml(x.id)+'">'+escapeHtml(x.vehicle_type)+' '+escapeHtml(x.make_model||'')+' — '+escapeHtml(x.registration_number)+'</option>').join("");
+  });
+
+  document.getElementById("nxAdminDeliveryForm")?.addEventListener("submit",async event=>{
+    event.preventDefault();
+    const form=event.currentTarget,f=new FormData(form);
+    const val=k=>String(f.get(k)||"").trim();
+    const iso=k=>val(k)?new Date(val(k)).toISOString():null;
+    const args={
+      p_external_reference:val("external_reference")||null,
+      p_package_description:val("package_description"),
+      p_package_count:Number(val("package_count")),
+      p_pickup_contact_name:val("pickup_contact_name")||null,
+      p_pickup_contact_phone:val("pickup_contact_phone")||null,
+      p_pickup_address:val("pickup_address"),p_pickup_city:val("pickup_city"),p_pickup_country:val("pickup_country"),
+      p_recipient_contact_name:val("recipient_contact_name")||null,
+      p_recipient_contact_phone:val("recipient_contact_phone")||null,
+      p_delivery_address:val("delivery_address"),p_delivery_city:val("delivery_city"),p_delivery_country:val("delivery_country"),
+      p_requested_pickup_at:iso("requested_pickup_at"),p_delivery_deadline:iso("delivery_deadline"),
+      p_special_instructions:val("special_instructions")||null,
+      p_provider_id:val("provider_id"),p_vehicle_id:val("vehicle_id")
+    };
+    if(!args.p_provider_id||!args.p_vehicle_id){say("Approved Provider ও Vehicle নির্বাচন করুন।");return;}
+    const button=form.querySelector('button[type="submit"]');button.disabled=true;
+    const {data,error}=await db.rpc("create_delivery_assignment",args);
+    if(error){say("Delivery Job তৈরি হয়নি: "+error.message);button.disabled=false;return;}
+    form.reset();
+    say("Delivery Job তৈরি ও বরাদ্দ হয়েছে: "+(data?.job_reference||"সফল"),true);
+    await loadAdminDeliveryJobs(true,true);
+    await loadAdminAuditLogs();
+    button.disabled=false;
   });
 
   async function loadAdminAuditLogs() {
