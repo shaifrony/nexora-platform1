@@ -139,8 +139,10 @@
   }
 
   document.getElementById("nxSignup").addEventListener("submit", async e => {
-    e.preventDefault(); setBusy(e.currentTarget, true); say("");
-    const f = new FormData(e.currentTarget);
+    e.preventDefault();
+    const form = e.currentTarget;
+    setBusy(form, true); say("");
+    const f = new FormData(form);
     try {
       const { data, error } = await db.auth.signUp({
         email: String(f.get("email")).trim(),
@@ -154,22 +156,24 @@
       if (data.session) await sync(data.session);
       say(data.session ? "অ্যাকাউন্ট তৈরি হয়েছে।" :
         "রেজিস্ট্রেশন হয়েছে। ইমেইলে confirmation link এলে সেটি খুলে নিশ্চিত করুন।", true);
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) { say("রেজিস্ট্রেশন ব্যর্থ: " + err.message); }
-    finally { setBusy(e.currentTarget, false); }
+    finally { setBusy(form, false); }
   });
 
   document.getElementById("nxLogin").addEventListener("submit", async e => {
-    e.preventDefault(); setBusy(e.currentTarget, true); say("");
-    const f = new FormData(e.currentTarget);
+    e.preventDefault();
+    const form = e.currentTarget;
+    setBusy(form, true); say("");
+    const f = new FormData(form);
     try {
       const { data, error } = await db.auth.signInWithPassword({
         email: String(f.get("email")).trim(), password: String(f.get("password"))
       });
       if (error) throw error;
-      await sync(data.session); say("লগইন সফল হয়েছে।", true); e.currentTarget.reset();
+      await sync(data.session); say("লগইন সফল হয়েছে।", true); form.reset();
     } catch (err) { say("লগইন ব্যর্থ: " + err.message); }
-    finally { setBusy(e.currentTarget, false); }
+    finally { setBusy(form, false); }
   });
 
   document.getElementById("nxLogout").addEventListener("click", async () => {
@@ -180,19 +184,20 @@
 
   document.getElementById("nxRoleRequest").addEventListener("submit", async e => {
     e.preventDefault();
+    const form = e.currentTarget;
     if (!currentUser) return say("আগে লগইন করুন।");
-    const role = new FormData(e.currentTarget).get("requested_role");
+    const role = new FormData(form).get("requested_role");
     if (!["seller", "porter"].includes(role)) return;
-    setBusy(e.currentTarget, true);
+    setBusy(form, true);
     try {
       const { error } = await db.from("role_requests").insert({
         user_id: currentUser.id, requested_role: role, status: "pending"
       });
       if (error) throw error;
       say("আপনার আবেদন Admin-এর কাছে পাঠানো হয়েছে।", true);
-      e.currentTarget.reset();
+      form.reset();
     } catch (err) { say("আবেদন জমা হয়নি: " + err.message); }
-    finally { setBusy(e.currentTarget, false); }
+    finally { setBusy(form, false); }
   });
 
   async function loadRequests() {
