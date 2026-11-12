@@ -48,7 +48,7 @@
         .select("id,display_name,country,city,seller_id,created_at")
         .eq("approval_status", "pending").order("created_at"),
       client().from("products")
-        .select("id,product_code,product_name,category,price,currency,seller_id,created_at")
+        .select("id,product_code,product_name,category,price,currency,price_unit,minimum_order_quantity,price_negotiable,seller_id,created_at")
         .eq("listing_status", "pending").order("created_at")
     ]);
     if (businesses.error) businessHost.textContent = "Business queue error: " + businesses.error.message;
@@ -62,7 +62,7 @@
     if (products.error) productHost.textContent = "Product queue error: " + products.error.message;
     else productHost.innerHTML = (products.data || []).map(p => `
       <div class="offer"><strong>${esc(p.product_name)}</strong>
-      <p class="muted">${esc(p.product_code)} | ${esc(p.category)} | ${esc(p.price)} ${esc(p.currency)}</p>
+      <p class="muted">${esc(p.product_code)} | ${esc(p.category)} | ${esc(p.price)} ${esc(p.currency)} / ${esc(p.price_unit)} | MOQ: ${esc(p.minimum_order_quantity)} ${esc(p.price_unit)} | দরদাম: ${p.price_negotiable ? "হ্যাঁ" : "না"}</p>
       <div class="form-actions">
         <button class="primary" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="approved">Approve</button>
         <button class="danger" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="rejected">Reject</button>
@@ -190,7 +190,7 @@
       return;
     }
     const { data, error } = await client().from("products")
-      .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
+      .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,price_unit,minimum_order_quantity,price_negotiable,listing_status,business_id")
       .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
     if (error) {
@@ -251,7 +251,9 @@
         <h3>${esc(p.product_name)}</h3><p class="muted">${esc(p.description)}</p>
         <p class="muted">Origin: ${esc(p.origin)}</p>
         <p class="muted">Business: ${esc(b?.display_name || "Approved Seller")}</p>
-        <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
+        <p class="price">${esc(p.price)} ${esc(p.currency)} / ${esc(p.price_unit)}</p>
+        <p class="muted">Minimum wholesale order: ${esc(p.minimum_order_quantity)} ${esc(p.price_unit)}</p>
+        <p class="muted">দরদাম: ${p.price_negotiable ? "গ্রহণযোগ্য" : "গ্রহণযোগ্য নয়"}</p>
         <p class="muted">Product ID: ${esc(p.product_code)}</p>
         <p class="muted">Permanent URL slug: ${esc(p.slug)}</p>
       </article>`;
@@ -337,13 +339,14 @@
     try {
       await loadBusinessProfile();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,origin,price,currency,listing_status")
+        .select("id,product_code,product_name,category,origin,price,currency,price_unit,minimum_order_quantity,price_negotiable,listing_status")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       $("sellerProducts").innerHTML = (data || []).length ? data.map(p => `
         <div class="offer"><strong>${esc(p.product_name)}</strong>
         <p class="muted">${esc(p.category)} | ${esc(p.origin)}</p>
-        <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
+        <p class="price">${esc(p.price)} ${esc(p.currency)} / ${esc(p.price_unit)}</p>
+        <p class="muted">MOQ: ${esc(p.minimum_order_quantity)} ${esc(p.price_unit)} | দরদাম: ${p.price_negotiable ? "হ্যাঁ" : "না"}</p>
         <p class="muted">Product ID: ${esc(p.product_code)} | Approval: ${esc(p.listing_status)}</p>
         ${p.listing_status === "pending" ? `<button class="danger" data-delete-product="${esc(p.id)}">Delete</button>` : ""}
         </div>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>';
@@ -375,7 +378,9 @@
     const v = Object.fromEntries(new FormData(form));
     const images = String(v.images || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
     if (images.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
-    if (!Number.isFinite(Number(v.price)) || Number(v.price) < 0) return say("সঠিক মূল্য লিখুন।");
+    if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পাইকারি মূল্য শূন্যের বেশি হতে হবে।");
+    if (!v.price_unit?.trim() || v.price_unit.trim().length > 24) return say("সঠিক বিক্রয় একক লিখুন (সর্বোচ্চ ২৪ অক্ষর)।");
+    if (!Number.isFinite(Number(v.minimum_order_quantity)) || Number(v.minimum_order_quantity) <= 0) return say("MOQ শূন্যের বেশি হতে হবে।");
     setBusy(form, true);
     try {
       const { error } = await client().from("products").insert({
@@ -383,7 +388,9 @@
         product_name: v.name.trim(), category: v.category, image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
-        price: Number(v.price), currency: String(v.currency).toUpperCase()
+        price: Number(v.price), currency: String(v.currency).toUpperCase(),
+        price_unit: v.price_unit.trim(), minimum_order_quantity: Number(v.minimum_order_quantity),
+        price_negotiable: v.price_negotiable === "yes"
       });
       if (error) throw error;
       form.reset(); form.classList.add("hidden");
