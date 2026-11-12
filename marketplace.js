@@ -1571,8 +1571,8 @@
     host.innerHTML='<p class="muted">পরিবর্তনের আবেদন লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("listing_edit_requests")
-        .select("id,listing_type,product_id,service_listing_id,seller_id,original_data,proposed_changes,created_at,status")
-        .eq("status","pending").order("created_at",{ascending:true}).limit(100);
+        .select("id,listing_type,product_id,service_listing_id,seller_id,original_data,proposed_changes,created_at,status,review_reason,reviewed_at")
+        .order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
       const ids=(data||[]).map(r=>r.id);let events=[];
       if(ids.length){
@@ -1581,7 +1581,7 @@
           .order("created_at",{ascending:true});
         if(result.error)throw result.error;events=result.data||[];
       }
-      host.innerHTML=(data||[]).map(r=>'<article class="card nx-history-card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product Change Request":"Service Change Request")+'</strong><span class="tag">Pending Review</span></div><small>Request ID: '+esc(r.id)+' · Seller: '+esc(r.seller_id)+'</small>'+listingEditChangeMarkup(r)+'<details><summary>Request Timeline</summary>'+listingHistoryTimeline(events.filter(e=>e.request_id===r.id))+'</details><div class="form-actions"><button class="primary" type="button" data-listing-edit-review="approve" data-request-id="'+esc(r.id)+'">Approve & Publish Changes</button><button class="danger" type="button" data-listing-edit-review="reject" data-request-id="'+esc(r.id)+'">Reject</button></div></article>').join("")||'<p class="muted">কোনো Pending Listing Change Request নেই।</p>';
+      host.innerHTML=(data||[]).map(r=>'<article class="card nx-history-card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product Change Request":"Service Change Request")+'</strong><span class="tag">'+esc(({pending:"Pending Review",approved:"Approved",rejected:"Rejected"})[r.status]||r.status)+'</span></div><small>Request ID: '+esc(r.id)+' · Seller: '+esc(r.seller_id)+' · '+esc(new Date(r.created_at).toLocaleString("bn-BD"))+'</small>'+listingEditChangeMarkup(r)+'<details><summary>Request Timeline</summary>'+listingHistoryTimeline(events.filter(e=>e.request_id===r.id))+'</details>'+(r.review_reason?'<p class="muted">Admin Note: '+esc(r.review_reason)+'</p>':'')+(r.status==="pending"?'<div class="form-actions"><button class="primary" type="button" data-listing-edit-review="approve" data-request-id="'+esc(r.id)+'">Approve & Publish Changes</button><button class="danger" type="button" data-listing-edit-review="reject" data-request-id="'+esc(r.id)+'">Reject</button></div>':'')+'</article>').join("")||'<p class="muted">কোনো Listing Change Request নেই।</p>';
     }catch(err){host.textContent="Change Request History লোড হয়নি: "+err.message;}
   }
 
