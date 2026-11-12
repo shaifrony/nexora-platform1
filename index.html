@@ -333,6 +333,24 @@ h2{font-size:24px}
           <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p></div>
           <div class="form-actions"><button class="primary" type="submit">Save Admin Settings</button></div>
         </form>
+        <h4>নিরাপদ Test Account</h4>
+        <p class="muted">শুধু পরীক্ষার জন্য। Reserved example.com ঠিকানা ব্যবহার করুন; এই অ্যাকাউন্টগুলো বাস্তব ইমেইল পাঠাবে না। Buyer, Seller ও Porter role পরীক্ষা করা যাবে।</p>
+        <form id="nxTestAccountForm" class="card">
+          <label>Test Email *</label>
+          <input name="email" type="email" required pattern="nexora-test\\+[^@]+@example\\.com" placeholder="nexora-test+buyer@example.com">
+          <label>অস্থায়ী পাসওয়ার্ড (কমপক্ষে ১২ অক্ষর) *</label>
+          <input name="password" type="password" minlength="12" required autocomplete="new-password">
+          <label>পরীক্ষার Role *</label>
+          <select name="role" required>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+            <option value="porter">Porter</option>
+          </select>
+          <label>পরীক্ষার নাম</label>
+          <input name="full_name" maxlength="150" value="NEXORA Test User">
+          <div class="form-actions"><button class="primary" type="submit">Create Test Account</button></div>
+          <p class="muted">পাসওয়ার্ড ডেটাবেসে বা লগে সংরক্ষণ করা হবে না। তৈরি হওয়ার পর Test Account দিয়ে আলাদাভাবে লগইন করে পরীক্ষা করুন।</p>
+        </form>
         <h4>বর্তমান Assistant Admin</h4>
         <div id="nxAdminStaffList" class="muted">Admin তালিকা লোড হচ্ছে…</div>
       </div>
