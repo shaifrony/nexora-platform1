@@ -6,7 +6,7 @@
   const db = () => auth()?.client;
   const user = () => auth()?.user;
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const state = { conversationId: null, channel: null, conversations: [], participants: [], directory: [], messages: [] };
+  const state = { conversationId: null, channel: null, callChannel: null, conversations: [], participants: [], directory: [], messages: [], pc: null, localStream: null, activeCall: null, incomingCall: null, pendingIce: [] };
   const note = (msg, ok=false) => { const n=$("chatNotice"); if(n){n.textContent=msg;n.style.color=ok?"#087b5f":"#b42318";} };
   const isSignedIn = () => Boolean(user()?.id);
 
@@ -189,8 +189,140 @@
     finally{e.target.value="";}
   }
 
+
+  function setCallStatus(message){const n=$("callStatus");if(n)n.textContent=message;}
+  async function sendCallSignal(signalType,payload={}){
+    const c=state.activeCall;if(!c)return;
+    const {error}=await db().from("call_signals").insert({
+      call_id:c.id,conversation_id:c.conversationId,sender_id:user().id,
+      recipient_id:c.remoteUserId,signal_type:signalType,payload
+    });
+    if(error)note("Call signaling error: "+error.message);
+  }
+  async function setupCallNotifications(){
+    if(!isSignedIn()||state.callChannel)return;
+    state.callChannel=db().channel("nexora-incoming-calls-"+user().id)
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"recipient_id=eq."+user().id},payload=>handleCallSignal(payload.new))
+      .subscribe();
+  }
+  async function handleCallSignal(signal){
+    if(signal.signal_type==="offer"){
+      if(state.activeCall){return;}
+      state.incomingCall=signal;
+      if(typeof window.showSection==="function")window.showSection("privateChat");
+      await openConversation(signal.conversation_id);
+      $("incomingCall").classList.remove("hidden");
+      $("incomingCallText").textContent="Incoming "+(signal.payload.call_type||"audio")+" call";
+      return;
+    }
+    if(!state.activeCall||signal.call_id!==state.activeCall.id)return;
+    try{
+      if(signal.signal_type==="answer"){
+        await state.pc.setRemoteDescription(new RTCSessionDescription({type:"answer",sdp:signal.payload.sdp}));
+        await flushIce();
+        setCallStatus("Call connected.");
+      }else if(signal.signal_type==="ice-candidate"){
+        const candidate=new RTCIceCandidate(signal.payload.candidate);
+        if(state.pc.remoteDescription)await state.pc.addIceCandidate(candidate);
+        else state.pendingIce.push(candidate);
+      }else if(signal.signal_type==="hangup"||signal.signal_type==="busy"){
+        closeCall(signal.signal_type==="busy"?"The other participant is unavailable.":"The other participant ended the call.");
+      }
+    }catch(err){note("Call connection error: "+err.message);}
+  }
+  async function flushIce(){
+    if(!state.pc?.remoteDescription)return;
+    for(const candidate of state.pendingIce.splice(0)){try{await state.pc.addIceCandidate(candidate);}catch(e){}}
+  }
+  async function createPeerConnection(){
+    const pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
+    state.pc=pc;
+    state.localStream.getTracks().forEach(track=>pc.addTrack(track,state.localStream));
+    const remote=new MediaStream();
+    $("remoteCallVideo").srcObject=remote;
+    $("localCallVideo").srcObject=state.localStream;
+    pc.ontrack=e=>e.streams[0]?.getTracks().forEach(t=>remote.addTrack(t));
+    pc.onicecandidate=e=>{if(e.candidate)sendCallSignal("ice-candidate",{candidate:e.candidate.toJSON()});};
+    pc.onconnectionstatechange=()=>{
+      if(pc.connectionState==="connected")setCallStatus("Connected.");
+      if(pc.connectionState==="failed")setCallStatus("Connection failed. This network may require a TURN relay.");
+      if(pc.connectionState==="disconnected")setCallStatus("Connection interrupted…");
+    };
+    $("endCall").classList.remove("hidden");
+  }
+  async function startCall(type){
+    if(!state.conversationId)return;
+    const others=state.participants.filter(p=>p.user_id!==user().id&&p.invitation_status==="accepted");
+    if(others.length!==1){note("এখন এক-টু-এক Audio/Video Call সমর্থিত; Group Call পরে যোগ হবে।");return;}
+    if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection){note("এই Browser-এ WebRTC বা Microphone/Camera API পাওয়া যাচ্ছে না। HTTPS ব্যবহার করুন।");return;}
+    try{
+      state.localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:type==="video"});
+      const {data:session,error}=await db().from("call_sessions").insert({
+        conversation_id:state.conversationId,initiated_by:user().id,call_type:type,call_status:"ringing"
+      }).select("id").single();
+      if(error)throw error;
+      state.activeCall={id:session.id,conversationId:state.conversationId,remoteUserId:others[0].user_id,type};
+      await createPeerConnection();
+      const offer=await state.pc.createOffer();
+      await state.pc.setLocalDescription(offer);
+      await sendCallSignal("offer",{sdp:offer.sdp,call_type:type});
+      setCallStatus(type==="video"?"Video call ringing…":"Audio call ringing…");
+    }catch(err){closeCall("Call could not start: "+err.message);}
+  }
+  async function acceptIncomingCall(){
+    const signal=state.incomingCall;if(!signal)return;
+    try{
+      const {data:session,error}=await db().from("call_sessions").select("id,call_type,conversation_id").eq("id",signal.call_id).single();
+      if(error)throw error;
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error("Microphone/Camera permission API unavailable.");
+      state.localStream=await navigator.mediaDevices.getUserMedia({audio:true,video:session.call_type==="video"});
+      state.activeCall={id:session.id,conversationId:session.conversation_id,remoteUserId:signal.sender_id,type:session.call_type};
+      await createPeerConnection();
+      await state.pc.setRemoteDescription(new RTCSessionDescription({type:"offer",sdp:signal.payload.sdp}));
+      await flushIce();
+      const answer=await state.pc.createAnswer();
+      await state.pc.setLocalDescription(answer);
+      const {error:updateError}=await db().from("call_sessions").update({call_status:"accepted",started_at:new Date().toISOString()}).eq("id",session.id);
+      if(updateError)throw updateError;
+      await sendCallSignal("answer",{sdp:answer.sdp});
+      state.incomingCall=null;$("incomingCall").classList.add("hidden");
+      setCallStatus("Connecting…");
+    }catch(err){note("Call গ্রহণ করা যায়নি: "+err.message);closeCall("Call setup failed.");}
+  }
+  async function declineIncomingCall(){
+    const signal=state.incomingCall;if(!signal)return;
+    await db().from("call_sessions").update({call_status:"declined",ended_at:new Date().toISOString()}).eq("id",signal.call_id);
+    state.activeCall={id:signal.call_id,conversationId:signal.conversation_id,remoteUserId:signal.sender_id};
+    await sendCallSignal("busy",{});
+    state.activeCall=null;state.incomingCall=null;$("incomingCall").classList.add("hidden");
+    setCallStatus("Call declined.");
+  }
+  async function endCall(){
+    if(state.activeCall){
+      await sendCallSignal("hangup",{});
+      await db().from("call_sessions").update({call_status:"ended",ended_at:new Date().toISOString()}).eq("id",state.activeCall.id);
+    }
+    closeCall("Call ended.");
+  }
+  function closeCall(message){
+    if(state.pc){state.pc.onicecandidate=null;state.pc.close();state.pc=null;}
+    if(state.localStream){state.localStream.getTracks().forEach(t=>t.stop());state.localStream=null;}
+    if($("localCallVideo"))$("localCallVideo").srcObject=null;
+    if($("remoteCallVideo"))$("remoteCallVideo").srcObject=null;
+    if($("endCall"))$("endCall").classList.add("hidden");
+    if($("incomingCall"))$("incomingCall").classList.add("hidden");
+    state.activeCall=null;state.incomingCall=null;state.pendingIce=[];
+    setCallStatus(message);
+  }
+
+  $("startAudioCall")?.addEventListener("click",()=>startCall("audio"));
+  $("startVideoCall")?.addEventListener("click",()=>startCall("video"));
+  $("acceptIncomingCall")?.addEventListener("click",acceptIncomingCall);
+  $("declineIncomingCall")?.addEventListener("click",declineIncomingCall);
+  $("endCall")?.addEventListener("click",endCall);
   $("chatComposer")?.addEventListener("submit",sendMessage);
   $("chatFile")?.addEventListener("change",uploadChatFile);
-  window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
+  window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if(state.callChannel){db().removeChannel(state.callChannel);state.callChannel=null;}if(isSignedIn())setupCallNotifications();if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
   setChatVisible(true);
+  if(isSignedIn())setupCallNotifications();
 })();
