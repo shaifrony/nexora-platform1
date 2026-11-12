@@ -213,6 +213,7 @@
   }
 
   function applySection(id) {
+    document.body.classList.toggle("nx-buyer-dashboard-active", id === "buyerDashboard");
     document.body.classList.toggle("nx-demand-only-active", id === "postDemand");
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     currentSection = id;
