@@ -116,7 +116,15 @@
   }
   async function sync(session) {
     currentUser = session?.user || null;
-    try { await loadProfile(); render(); }
+    try {
+      await loadProfile();
+      if (currentUser && profile && profile.account_status !== "active") {
+        await db.auth.signOut({ scope: "local" });
+        currentUser = null; profile = null; adminStaff = null;
+        render();
+        say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
+      } else render();
+    }
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
     window.dispatchEvent(new Event("nexora:auth-change"));
   }
