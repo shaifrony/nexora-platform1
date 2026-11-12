@@ -389,6 +389,95 @@ body.nx-buyer-dashboard-active>header{display:none}
 .nx-profile-dropdown>button{min-height:42px;padding:11px 12px;font-size:14px}
 .nx-profile-dropdown .nx-profile-logout{margin-top:6px;padding-top:12px}
 @media(max-width:600px){.nx-account-menu-trigger{width:42px;height:42px;min-width:42px}}
+
+/* Unified commerce design system — NEXORA role workspaces */
+:root{
+  --nx-ink:#172b3d;--nx-muted:#718096;--nx-line:#e5ebf0;
+  --nx-surface:#fff;--nx-soft:#f6f8fa;--nx-brand:#087f78;
+  --nx-accent:#f26b38;--nx-radius:16px;
+  --nx-elevation:0 8px 26px rgba(23,43,61,.065);
+}
+main.container{max-width:1320px}
+main>section.section:not(#market){
+  background:var(--nx-surface);border:1px solid var(--nx-line);
+  border-radius:18px;padding:clamp(16px,2.3vw,28px);
+  box-shadow:var(--nx-elevation);margin:22px auto;
+}
+main>section.section:not(#market)>.section-head{
+  padding-bottom:15px;border-bottom:1px solid #edf1f4;margin-bottom:20px;
+}
+main>section.section:not(#market) h2,
+main>section.section:not(#market) h3{color:var(--nx-ink);letter-spacing:-.25px}
+main>section.section:not(#market) .card{
+  border:1px solid var(--nx-line);border-radius:14px;
+  box-shadow:0 3px 14px rgba(23,43,61,.035);padding:20px;
+}
+main>section.section:not(#market) button{
+  min-height:40px;transition:background .18s,border-color .18s,transform .18s;
+}
+main>section.section:not(#market) button:active{transform:translateY(1px)}
+main>section.section:not(#market) input,
+main>section.section:not(#market) select,
+main>section.section:not(#market) textarea{
+  border-color:#dce4eb;border-radius:10px;background:#fbfcfd;
+  min-height:44px;
+}
+main>section.section:not(#market) textarea{min-height:100px}
+main>section.section:not(#market) label{color:#34495e;font-weight:700}
+.nx-buyer-shellbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 15px;margin:-4px 0 20px;border:1px solid var(--nx-line);
+  border-radius:15px;background:#fff;box-shadow:0 4px 16px rgba(23,43,61,.045);
+}
+.nx-buyer-brand{display:flex;align-items:center;gap:10px;color:var(--nx-ink);font-weight:850;letter-spacing:.7px}
+.nx-buyer-brand small{display:block;font-size:9px;letter-spacing:1.5px;color:var(--nx-muted);margin-top:3px}
+.nx-buyer-brandmark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#35cda5,#087f78);font-size:20px;box-shadow:0 4px 12px #087f7828}
+.nx-buyer-shell-actions{gap:12px}
+.nx-buyer-wallet{
+  min-width:184px;display:flex;align-items:center;gap:10px;padding:7px 13px;
+  border:1px solid #dcebe7;border-radius:13px;background:linear-gradient(110deg,#f0faf7,#fff);
+}
+.nx-buyer-wallet-icon{
+  width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+  border-radius:11px;background:#dff4ed;color:#087f78;font-size:22px;
+}
+.nx-buyer-wallet-copy{display:flex;flex-direction:column;gap:1px;line-height:1.2}
+.nx-buyer-wallet-copy small{font-size:9px;letter-spacing:1px;font-weight:800;color:#638078}
+.nx-buyer-wallet-copy strong{font-size:17px;color:#087f78;font-variant-numeric:tabular-nums}
+.nx-buyer-wallet-copy em{font-size:10px;color:#718096;font-style:normal}
+.nx-buyer-layout{gap:22px}
+.nx-buyer-sidebar{border-radius:15px;border:1px solid var(--nx-line);background:#fbfcfd;padding:13px}
+.nx-buyer-sidebar button{border-radius:10px}
+.nx-buyer-main{min-width:0}
+.nx-buyer-demands,.nx-buyer-products{border:1px solid var(--nx-line);border-radius:15px;padding:18px;background:#fff}
+.nx-buyer-section-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:15px}
+.nx-buyer-eyebrow{font-size:10px;letter-spacing:1.5px;font-weight:800;color:var(--nx-brand)}
+#buyerDemandList .card,#matchedDemands .card,#sellerProducts .card{
+  border:1px solid var(--nx-line);border-radius:13px;box-shadow:none;
+}
+#privateChat .chat-messages{border-radius:12px;background:#f7f9fb}
+#postDemand .nx-demand-form-card{max-width:850px;margin:0 auto;padding:clamp(16px,3vw,30px);border:1px solid var(--nx-line);border-radius:16px;background:#fff;box-shadow:var(--nx-elevation)}
+#accountSection .nx-auth-panel{max-width:560px;margin:0 auto}
+@media(max-width:680px){
+  main>section.section:not(#market){padding:14px 11px;border-radius:14px}
+  .nx-buyer-shellbar{padding:10px;gap:9px}
+  .nx-buyer-wallet{min-width:0;padding:6px 8px;gap:7px}
+  .nx-buyer-wallet-icon{width:32px;height:32px;flex-basis:32px}
+  .nx-buyer-wallet-copy strong{font-size:15px}
+  .nx-buyer-wallet-copy small{font-size:8px}
+  .nx-buyer-wallet-copy em{display:none}
+  .nx-buyer-shell-actions{gap:7px}
+  .nx-account-menu-trigger{width:40px;height:40px;min-width:40px}
+  .nx-buyer-layout{display:block}
+  .nx-buyer-sidebar{margin-bottom:14px}
+  .nx-buyer-demands,.nx-buyer-products{padding:13px}
+}
+@media(max-width:380px){
+  .nx-buyer-brand{font-size:12px;gap:6px}
+  .nx-buyer-brandmark{width:31px;height:31px}
+  .nx-buyer-wallet{padding:5px 6px}
+}
+
 </style>
 </head>
 
@@ -634,6 +723,10 @@ body.nx-buyer-dashboard-active>header{display:none}
   <section id="buyerDashboard" class="section hidden nx-buyer-workspace">
     <div class="nx-buyer-shellbar">
       <div class="nx-buyer-brand"><span class="nx-buyer-brandmark">N</span><span>NEXORA <small>BUYER CENTER</small></span></div>
+      <div class="nx-buyer-wallet" aria-label="Buyer wallet balance">
+        <span class="nx-buyer-wallet-icon" aria-hidden="true">▰</span>
+        <span class="nx-buyer-wallet-copy"><small>WALLET BALANCE</small><strong id="nxBuyerWalletBalance">৳ —</strong><em>Available Balance</em></span>
+      </div>
       <div class="nx-buyer-shell-actions">
         <div id="nxBuyerProfileMenu" class="nx-profile-wrap">
           <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle nx-account-menu-trigger" aria-label="Buyer account menu" title="Account menu" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
