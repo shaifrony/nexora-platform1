@@ -199,25 +199,72 @@
     await loadAdminQueue();
   }
 
-  window.showSection = function(id) {
+  let currentSection = "market";
+  let restoringSectionHistory = false;
+
+  function ensurePageBackButtons() {
+    document.querySelectorAll("main > section.section:not(#market)").forEach(section => {
+      if (section.querySelector(":scope > .nx-page-back-row")) return;
+      const row = document.createElement("div");
+      row.className = "nx-page-back-row";
+      row.innerHTML = '<button type="button" class="nx-page-back-button" data-nx-page-back><span aria-hidden="true">←</span> Back</button>';
+      section.insertBefore(row, section.firstChild);
+    });
+  }
+
+  function applySection(id) {
     document.body.classList.toggle("nx-demand-only-active", id === "postDemand");
-    if (["postDemand","buyerDashboard"].includes(id) && !(signedIn() && activeBuyer())) {
-      document.querySelectorAll("main section.section").forEach(s => s.classList.add("hidden"));
-      $("accountSection")?.classList.remove("hidden");
-      const hint = $("nxCurrent");
-      if (hint) hint.textContent = signedIn()
-        ? "Buyer Dashboard ও Demand Posting ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
-        : "Buyer Dashboard ও Demand Posting ব্যবহার করতে আগে Buyer হিসেবে লগইন করুন।";
-      $("accountSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      return;
-    }
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
+    currentSection = id;
     if (id === "market") loadProducts();
     if (id === "accountSection") loadAdminActions();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  window.nexoraGoBack = function() {
+    if (window.history.state?.nxPage && window.history.state.nxPage !== "market") {
+      window.history.back();
+      return;
+    }
+    if (currentSection !== "market") {
+      applySection("market");
+      window.history.replaceState({ nxPage: "market" }, "", window.location.href);
+    } else {
+      window.history.back();
+    }
   };
+
+  window.showSection = function(id, options = {}) {
+    if (["postDemand","buyerDashboard"].includes(id) && !(signedIn() && activeBuyer())) {
+      const hint = $("nxCurrent");
+      if (hint) hint.textContent = signedIn()
+        ? "Buyer Dashboard ও Demand Posting ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
+        : "Buyer Dashboard ও Demand Posting ব্যবহার করতে আগে Buyer হিসেবে লগইন করুন।";
+      id = "accountSection";
+    }
+    if (!document.querySelector('main > section.section#' + CSS.escape(id))) return;
+    if (!restoringSectionHistory && options.history !== false && id !== currentSection) {
+      window.history.pushState({ nxPage: id }, "", window.location.href);
+    }
+    applySection(id);
+  };
+
+  document.addEventListener("click", event => {
+    if (event.target.closest("[data-nx-page-back]")) window.nexoraGoBack();
+  });
+
+  if (!window.history.state?.nxPage) {
+    window.history.replaceState({ nxPage: "market" }, "", window.location.href);
+  }
+  window.addEventListener("popstate", event => {
+    const next = event.state?.nxPage || "market";
+    restoringSectionHistory = true;
+    window.showSection(next, { history: false });
+    restoringSectionHistory = false;
+  });
+  ensurePageBackButtons();
 
   function ensureBusinessForm() {
     const host = $("sellerDashboard");
