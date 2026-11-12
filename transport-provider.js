@@ -89,7 +89,7 @@
           </div>
           <label class="nx-transport-check"><input name="is_available" type="checkbox" checked style="width:auto"> বর্তমানে গাড়িটি কাজের জন্য উপলভ্য</label>
           <p class="muted">গাড়ির ছবি ও আইনগত কাগজপত্র আপলোডের ব্যবস্থা পরবর্তী ধাপে যুক্ত হবে। ব্যক্তিগত Registration Number ও নথি Public Marketplace-এ দেখানো হবে না।</p>
-          <div class="form-actions"><button class="primary" type="submit" ${p.application_status==="suspended"?"disabled":""}>গাড়ি নিবন্ধন করুন</button></div>
+          <div class="form-actions"><button class="primary" type="submit" ${["suspended","rejected"].includes(p.application_status)?"disabled":""}>গাড়ি নিবন্ধন করুন</button></div>
         </form>
       </article>`).join("");
     providers.forEach(p=>loadVehicles(p.id));
