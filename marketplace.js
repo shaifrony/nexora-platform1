@@ -24,6 +24,71 @@
 
   window.toggleProductForm = function() { $("productForm")?.classList.toggle("hidden"); };
 
+  function ensureAdminApprovalPanel() {
+    const host = $("nxAdmin");
+    if (!host || $("nxMarketplaceAdmin")) return;
+    const panel = document.createElement("div");
+    panel.id = "nxMarketplaceAdmin";
+    panel.innerHTML = `
+      <hr><h3>Marketplace Approvals</h3>
+      <h4>Pending Business Profiles</h4><div id="nxPendingBusinesses" class="muted">Loading…</div>
+      <h4>Pending Product Listings</h4><div id="nxPendingProducts" class="muted">Loading…</div>`;
+    host.appendChild(panel);
+    panel.addEventListener("click", handleAdminDecision);
+  }
+
+  async function loadAdminQueue() {
+    if (profile()?.role !== "admin" || profile()?.account_status !== "active") return;
+    ensureAdminApprovalPanel();
+    const businessHost = $("nxPendingBusinesses");
+    const productHost = $("nxPendingProducts");
+    if (!businessHost || !productHost) return;
+    const [businesses, products] = await Promise.all([
+      client().from("business_profiles")
+        .select("id,display_name,country,city,seller_id,created_at")
+        .eq("approval_status", "pending").order("created_at"),
+      client().from("products")
+        .select("id,product_code,product_name,category,price,currency,seller_id,created_at")
+        .eq("listing_status", "pending").order("created_at")
+    ]);
+    if (businesses.error) businessHost.textContent = "Business queue error: " + businesses.error.message;
+    else businessHost.innerHTML = (businesses.data || []).map(b => `
+      <div class="offer"><strong>${esc(b.display_name)}</strong>
+      <p class="muted">${esc(b.country)}, ${esc(b.city)} | Seller ID: ${esc(b.seller_id)}</p>
+      <div class="form-actions">
+        <button class="primary" data-review-type="business" data-review-id="${esc(b.id)}" data-decision="approved">Approve</button>
+        <button class="danger" data-review-type="business" data-review-id="${esc(b.id)}" data-decision="rejected">Reject</button>
+      </div></div>`).join("") || "কোনো Pending Business Profile নেই।";
+    if (products.error) productHost.textContent = "Product queue error: " + products.error.message;
+    else productHost.innerHTML = (products.data || []).map(p => `
+      <div class="offer"><strong>${esc(p.product_name)}</strong>
+      <p class="muted">${esc(p.product_code)} | ${esc(p.category)} | ${esc(p.price)} ${esc(p.currency)}</p>
+      <div class="form-actions">
+        <button class="primary" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="approved">Approve</button>
+        <button class="danger" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="rejected">Reject</button>
+      </div></div>`).join("") || "কোনো Pending Product নেই।";
+  }
+
+  async function handleAdminDecision(e) {
+    const button = e.target.closest("button[data-review-type]");
+    if (!button || profile()?.role !== "admin" || profile()?.account_status !== "active") return;
+    const note = prompt("Admin note (ঐচ্ছিক):", "") || null;
+    button.disabled = true;
+    const type = button.dataset.reviewType;
+    const approved = button.dataset.decision === "approved";
+    const table = type === "business" ? "business_profiles" : "products";
+    const statusColumn = type === "business" ? "approval_status" : "listing_status";
+    const { error } = await client().from(table).update({
+      [statusColumn]: approved ? "approved" : "rejected",
+      admin_note: note,
+      reviewed_by: user().id,
+      reviewed_at: new Date().toISOString()
+    }).eq("id", button.dataset.reviewId);
+    if (error) { button.disabled = false; return say("Approval update failed: " + error.message); }
+    say((type === "business" ? "Business Profile" : "Product") + (approved ? " approved." : " rejected."), true);
+    await loadAdminQueue();
+  }
+
   window.showSection = function(id) {
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     if (id === "market") loadProducts();
@@ -303,6 +368,7 @@
   $("categoryFilter")?.addEventListener("change", () => renderProducts());
   window.addEventListener("nexora:auth-change", async () => {
     state.business = null;
+    await loadAdminQueue();
     if ($("market") && !$("market").classList.contains("hidden")) await loadProducts();
     if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
     if ($("sellerDashboard") && !$("sellerDashboard").classList.contains("hidden")) await loadSellerDashboard();
