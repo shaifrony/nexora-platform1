@@ -317,6 +317,7 @@
     if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadRequests();
   }
   async function sync(session) {
+    const wasSignedIn = Boolean(currentUser);
     currentUser = session?.user || null;
     try {
       await loadProfile();
@@ -332,6 +333,9 @@
         render();
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
       } else render();
+      if (!wasSignedIn && currentUser && profile?.role === "buyer" && profile?.account_status === "active") {
+        window.showSection?.("market");
+      }
     }
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
     window.dispatchEvent(new Event("nexora:auth-change"));
