@@ -946,6 +946,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <h4>Services Marketplace Review</h4>
         <p class="muted">নতুন সেবা প্রকাশের আগে বিবরণ, বিভাগ ও সেবার এলাকা যাচাই করুন। ব্যক্তিগত ফোন ও সঠিক ঠিকানা এখানে প্রকাশ করা হয় না।</p>
         <div id="nxAdminServiceQueue" class="muted">সেবা আবেদন লোড হচ্ছে…</div>
+        <h4>Approved Listing Change Review</h4>
+        <p class="muted">Seller-এর পরিবর্তন প্রস্তাব অনুমোদনের আগে Marketplace-এ বর্তমান তথ্যই থাকবে। Approve করলে পরিবর্তন প্রকাশিত হবে; Reject করলে পুরোনো Listing অপরিবর্তিত থাকবে।</p>
+        <div id="nxAdminListingEditQueue" aria-live="polite" class="muted">Admin MFA ও products.edit / services.edit অনুমতি যাচাইয়ের পর আবেদন দেখা যাবে…</div>
         <h4>Transport Provider & Vehicle Review</h4>
         <p class="muted">Provider এবং প্রতিটি Vehicle আলাদাভাবে যাচাই করুন। Reject/Suspend করার সময় কারণ লিখতে হবে। সব সিদ্ধান্ত Audit Log-এ সংরক্ষিত হবে।</p>
         <div id="nxAdminTransportQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর আবেদন দেখা যাবে…</div>
@@ -1376,6 +1379,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       </form>
 
       <div id="sellerProducts"></div>
+      <div class="card" style="margin-top:14px"><h4>আমার Listing Change Requests</h4><div id="nxSellerEditRequests" aria-live="polite"><p class="muted">আপনার পরিবর্তনের আবেদন এখানে দেখা যাবে।</p></div></div>
     </div>
   </section>
 
