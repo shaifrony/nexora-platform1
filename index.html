@@ -199,6 +199,10 @@ h2{font-size:24px}
 @media(max-width:760px){header{position:relative}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
 @media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
 
+  #nxAdminManagement .nx-permission-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
+  #nxAdminManagement .nx-permission-option{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin:0;font-weight:400}
+  #nxAdminManagement .nx-permission-option input{width:auto;margin-top:3px}
+  #nxAdminManagement .nx-permission-option small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:3px}
 </style>
 </head>
 
@@ -310,6 +314,27 @@ h2{font-size:24px}
     <div id="nxAdmin" class="card hidden">
       <h3>Admin Dashboard</h3>
       <p id="nxAdminIdentity" class="muted"></p>
+      <div id="nxAdminManagement" class="hidden">
+        <h4>Assistant Admin Management</h4>
+        <p class="muted">নিবন্ধিত Buyer অ্যাকাউন্টের ইমেইল দিয়ে Assistant Admin নিয়োগ করুন। Update করলে নির্বাচিত অনুমতিগুলোই থাকবে; Deactivate করলে Admin access বন্ধ হবে।</p>
+        <form id="nxAssistantAdminForm" class="card">
+          <label>নিবন্ধিত অ্যাকাউন্টের Email *</label>
+          <input name="email" type="email" required placeholder="assistant@example.com">
+          <label>কাজের ধরন *</label>
+          <select name="action" required>
+            <option value="create">নতুন Assistant Admin নিয়োগ</option>
+            <option value="update">বিভাগ / অনুমতি পরিবর্তন বা পুনরায় সক্রিয়</option>
+            <option value="deactivate">Assistant Admin নিষ্ক্রিয়</option>
+          </select>
+          <label>বিভাগ</label>
+          <select id="nxAssistantDepartment" name="department"><option value="">বিভাগ নির্বাচন করুন</option></select>
+          <label>অনুমতি নির্ধারণ</label>
+          <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p></div>
+          <div class="form-actions"><button class="primary" type="submit">Save Admin Settings</button></div>
+        </form>
+        <h4>বর্তমান Assistant Admin</h4>
+        <div id="nxAdminStaffList" class="muted">Admin তালিকা লোড হচ্ছে…</div>
+      </div>
       <div id="nxRoleRequestsPanel">
         <h4>Pending Role Requests</h4>
         <div id="nxRequests" class="muted">আবেদন লোড হচ্ছে…</div>
