@@ -323,6 +323,42 @@
     const businessMap = state.businessMap;
     const host = $("productList");
     if (!host) return;
+    const detailPanel = $("productDetailPanel");
+    const requestedSlug = new URLSearchParams(window.location.search).get("product");
+    if (requestedSlug && detailPanel) {
+      $("nx-search-panel")?.classList.add("hidden");
+      document.querySelector(".nx-search-panel")?.classList.add("hidden");
+      host.classList.add("hidden");
+      $("publicDemandBoard")?.classList.add("hidden");
+      const selected = state.products.find(p => p.slug === requestedSlug);
+      if (!selected) {
+        detailPanel.classList.remove("hidden");
+        detailPanel.innerHTML = '<p>পণ্যটি পাওয়া যায়নি অথবা বর্তমানে অনুমোদিত নয়।</p><a href="' + esc(window.location.pathname) + '">Marketplace-এ ফিরে যান</a>';
+        return;
+      }
+      const business = state.businessMap.get(selected.business_id);
+      const images = (selected.image_urls || []).filter(Boolean);
+      detailPanel.classList.remove("hidden");
+      detailPanel.innerHTML = `
+        <p><a href="${esc(window.location.pathname)}">← Marketplace-এ ফিরে যান</a></p>
+        <span class="tag">${esc(selected.category)}</span>
+        <h2>${esc(selected.product_name)}</h2>
+        ${images.length ? `<div class="grid">${images.map((src,i) => `<img class="product-image" src="${esc(src)}" alt="${esc(selected.product_name)} image ${i+1}" loading="lazy" onerror="this.style.display='none'">`).join("")}</div>` : ""}
+        <p>${esc(selected.description)}</p>
+        <h3>পণ্যের তথ্য</h3>
+        <p><strong>উৎপত্তি:</strong> ${esc(selected.origin)}</p>
+        <p><strong>Specifications & Quality:</strong> ${esc(selected.specifications_quality || "তথ্য দেওয়া হয়নি")}</p>
+        <p class="price"><strong>পাইকারি মূল্য:</strong> ${esc(selected.price)} ${esc(selected.currency)}</p>
+        <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
+        <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
+        <div class="form-actions"><button class="primary" type="button" onclick="showSection('accountSection')">Login / Register করে Inquiry করুন</button></div>
+      `;
+      return;
+    }
+    if (detailPanel) detailPanel.classList.add("hidden");
+    document.querySelector(".nx-search-panel")?.classList.remove("hidden");
+    host.classList.remove("hidden");
+    $("publicDemandBoard")?.classList.remove("hidden");
     const search = ($("productSearch")?.value || "").trim().toLowerCase();
     const category = $("categoryFilter")?.value || "";
     const minRaw = $("priceMin")?.value || "";
@@ -378,7 +414,8 @@
       return `<article class="card">
         ${image ? `<img class="product-image" src="${esc(image)}" alt="Product image" onerror="this.style.display='none'">` : ""}
         <span class="tag">${esc(p.category)}</span>
-        <h3>${esc(p.product_name)}</h3><p class="muted">${esc(p.description)}</p>
+        <h3><a href="?product=${esc(encodeURIComponent(p.slug))}">${esc(p.product_name)}</a></h3><p class="muted">${esc(p.description)}</p>
+        <p><a href="?product=${esc(encodeURIComponent(p.slug))}">পণ্যের বিস্তারিত দেখুন →</a></p>
         <p class="muted">Origin: ${esc(p.origin)}</p>
         <p class="muted">Business: ${esc(b?.display_name || "Approved Seller")}</p>
         <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
