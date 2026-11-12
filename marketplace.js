@@ -889,11 +889,12 @@
     if(!activeSeller()||!signedIn()){host.textContent="সক্রিয় Seller হিসেবে লগইন করুন।";return;}
     try{
       const {data,error}=await client().from("service_listings")
-        .select("id,service_code,service_name,service_category,description,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note,image_urls")
+        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note,image_urls")
         .eq("seller_id",user().id).order("created_at",{ascending:false});
       if(error)throw error;
       if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
-      host.innerHTML=data.map(s=>'<article class="card">'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button>':'')+'</article>').join("");
+      window.NEXORA_SELLER_SERVICES=data;
+      host.innerHTML=data.map(s=>'<article class="card" data-seller-service>'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<div class="form-actions"><button class="primary" type="button" data-edit-service="'+esc(s.id)+'">সেবা সম্পাদনা</button><button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button></div>':'')+'</article>').join("");
       host.querySelectorAll("[data-delete-service]").forEach(b=>b.addEventListener("click",()=>deleteService(b.dataset.deleteService)));
     }catch(err){host.innerHTML='<p class="muted">সেবা তালিকা লোড হয়নি: '+esc(err.message)+'</p>';}
   }
@@ -979,7 +980,7 @@
       await loadBusinessProfile();
       await loadSellerServices();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls")
+        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -995,6 +996,7 @@
         rejected: "প্রত্যাখ্যাত", not_created: "তৈরি হয়নি"
       })[businessStatus] || "অবস্থা অজানা");
 
+      window.NEXORA_SELLER_PRODUCTS=products;
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
         <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
@@ -1003,7 +1005,7 @@
           <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
-          ${p.listing_status === "pending" ? `<button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button>` : ""}
+          ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button></div>` : ""}
         </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
 
@@ -1339,6 +1341,154 @@
     }
   }
   $("nxPorterRefresh")?.addEventListener("click",loadPorterDashboard);
+
+  function renderExistingImageChecks(urls,kind) {
+    return (urls||[]).map((url,index)=>'<div class="nx-existing-image"><img src="'+esc(url)+'" alt="বর্তমান ছবি '+(index+1)+'" loading="lazy"><label><input type="checkbox" data-existing-image-index="'+index+'" data-image-kind="'+kind+'" checked> রাখুন</label></div>').join("");
+  }
+
+  function renderProductEditor(p) {
+    const id=String(p.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
+    const categories=["Food & Agriculture","Textile & Garments","Electronics","Industrial Products","Handicrafts","Other"];
+    const marketOptions=(profile()?.seller_categories||[]).map(v=>'<option value="'+esc(v)+'" '+(p.market_category===v?"selected":"")+'>'+(v==="retail"?"Retail (খুচরা)":"Wholesale (পাইকারি)")+'</option>').join("");
+    const categoryOptions=categories.map(v=>'<option '+(p.category===v?"selected":"")+'>'+esc(v)+'</option>').join("");
+    const currencies=["BDT","USD","EUR","GBP","CNY"];
+    const currencyOptions=currencies.map(v=>'<option '+(p.currency===v?"selected":"")+'>'+v+'</option>').join("");
+    return '<form class="nx-listing-editor" data-edit-product-form="'+esc(id)+'">'+
+      '<h4>পণ্য সম্পাদনা · '+esc(p.product_code)+'</h4>'+
+      '<label>Product Name *<input name="name" required maxlength="180" value="'+esc(p.product_name)+'"></label>'+
+      '<label>বিক্রয় ক্যাটাগরি *<select name="market_category" required>'+marketOptions+'</select></label>'+
+      '<label>Product Category *<select name="category" required>'+categoryOptions+'</select></label>'+
+      '<label>বর্তমান ছবি — যেগুলো রাখতে চান সেগুলোতে টিক রাখুন</label><div class="nx-existing-images">'+renderExistingImageChecks(p.image_urls||[],"product")+'</div>'+
+      '<label>নতুন ছবি যোগ করুন (প্রতিটি সর্বোচ্চ ৫ MB)</label><input id="nxEditProductFiles-'+safeId+'" name="image_files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>'+
+      '<div id="nxEditProductPreview-'+safeId+'" class="nx-upload-preview"></div>'+
+      '<label>নতুন বাইরের HTTPS Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label><textarea name="images" placeholder="https://example.com/image.jpg"></textarea>'+
+      '<label>Product Description *<textarea name="description" required>'+esc(p.description||"")+'</textarea></label>'+
+      '<label>Origin *<input name="origin" required value="'+esc(p.origin||"")+'"></label>'+
+      '<label>Specifications & Quality<textarea name="specifications">'+esc(p.specifications_quality||"")+'</textarea></label>'+
+      '<div class="grid"><label>মূল্য *<input name="price" type="number" min="0.01" step="0.01" required value="'+esc(p.price)+'"></label>'+
+      '<label>Currency *<select name="currency" required>'+currencyOptions+'</select></label></div>'+
+      '<div class="form-actions"><button class="primary" type="submit">পরিবর্তন সংরক্ষণ</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
+      '</form>';
+  }
+
+  function renderServiceEditor(s) {
+    const id=String(s.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
+    const cats=[["household","গৃহস্থালি সেবা"],["tutoring","শিক্ষা ও টিউশন"],["plumbing","প্লাম্বিং"],["electrical","ইলেকট্রিক্যাল"],["mechanic","মেকানিক ও মেরামত"],["appliance_repair","ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত"],["it_support","আইটি ও কম্পিউটার"],["beauty_laundry","বিউটি ও লন্ড্রি"],["other","অন্যান্য"]];
+    const bases=[["negotiable","আলোচনা সাপেক্ষে"],["per_hour","প্রতি ঘণ্টা"],["per_day","প্রতি দিন"],["per_visit","প্রতি ভিজিট"],["per_job","প্রতি কাজ"],["per_month","প্রতি মাস"]];
+    const opts=(items,value)=>items.map(([v,label])=>'<option value="'+v+'" '+(value===v?"selected":"")+'>'+label+'</option>').join("");
+    return '<form class="nx-listing-editor" data-edit-service-form="'+esc(id)+'">'+
+      '<h4>সেবা সম্পাদনা · '+esc(s.service_code)+'</h4>'+
+      '<label>সেবার নাম *<input name="service_name" required minlength="2" maxlength="160" value="'+esc(s.service_name)+'"></label>'+
+      '<label>সেবার বিভাগ *<select name="service_category" required>'+opts(cats,s.service_category)+'</select></label>'+
+      '<label>সেবার বিবরণ *<textarea name="description" required minlength="20" maxlength="3000">'+esc(s.description||"")+'</textarea></label>'+
+      '<div class="grid"><label>দেশ *<input name="country" required maxlength="100" value="'+esc(s.country||"")+'"></label><label>শহর / জেলা *<input name="city" required maxlength="100" value="'+esc(s.city||"")+'"></label></div>'+
+      '<label>সেবা দেওয়ার এলাকা *<input name="service_area" required minlength="2" maxlength="300" value="'+esc(s.service_area||"")+'"></label>'+
+      '<div class="grid"><label>মূল্য নির্ধারণ *<select name="price_basis" required>'+opts(bases,s.price_basis)+'</select></label>'+
+      '<label>মূল্য (ঐচ্ছিক)<input name="price_amount" type="number" min="0" step="0.01" value="'+(s.price_amount===null||s.price_amount===undefined?"":esc(s.price_amount))+'"></label></div>'+
+      '<label>সেবার ছবি — যেগুলো রাখতে চান সেগুলোতে টিক রাখুন</label><div class="nx-existing-images">'+renderExistingImageChecks(s.image_urls||[],"service")+'</div>'+
+      '<label>নতুন ছবি যোগ করুন (প্রতিটি সর্বোচ্চ ৫ MB)</label><input id="nxEditServiceFiles-'+safeId+'" name="image_files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>'+
+      '<div id="nxEditServicePreview-'+safeId+'" class="nx-upload-preview"></div>'+
+      '<label>নতুন বাইরের HTTPS Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label><textarea name="images" placeholder="https://example.com/image.jpg"></textarea>'+
+      '<label>মুদ্রা<select name="currency"><option value="BDT" selected>BDT</option></select></label>'+
+      '<label>Availability<input name="availability" maxlength="300" value="'+esc(s.availability||"")+'"></label>'+
+      '<div class="form-actions"><button class="primary" type="submit">পরিবর্তন সংরক্ষণ</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
+      '</form>';
+  }
+
+  function retainedListingImages(form,oldUrls,kind) {
+    return (oldUrls||[]).filter((url,index)=>form.querySelector('[data-existing-image-index="'+index+'"][data-image-kind="'+kind+'"]')?.checked);
+  }
+
+  async function saveListingImages(form,oldUrls,kind,maxCount) {
+    const kept=retainedListingImages(form,oldUrls,kind);
+    const files=Array.from(form.querySelector('[name="image_files"]')?.files||[]);
+    const external=String(new FormData(form).get("images")||"").split(/\r?\n/).map(v=>v.trim()).filter(Boolean);
+    if(external.some(v=>!/^https:\/\//i.test(v)))throw new Error("প্রতিটি নতুন Image URL অবশ্যই HTTPS হতে হবে।");
+    if(kept.length+files.length+external.length>maxCount)throw new Error("মোট ছবি "+maxCount+"টির বেশি হতে পারবে না।");
+    const uploaded=await uploadListingImages(files,kind==="product"?"products":"services");
+    return {urls:[...kept,...uploaded.urls,...external],uploadedPaths:uploaded.paths,removedPaths:listingImagePathsFromUrls(oldUrls).filter(path=>!listingImagePathsFromUrls(kept).includes(path))};
+  }
+
+  async function saveProductEdit(form) {
+    const id=form.dataset.editProductForm;
+    const old=(await client().from("products").select("image_urls").eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").single());
+    if(old.error)throw old.error;
+    const oldUrls=old.data.image_urls||[];
+    const v=Object.fromEntries(new FormData(form));
+    const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
+    if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
+    if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
+    const images=await saveListingImages(form,oldUrls,"product",5);
+    try{
+      const {data,error}=await client().from("products").update({
+        product_name:v.name.trim(),market_category:v.market_category,category:v.category,
+        image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
+        specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
+      }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
+      if(error)throw error;
+      if(!data)throw new Error("পণ্যটি আর Pending অবস্থায় নেই; পৃষ্ঠা Refresh করে দেখুন।");
+    }catch(err){if(images.uploadedPaths.length)await removeListingImages(images.uploadedPaths);throw err;}
+    await removeListingImages(images.removedPaths);
+    say("পণ্যের পরিবর্তন সংরক্ষিত হয়েছে। Admin Review সম্পন্ন হলে প্রকাশিত হবে।",true);
+    await loadSellerDashboard();
+  }
+
+  async function saveServiceEdit(form) {
+    const id=form.dataset.editServiceForm;
+    const old=await client().from("service_listings").select("image_urls").eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").single();
+    if(old.error)throw old.error;
+    const oldUrls=old.data.image_urls||[];
+    const v=Object.fromEntries(new FormData(form));
+    if(v.price_amount!==""&&(!Number.isFinite(Number(v.price_amount))||Number(v.price_amount)<0))throw new Error("সঠিক মূল্য লিখুন।");
+    const images=await saveListingImages(form,oldUrls,"service",3);
+    try{
+      const {data,error}=await client().from("service_listings").update({
+        service_name:v.service_name.trim(),service_category:v.service_category,description:v.description.trim(),
+        country:v.country.trim(),city:v.city.trim(),service_area:v.service_area.trim(),
+        price_basis:v.price_basis,price_amount:v.price_amount===""?null:Number(v.price_amount),
+        currency:String(v.currency||"BDT").toUpperCase(),availability:v.availability.trim()||null,image_urls:images.urls
+      }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
+      if(error)throw error;
+      if(!data)throw new Error("সেবাটি আর Pending অবস্থায় নেই; পৃষ্ঠা Refresh করে দেখুন।");
+    }catch(err){if(images.uploadedPaths.length)await removeListingImages(images.uploadedPaths);throw err;}
+    await removeListingImages(images.removedPaths);
+    say("সেবার পরিবর্তন সংরক্ষিত হয়েছে। Admin Review সম্পন্ন হলে প্রকাশিত হবে।",true);
+    await loadSellerServices();
+  }
+
+  document.addEventListener("click",e=>{
+    const cancel=e.target.closest("[data-cancel-listing-edit]");
+    if(cancel){cancel.closest("form")?.remove();return;}
+    const product=e.target.closest("[data-edit-product]");
+    if(product){
+      const card=product.closest("[data-seller-product]");
+      card?.querySelector(".nx-listing-editor")?.remove();
+      const item=window.NEXORA_SELLER_PRODUCTS?.find(p=>p.id===product.dataset.editProduct);
+      if(!item)return say("পণ্যের তথ্য পাওয়া যায়নি; তালিকা Refresh করুন।");
+      card.insertAdjacentHTML("beforeend",renderProductEditor(item));
+      const safeId=String(item.id).replace(/[^a-zA-Z0-9_-]/g,"");
+      bindListingImagePicker("nxEditProductFiles-"+safeId,"nxEditProductPreview-"+safeId,5);
+    }
+    const service=e.target.closest("[data-edit-service]");
+    if(service){
+      const card=service.closest("[data-seller-service]");
+      card?.querySelector(".nx-listing-editor")?.remove();
+      const item=window.NEXORA_SELLER_SERVICES?.find(s=>s.id===service.dataset.editService);
+      if(!item)return say("সেবার তথ্য পাওয়া যায়নি; তালিকা Refresh করুন।");
+      card.insertAdjacentHTML("beforeend",renderServiceEditor(item));
+      const safeId=String(item.id).replace(/[^a-zA-Z0-9_-]/g,"");
+      bindListingImagePicker("nxEditServiceFiles-"+safeId,"nxEditServicePreview-"+safeId,3);
+    }
+  });
+  document.addEventListener("submit",async e=>{
+    const productForm=e.target.closest("form[data-edit-product-form]");
+    const serviceForm=e.target.closest("form[data-edit-service-form]");
+    const form=productForm||serviceForm;if(!form)return;
+    e.preventDefault();setBusy(form,true);
+    try{if(productForm)await saveProductEdit(form);else await saveServiceEdit(form);}
+    catch(err){say("পরিবর্তন সংরক্ষণ হয়নি: "+err.message);}
+    finally{setBusy(form,false);}
+  });
 
   async function deleteProduct(id) {
     if (!confirm("এই pending পণ্যটি মুছে ফেলতে চান?")) return;
