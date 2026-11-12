@@ -116,7 +116,8 @@
     else { await sync(null); say("লগআউট সম্পন্ন।", true); }
   });
 
-  document.getElementById("nxRoleRequest").addEventListener("submit", async e => {
+  const roleRequestForm = document.getElementById("nxRoleRequest");
+  roleRequestForm?.addEventListener("submit", async e => {
     e.preventDefault();
     const form = e.currentTarget;
     if (!currentUser) return say("আগে লগইন করুন।");
@@ -148,7 +149,7 @@
       r.id + '" data-decision="rejected">Reject</button></div></div>'
     ).join("");
   }
-  document.getElementById("nxRequests").addEventListener("click", async e => {
+  document.getElementById("nxRequests")?.addEventListener("click", async e => {
     const b = e.target.closest("button[data-id]");
     if (!b || profile?.role !== "admin" || profile?.account_status !== "active") return;
     b.disabled = true;
