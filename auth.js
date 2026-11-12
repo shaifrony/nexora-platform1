@@ -261,7 +261,7 @@
       role: String(f.get("role") || "buyer"),
       full_name: String(f.get("full_name") || "NEXORA Test User").trim()
     };
-    if (!/^nexora-test\\+[^@]+@example\\.com$/i.test(payload.email)) {
+    if (!/^nexora-test\+[^@]+@example\.com$/i.test(payload.email)) {
       return say("শুধু nexora-test+label@example.com ঠিকানা ব্যবহার করুন।");
     }
     if (payload.password.length < 12) return say("অস্থায়ী পাসওয়ার্ড কমপক্ষে ১২ অক্ষরের হতে হবে।");
