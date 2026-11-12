@@ -238,11 +238,23 @@
   };
 
   window.showSection = function(id, options = {}) {
-    if (["postDemand","buyerDashboard"].includes(id) && !(signedIn() && activeBuyer())) {
+    const role = profile()?.role;
+    const activePorter = role === "porter" && profile()?.account_status === "active";
+    const access = {
+      buyer: signedIn() && activeBuyer(),
+      seller: signedIn() && activeSeller(),
+      porter: signedIn() && activePorter
+    };
+    const requiredRole = {
+      postDemand: "buyer", buyerDashboard: "buyer",
+      sellerDashboard: "seller", porterDashboard: "porter"
+    }[id];
+    if (requiredRole && !access[requiredRole]) {
       const hint = $("nxCurrent");
+      const roleLabel = requiredRole === "buyer" ? "Buyer" : requiredRole === "seller" ? "Seller" : "Porter";
       if (hint) hint.textContent = signedIn()
-        ? "Buyer Dashboard ও Demand Posting ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
-        : "Buyer Dashboard ও Demand Posting ব্যবহার করতে আগে Buyer হিসেবে লগইন করুন।";
+        ? roleLabel + " Center ব্যবহার করতে অনুমোদিত Active " + roleLabel + " অ্যাকাউন্ট প্রয়োজন।"
+        : roleLabel + " Center ব্যবহার করতে আগে লগইন করুন।";
       id = "accountSection";
     }
     if (!document.querySelector('main > section.section#' + CSS.escape(id))) return;
