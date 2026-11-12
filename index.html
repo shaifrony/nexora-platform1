@@ -286,6 +286,21 @@ nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visi
 }
 
 
+/* Admin logistics monitoring */
+.nx-logistics-monitor-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.nx-logistics-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.nx-logistics-metrics>div{padding:13px;border:1px solid var(--border);border-radius:12px;background:#f8fafc;display:flex;flex-direction:column;gap:4px}
+.nx-logistics-metrics strong{font-size:23px;color:var(--navy)}.nx-logistics-metrics span{font-size:12px;color:var(--muted)}
+.nx-logistics-jobs,.nx-logistics-history{display:grid;gap:10px;margin-top:12px}
+.nx-logistics-job,.nx-logistics-event{padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff}
+.nx-logistics-job-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.nx-logistics-job-code{font-size:11px;font-weight:800;letter-spacing:.8px;color:#087f78}
+.nx-logistics-job h5{font-size:15px;margin:5px 0;color:var(--navy)}
+.nx-logistics-job p,.nx-logistics-event p{margin:5px 0;font-size:13px;color:#64748b}
+.nx-logistics-status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf5f8;color:#28536a;font-size:11px;font-weight:700}
+.nx-logistics-event{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nx-logistics-event time{font-size:11px;color:var(--muted)}
+@media(max-width:560px){.nx-logistics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-logistics-event{display:block}}
 /* NEXORA visible marketplace redesign — hero, category discovery and wholesale storefront */
 .nx-market-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;min-height:340px;overflow:hidden;padding:38px 42px;margin:8px 0 30px;border-radius:22px;background:linear-gradient(115deg,#0b2238 0%,#104e65 58%,#087f78 100%);color:#fff;box-shadow:0 18px 40px #102b4326}
 .nx-market-hero:before{content:"";position:absolute;width:430px;height:430px;border:1px solid #ffffff18;border-radius:50%;right:5%;top:-45%;z-index:-1}
@@ -792,6 +807,26 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <p class="muted">কাজ বরাদ্দের জন্য logistics.assign অনুমতি ও Admin MFA (AAL2) প্রয়োজন।</p>
         </form>
         <div id="nxAdminLogisticsStatus" class="muted" aria-live="polite"></div>
+        <hr>
+        <div class="nx-logistics-monitor-head">
+          <div><h4>Delivery Job Monitoring</h4><p class="muted">অনুমোদিত Logistics Admin-এর জন্য বরাদ্দ, চলমান, সম্পন্ন ও সমস্যাযুক্ত ডেলিভারির সারসংক্ষেপ।</p></div>
+          <button type="button" class="light" id="nxAdminLogisticsRefresh">Refresh</button>
+        </div>
+        <div class="nx-logistics-metrics">
+          <div><strong id="nxLogisticsTotal">—</strong><span>মোট কাজ</span></div>
+          <div><strong id="nxLogisticsActive">—</strong><span>চলমান</span></div>
+          <div><strong id="nxLogisticsDelivered">—</strong><span>সম্পন্ন</span></div>
+          <div><strong id="nxLogisticsIssues">—</strong><span>সমস্যা / প্রত্যাখ্যাত</span></div>
+        </div>
+        <label for="nxAdminLogisticsFilter">কাজের অবস্থা</label>
+        <select id="nxAdminLogisticsFilter">
+          <option value="all">সব কাজ</option><option value="assigned">নতুন বরাদ্দ</option>
+          <option value="active">চলমান</option><option value="delivered">সম্পন্ন</option>
+          <option value="issues">সমস্যা / প্রত্যাখ্যাত</option><option value="cancelled">বাতিল</option>
+        </select>
+        <div id="nxAdminLogisticsJobs" class="nx-logistics-jobs" aria-live="polite"><p class="muted">Logistics permission যাচাইয়ের পর কাজের তালিকা দেখা যাবে।</p></div>
+        <h4>সর্বশেষ Status History</h4>
+        <div id="nxAdminLogisticsHistory" class="nx-logistics-history"><p class="muted">ইতিহাস লোড হয়নি।</p></div>
       </section>
       <div id="nxRoleRequestsPanel">
         <h4>Pending Role Requests</h4>
