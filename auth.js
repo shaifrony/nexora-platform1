@@ -13,6 +13,7 @@
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   let currentUser = null;
   let profile = null;
+  let showLogin = false;
 
   const style = document.createElement("style");
   style.textContent = `
@@ -50,12 +51,14 @@
       current.textContent = "আপনি লগইন করেননি।";
       logged.classList.add("hidden");
       admin.classList.add("hidden");
-      document.getElementById("nxSignup").classList.remove("hidden");
-      document.getElementById("nxLogin").classList.remove("hidden");
+      document.getElementById("nxSignup").classList.toggle("hidden", showLogin);
+      document.getElementById("nxLogin").classList.toggle("hidden", !showLogin);
+      document.getElementById("nxAuthSwitch").classList.toggle("hidden", showLogin);
       return;
     }
     document.getElementById("nxSignup").classList.add("hidden");
     document.getElementById("nxLogin").classList.add("hidden");
+    document.getElementById("nxAuthSwitch").classList.add("hidden");
     logged.classList.remove("hidden");
     const p = profile || {};
     current.textContent = "লগইন: " + currentUser.email;
@@ -71,6 +74,9 @@
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
     window.dispatchEvent(new Event("nexora:auth-change"));
   }
+
+  document.getElementById("nxShowLogin")?.addEventListener("click", () => { showLogin = true; render(); });
+  document.getElementById("nxShowRegister")?.addEventListener("click", () => { showLogin = false; render(); });
 
   document.getElementById("nxSignup").addEventListener("submit", async e => {
     e.preventDefault();
