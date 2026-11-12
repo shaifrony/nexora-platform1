@@ -307,6 +307,7 @@
     if (id === "market") loadProducts();
     if (id === "servicesMarketplace") loadServicesMarketplace();
     if (id === "accountSection") loadAdminServiceQueue();
+    if (id === "accountSection") loadAdminListingEditRequests();
     if (id === "accountSection") loadAdminActions();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
@@ -894,7 +895,7 @@
       if(error)throw error;
       if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
       window.NEXORA_SELLER_SERVICES=data;
-      host.innerHTML=data.map(s=>'<article class="card" data-seller-service>'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<div class="form-actions"><button class="primary" type="button" data-edit-service="'+esc(s.id)+'">সেবা সম্পাদনা</button><button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button></div>':'')+'</article>').join("");
+      host.innerHTML=data.map(s=>'<article class="card" data-seller-service>'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<div class="form-actions"><button class="primary" type="button" data-edit-service="'+esc(s.id)+'">সেবা সম্পাদনা</button><button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button></div>':s.listing_status==="approved"?'<div class="form-actions"><button class="light" type="button" data-request-service-edit="'+esc(s.id)+'">পরিবর্তন প্রস্তাব করুন</button></div>':'')+'</article>').join("");
       host.querySelectorAll("[data-delete-service]").forEach(b=>b.addEventListener("click",()=>deleteService(b.dataset.deleteService)));
     }catch(err){host.innerHTML='<p class="muted">সেবা তালিকা লোড হয়নি: '+esc(err.message)+'</p>';}
   }
@@ -984,6 +985,7 @@
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
+      await loadSellerEditRequests();
       const approvedCount = products.filter(p => p.listing_status === "approved").length;
       const pendingCount = products.filter(p => p.listing_status === "pending").length;
       const setMetric = (id, value) => { const node = $(id); if (node) node.textContent = String(value); };
@@ -1005,7 +1007,7 @@
           <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
-          ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button></div>` : ""}
+          ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button></div>` : ""}
         </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
 
@@ -1346,14 +1348,14 @@
     return (urls||[]).map((url,index)=>'<div class="nx-existing-image"><img src="'+esc(url)+'" alt="বর্তমান ছবি '+(index+1)+'" loading="lazy"><label><input type="checkbox" data-existing-image-index="'+index+'" data-image-kind="'+kind+'" checked> রাখুন</label></div>').join("");
   }
 
-  function renderProductEditor(p) {
+  function renderProductEditor(p,requestMode=false) {
     const id=String(p.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
     const categories=["Food & Agriculture","Textile & Garments","Electronics","Industrial Products","Handicrafts","Other"];
     const marketOptions=(profile()?.seller_categories||[]).map(v=>'<option value="'+esc(v)+'" '+(p.market_category===v?"selected":"")+'>'+(v==="retail"?"Retail (খুচরা)":"Wholesale (পাইকারি)")+'</option>').join("");
     const categoryOptions=categories.map(v=>'<option '+(p.category===v?"selected":"")+'>'+esc(v)+'</option>').join("");
     const currencies=["BDT","USD","EUR","GBP","CNY"];
     const currencyOptions=currencies.map(v=>'<option '+(p.currency===v?"selected":"")+'>'+v+'</option>').join("");
-    return '<form class="nx-listing-editor" data-edit-product-form="'+esc(id)+'">'+
+    return '<form class="nx-listing-editor" '+(requestMode?'data-request-product-form="'+esc(id)+'"':'data-edit-product-form="'+esc(id)+'')+'>'+
       '<h4>পণ্য সম্পাদনা · '+esc(p.product_code)+'</h4>'+
       '<label>Product Name *<input name="name" required maxlength="180" value="'+esc(p.product_name)+'"></label>'+
       '<label>বিক্রয় ক্যাটাগরি *<select name="market_category" required>'+marketOptions+'</select></label>'+
@@ -1367,16 +1369,16 @@
       '<label>Specifications & Quality<textarea name="specifications">'+esc(p.specifications_quality||"")+'</textarea></label>'+
       '<div class="grid"><label>মূল্য *<input name="price" type="number" min="0.01" step="0.01" required value="'+esc(p.price)+'"></label>'+
       '<label>Currency *<select name="currency" required>'+currencyOptions+'</select></label></div>'+
-      '<div class="form-actions"><button class="primary" type="submit">পরিবর্তন সংরক্ষণ</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
+      '<div class="form-actions"><button class="primary" type="submit">'+(requestMode?'পরিবর্তন Admin Review-এ পাঠান':'পরিবর্তন সংরক্ষণ')+'</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
       '</form>';
   }
 
-  function renderServiceEditor(s) {
+  function renderServiceEditor(s,requestMode=false) {
     const id=String(s.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
     const cats=[["household","গৃহস্থালি সেবা"],["tutoring","শিক্ষা ও টিউশন"],["plumbing","প্লাম্বিং"],["electrical","ইলেকট্রিক্যাল"],["mechanic","মেকানিক ও মেরামত"],["appliance_repair","ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত"],["it_support","আইটি ও কম্পিউটার"],["beauty_laundry","বিউটি ও লন্ড্রি"],["other","অন্যান্য"]];
     const bases=[["negotiable","আলোচনা সাপেক্ষে"],["per_hour","প্রতি ঘণ্টা"],["per_day","প্রতি দিন"],["per_visit","প্রতি ভিজিট"],["per_job","প্রতি কাজ"],["per_month","প্রতি মাস"]];
     const opts=(items,value)=>items.map(([v,label])=>'<option value="'+v+'" '+(value===v?"selected":"")+'>'+label+'</option>').join("");
-    return '<form class="nx-listing-editor" data-edit-service-form="'+esc(id)+'">'+
+    return '<form class="nx-listing-editor" '+(requestMode?'data-request-service-form="'+esc(id)+'"':'data-edit-service-form="'+esc(id)+'')+'>'+
       '<h4>সেবা সম্পাদনা · '+esc(s.service_code)+'</h4>'+
       '<label>সেবার নাম *<input name="service_name" required minlength="2" maxlength="160" value="'+esc(s.service_name)+'"></label>'+
       '<label>সেবার বিভাগ *<select name="service_category" required>'+opts(cats,s.service_category)+'</select></label>'+
@@ -1391,7 +1393,7 @@
       '<label>নতুন বাইরের HTTPS Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label><textarea name="images" placeholder="https://example.com/image.jpg"></textarea>'+
       '<label>মুদ্রা<select name="currency">'+[["BDT","BDT"],["USD","USD"],["EUR","EUR"],["GBP","GBP"],["CNY","CNY"]].map(([v,label])=>'<option value="'+v+'" '+((s.currency||"BDT")===v?"selected":"")+'>'+label+'</option>').join("")+'</select></label>'+
       '<label>Availability<input name="availability" maxlength="300" value="'+esc(s.availability||"")+'"></label>'+
-      '<div class="form-actions"><button class="primary" type="submit">পরিবর্তন সংরক্ষণ</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
+      '<div class="form-actions"><button class="primary" type="submit">'+(requestMode?'পরিবর্তন Admin Review-এ পাঠান':'পরিবর্তন সংরক্ষণ')+'</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
       '</form>';
   }
 
@@ -1456,37 +1458,153 @@
     await loadSellerServices();
   }
 
+  async function submitProductEditRequest(form) {
+    const id=form.dataset.requestProductForm;
+    const current=await client().from("products").select("image_urls,listing_status").eq("id",id).eq("seller_id",user().id).single();
+    if(current.error)throw current.error;
+    if(current.data.listing_status!=="approved")throw new Error("এই পণ্য আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
+    const v=Object.fromEntries(new FormData(form));
+    const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
+    if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
+    if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
+    const images=await saveListingImages(form,current.data.image_urls||[],"product",5);
+    const changes={
+      product_name:v.name.trim(),market_category:v.market_category,category:v.category,
+      image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
+      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
+    };
+    try{
+      const {data,error}=await client().rpc("submit_listing_edit_request",{
+        p_listing_type:"product",p_listing_id:id,p_proposed_changes:changes
+      });
+      if(error)throw error;
+      if(!data?.request_id)throw new Error("Change Request ID পাওয়া যায়নি।");
+    }catch(err){if(images.uploadedPaths.length)await removeListingImages(images.uploadedPaths);throw err;}
+    say("পণ্যের পরিবর্তন Admin Review-এ পাঠানো হয়েছে। অনুমোদনের আগে Marketplace-এ পুরোনো তথ্যই থাকবে।",true);
+    await loadSellerDashboard();await loadSellerEditRequests();
+  }
+
+  async function submitServiceEditRequest(form) {
+    const id=form.dataset.requestServiceForm;
+    const current=await client().from("service_listings").select("image_urls,listing_status").eq("id",id).eq("seller_id",user().id).single();
+    if(current.error)throw current.error;
+    if(current.data.listing_status!=="approved")throw new Error("এই সেবা আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
+    const v=Object.fromEntries(new FormData(form));
+    if(v.price_amount!==""&&(!Number.isFinite(Number(v.price_amount))||Number(v.price_amount)<0))throw new Error("সঠিক মূল্য লিখুন।");
+    const images=await saveListingImages(form,current.data.image_urls||[],"service",3);
+    const changes={
+      service_name:v.service_name.trim(),service_category:v.service_category,description:v.description.trim(),
+      country:v.country.trim(),city:v.city.trim(),service_area:v.service_area.trim(),
+      price_basis:v.price_basis,price_amount:v.price_amount===""?null:Number(v.price_amount),
+      currency:String(v.currency||"BDT").toUpperCase(),availability:v.availability.trim()||null,image_urls:images.urls
+    };
+    try{
+      const {data,error}=await client().rpc("submit_listing_edit_request",{
+        p_listing_type:"service",p_listing_id:id,p_proposed_changes:changes
+      });
+      if(error)throw error;
+      if(!data?.request_id)throw new Error("Change Request ID পাওয়া যায়নি।");
+    }catch(err){if(images.uploadedPaths.length)await removeListingImages(images.uploadedPaths);throw err;}
+    say("সেবার পরিবর্তন Admin Review-এ পাঠানো হয়েছে। অনুমোদনের আগে Marketplace-এ পুরোনো তথ্যই থাকবে।",true);
+    await loadSellerServices();await loadSellerEditRequests();
+  }
+
+  async function loadSellerEditRequests(){
+    const host=$("nxSellerEditRequests");if(!host)return;
+    if(!signedIn()||!activeSeller()){host.textContent="Seller হিসেবে লগইন করলে Change Request দেখা যাবে।";return;}
+    try{
+      const {data,error}=await client().from("listing_edit_requests")
+        .select("id,listing_type,product_id,service_listing_id,status,review_reason,created_at")
+        .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(30);
+      if(error)throw error;
+      const labels={pending:"Admin Review-এ আছে",approved:"পরিবর্তন অনুমোদিত",rejected:"পরিবর্তন প্রত্যাখ্যাত"};
+      host.innerHTML=(data||[]).map(r=>'<article class="offer"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product":"Service")+'</strong><span class="tag">'+esc(labels[r.status]||r.status)+'</span></div><small>'+esc(new Date(r.created_at).toLocaleString("bn-BD"))+'</small>'+(r.review_reason?'<p class="muted">Admin Note: '+esc(r.review_reason)+'</p>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো Listing Change Request নেই।</p>';
+    }catch(err){host.textContent="Change Request লোড হয়নি: "+err.message;}
+  }
+
+  function listingEditChangeMarkup(request){
+    const c=request.proposed_changes||{},fields=request.listing_type==="product"?[
+      ["পণ্যের নাম","product_name"],["বিক্রয় ধরন","market_category"],["পণ্যের বিভাগ","category"],
+      ["বিবরণ","description"],["Origin","origin"],["Specifications","specifications_quality"],
+      ["মূল্য","price"],["Currency","currency"]
+    ]:[
+      ["সেবার নাম","service_name"],["সেবার বিভাগ","service_category"],["বিবরণ","description"],
+      ["দেশ","country"],["শহর","city"],["সেবার এলাকা","service_area"],
+      ["মূল্য নির্ধারণ","price_basis"],["মূল্য","price_amount"],["Currency","currency"],["Availability","availability"]
+    ];
+    const rows=fields.map(([label,key])=>'<p><b>'+esc(label)+':</b> '+esc(c[key]===null||c[key]===undefined||c[key]===""?"—":String(c[key]))+'</p>').join("");
+    const images=Array.isArray(c.image_urls)?'<div class="nx-upload-preview">'+c.image_urls.map(url=>'<img src="'+esc(url)+'" alt="প্রস্তাবিত ছবি" loading="lazy">').join("")+'</div>':"";
+    return rows+images;
+  }
+
+  async function loadAdminListingEditRequests(){
+    const host=$("nxAdminListingEditQueue");if(!host)return;
+    if(!signedIn()||profile()?.role!=="admin"||profile()?.account_status!=="active"){
+      host.textContent="শুধু সক্রিয় Admin Change Request পর্যালোচনা করতে পারবেন।";return;
+    }
+    host.innerHTML='<p class="muted">পরিবর্তনের আবেদন লোড হচ্ছে…</p>';
+    try{
+      const {data,error}=await client().from("listing_edit_requests")
+        .select("id,listing_type,product_id,service_listing_id,seller_id,proposed_changes,created_at,status")
+        .eq("status","pending").order("created_at",{ascending:true}).limit(100);
+      if(error)throw error;
+      host.innerHTML=(data||[]).map(r=>'<article class="card"><div class="section-head"><strong>'+(r.listing_type==="product"?"Product Change Request":"Service Change Request")+'</strong><span class="tag">Pending Review</span></div><small>Request ID: '+esc(r.id)+'</small>'+listingEditChangeMarkup(r)+'<div class="form-actions"><button class="primary" type="button" data-listing-edit-review="approve" data-request-id="'+esc(r.id)+'">Approve & Publish Changes</button><button class="danger" type="button" data-listing-edit-review="reject" data-request-id="'+esc(r.id)+'">Reject</button></div></article>').join("")||'<p class="muted">কোনো Pending Listing Change Request নেই।</p>';
+    }catch(err){host.textContent="Change Request লোড হয়নি: "+err.message;}
+  }
+
+  async function reviewListingEditRequest(id,action){
+    const reason=action==="reject"?prompt("প্রত্যাখ্যানের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):"):"";
+    if(action==="reject"&&(!reason||reason.trim().length<5))return say("প্রত্যাখ্যানের কারণ আবশ্যক।");
+    const {data,error}=await client().rpc("review_listing_edit_request",{
+      p_request_id:id,p_action:action,p_reason:reason||null
+    });
+    if(error)return say("পরিবর্তন পর্যালোচনা ব্যর্থ: "+error.message);
+    if(data?.cleanup_urls?.length)await removeListingImages(listingImagePathsFromUrls(data.cleanup_urls));
+    say(action==="approve"?"পরিবর্তন অনুমোদিত ও Marketplace-এ প্রকাশিত হয়েছে।":"পরিবর্তনের আবেদন প্রত্যাখ্যান করা হয়েছে।",true);
+    await loadAdminListingEditRequests();await loadProducts();await loadServicesMarketplace();
+  }
+
   document.addEventListener("click",e=>{
     const cancel=e.target.closest("[data-cancel-listing-edit]");
     if(cancel){cancel.closest("form")?.remove();return;}
-    const product=e.target.closest("[data-edit-product]");
+    const product=e.target.closest("[data-edit-product],[data-request-product-edit]");
     if(product){
+      const requestMode=product.hasAttribute("data-request-product-edit");
       const card=product.closest("[data-seller-product]");
       card?.querySelector(".nx-listing-editor")?.remove();
-      const item=window.NEXORA_SELLER_PRODUCTS?.find(p=>p.id===product.dataset.editProduct);
+      const item=window.NEXORA_SELLER_PRODUCTS?.find(p=>p.id===(product.dataset.editProduct||product.dataset.requestProductEdit));
       if(!item)return say("পণ্যের তথ্য পাওয়া যায়নি; তালিকা Refresh করুন।");
-      card.insertAdjacentHTML("beforeend",renderProductEditor(item));
+      card.insertAdjacentHTML("beforeend",renderProductEditor(item,requestMode));
       const safeId=String(item.id).replace(/[^a-zA-Z0-9_-]/g,"");
       bindListingImagePicker("nxEditProductFiles-"+safeId,"nxEditProductPreview-"+safeId,5);
     }
-    const service=e.target.closest("[data-edit-service]");
+    const service=e.target.closest("[data-edit-service],[data-request-service-edit]");
     if(service){
+      const requestMode=service.hasAttribute("data-request-service-edit");
       const card=service.closest("[data-seller-service]");
       card?.querySelector(".nx-listing-editor")?.remove();
-      const item=window.NEXORA_SELLER_SERVICES?.find(s=>s.id===service.dataset.editService);
+      const item=window.NEXORA_SELLER_SERVICES?.find(s=>s.id===(service.dataset.editService||service.dataset.requestServiceEdit));
       if(!item)return say("সেবার তথ্য পাওয়া যায়নি; তালিকা Refresh করুন।");
-      card.insertAdjacentHTML("beforeend",renderServiceEditor(item));
+      card.insertAdjacentHTML("beforeend",renderServiceEditor(item,requestMode));
       const safeId=String(item.id).replace(/[^a-zA-Z0-9_-]/g,"");
       bindListingImagePicker("nxEditServiceFiles-"+safeId,"nxEditServicePreview-"+safeId,3);
     }
+    const review=e.target.closest("[data-listing-edit-review]");
+    if(review)reviewListingEditRequest(review.dataset.requestId,review.dataset.listingEditReview);
   });
   document.addEventListener("submit",async e=>{
     const productForm=e.target.closest("form[data-edit-product-form]");
     const serviceForm=e.target.closest("form[data-edit-service-form]");
-    const form=productForm||serviceForm;if(!form)return;
+    const requestProductForm=e.target.closest("form[data-request-product-form]");
+    const requestServiceForm=e.target.closest("form[data-request-service-form]");
+    const form=productForm||serviceForm||requestProductForm||requestServiceForm;if(!form)return;
     e.preventDefault();setBusy(form,true);
-    try{if(productForm)await saveProductEdit(form);else await saveServiceEdit(form);}
-    catch(err){say("পরিবর্তন সংরক্ষণ হয়নি: "+err.message);}
+    try{
+      if(productForm)await saveProductEdit(form);
+      else if(serviceForm)await saveServiceEdit(form);
+      else if(requestProductForm)await submitProductEditRequest(form);
+      else await submitServiceEditRequest(form);
+    }catch(err){say("পরিবর্তন সংরক্ষণ হয়নি: "+err.message);}
     finally{setBusy(form,false);}
   });
 
