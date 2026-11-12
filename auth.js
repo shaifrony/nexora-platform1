@@ -14,6 +14,7 @@
   let currentUser = null;
   let profile = null;
   let adminStaff = null;
+  let pendingRoleRequest = null;
   let forgotMode = false;
   let recoveryMode = false;
 
@@ -43,12 +44,21 @@
     form.querySelectorAll("button").forEach(b => b.disabled = busy);
   }
   async function loadProfile() {
-    if (!currentUser) { profile = null; adminStaff = null; return; }
+    if (!currentUser) { profile = null; adminStaff = null; pendingRoleRequest = null; return; }
     const { data, error } = await db.from("profiles")
       .select("id,full_name,role,account_status")
       .eq("id", currentUser.id).maybeSingle();
     if (error) throw error;
     profile = data;
+    const pending = await db.from("role_requests")
+      .select("requested_role,status,created_at")
+      .eq("user_id", currentUser.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (pending.error) throw pending.error;
+    pendingRoleRequest = pending.data || null;
     adminStaff = null;
     if (profile?.role === "admin" && profile?.account_status === "active") {
       const staff = await db.from("admin_staff")
@@ -95,6 +105,19 @@
     document.getElementById("nxSignupView")?.classList.add("hidden");
     document.getElementById("nxForgotView")?.classList.add("hidden");
     logged.classList.remove("hidden");
+    const roleForm = document.getElementById("nxRoleRequest");
+    const roleStatus = document.getElementById("nxRoleRequestStatus");
+    if (roleForm) roleForm.classList.toggle("hidden", !!pendingRoleRequest);
+    if (roleStatus) {
+      if (pendingRoleRequest) {
+        const roleLabel = pendingRoleRequest.requested_role === "seller" ? "Seller" : "Porter";
+        roleStatus.textContent = "আপনার " + roleLabel + " হওয়ার আবেদন পর্যালোচনাধীন। Admin-এর সিদ্ধান্ত না হওয়া পর্যন্ত নতুন আবেদন পাঠানোর প্রয়োজন নেই।";
+        roleStatus.classList.remove("hidden");
+      } else {
+        roleStatus.textContent = "";
+        roleStatus.classList.add("hidden");
+      }
+    }
     const p = profile || {};
     current.textContent = "লগইন: " + currentUser.email;
     document.getElementById("nxProfile").textContent =
@@ -289,9 +312,29 @@
       const { error } = await db.from("role_requests").insert({
         user_id: currentUser.id, requested_role: role, status: "pending"
       });
-      if (error) throw error;
-      say("আপনার আবেদন Admin-এর কাছে পাঠানো হয়েছে।", true);
+      if (error) {
+        if (error.code === "23505" || String(error.message || "").includes("one_pending_role_request_per_user")) {
+          const pending = await db.from("role_requests")
+            .select("requested_role,status,created_at")
+            .eq("user_id", currentUser.id)
+            .eq("status", "pending")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (pending.error) throw pending.error;
+          pendingRoleRequest = pending.data || null;
+          render();
+          say(pendingRoleRequest
+            ? "আপনার " + (pendingRoleRequest.requested_role === "seller" ? "Seller" : "Porter") + " আবেদন আগে থেকেই পর্যালোচনাধীন আছে।"
+            : "একটি আবেদন ইতিমধ্যে জমা হয়েছে। পৃষ্ঠাটি রিফ্রেশ করে দেখুন।", true);
+          return;
+        }
+        throw error;
+      }
+      pendingRoleRequest = { requested_role: role, status: "pending" };
       form.reset();
+      render();
+      say("আপনার " + (role === "seller" ? "Seller" : "Porter") + " হওয়ার আবেদন Admin-এর কাছে পাঠানো হয়েছে।", true);
     } catch (err) { say("আবেদন জমা হয়নি: " + err.message); }
     finally { setBusy(form, false); }
   });
