@@ -222,7 +222,7 @@
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     if (id === "porterDashboard") loadPorterDashboard();
-    if (id === "accountSection") { loadAdminPorterOptions(); loadAdminLogisticsMonitor(); }
+    if (id === "accountSection") { loadAdminPorterOptions().then(loadAdminLogisticsMonitor); }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -785,6 +785,7 @@
 
 
 
+  let activeLogisticsPorters = [];
   async function loadAdminPorterOptions() {
     const select=$("nxAdminPorterSelect");
     if(!select)return;
@@ -792,9 +793,11 @@
     try{
       const {data,error}=await client().rpc("list_active_nexora_porters_for_logistics");
       if(error)throw error;
-      select.innerHTML='<option value="">Porter নির্বাচন করুন</option>'+(data||[]).map(p=>'<option value="'+esc(p.porter_id)+'">'+esc(p.full_name||"Porter")+'</option>').join("");
-      if(!data?.length)select.innerHTML='<option value="">কোনো সক্রিয় Porter পাওয়া যায়নি</option>';
+      activeLogisticsPorters = data || [];
+      select.innerHTML='<option value="">Porter নির্বাচন করুন</option>'+activeLogisticsPorters.map(p=>'<option value="'+esc(p.porter_id)+'">'+esc(p.full_name||"Porter")+'</option>').join("");
+      if(!activeLogisticsPorters.length)select.innerHTML='<option value="">কোনো সক্রিয় Porter পাওয়া যায়নি</option>';
     }catch(err){
+      activeLogisticsPorters = [];
       select.innerHTML='<option value="">Logistics permission / database migration প্রয়োজন</option>';
       const status=$("nxAdminLogisticsStatus");if(status)status.textContent="Porter তালিকা লোড হয়নি: "+err.message;
     }
@@ -846,6 +849,7 @@
           <p><strong>সংগ্রহ:</strong> ${esc([job.pickup_city,job.pickup_country].filter(Boolean).join(", ")||"তথ্য নেই")} → <strong>গন্তব্য:</strong> ${esc([job.dropoff_city,job.dropoff_country].filter(Boolean).join(", ")||"তথ্য নেই")}</p>
           <p>বরাদ্দ: ${esc(new Date(job.created_at).toLocaleString("bn-BD"))}${job.scheduled_pickup_at?" · নির্ধারিত সংগ্রহ: "+esc(new Date(job.scheduled_pickup_at).toLocaleString("bn-BD")):""}</p>
           ${job.porter_note?'<p>সর্বশেষ নোট: '+esc(job.porter_note)+'</p>':""}
+          ${["assigned","accepted"].includes(job.status) ? '<div class="nx-logistics-admin-actions"><label>অন্য Porter-কে বরাদ্দ</label><select data-reassign-select="'+esc(job.id)+'"><option value="">Porter নির্বাচন করুন</option>'+activeLogisticsPorters.filter(p=>p.porter_id!==job.assigned_porter_id).map(p=>'<option value="'+esc(p.porter_id)+'">'+esc(p.full_name||"Porter")+'</option>').join("")+'</select><button type="button" class="light" data-logistics-action="reassign" data-job-id="'+esc(job.id)+'">Reassign</button><button type="button" class="danger" data-logistics-action="cancel" data-job-id="'+esc(job.id)+'">Cancel Job</button></div>' : ""}
         </article>`).join(""):'<p class="muted">এই ফিল্টারে কোনো ডেলিভারি কাজ পাওয়া যায়নি।</p>';
       if(historyHost){
         const jobIds=rows.map(job=>job.id);
@@ -867,6 +871,45 @@
       if(historyHost)historyHost.innerHTML='<p class="muted">ইতিহাস লোড করা যায়নি।</p>';
     }
   }
+  $("nxAdminLogisticsJobs")?.addEventListener("click",async e=>{
+    const button=e.target.closest("[data-logistics-action]");
+    if(!button)return;
+    const jobId=button.dataset.jobId, action=button.dataset.logisticsAction;
+    if(action==="reassign"){
+      const select=$("nxAdminLogisticsJobs").querySelector('[data-reassign-select="'+CSS.escape(jobId)+'"]');
+      const newPorterId=select?.value;
+      if(!newPorterId)return say("নতুন Porter নির্বাচন করুন।");
+      const note=window.prompt("কেন অন্য Porter-কে কাজটি দিচ্ছেন? (কমপক্ষে ৫ অক্ষর)","");
+      if(note===null)return;
+      if(note.trim().length<5)return say("কমপক্ষে ৫ অক্ষরের কারণ লিখুন।");
+      if(!window.confirm("এই কাজটি নতুন Porter-কে বরাদ্দ করবেন?"))return;
+      button.disabled=true;
+      try{
+        const {error}=await client().rpc("admin_reassign_porter_delivery_job",{
+          p_job_id:jobId,p_new_porter_id:newPorterId,p_note:note.trim()
+        });
+        if(error)throw error;
+        say("ডেলিভারি কাজ নতুন Porter-কে বরাদ্দ হয়েছে।",true);
+        await loadAdminLogisticsMonitor();
+      }catch(err){say("Reassign করা যায়নি: "+err.message);}
+      finally{button.disabled=false;}
+    }else if(action==="cancel"){
+      const note=window.prompt("কাজটি বাতিলের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):","");
+      if(note===null)return;
+      if(note.trim().length<5)return say("কমপক্ষে ৫ অক্ষরের কারণ লিখুন।");
+      if(!window.confirm("এই ডেলিভারি কাজটি বাতিল করবেন?"))return;
+      button.disabled=true;
+      try{
+        const {error}=await client().rpc("admin_cancel_porter_delivery_job",{
+          p_job_id:jobId,p_note:note.trim()
+        });
+        if(error)throw error;
+        say("ডেলিভারি কাজ বাতিল হয়েছে।",true);
+        await loadAdminLogisticsMonitor();
+      }catch(err){say("কাজ বাতিল করা যায়নি: "+err.message);}
+      finally{button.disabled=false;}
+    }
+  });
   $("nxAdminLogisticsRefresh")?.addEventListener("click",loadAdminLogisticsMonitor);
   $("nxAdminLogisticsFilter")?.addEventListener("change",loadAdminLogisticsMonitor);
   $("nxAdminPorterJobForm")?.addEventListener("submit",async e=>{
