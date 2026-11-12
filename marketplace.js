@@ -518,6 +518,7 @@
 
   async function submitOffer(demandId) {
     if (!activeSeller()) return say("Offer দিতে সক্রিয় Seller অ্যাকাউন্ট প্রয়োজন।");
+    if (!state.business || state.business.approval_status !== "approved") return say("Offer পাঠাতে Admin অনুমোদিত Business Profile প্রয়োজন।");
     const price = prompt("প্রস্তাবিত দাম লিখুন:");
     if (price === null || price.trim() === "" || !Number.isFinite(Number(price)) || Number(price) < 0) return;
     const currency = (prompt("Currency (USD / BDT / EUR):", "USD") || "").toUpperCase();
@@ -557,14 +558,37 @@
         ${p.listing_status === "pending" ? `<button class="danger" data-delete-product="${esc(p.id)}">Delete</button>` : ""}
         </div>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>';
       $("sellerProducts").querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
+
+      const matchedHost = $("matchedDemands");
+      if (!state.business || state.business.approval_status !== "approved") {
+        matchedHost.innerHTML = '<p class="muted">Business Profile Admin অনুমোদনের পর প্রাসঙ্গিক Buyer Demand ও Offer পাঠানোর সুবিধা চালু হবে।</p>';
+        return;
+      }
+      const approvedCategories = [...new Set((data || []).filter(p => p.listing_status === "approved").map(p => p.category).filter(Boolean))];
+      if (!approvedCategories.length) {
+        matchedHost.innerHTML = '<p class="muted">আপনার কোনো Admin অনুমোদিত পণ্য নেই। পণ্য অনুমোদিত হলে সংশ্লিষ্ট Category-এর Buyer Demand এখানে দেখানো হবে।</p>';
+        return;
+      }
       const { data: demands, error: demandError } = await client().from("buyer_demands")
-        .select("id,product_name,category,description,required_date")
-        .eq("demand_status", "open").order("created_at", { ascending: false });
+        .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,destination_country,destination_city,required_date")
+        .eq("demand_status", "open").in("category", approvedCategories)
+        .order("created_at", { ascending: false });
       if (demandError) throw demandError;
-      $("matchedDemands").innerHTML = (demands || []).map(d => `
-        <div class="offer"><strong>${esc(d.product_name)}</strong>
-        <p class="muted">${esc(d.category)}</p><p>${esc(d.description)}</p>
-        <p><span class="demand-date">Required by: ${esc(d.required_date)}</span></p></div>`).join("") || '<p class="muted">এখনো কোনো খোলা Buyer Demand নেই।</p>';
+      const { data: offers, error: offerError } = await client().from("seller_offers")
+        .select("demand_id").eq("seller_id", user().id);
+      if (offerError) throw offerError;
+      const offeredDemandIds = new Set((offers || []).map(o => o.demand_id));
+      matchedHost.innerHTML = (demands || []).map(d => `
+        <div class="offer">
+          <strong>${esc(d.product_name)}</strong>
+          <p class="muted">${esc(d.category)} · Demand ID: ${esc(d.demand_code)}</p>
+          <p>${esc(d.description)}</p>
+          ${d.specifications_quality ? `<p class="muted">মান/বৈশিষ্ট্য: ${esc(d.specifications_quality)}</p>` : ""}
+          <p class="muted">পরিমাণ: ${esc(d.required_quantity)} · গন্তব্য: ${esc([d.destination_city,d.destination_country].filter(Boolean).join(", "))}</p>
+          <p><span class="demand-date">প্রয়োজন: ${esc(d.required_date)}</span></p>
+          ${offeredDemandIds.has(d.id) ? '<span class="tag">Offer পাঠানো হয়েছে</span>' : `<button class="primary" type="button" data-offer-demand="${esc(d.id)}">প্রস্তাব পাঠান</button>`}
+        </div>`).join("") || '<p class="muted">আপনার অনুমোদিত পণ্যের Category-এর সঙ্গে মেলে এমন কোনো খোলা Buyer Demand নেই।</p>';
+      matchedHost.querySelectorAll("button[data-offer-demand]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offerDemand)));
     } catch (err) { say("Seller Dashboard লোড হয়নি: " + err.message); }
   }
 
