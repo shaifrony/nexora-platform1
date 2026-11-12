@@ -37,6 +37,75 @@
     panel.addEventListener("click", handleAdminDecision);
   }
 
+  async function loadAdminActions() {
+    const staff = window.NEXORA_AUTH?.adminStaff;
+    const signedUser = user();
+    const host = $("nxAdminPermissionActions");
+    if (!host) return;
+    if (!signedUser || profile()?.role !== "admin" || profile()?.account_status !== "active" ||
+        !staff?.is_active || staff.admin_level !== "assistant_admin") {
+      host.classList.add("hidden");
+      return;
+    }
+    const { data: grants, error: grantError } = await client().from("admin_permission_grants")
+      .select("permission_key").eq("admin_user_id", signedUser.id).eq("is_allowed", true);
+    if (grantError) { host.textContent = "অনুমতি যাচাই করা যায়নি: " + grantError.message; host.classList.remove("hidden"); return; }
+    const allowed = new Set((grants || []).map(g => g.permission_key));
+    const productActions = ["products.suspend","products.restore","products.cancel"].some(k => allowed.has(k));
+    const businessActions = allowed.has("businesses.suspend");
+    if (!productActions && !businessActions) { host.classList.add("hidden"); return; }
+    host.classList.remove("hidden");
+    host.innerHTML = '<hr><h3>Assigned Moderation Tasks</h3><div id="nxAssistantProductActions">পণ্য লোড হচ্ছে…</div><div id="nxAssistantBusinessActions">ব্যবসা লোড হচ্ছে…</div>';
+    const productHost = $("nxAssistantProductActions");
+    const businessHost = $("nxAssistantBusinessActions");
+    if (productActions) {
+      const { data, error } = await client().from("products")
+        .select("id,product_code,product_name,listing_status")
+        .in("listing_status", ["approved","pending","suspended"]).order("created_at",{ascending:false}).limit(50);
+      if (error) productHost.textContent = "পণ্য লোড হয়নি: " + error.message;
+      else productHost.innerHTML = '<h4>পণ্য Listing</h4>' + ((data||[]).map(p => {
+        const buttons = [];
+        if (allowed.has("products.suspend") && ["approved","pending"].includes(p.listing_status)) buttons.push('<button class="danger" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="suspend">Suspend</button>');
+        if (allowed.has("products.restore") && p.listing_status==="suspended") buttons.push('<button class="primary" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="restore">Restore</button>');
+        if (allowed.has("products.cancel") && !["cancelled","rejected"].includes(p.listing_status)) buttons.push('<button class="danger" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="cancel">Cancel</button>');
+        return '<div class="offer"><b>'+esc(p.product_name)+'</b><p class="muted">'+esc(p.product_code)+' | '+esc(p.listing_status)+'</p><div class="form-actions">'+buttons.join("")+'</div></div>';
+      }).join("") || "কোনো পরিচালনাযোগ্য পণ্য নেই।");
+    } else productHost.textContent = "";
+    if (businessActions) {
+      const { data, error } = await client().from("business_profiles")
+        .select("id,display_name,approval_status").in("approval_status",["approved","pending"]).order("created_at",{ascending:false}).limit(50);
+      if (error) businessHost.textContent = "Business লোড হয়নি: " + error.message;
+      else businessHost.innerHTML = '<h4>Business Listing</h4>' + ((data||[]).map(b =>
+        '<div class="offer"><b>'+esc(b.display_name)+'</b><p class="muted">'+esc(b.approval_status)+'</p><div class="form-actions"><button class="danger" data-mod-type="business" data-mod-id="'+esc(b.id)+'" data-mod-action="suspend">Suspend</button></div></div>'
+      ).join("") || "কোনো স্থগিতযোগ্য Business নেই।");
+    } else businessHost.textContent = "";
+  }
+
+  async function handleAssistantModeration(e) {
+    const button = e.target.closest("button[data-mod-type]");
+    if (!button) return;
+    const staff = window.NEXORA_AUTH?.adminStaff;
+    if (profile()?.role !== "admin" || profile()?.account_status !== "active" ||
+        staff?.admin_level !== "assistant_admin" || staff?.is_active !== true) return;
+    const reason = prompt("এই পদক্ষেপের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):", "");
+    if (!reason || reason.trim().length < 5) return say("কারণ না দিলে কাজটি করা যাবে না।");
+    button.disabled = true;
+    try {
+      const { error } = await client().rpc("manage_marketplace_listing", {
+        p_target_type: button.dataset.modType,
+        p_target_id: button.dataset.modId,
+        p_action: button.dataset.modAction,
+        p_reason: reason.trim()
+      });
+      if (error) throw error;
+      say("পরিবর্তন সফলভাবে সংরক্ষিত হয়েছে।", true);
+      await loadAdminActions();
+    } catch (err) {
+      button.disabled = false;
+      say("পরিবর্তন করা যায়নি: " + err.message);
+    }
+  }
+
   async function loadAdminQueue() {
     if (profile()?.role !== "admin" || profile()?.account_status !== "active" ||
         window.NEXORA_AUTH?.adminStaff?.admin_level !== "super_admin" ||
@@ -106,6 +175,7 @@
     }
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     if (id === "market") loadProducts();
+    if (id === "accountSection") loadAdminActions();
     if (id === "demandBoard") loadDemands();
     if (id === "sellerDashboard") loadSellerDashboard();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -426,9 +496,11 @@
 
   $("productSearch")?.addEventListener("input", () => renderProducts());
   $("categoryFilter")?.addEventListener("change", () => renderProducts());
+  $("nxAdmin")?.addEventListener("click", handleAssistantModeration);
   window.addEventListener("nexora:auth-change", async () => {
     state.business = null;
     await loadAdminQueue();
+    await loadAdminActions();
     if ($("market") && !$("market").classList.contains("hidden")) await loadProducts();
     if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
     if ($("sellerDashboard") && !$("sellerDashboard").classList.contains("hidden")) await loadSellerDashboard();
