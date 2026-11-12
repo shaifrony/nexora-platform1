@@ -220,3 +220,21 @@ Scope / pending:
 - The schema currently permits more than one active job to be assigned to a vehicle; concurrency/capacity scheduling policy is not yet defined.
 - Confirm the project's Data API exposure settings for the new public tables before applying migrations; Supabase changed new-table exposure defaults in 2026.
 - Add real browser tests and negative RLS/RPC tests with Admin MFA and Provider accounts before enabling in production.
+
+
+## 11. Buyer and Seller market-category registration (2026-11-13)
+
+Approved product decision:
+- Buyer creates one account and selects exactly one active marketplace category at registration: `wholesale` or `retail`.
+- A Buyer can switch their active category at any time from Buyer Center without creating another account. Account identity, orders, messages, demands and history remain attached to the same user.
+- Seller creates one account and may select Wholesale, Retail, or both categories during registration.
+- A Seller who selects both categories uses one Seller account and one Business Profile; category access is represented as a set, not separate user roles or duplicate accounts.
+- Category values are controlled profile fields; users cannot self-change account role, account status, approval state or Seller category entitlements.
+- Transport Provider enrollment remains separate from account roles and does not affect these categories.
+
+Implementation staging:
+- Registration UI captures Buyer category or one/both Seller categories.
+- Buyer Center includes a category switch control.
+- A staged database migration is required to persist `profiles.buyer_category` and `profiles.seller_categories`, validate registration metadata in `handle_new_user()`, and permit only the active Buyer to update their own Buyer category.
+- Marketplace visibility filtering and product listing sale-mode are intentionally a separate follow-up: each product's wholesale/retail listing representation and price model must be finalized before filtering product rows. Do not assume one listing has dual prices.
+- No hosted migration or deployment is performed as part of this design stage.
