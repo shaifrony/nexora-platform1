@@ -119,7 +119,7 @@
     try {
       await loadProfile();
       if (currentUser && profile && profile.account_status !== "active") {
-        await db.auth.signOut({ scope: "local" });
+        await db.auth.signOut({ scope: "global" });
         currentUser = null; profile = null; adminStaff = null;
         render();
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
