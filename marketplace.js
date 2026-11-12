@@ -454,7 +454,37 @@
     }).join("") : '<div class="card">কোনো অনুমোদিত পণ্য পাওয়া যায়নি।</div>';
   }
 
+  async function loadBuyerDashboardProducts() {
+    const host = $("buyerProductList");
+    if (!host) return;
+    if (!activeBuyer() || !signedIn()) { host.textContent = "সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।"; return; }
+    host.textContent = "অনুমোদিত পণ্য লোড হচ্ছে…";
+    try {
+      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
+      if (error) throw error;
+      state.buyerProducts = data || [];
+      renderBuyerDashboardProducts();
+    } catch (err) { host.textContent = "পণ্য লোড হয়নি: " + (err.message || "অজানা সমস্যা"); }
+  }
+  function renderBuyerDashboardProducts() {
+    const host = $("buyerProductList");
+    if (!host) return;
+    const term = ($("buyerProductSearch")?.value || "").trim().toLowerCase();
+    const rows = (state.buyerProducts || []).filter(p => [p.product_name,p.category,p.description,p.origin].join(" ").toLowerCase().includes(term));
+    if ($("buyerProductCount")) $("buyerProductCount").textContent = rows.length + " Products";
+    if (!rows.length) { host.innerHTML = '<div class="card muted">এখনো কোনো Admin অনুমোদিত পণ্য নেই অথবা অনুসন্ধানের সঙ্গে মেলে এমন পণ্য পাওয়া যায়নি।</div>'; return; }
+    host.innerHTML = rows.map(p => {
+      const image = (p.image_urls || []).find(Boolean);
+      return '<article class="card">' + (image ? '<img class="product-image" src="' + esc(image) + '" alt="' + esc(p.product_name) + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
+        '<span class="tag">' + esc(p.category) + '</span><h3>' + esc(p.product_name) + '</h3><p class="price">' + esc(p.price) + ' ' + esc(p.currency) + '</p><p class="muted">' + esc(p.origin || '') + '</p>' +
+        '<p class="muted">' + esc(p.description || '') + '</p>' + (p.slug ? '<a href="' + esc(window.location.pathname) + '?product=' + encodeURIComponent(p.slug) + '">পণ্য বিস্তারিত দেখুন</a>' : '<span class="muted">Product ID: ' + esc(p.product_code) + '</span>') + '</article>';
+    }).join("");
+  }
+  $("buyerProductSearch")?.addEventListener("input", renderBuyerDashboardProducts);
+  $("buyerProductSearchButton")?.addEventListener("click", renderBuyerDashboardProducts);
+
   async function loadBuyerDashboard() {
+    loadBuyerDashboardProducts();
     const host = $("buyerDemandList");
     if (!host) return;
     if (!signedIn() || !activeBuyer()) {
