@@ -221,6 +221,7 @@
     if (id === "accountSection") loadAdminActions();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
+    if (id === "porterDashboard") loadPorterDashboard();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -780,6 +781,104 @@
       matchedHost.querySelectorAll("button[data-offer-demand]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offerDemand)));
     } catch (err) { say("Seller Dashboard লোড হয়নি: " + err.message); }
   }
+
+
+  const porterStatusLabels = {
+    assigned: "নতুন কাজ", accepted: "গ্রহণ করা হয়েছে",
+    pickup_in_progress: "পণ্য সংগ্রহ চলছে", picked_up: "পণ্য সংগ্রহ সম্পন্ন",
+    in_transit: "পথে রয়েছে", delivered: "ডেলিভারি সম্পন্ন",
+    declined: "প্রত্যাখ্যাত", failed: "সমস্যা হয়েছে", cancelled: "বাতিল"
+  };
+  const porterActiveStatuses = ["accepted","pickup_in_progress","picked_up","in_transit"];
+  function porterNextActions(status) {
+    return ({
+      assigned: [["accepted","কাজ গ্রহণ"],["declined","কাজ প্রত্যাখ্যান"]],
+      accepted: [["pickup_in_progress","সংগ্রহ শুরু"]],
+      pickup_in_progress: [["picked_up","পণ্য সংগ্রহ নিশ্চিত"]],
+      picked_up: [["in_transit","পরিবহন শুরু"]],
+      in_transit: [["delivered","ডেলিভারি সম্পন্ন"],["failed","সমস্যা রিপোর্ট"]]
+    })[status] || [];
+  }
+  async function updatePorterJob(jobId, nextStatus) {
+    const prompts = {
+      accepted: "এই ডেলিভারি কাজটি গ্রহণ করছেন?",
+      declined: "এই কাজটি প্রত্যাখ্যান করার কারণ লিখুন:",
+      pickup_in_progress: "পণ্য সংগ্রহ শুরু করার বিষয়টি নিশ্চিত করুন।",
+      picked_up: "পণ্যটি সংগ্রহ করেছেন—নিশ্চিত করুন।",
+      in_transit: "পণ্যটি গন্তব্যের উদ্দেশ্যে পাঠানো হয়েছে—নিশ্চিত করুন।",
+      delivered: "ডেলিভারি সম্পন্ন হওয়ার সংক্ষিপ্ত প্রমাণ/নোট লিখুন:",
+      failed: "ডেলিভারিতে কী সমস্যা হয়েছে তা লিখুন:"
+    };
+    const promptText = prompts[nextStatus] || "নোট (ঐচ্ছিক):";
+    const note = window.prompt(promptText, "");
+    if (note === null) return;
+    if (["declined","delivered","failed"].includes(nextStatus) && note.trim().length < 5)
+      return say("এই স্ট্যাটাসের জন্য কমপক্ষে ৫ অক্ষরের নোট প্রয়োজন।");
+    try {
+      const { error } = await client().rpc("porter_update_delivery_job_status", {
+        p_job_id: jobId, p_new_status: nextStatus, p_note: note.trim() || null
+      });
+      if (error) throw error;
+      say("ডেলিভারি কাজের অবস্থা আপডেট হয়েছে।", true);
+      await loadPorterDashboard();
+    } catch (err) { say("স্ট্যাটাস আপডেট হয়নি: " + err.message); }
+  }
+  async function loadPorterDashboard() {
+    const host = $("nxPorterJobs");
+    if (!host) return;
+    if (!signedIn() || profile()?.role !== "porter" || profile()?.account_status !== "active") {
+      host.textContent = "সক্রিয় অনুমোদিত Porter অ্যাকাউন্ট প্রয়োজন।";
+      return;
+    }
+    host.innerHTML = '<p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p>';
+    try {
+      const { data, error } = await client().from("porter_delivery_jobs")
+        .select("id,job_code,status,pickup_address,pickup_city,pickup_country,dropoff_address,dropoff_city,dropoff_country,package_description,package_count,scheduled_pickup_at,created_at,porter_note")
+        .eq("assigned_porter_id", user().id).order("created_at", {ascending:false});
+      if (error) throw error;
+      const jobs = data || [];
+      const count = (statuses) => jobs.filter(j => statuses.includes(j.status)).length;
+      const setMetric = (id,value) => {const n=$(id);if(n)n.textContent=String(value);};
+      setMetric("nxPorterAssigned",count(["assigned"]));
+      setMetric("nxPorterActive",count(porterActiveStatuses));
+      setMetric("nxPorterDelivered",count(["delivered"]));
+      setMetric("nxPorterTotal",jobs.length);
+      const labelAddress = (address,city,country) => [address,city,country].filter(Boolean).map(esc).join(", ") || "তথ্য দেওয়া হয়নি";
+      host.innerHTML = jobs.length ? jobs.map(job => {
+        const actions = porterNextActions(job.status).map(([status,label]) =>
+          '<button type="button" class="'+(status==="declined"||status==="failed"?"danger":"primary")+'" data-porter-job="'+esc(job.id)+'" data-next-status="'+status+'">'+label+'</button>'
+        ).join("");
+        return `<article class="nx-porter-job" data-porter-card data-status="${esc(job.status)}">
+          <div class="nx-porter-job-head"><div><div class="nx-porter-job-code">${esc(job.job_code)}</div><h3>${esc(job.package_description || "পণ্য পরিবহন")}</h3></div><span class="nx-porter-job-status">${esc(porterStatusLabels[job.status] || "অবস্থা অজানা")}</span></div>
+          <div class="nx-porter-route">
+            <div><strong>পণ্য সংগ্রহ</strong><p>${labelAddress(job.pickup_address,job.pickup_city,job.pickup_country)}</p></div>
+            <div><strong>ডেলিভারি গন্তব্য</strong><p>${labelAddress(job.dropoff_address,job.dropoff_city,job.dropoff_country)}</p></div>
+          </div>
+          <p class="muted">প্যাকেজ সংখ্যা: ${esc(job.package_count ?? "উল্লেখ নেই")} ${job.scheduled_pickup_at ? " · সংগ্রহের সময়: "+esc(new Date(job.scheduled_pickup_at).toLocaleString("bn-BD")) : ""}</p>
+          ${job.porter_note ? '<p class="muted">নোট: '+esc(job.porter_note)+'</p>' : ""}
+          <div class="nx-porter-job-actions">${actions || '<span class="muted">এই কাজের জন্য এখন কোনো পদক্ষেপ নেই।</span>'}</div>
+        </article>`;
+      }).join("") : '<div class="offer"><strong>এখনো কোনো কাজ বরাদ্দ হয়নি</strong><p class="muted">Admin আপনাকে পরিবহন কাজ বরাদ্দ করলে এখানে দেখা যাবে।</p></div>';
+      const applyFilter = () => {
+        const filter = $("nxPorterJobFilter")?.value || "all";
+        host.querySelectorAll("[data-porter-card]").forEach(card => {
+          const status=card.dataset.status;
+          const group=status==="assigned"?"assigned":porterActiveStatuses.includes(status)?"active":status;
+          card.hidden=filter!=="all" && filter!==group;
+        });
+      };
+      const filterEl=$("nxPorterJobFilter");
+      if(filterEl)filterEl.onchange=applyFilter;
+      applyFilter();
+      host.querySelectorAll("button[data-porter-job]").forEach(button => button.addEventListener("click",() => updatePorterJob(button.dataset.porterJob,button.dataset.nextStatus)));
+    } catch (err) {
+      const missing = /porter_delivery_jobs|schema cache|does not exist/i.test(err.message || "");
+      host.innerHTML = missing
+        ? '<div class="offer"><strong>Porter Database প্রস্তুত হয়নি</strong><p class="muted">নিরাপদ Delivery Workflow migration এখনো ডাটাবেজে প্রয়োগ করা হয়নি। সেটি অনুমোদিতভাবে প্রয়োগের পর কাজের তালিকা চালু হবে।</p></div>'
+        : '<p class="muted">ডেলিভারি কাজ লোড হয়নি: '+esc(err.message)+'</p>';
+    }
+  }
+  $("nxPorterRefresh")?.addEventListener("click",loadPorterDashboard);
 
   async function deleteProduct(id) {
     if (!confirm("এই pending পণ্যটি মুছে ফেলতে চান?")) return;
