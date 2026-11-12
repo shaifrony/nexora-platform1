@@ -271,8 +271,8 @@
     if (roleForm) roleForm.classList.toggle("hidden", !!pendingRoleRequest);
     if (roleStatus) {
       if (pendingRoleRequest) {
-        const roleLabel = pendingRoleRequest.requested_role === "seller" ? "Seller" : "Porter";
-        roleStatus.textContent = "আপনার " + roleLabel + " হওয়ার আবেদন পর্যালোচনাধীন। Admin-এর সিদ্ধান্ত না হওয়া পর্যন্ত নতুন আবেদন পাঠানোর প্রয়োজন নেই।";
+        const roleLabel = pendingRoleRequest.requested_role === "seller" ? "Seller" : "পুরোনো Porter";
+        roleStatus.textContent = "আপনার " + roleLabel + " আবেদন পর্যালোচনাধীন।";
         roleStatus.classList.remove("hidden");
       } else {
         roleStatus.textContent = "";
@@ -296,9 +296,6 @@
       workspaceNav.classList.remove("hidden");
     } else if (p.role === "seller" && p.account_status === "active") {
       workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'sellerDashboard\')">Seller Center</button>';
-      workspaceNav.classList.remove("hidden");
-    } else if (p.role === "porter" && p.account_status === "active") {
-      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'porterDashboard\')">Porter Center</button>';
       workspaceNav.classList.remove("hidden");
     } else if (p.role === "admin" && p.account_status === "active") {
       workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'accountSection\')">Admin Console</button>';
@@ -502,7 +499,7 @@
     const form = e.currentTarget;
     if (!currentUser) return say("আগে লগইন করুন।");
     const role = new FormData(form).get("requested_role");
-    if (!["seller", "porter"].includes(role)) return;
+    if (role !== "seller") return;
     setBusy(form, true);
     try {
       const { error } = await db.from("role_requests").insert({
@@ -521,7 +518,7 @@
           pendingRoleRequest = pending.data || null;
           render();
           say(pendingRoleRequest
-            ? "আপনার " + (pendingRoleRequest.requested_role === "seller" ? "Seller" : "Porter") + " আবেদন আগে থেকেই পর্যালোচনাধীন আছে।"
+            ? "আপনার Seller আবেদন আগে থেকেই পর্যালোচনাধীন আছে।"
             : "একটি আবেদন ইতিমধ্যে জমা হয়েছে। পৃষ্ঠাটি রিফ্রেশ করে দেখুন।", true);
           return;
         }
@@ -530,7 +527,7 @@
       pendingRoleRequest = { requested_role: role, status: "pending" };
       form.reset();
       render();
-      say("আপনার " + (role === "seller" ? "Seller" : "Porter") + " হওয়ার আবেদন Admin-এর কাছে পাঠানো হয়েছে।", true);
+      say("আপনার Seller হওয়ার আবেদন Admin-এর কাছে পাঠানো হয়েছে।", true);
     } catch (err) { say("আবেদন জমা হয়নি: " + err.message); }
     finally { setBusy(form, false); }
   });
@@ -608,7 +605,7 @@
     const can=(key)=>isSuper||permissions.has(key);
     const safeDate=(v)=>v?escapeHtml(new Date(v).toLocaleString("bn-BD")):"—";
     if(can("users.view")||can("users.suspend")||can("users.restore")||can("users.cancel")) {
-      const {data,error}=await db.from("profiles").select("id,full_name,role,account_status,created_at").in("role",["buyer","seller","porter"]).order("created_at",{ascending:false}).limit(20);
+      const {data,error}=await db.from("profiles").select("id,full_name,role,account_status,created_at").in("role",["buyer","seller"]).order("created_at",{ascending:false}).limit(20);
       if(error) usersHost.textContent="ব্যবহারকারী তালিকা লোড হয়নি: "+error.message;
       else if(!data?.length) usersHost.textContent="কোনো ব্যবহারকারী পাওয়া যায়নি।";
       else usersHost.innerHTML=data.map(u=>{
@@ -712,7 +709,7 @@
     const profileById = new Map((users || []).map(u => [u.id, u]));
     host.innerHTML = data.map(r => {
       const applicant = profileById.get(r.user_id);
-      const roleLabel = r.requested_role === "seller" ? "Seller" : "Porter";
+      const roleLabel = r.requested_role === "seller" ? "Seller" : "পুরোনো Porter";
       const created = r.created_at ? new Date(r.created_at).toLocaleString("bn-BD") : "সময় পাওয়া যায়নি";
       return '<div class="offer"><b>' + escapeHtml(roleLabel) + ' আবেদন</b>' +
         '<div>আবেদনকারী: ' + escapeHtml(applicant?.full_name || "নাম পাওয়া যায়নি") + '</div>' +
