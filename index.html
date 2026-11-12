@@ -347,20 +347,34 @@ h2{font-size:24px}
 
         <div class="grid">
           <div>
-            <label>Price *</label>
-            <input name="price" required>
+            <label>Wholesale Price (per unit) *</label>
+            <input name="price" type="number" min="0.01" step="0.01" required placeholder="যেমন: 180">
           </div>
           <div>
             <label>Currency *</label>
             <select name="currency" required>
-              <option>USD</option>
               <option>BDT</option>
+              <option>USD</option>
               <option>EUR</option>
               <option>GBP</option>
               <option>CNY</option>
             </select>
           </div>
+          <div>
+            <label>Price Unit *</label>
+            <input name="price_unit" required maxlength="24" placeholder="KG / Piece / Ton / Meter">
+          </div>
+          <div>
+            <label>Minimum Order Quantity (MOQ) *</label>
+            <input name="minimum_order_quantity" type="number" min="0.001" step="0.001" required placeholder="যেমন: 500">
+          </div>
         </div>
+        <label>দরদাম গ্রহণযোগ্য? *</label>
+        <select name="price_negotiable" required>
+          <option value="yes">হ্যাঁ, দরদাম করা যাবে</option>
+          <option value="no">না, নির্ধারিত মূল্য</option>
+        </select>
+        <p class="muted">পাইকারি পণ্যের মূল্য একক অনুযায়ী দেখানো হবে। ক্রেতা MOQ-এর কম পরিমাণ অর্ডার করতে পারবে না।</p>
 
         <div class="form-actions">
           <button class="primary" type="submit">Save Product</button>
