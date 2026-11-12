@@ -106,7 +106,7 @@
     const isAdminRole = profile.role === "admin" && profile.account_status === "active";
     const hasFactor = mfaFactors.length > 0;
     const mustBlock = isAdminRole && !mfaVerified;
-    const shouldShow = mustBlock || (!isAdminRole && !hasFactor);
+    const shouldShow = mustBlock || !isAdminRole;
     panel.classList.toggle("hidden", !shouldShow);
     if (!shouldShow) return;
     panel.innerHTML = isAdminRole
@@ -125,6 +125,8 @@
       panel.insertAdjacentHTML("beforeend", '<label>Authenticator-এর ৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyEnroll" type="button">MFA সক্রিয় করুন</button>');
     } else if (mfaChallengeId) {
       panel.insertAdjacentHTML("beforeend", '<p>Authenticator App থেকে বর্তমান ৬ সংখ্যার কোড লিখুন।</p><label>৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyLogin" type="button">কোড যাচাই করুন</button>');
+    } else if (hasFactor && mfaVerified && !isAdminRole) {
+      panel.insertAdjacentHTML("beforeend", '<p role="status">MFA সক্রিয় আছে। আপনার অ্যাকাউন্টে Authenticator App যুক্ত রয়েছে।</p><button class="light" id="nxMfaDisable" type="button">MFA বন্ধ করুন</button>');
     } else if (hasFactor) {
       panel.insertAdjacentHTML("beforeend", '<button class="primary" id="nxMfaStartChallenge" type="button">Authenticator Code দিন</button>');
     } else {
@@ -135,12 +137,19 @@
     panel.appendChild(error);
   }
   document.addEventListener("click", async e => {
-    const button = e.target.closest("#nxMfaEnroll,#nxMfaVerifyEnroll,#nxMfaStartChallenge,#nxMfaVerifyLogin");
+    const button = e.target.closest("#nxMfaEnroll,#nxMfaVerifyEnroll,#nxMfaStartChallenge,#nxMfaVerifyLogin,#nxMfaDisable");
     if (!button) return;
     button.disabled = true;
     const showError = err => { const n=document.getElementById("nxMfaError"); if(n) n.textContent="MFA কাজ সম্পন্ন হয়নি: "+(err.message||String(err)); };
     try {
-      if (button.id === "nxMfaEnroll") {
+      if (button.id === "nxMfaDisable") {
+        if (profile?.role === "admin") throw new Error("Admin MFA বন্ধ করা যাবে না।");
+        if (!window.confirm("আপনি কি এই অ্যাকাউন্টের MFA বন্ধ করতে চান?")) { button.disabled=false; return; }
+        const factorId=mfaFactors[0]?.id; if(!factorId) throw new Error("Verified Authenticator পাওয়া যায়নি।");
+        const {error}=await db.auth.mfa.unenroll({factorId}); if(error) throw error;
+        const {data,error:sessionError}=await db.auth.getSession(); if(sessionError) throw sessionError;
+        await sync(data.session); say("MFA বন্ধ করা হয়েছে।",true);
+      } else if (button.id === "nxMfaEnroll") {
         const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"NEXORA Authenticator"});
         if(error) throw error;
         mfaPendingFactor=data; mfaChallengeId=null; renderMfaPanel();
