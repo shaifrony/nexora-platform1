@@ -205,8 +205,8 @@
       $("accountSection")?.classList.remove("hidden");
       const hint = $("nxCurrent");
       if (hint) hint.textContent = signedIn()
-        ? "Post a Demand ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
-        : "Post a Demand করতে আগে Buyer হিসেবে লগইন করুন।";
+        ? "Buyer Dashboard ও Demand Posting ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
+        : "Buyer Dashboard ও Demand Posting ব্যবহার করতে আগে Buyer হিসেবে লগইন করুন।";
       $("accountSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
