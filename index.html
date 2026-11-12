@@ -244,7 +244,11 @@ h2{font-size:24px}
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
   <nav aria-label="প্রধান নেভিগেশন">
     <button type="button" onclick="showSection('market')">Marketplace</button>
-    <button type="button" onclick="showSection('accountSection')">Login / Register</button>
+    <button type="button" id="nxHeaderLogin" onclick="showSection('accountSection')">Login / Register</button>
+    <button type="button" id="nxHeaderBuyerDashboard" class="hidden" onclick="showSection('buyerDashboard')">Buyer Dashboard</button>
+    <button type="button" id="nxHeaderPostDemand" class="hidden" onclick="showSection('postDemand')">Post Demand</button>
+    <button type="button" id="nxHeaderAccount" class="hidden" onclick="showSection('accountSection')">Account</button>
+    <button type="button" id="nxHeaderLogout" class="hidden" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
   </nav>
 </header>
 
