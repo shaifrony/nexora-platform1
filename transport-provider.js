@@ -131,6 +131,8 @@
     renderProviders();
   }
 
+  if($("nxTransportProviderFormHost")) $("nxTransportProviderFormHost").innerHTML=providerFormMarkup();
+
   $("nxTransportProviderForm")?.addEventListener("submit",async event=>{
     event.preventDefault();
     if(!activeAccount()) return say("সক্রিয় Buyer বা Seller অ্যাকাউন্ট প্রয়োজন।");
