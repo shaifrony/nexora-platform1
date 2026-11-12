@@ -511,6 +511,22 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 @media(max-width:760px){.nx-seller-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.nx-seller-stat{padding:12px}.nx-seller-stat strong{font-size:23px}.nx-seller-product-tools{grid-template-columns:1fr}.nx-seller-search-label{margin-top:4px}}
 
+
+/* Porter delivery operations */
+.nx-porter-note{font-size:12px;line-height:1.65;margin:12px 2px}
+.nx-porter-job{padding:17px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;margin:12px 0}
+.nx-porter-job[hidden]{display:none!important}
+.nx-porter-job-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.nx-porter-job-code{font-size:11px;color:var(--nx-muted);font-weight:800;letter-spacing:.5px}
+.nx-porter-job-status{display:inline-flex;padding:5px 9px;border-radius:20px;background:#eef3f8;color:#38516b;font-size:11px;font-weight:800}
+.nx-porter-route{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.nx-porter-route>div{padding:12px;border-radius:10px;background:#f7f9fb;min-width:0}
+.nx-porter-route strong{display:block;font-size:12px;margin-bottom:5px}
+.nx-porter-route p{margin:0;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.nx-porter-job-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.nx-porter-job-actions button{min-height:38px}
+@media(max-width:560px){.nx-porter-route{grid-template-columns:1fr}.nx-porter-job{padding:13px}}
+
 </style>
 </head>
 
@@ -1005,16 +1021,23 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>পরিবহন ও ডেলিভারি ব্যবস্থাপনা</h1><p>পণ্য সংগ্রহ থেকে গন্তব্যে পৌঁছানো পর্যন্ত পরিবহন কার্যক্রম পরিচালনার জন্য Porter Center। Porter অ্যাকাউন্ট Admin অনুমোদনের পর সক্রিয় হয়।</p></div>
       <div class="nx-role-hero-mark" aria-hidden="true">↗</div>
     </div>
+    <div class="nx-seller-overview nx-porter-overview" aria-label="Porter job overview">
+      <article class="nx-seller-stat"><span>নতুন কাজ</span><strong id="nxPorterAssigned">—</strong><small>গ্রহণের অপেক্ষায়</small></article>
+      <article class="nx-seller-stat"><span>চলমান কাজ</span><strong id="nxPorterActive">—</strong><small>সংগ্রহ বা পরিবহনে</small></article>
+      <article class="nx-seller-stat"><span>সম্পন্ন কাজ</span><strong id="nxPorterDelivered">—</strong><small>ডেলিভারি সম্পন্ন</small></article>
+      <article class="nx-seller-stat"><span>মোট কাজ</span><strong id="nxPorterTotal">—</strong><small>আপনার বরাদ্দকৃত কাজ</small></article>
+    </div>
     <div class="card">
-      <h3>Porter Workspace প্রস্তুত হচ্ছে</h3>
-      <p class="muted">এই পর্যায়ে Porter-এর জন্য আলাদা কর্মক্ষেত্রের কাঠামো তৈরি করা হয়েছে। বাস্তব কাজ বরাদ্দ, গ্রহণ, পণ্য সংগ্রহ, লাইভ ট্র্যাকিং, ডেলিভারি প্রমাণ এবং পারিশ্রমিকের সুবিধা সংশ্লিষ্ট নিরাপদ workflow ও database প্রস্তুত হওয়ার পর চালু হবে। এখনো কোনো ডেলিভারি কাজ বরাদ্দ বা সম্পন্ন করার সুবিধা চালু নেই।</p>
+      <div class="section-head"><div><h3>আমার ডেলিভারি কাজ</h3><p class="muted">আপনাকে বরাদ্দ করা পরিবহন কাজ, সংগ্রহের ঠিকানা ও গন্তব্য।</p></div><button class="secondary" id="nxPorterRefresh" type="button">রিফ্রেশ</button></div>
+      <div class="nx-seller-product-tools">
+        <label class="nx-seller-search-label" for="nxPorterJobFilter">কাজের অবস্থা</label>
+        <select id="nxPorterJobFilter">
+          <option value="all">সব কাজ</option><option value="assigned">নতুন কাজ</option><option value="active">চলমান</option><option value="delivered">সম্পন্ন</option><option value="declined">প্রত্যাখ্যাত</option><option value="failed">সমস্যা হয়েছে</option>
+        </select>
+      </div>
+      <div id="nxPorterJobs" aria-live="polite"><p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p></div>
     </div>
-    <div class="nx-porter-grid">
-      <article class="nx-porter-module"><span aria-hidden="true">▤</span><h3>কাজের তালিকা</h3><p>অনুমোদিত পরিবহন ও ডেলিভারি কাজ দেখার স্থান</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
-      <article class="nx-porter-module"><span aria-hidden="true">⇄</span><h3>কাজ গ্রহণ ও স্ট্যাটাস</h3><p>কাজ গ্রহণ, সংগ্রহ এবং ডেলিভারি অগ্রগতি আপডেট</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
-      <article class="nx-porter-module"><span aria-hidden="true">⌖</span><h3>রুট ও ট্র্যাকিং</h3><p>পণ্য পরিবহনের রুট ও অবস্থান ব্যবস্থাপনা</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
-      <article class="nx-porter-module"><span aria-hidden="true">৳</span><h3>পারিশ্রমিক ও ইতিহাস</h3><p>সম্পন্ন কাজ, ডেলিভারি রেকর্ড এবং পাওনা হিসাব</p><span class="nx-module-status">পরবর্তী ধাপে চালু হবে</span></article>
-    </div>
+    <p class="muted nx-porter-note">নিরাপত্তা: কেবল আপনাকে বরাদ্দ করা কাজের প্রয়োজনীয় সংগ্রহ ও গন্তব্যের তথ্য এখানে দেখানো হবে। লাইভ GPS tracking, ছবি-ভিত্তিক delivery proof এবং earnings settlement এখনো চালু নয়।</p>
   </section>
 
   <!-- PRIVATE COMMUNICATIONS -->
