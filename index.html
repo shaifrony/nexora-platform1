@@ -1083,6 +1083,17 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   </section>
 
 
+  <!-- TRANSPORT PROVIDER CENTER — separate from account roles -->
+  <section id="transportProviderCenter" class="section hidden">
+    <div class="section-head"><div><span class="tag">NEXORA LOGISTICS</span><h2>Transport Provider Center</h2></div></div>
+    <div class="card">
+      <p class="muted">Transport Provider একটি আলাদা সেবা নিবন্ধন। আপনার Buyer/Seller account role অপরিবর্তিত থাকবে। একটি Provider-এর অধীনে একাধিক Vehicle নিবন্ধন করা যাবে। Provider ও প্রতিটি Vehicle আলাদাভাবে Admin approval পাবে।</p>
+      <p id="nxTransportMessage" class="muted" role="status" aria-live="polite"></p>
+      <div id="nxTransportProviderFormHost"></div>
+      <div id="nxTransportProviderList" aria-live="polite">আপনার Provider আবেদন লোড হচ্ছে…</div>
+    </div>
+  </section>
+
   <!-- LEGACY PORTER WORKSPACE — disabled pending Transport Provider refactor -->
   <section id="porterDashboard" class="section hidden nx-role-workspace" aria-hidden="true">
     <div class="nx-role-hero">
@@ -1175,6 +1186,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="auth.js"></script>
 <script src="marketplace.js"></script>
+<script src="transport-provider.js"></script>
 <script src="chat.js"></script>
 
 </body>
