@@ -17,6 +17,12 @@
   let pendingRoleRequest = null;
   let forgotMode = false;
   let recoveryMode = false;
+  let mfaVerified = false;
+  let mfaFactors = [];
+  let mfaPendingFactor = null;
+  let mfaChallengeId = null;
+  let mfaChallengeFactorId = null;
+  let mfaAssurance = null;
 
   const style = document.createElement("style");
   style.textContent = `
@@ -68,6 +74,99 @@
       adminStaff = staff.data;
     }
   }
+  function ensureMfaPanel() {
+    let panel = document.getElementById("nxMfaPanel");
+    if (!panel) {
+      const logged = document.getElementById("nxLogged");
+      if (!logged) return null;
+      panel = document.createElement("section");
+      panel.id = "nxMfaPanel";
+      panel.className = "card hidden";
+      logged.insertAdjacentElement("afterend", panel);
+    }
+    return panel;
+  }
+  async function refreshMfaState() {
+    mfaVerified = false; mfaFactors = []; mfaAssurance = null;
+    if (!currentUser) return;
+    const [assurance, factors] = await Promise.all([
+      db.auth.mfa.getAuthenticatorAssuranceLevel(),
+      db.auth.mfa.listFactors()
+    ]);
+    if (assurance.error) throw assurance.error;
+    if (factors.error) throw factors.error;
+    mfaAssurance = assurance.data || null;
+    mfaFactors = (factors.data?.totp || []).filter(x => x.status === "verified");
+    mfaVerified = mfaAssurance?.currentLevel === "aal2";
+  }
+  function renderMfaPanel() {
+    const panel = ensureMfaPanel();
+    if (!panel) return;
+    if (!currentUser || !profile || recoveryMode) { panel.classList.add("hidden"); return; }
+    const isAdminRole = profile.role === "admin" && profile.account_status === "active";
+    const hasFactor = mfaFactors.length > 0;
+    const mustBlock = isAdminRole && !mfaVerified;
+    const shouldShow = mustBlock || (!isAdminRole && !hasFactor);
+    panel.classList.toggle("hidden", !shouldShow);
+    if (!shouldShow) return;
+    panel.innerHTML = isAdminRole
+      ? '<h3>Admin নিরাপত্তা যাচাই (MFA বাধ্যতামূলক)</h3><p class="muted">Admin Dashboard ব্যবহারের আগে Authenticator App দিয়ে MFA সক্রিয় ও যাচাই করুন।</p>'
+      : '<h3>দুই-ধাপের নিরাপত্তা (ঐচ্ছিক MFA)</h3><p class="muted">Authenticator App যুক্ত করলে পাসওয়ার্ডের পাশাপাশি ৬ সংখ্যার কোড দিয়ে লগইন করতে পারবেন।</p>';
+    if (mfaPendingFactor?.totp?.qr_code) {
+      const qr = document.createElement("img");
+      qr.alt = "Authenticator QR Code";
+      qr.style.cssText = "max-width:220px;width:100%;display:block;margin:12px 0";
+      qr.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(mfaPendingFactor.totp.qr_code);
+      panel.appendChild(qr);
+      const secret = document.createElement("p");
+      secret.className = "muted";
+      secret.textContent = "QR স্ক্যান না হলে Secret: " + (mfaPendingFactor.totp.secret || "");
+      panel.appendChild(secret);
+      panel.insertAdjacentHTML("beforeend", '<label>Authenticator-এর ৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyEnroll" type="button">MFA সক্রিয় করুন</button>');
+    } else if (mfaChallengeId) {
+      panel.insertAdjacentHTML("beforeend", '<p>Authenticator App থেকে বর্তমান ৬ সংখ্যার কোড লিখুন।</p><label>৬ সংখ্যার কোড</label><input id="nxMfaCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6"><button class="primary" id="nxMfaVerifyLogin" type="button">কোড যাচাই করুন</button>');
+    } else if (hasFactor) {
+      panel.insertAdjacentHTML("beforeend", '<button class="primary" id="nxMfaStartChallenge" type="button">Authenticator Code দিন</button>');
+    } else {
+      panel.insertAdjacentHTML("beforeend", '<button class="primary" id="nxMfaEnroll" type="button">Authenticator App যুক্ত করুন</button>');
+    }
+    const error = document.createElement("p");
+    error.id = "nxMfaError"; error.className = "muted"; error.setAttribute("aria-live","polite");
+    panel.appendChild(error);
+  }
+  document.addEventListener("click", async e => {
+    const button = e.target.closest("#nxMfaEnroll,#nxMfaVerifyEnroll,#nxMfaStartChallenge,#nxMfaVerifyLogin");
+    if (!button) return;
+    button.disabled = true;
+    const showError = err => { const n=document.getElementById("nxMfaError"); if(n) n.textContent="MFA কাজ সম্পন্ন হয়নি: "+(err.message||String(err)); };
+    try {
+      if (button.id === "nxMfaEnroll") {
+        const {data,error}=await db.auth.mfa.enroll({factorType:"totp",friendlyName:"NEXORA Authenticator"});
+        if(error) throw error;
+        mfaPendingFactor=data; mfaChallengeId=null; renderMfaPanel();
+      } else if (button.id === "nxMfaStartChallenge") {
+        const factorId=mfaFactors[0]?.id; if(!factorId) throw new Error("Verified Authenticator পাওয়া যায়নি।");
+        const {data,error}=await db.auth.mfa.challenge({factorId}); if(error) throw error;
+        mfaChallengeFactorId=factorId; mfaChallengeId=data.id; renderMfaPanel();
+      } else {
+        const code=String(document.getElementById("nxMfaCode")?.value||"").trim();
+        if(!/^\\d{6}$/.test(code)) throw new Error("৬ সংখ্যার সঠিক কোড লিখুন।");
+        if(button.id==="nxMfaVerifyEnroll") {
+          const factorId=mfaPendingFactor?.id; if(!factorId) throw new Error("MFA setup session পাওয়া যায়নি।");
+          const challenge=await db.auth.mfa.challenge({factorId}); if(challenge.error) throw challenge.error;
+          const {error}=await db.auth.mfa.verify({factorId,challengeId:challenge.data.id,code}); if(error) throw error;
+          mfaPendingFactor=null;
+        } else {
+          const {error}=await db.auth.mfa.verify({factorId:mfaChallengeFactorId,challengeId:mfaChallengeId,code}); if(error) throw error;
+          mfaChallengeId=null; mfaChallengeFactorId=null;
+        }
+        const {data,error}=await db.auth.getSession(); if(error) throw error;
+        await sync(data.session);
+        say("MFA যাচাই সফল হয়েছে।",true);
+      }
+    } catch(err) { showError(err); button.disabled=false; }
+  });
+
   function render() {
     const current = document.getElementById("nxCurrent");
     const logged = document.getElementById("nxLogged");
@@ -124,7 +223,8 @@
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
       " | Status: " + (p.account_status || "অজানা");
     const isActiveAdmin = p.role === "admin" && p.account_status === "active" && adminStaff?.is_active === true;
-    admin.classList.toggle("hidden", !isActiveAdmin);
+    renderMfaPanel();
+    admin.classList.toggle("hidden", !isActiveAdmin || !mfaVerified);
     const adminIdentity = document.getElementById("nxAdminIdentity");
     if (adminIdentity) {
       const dept = adminStaff?.admin_level === "super_admin" ? "Super Admin" : (adminStaff?.department_key || "Assistant Admin");
@@ -142,6 +242,8 @@
     currentUser = session?.user || null;
     try {
       await loadProfile();
+      if (currentUser && profile && profile.account_status === "active" && !recoveryMode) await refreshMfaState();
+      else { mfaVerified=false; mfaFactors=[]; }
       if (currentUser && profile && profile.account_status !== "active" && !recoveryMode) {
         await db.auth.signOut({ scope: "global" });
         currentUser = null; profile = null; adminStaff = null;
