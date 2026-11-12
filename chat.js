@@ -116,7 +116,9 @@
     state.channel=db().channel("nexora-chat-"+id)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+id},payload=>{
         if(payload.new.sender_id!==user().id) appendMessage(payload.new);
-      }).subscribe();
+      })
+      .on("postgres_changes",{event:"INSERT",schema:"public",table:"message_attachments",filter:"conversation_id=eq."+id},payload=>appendAttachmentLink(payload.new))
+      .subscribe();
   }
 
   async function respondInvite(id,decision){
@@ -152,13 +154,21 @@
     item.innerHTML=`<strong>${own?"You":"NEXORA User"}</strong><p>${esc(m.deleted_at?"এই বার্তাটি মুছে ফেলা হয়েছে।":m.body)}</p><span class="muted">${esc(time)}</span>`;
     host.appendChild(item);
     if(m.message_type==="image"||m.message_type==="file"){
-      const {data:attachment}=await db().from("message_attachments").select("storage_path,file_name").eq("message_id",m.id).maybeSingle();
-      if(attachment){
-        const {data:signed}=await db().storage.from("nexora-chat-files").createSignedUrl(attachment.storage_path,3600);
-        if(signed?.signedUrl){const link=document.createElement("a");link.href=signed.signedUrl;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open / Download: "+attachment.file_name;link.className="secondary";link.style.display="inline-block";link.style.padding="8px 10px";link.style.borderRadius="7px";item.appendChild(link);}
-      }
+      const {data:attachment}=await db().from("message_attachments").select("id,message_id,storage_path,file_name").eq("message_id",m.id).maybeSingle();
+      if(attachment) await appendAttachmentLink(attachment);
     }
     host.scrollTop=host.scrollHeight;
+  }
+
+  async function appendAttachmentLink(attachment){
+    const item=$("chatMessages")?.querySelector('[data-message="'+attachment.message_id+'"]');
+    if(!item || item.querySelector("[data-attachment-link]"))return;
+    const {data:signed,error}=await db().storage.from("nexora-chat-files").createSignedUrl(attachment.storage_path,3600);
+    if(error||!signed?.signedUrl)return;
+    const link=document.createElement("a");link.href=signed.signedUrl;link.target="_blank";link.rel="noopener noreferrer";
+    link.textContent="Open / Download: "+attachment.file_name;link.dataset.attachmentLink="true";
+    link.className="secondary";link.style.display="inline-block";link.style.padding="8px 10px";link.style.borderRadius="7px";
+    item.appendChild(link);
   }
 
   async function sendMessage(e){
