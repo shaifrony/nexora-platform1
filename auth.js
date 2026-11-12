@@ -110,6 +110,25 @@
     finally { setBusy(form, false); }
   });
 
+  // Social sign-in: Google is built-in; Yahoo uses Supabase Custom OIDC provider.
+  document.querySelectorAll("[data-oauth-provider]").forEach(button => {
+    button.addEventListener("click", async () => {
+      const provider = button.dataset.oauthProvider;
+      button.disabled = true;
+      say("");
+      try {
+        const { error } = await db.auth.signInWithOAuth({
+          provider,
+          options: { redirectTo: window.location.origin + window.location.pathname }
+        });
+        if (error) throw error;
+      } catch (err) {
+        say((provider === "google" ? "Google" : "Yahoo") + " Login চালু হয়নি: " + err.message);
+        button.disabled = false;
+      }
+    });
+  });
+
   document.getElementById("nxLogout").addEventListener("click", async () => {
     const { error } = await db.auth.signOut();
     if (error) say("Logout ব্যর্থ: " + error.message);
