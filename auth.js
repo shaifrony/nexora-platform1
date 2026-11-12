@@ -76,7 +76,16 @@
   const main = document.querySelector("main");
   if (main) main.insertBefore(section, main.firstChild);
 
+  let buyerDemandButton = null;
   if (nav) {
+    buyerDemandButton = document.createElement("button");
+    buyerDemandButton.type = "button";
+    buyerDemandButton.id = "buyerDemandNav";
+    buyerDemandButton.textContent = "Post a Demand";
+    buyerDemandButton.classList.add("hidden");
+    buyerDemandButton.addEventListener("click", () => window.showSection?.("postDemand"));
+    nav.appendChild(buyerDemandButton);
+
     const btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = "Account / Login";
@@ -113,6 +122,7 @@
     const logged = document.getElementById("nxLogged");
     const admin = document.getElementById("nxAdmin");
     if (!current) return;
+    if (buyerDemandButton) buyerDemandButton.classList.add("hidden");
     if (!currentUser) {
       current.textContent = "আপনি লগইন করেননি।";
       logged.classList.add("hidden");
@@ -125,6 +135,7 @@
     document.getElementById("nxLogin").classList.add("hidden");
     logged.classList.remove("hidden");
     const p = profile || {};
+    if (buyerDemandButton) buyerDemandButton.classList.toggle("hidden", !(p.role === "buyer" && p.account_status === "active"));
     current.textContent = "লগইন: " + currentUser.email;
     document.getElementById("nxProfile").textContent =
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
