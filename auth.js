@@ -58,10 +58,14 @@
       admin.classList.add("hidden");
       document.getElementById("nxSignup").classList.remove("hidden");
       document.getElementById("nxLogin").classList.remove("hidden");
+      document.getElementById("nxLoginView")?.classList.remove("hidden");
+      document.getElementById("nxSignupView")?.classList.add("hidden");
       return;
     }
     document.getElementById("nxSignup").classList.add("hidden");
     document.getElementById("nxLogin").classList.add("hidden");
+    document.getElementById("nxLoginView")?.classList.add("hidden");
+    document.getElementById("nxSignupView")?.classList.add("hidden");
     logged.classList.remove("hidden");
     const p = profile || {};
     current.textContent = "লগইন: " + currentUser.email;
