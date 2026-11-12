@@ -127,16 +127,25 @@ Completed on `nexora-development`:
   - creates private `transport_providers` and `transport_vehicles` tables;
   - allows one provider to register multiple vehicles;
   - adds owner/admin RLS policies and protected review fields.
+- Added `transport-provider.js` and a Transport Provider Center entry point:
+  - active Buyer/Seller accounts can open a separate provider workspace;
+  - provider enrollment captures individual/business type, display/legal name, phone, country, city and operating address;
+  - each provider record can have multiple independently registered vehicles;
+  - each vehicle captures type, make/model, registration number/country, capacity and availability;
+  - provider and vehicle review statuses are shown separately;
+  - private registration data is not rendered in public marketplace cards.
 
 Verification:
 - Staged SQL executed inside a transaction and rolled back successfully.
 - Follow-up check confirmed the new tables do not exist in the hosted database.
 - Hosted database still has zero Porter-role profiles and the existing pending Seller request remains intact.
+- New frontend JavaScript passed a JavaScript syntax compilation check.
 - No live migration, deployment, paid resource, or production-branch change was performed.
 
 Still pending:
-- Provider application form and multi-vehicle UI.
+- Apply the staged migration only after explicit approval and a safe test environment is available.
 - Admin provider/vehicle review interface and audited review RPCs.
 - New delivery-job schema referencing provider + vehicle.
 - Private document/image Storage policies and upload flow.
 - End-to-end browser and RLS negative-case tests.
+
