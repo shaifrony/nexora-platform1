@@ -246,6 +246,45 @@ h2{font-size:24px}
   #nxAdminManagement .nx-permission-option{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin:0;font-weight:400}
   #nxAdminManagement .nx-permission-option input{width:auto;margin-top:3px}
   #nxAdminManagement .nx-permission-option small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:3px}
+
+/* NEXORA AMAZON + ALIBABA VISUAL POLISH — development */
+:root{--nx-radius:16px;--nx-shadow:0 8px 24px rgba(23,43,61,.07)}
+body{letter-spacing:.005em}
+header{min-height:68px}
+.logo{letter-spacing:1.6px}
+nav button{border:1px solid #e4eaf0;transition:background .18s,border-color .18s,transform .18s}
+nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8bd8c7;outline-offset:2px}
+#market{box-shadow:var(--nx-shadow)}
+#market>.section-head{align-items:center}
+#market>.section-head h2{font-size:26px;letter-spacing:-.4px}
+#productList .card{overflow:hidden;border-color:#e8edf2;box-shadow:0 3px 14px rgba(23,43,61,.045)}
+#productList .card h3{line-height:1.45;color:#172b3d}
+#productList .card .muted{min-height:34px}
+#productList .card button{width:100%;margin-top:8px}
+#productList .price{font-size:20px;letter-spacing:-.3px}
+.nx-public-demands{box-shadow:0 3px 14px rgba(23,43,61,.035)}
+.demand-card{transition:border-color .18s,transform .18s,box-shadow .18s}
+.demand-card:hover{border-color:#b8ded4;transform:translateY(-2px);box-shadow:0 7px 18px rgba(23,43,61,.06)}
+#buyerDashboard{background:#fff;border:1px solid #e6ebf0;border-radius:18px;padding:22px;box-shadow:var(--nx-shadow)}
+#buyerDashboard .section-head{margin-bottom:18px}
+#buyerDashboard .card{border-radius:14px}
+#buyerDashboard .nx-buyer-promo{box-shadow:0 10px 25px rgba(16,45,75,.12)}
+#buyerDashboard .nx-buyer-search input{min-height:48px}
+#buyerProductList .card{border-color:#e8edf2;box-shadow:0 3px 14px rgba(23,43,61,.045);transition:transform .18s,box-shadow .18s}
+#buyerProductList .card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(23,43,61,.10)}
+#buyerProductList .card h3{font-size:15px;line-height:1.45}
+#buyerProductList .price{color:#e65d2f}
+.nx-profile-dropdown{box-shadow:0 18px 42px rgba(16,36,58,.16)}
+@media(max-width:760px){
+ #market{padding:15px 12px}
+ #market>.section-head h2{font-size:22px}
+ #buyerDashboard{padding:14px 11px}
+ #buyerDashboard .nx-buyer-topbar{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
 </style>
 </head>
 
