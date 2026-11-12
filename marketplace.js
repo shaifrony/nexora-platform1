@@ -64,7 +64,7 @@
       userHost.textContent = "ব্যবহারকারী লোড হচ্ছে…";
       const { data, error } = await client().from("profiles")
         .select("id,full_name,role,account_status,created_at")
-        .in("role",["buyer","seller","porter"]).order("created_at",{ascending:false}).limit(100);
+        .in("role",["buyer","seller"]).order("created_at",{ascending:false}).limit(100);
       if (error) userHost.textContent = "ব্যবহারকারী লোড হয়নি: " + error.message;
       else userHost.innerHTML = '<h4>User Management</h4>' + ((data||[]).map(u => {
         const buttons=[];
@@ -222,7 +222,7 @@
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     if (id === "porterDashboard") loadPorterDashboard();
-    if (id === "accountSection") { loadAdminPorterOptions().then(loadAdminLogisticsMonitor); }
+    // Legacy Porter-role logistics queries are paused until provider/vehicle schema replaces them.
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -241,19 +241,22 @@
 
   window.showSection = function(id, options = {}) {
     const role = profile()?.role;
-    const activePorter = role === "porter" && profile()?.account_status === "active";
     const access = {
       buyer: signedIn() && activeBuyer(),
-      seller: signedIn() && activeSeller(),
-      porter: signedIn() && activePorter
+      seller: signedIn() && activeSeller()
     };
     const requiredRole = {
       postDemand: "buyer", buyerDashboard: "buyer",
-      sellerDashboard: "seller", porterDashboard: "porter"
+      sellerDashboard: "seller"
     }[id];
+    if (id === "porterDashboard") {
+      const hint = $("nxCurrent");
+      if (hint) hint.textContent = "পুরোনো Porter Account ব্যবস্থা বন্ধ রাখা হয়েছে। নতুন Transport Provider কাঠামো প্রস্তুত হলে এখানে প্রবেশ করা যাবে।";
+      id = "accountSection";
+    }
     if (requiredRole && !access[requiredRole]) {
       const hint = $("nxCurrent");
-      const roleLabel = requiredRole === "buyer" ? "Buyer" : requiredRole === "seller" ? "Seller" : "Porter";
+      const roleLabel = requiredRole === "buyer" ? "Buyer" : "Seller";
       if (hint) hint.textContent = signedIn()
         ? roleLabel + " Center ব্যবহার করতে অনুমোদিত Active " + roleLabel + " অ্যাকাউন্ট প্রয়োজন।"
         : roleLabel + " Center ব্যবহার করতে আগে লগইন করুন।";
