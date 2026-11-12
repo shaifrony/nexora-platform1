@@ -202,6 +202,17 @@
     const forgotView = document.getElementById("nxForgotView");
     const recoveryView = document.getElementById("nxPasswordRecoveryView");
     if (!current) return;
+    const headerLogin = document.getElementById("nxHeaderLogin");
+    const headerBuyerDashboard = document.getElementById("nxHeaderBuyerDashboard");
+    const headerPostDemand = document.getElementById("nxHeaderPostDemand");
+    const headerAccount = document.getElementById("nxHeaderAccount");
+    const headerLogout = document.getElementById("nxHeaderLogout");
+    const isActiveBuyer = !!(currentUser && profile?.role === "buyer" && profile?.account_status === "active");
+    headerLogin?.classList.toggle("hidden", !!currentUser);
+    headerBuyerDashboard?.classList.toggle("hidden", !isActiveBuyer);
+    headerPostDemand?.classList.toggle("hidden", !isActiveBuyer);
+    headerAccount?.classList.toggle("hidden", !currentUser);
+    headerLogout?.classList.toggle("hidden", !currentUser);
     if (recoveryMode) {
       current.textContent = "নতুন পাসওয়ার্ড সেট করুন।";
       logged.classList.add("hidden");
