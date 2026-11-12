@@ -22,6 +22,8 @@
   const currencyOK = (v) => /^[A-Z]{3}$/.test(String(v || "").toUpperCase());
   const setBusy = (form, busy) => form.querySelectorAll("button").forEach(b => b.disabled = busy);
 
+  window.toggleProductForm = function() { $("productForm")?.classList.toggle("hidden"); };
+
   window.showSection = function(id) {
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     if (id === "market") loadProducts();
@@ -299,11 +301,6 @@
 
   $("productSearch")?.addEventListener("input", () => renderProducts());
   $("categoryFilter")?.addEventListener("change", () => renderProducts());
-  document.addEventListener("click", e => {
-    const add = e.target.closest('button[onclick="toggleProductForm()"]');
-    if (add) $("productForm")?.classList.toggle("hidden");
-  });
-
   window.addEventListener("nexora:auth-change", async () => {
     state.business = null;
     if ($("market") && !$("market").classList.contains("hidden")) await loadProducts();
