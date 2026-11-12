@@ -224,7 +224,6 @@
     const isActiveBuyer = !!(currentUser && profile?.role === "buyer" && profile?.account_status === "active");
     const headerLogin = document.getElementById("nxHeaderLogin");
     const headerBuyerDashboard = document.getElementById("nxHeaderBuyerDashboard");
-    const headerPostDemand = document.getElementById("nxHeaderPostDemand");
     const headerAccount = document.getElementById("nxHeaderAccount");
     const headerLogout = document.getElementById("nxHeaderLogout");
     const profileMenu = document.getElementById("nxBuyerProfileMenu");
@@ -232,7 +231,6 @@
     const initials = buyerName.split(/\\s+/).filter(Boolean).slice(0,2).map(part => part[0]).join("").toUpperCase() || "B";
     headerLogin?.classList.toggle("hidden", !!currentUser);
     headerBuyerDashboard?.classList.toggle("hidden", !isActiveBuyer);
-    headerPostDemand?.classList.toggle("hidden", !isActiveBuyer);
     headerAccount?.classList.toggle("hidden", !currentUser);
     headerLogout?.classList.toggle("hidden", !currentUser);
     profileMenu?.classList.toggle("hidden", !isActiveBuyer);
