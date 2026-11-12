@@ -292,7 +292,16 @@
       document.getElementById("nxProfile").insertAdjacentElement("afterend", workspaceNav);
     }
     if (p.role === "buyer" && p.account_status === "active") {
-      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'buyerDashboard\')">Buyer Dashboard</button><button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>';
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'buyerDashboard\')">Buyer Center</button><button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>';
+      workspaceNav.classList.remove("hidden");
+    } else if (p.role === "seller" && p.account_status === "active") {
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'sellerDashboard\')">Seller Center</button>';
+      workspaceNav.classList.remove("hidden");
+    } else if (p.role === "porter" && p.account_status === "active") {
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'porterDashboard\')">Porter Center</button>';
+      workspaceNav.classList.remove("hidden");
+    } else if (p.role === "admin" && p.account_status === "active") {
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'accountSection\')">Admin Console</button>';
       workspaceNav.classList.remove("hidden");
     } else {
       workspaceNav.innerHTML = "";
