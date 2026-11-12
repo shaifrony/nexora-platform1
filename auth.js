@@ -54,7 +54,7 @@
   async function loadProfile() {
     if (!currentUser) { profile = null; adminStaff = null; pendingRoleRequest = null; return; }
     const { data, error } = await db.from("profiles")
-      .select("id,full_name,role,account_status")
+      .select("id,full_name,role,account_status,buyer_category,seller_categories")
       .eq("id", currentUser.id).maybeSingle();
     if (error) throw error;
     profile = data;
@@ -68,6 +68,28 @@
     if (pending.error) throw pending.error;
     pendingRoleRequest = pending.data || null;
     adminStaff = null;
+  }
+  async function setBuyerCategory(category) {
+    if (!currentUser || profile?.role !== "buyer" || profile?.account_status !== "active") {
+      say("শুধু সক্রিয় Buyer নিজের Marketplace ক্যাটাগরি পরিবর্তন করতে পারবেন।");
+      return false;
+    }
+    if (!["wholesale","retail"].includes(category)) {
+      say("সঠিক Buyer ক্যাটাগরি নির্বাচন করুন।");
+      return false;
+    }
+    try {
+      const { error } = await db.from("profiles").update({ buyer_category: category, updated_at: new Date().toISOString() }).eq("id", currentUser.id);
+      if (error) throw error;
+      profile = { ...profile, buyer_category: category };
+      render();
+      window.dispatchEvent(new Event("nexora:auth-change"));
+      say("আপনার Marketplace ক্যাটাগরি পরিবর্তন হয়েছে।", true);
+      return true;
+    } catch (err) {
+      say("ক্যাটাগরি পরিবর্তন হয়নি: " + (err.message || "অজানা সমস্যা"));
+      return false;
+    }
   }
   async function loadAdminStaff() {
     adminStaff = null;
@@ -237,6 +259,13 @@
     ["nxBuyerAvatar","nxBuyerMenuAvatar"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=initials; });
     ["nxBuyerHeaderName","nxBuyerMenuName"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=buyerName; });
     if (!isActiveBuyer) window.toggleBuyerProfileMenu?.(false);
+    const buyerCategorySelect = document.getElementById("nxBuyerCategorySelect");
+    if (buyerCategorySelect && profile?.role === "buyer") buyerCategorySelect.value = profile.buyer_category || "wholesale";
+    const sellerCategorySummary = document.getElementById("nxSellerCategorySummary");
+    if (sellerCategorySummary && profile?.role === "seller") {
+      const categories = Array.isArray(profile.seller_categories) ? profile.seller_categories : ["wholesale"];
+      sellerCategorySummary.textContent = categories.map(v => v === "retail" ? "খুচরা" : "পাইকারি").join(" + ");
+    }
     if (!current) return;
     if (recoveryMode) {
       current.textContent = "নতুন পাসওয়ার্ড সেট করুন।";
@@ -351,6 +380,14 @@
     setBusy(form, true); say("");
     const f = new FormData(form);
     const requestedSignupRole = String(f.get("role") || "buyer");
+    const buyerCategory = String(f.get("buyer_category") || "wholesale");
+    const sellerCategories = f.getAll("seller_categories").map(v => String(v)).filter(v => ["wholesale","retail"].includes(v));
+    if (requestedSignupRole === "buyer" && !["wholesale","retail"].includes(buyerCategory)) {
+      setBusy(form, false); return say("Buyer-এর জন্য Wholesale অথবা Retail নির্বাচন করুন।");
+    }
+    if (requestedSignupRole === "seller" && (!sellerCategories.length || sellerCategories.length > 2)) {
+      setBusy(form, false); return say("Seller-এর জন্য অন্তত একটি ক্যাটাগরি নির্বাচন করুন।");
+    }
     if (!["buyer","seller"].includes(requestedSignupRole)) {
       return say("শুধু Buyer বা Seller অ্যাকাউন্ট তৈরি করা যাবে। Transport Provider-এর জন্য আলাদা আবেদন ব্যবস্থা থাকবে।");
     }
@@ -360,7 +397,9 @@
         password: String(f.get("password")),
         options: { data: {
           full_name: String(f.get("full_name")).trim(),
-          role: requestedSignupRole
+          role: requestedSignupRole,
+          buyer_category: requestedSignupRole === "buyer" ? buyerCategory : null,
+          seller_categories: requestedSignupRole === "seller" ? [...new Set(sellerCategories)] : []
         } }
       });
       if (error) throw error;
@@ -368,9 +407,22 @@
       say(data.session ? "অ্যাকাউন্ট তৈরি হয়েছে।" :
         "রেজিস্ট্রেশন হয়েছে। ইমেইলে confirmation link এলে সেটি খুলে নিশ্চিত করুন।", true);
       form.reset();
+      updateSignupCategoryFields();
     } catch (err) { say("রেজিস্ট্রেশন ব্যর্থ: " + err.message); }
     finally { setBusy(form, false); }
   });
+
+  function updateSignupCategoryFields() {
+    const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
+    document.getElementById("nxBuyerCategoryFields")?.classList.toggle("hidden", role !== "buyer");
+    document.getElementById("nxSellerCategoryFields")?.classList.toggle("hidden", role !== "seller");
+  }
+  document.querySelector('#nxSignup select[name="role"]')?.addEventListener("change", updateSignupCategoryFields);
+  updateSignupCategoryFields();
+  window.changeBuyerCategory = async function() {
+    const value = document.getElementById("nxBuyerCategorySelect")?.value || "";
+    await setBuyerCategory(value);
+  };
 
   document.getElementById("nxForgotOpen")?.addEventListener("click", () => {
     forgotMode = true;
@@ -1000,5 +1052,5 @@
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
-  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; } };
+  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; }, setBuyerCategory };
 })();
