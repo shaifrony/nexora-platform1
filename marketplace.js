@@ -200,6 +200,7 @@
   }
 
   window.showSection = function(id) {
+    document.body.classList.toggle("nx-demand-only-active", id === "postDemand");
     if (["postDemand","buyerDashboard"].includes(id) && !(signedIn() && activeBuyer())) {
       document.querySelectorAll("main section.section").forEach(s => s.classList.add("hidden"));
       $("accountSection")?.classList.remove("hidden");
