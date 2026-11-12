@@ -879,7 +879,7 @@
     host.innerHTML = '<p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p>';
     try {
       const { data, error } = await client().from("porter_delivery_jobs")
-        .select("id,job_code,status,pickup_address,pickup_city,pickup_country,dropoff_address,dropoff_city,dropoff_country,package_description,package_count,scheduled_pickup_at,created_at,porter_note")
+        .select("id,job_code,status,pickup_contact_name,pickup_contact_phone,pickup_address,pickup_city,pickup_country,dropoff_contact_name,dropoff_contact_phone,dropoff_address,dropoff_city,dropoff_country,package_description,package_count,scheduled_pickup_at,created_at,porter_note")
         .eq("assigned_porter_id", user().id).order("created_at", {ascending:false});
       if (error) throw error;
       const jobs = data || [];
@@ -897,8 +897,8 @@
         return `<article class="nx-porter-job" data-porter-card data-status="${esc(job.status)}">
           <div class="nx-porter-job-head"><div><div class="nx-porter-job-code">${esc(job.job_code)}</div><h3>${esc(job.package_description || "পণ্য পরিবহন")}</h3></div><span class="nx-porter-job-status">${esc(porterStatusLabels[job.status] || "অবস্থা অজানা")}</span></div>
           <div class="nx-porter-route">
-            <div><strong>পণ্য সংগ্রহ</strong><p>${labelAddress(job.pickup_address,job.pickup_city,job.pickup_country)}</p></div>
-            <div><strong>ডেলিভারি গন্তব্য</strong><p>${labelAddress(job.dropoff_address,job.dropoff_city,job.dropoff_country)}</p></div>
+            <div><strong>পণ্য সংগ্রহ</strong><p>${labelAddress(job.pickup_address,job.pickup_city,job.pickup_country)}</p>${job.pickup_contact_name?'<p>যোগাযোগ: '+esc(job.pickup_contact_name)+'</p>':''}${job.pickup_contact_phone?'<p>ফোন: '+esc(job.pickup_contact_phone)+'</p>':''}</div>
+            <div><strong>ডেলিভারি গন্তব্য</strong><p>${labelAddress(job.dropoff_address,job.dropoff_city,job.dropoff_country)}</p>${job.dropoff_contact_name?'<p>প্রাপক: '+esc(job.dropoff_contact_name)+'</p>':''}${job.dropoff_contact_phone?'<p>ফোন: '+esc(job.dropoff_contact_phone)+'</p>':''}</div>
           </div>
           <p class="muted">প্যাকেজ সংখ্যা: ${esc(job.package_count ?? "উল্লেখ নেই")} ${job.scheduled_pickup_at ? " · সংগ্রহের সময়: "+esc(new Date(job.scheduled_pickup_at).toLocaleString("bn-BD")) : ""}</p>
           ${job.porter_note ? '<p class="muted">নোট: '+esc(job.porter_note)+'</p>' : ""}
