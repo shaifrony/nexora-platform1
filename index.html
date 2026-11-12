@@ -527,6 +527,13 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-porter-job-actions button{min-height:38px}
 @media(max-width:560px){.nx-porter-route{grid-template-columns:1fr}.nx-porter-job{padding:13px}}
 
+
+.nx-porter-history-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #e8edf2}
+.nx-porter-history-item:last-child{border-bottom:0}
+.nx-porter-history-item strong{display:block;color:#172b3d;font-size:13px}
+.nx-porter-history-item p{margin:4px 0 0;font-size:12px;color:#718096;line-height:1.5}
+.nx-porter-history-item time{font-size:11px;color:#718096;white-space:nowrap}
+@media(max-width:520px){.nx-porter-history-item{display:block}.nx-porter-history-item time{display:block;margin-top:6px}}
 </style>
 </head>
 
@@ -1061,6 +1068,10 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         </select>
       </div>
       <div id="nxPorterJobs" aria-live="polite"><p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p></div>
+    </div>
+    <div class="card nx-porter-history-card">
+      <div class="section-head"><div><h3>ডেলিভারি কাজের ইতিহাস</h3><p class="muted">আপনার বরাদ্দকৃত কাজের স্ট্যাটাস পরিবর্তনের সর্বশেষ ৫০টি রেকর্ড।</p></div></div>
+      <div id="nxPorterHistory" aria-live="polite"><p class="muted">ইতিহাস লোড হচ্ছে…</p></div>
     </div>
     <p class="muted nx-porter-note">নিরাপত্তা: কেবল আপনাকে বরাদ্দ করা কাজের প্রয়োজনীয় সংগ্রহ ও গন্তব্যের তথ্য এখানে দেখানো হবে। লাইভ GPS tracking, ছবি-ভিত্তিক delivery proof এবং earnings settlement এখনো চালু নয়।</p>
   </section>
