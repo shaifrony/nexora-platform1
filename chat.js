@@ -56,7 +56,7 @@
     (parts.data||[]).forEach(p=>{if(!partMap.has(p.conversation_id))partMap.set(p.conversation_id,[]);partMap.get(p.conversation_id).push(p);});
     host.innerHTML=data.map(c=>{
       const mine=(partMap.get(c.id)||[]).find(p=>p.user_id===user().id);
-      const label=mine?.invitation_status==="pending"?" • Invitation":(c.title||"Private Conversation");
+      const label=mine?.invitation_status==="pending"?" • "+(c.title||"যোগাযোগের অনুরোধ"):(c.title||"Private Conversation");
       return `<button class="light chat-thread" type="button" data-conversation="${esc(c.id)}">${esc(label)}</button>`;
     }).join("");
     host.querySelectorAll("[data-conversation]").forEach(b=>b.addEventListener("click",()=>openConversation(b.dataset.conversation)));
