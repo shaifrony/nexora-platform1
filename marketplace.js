@@ -301,7 +301,7 @@
       return;
     }
     const { data, error } = await client().from("products")
-      .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,seller_id")
+      .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
       .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
     if (error) {
@@ -324,19 +324,13 @@
     const form = e.currentTarget;
     if (!activeBuyer() || !signedIn()) return say("Inquiry পাঠাতে সক্রিয় Buyer হিসেবে লগইন করুন।");
     if (!product || product.listing_status !== "approved") return say("এই পণ্যটি বর্তমানে Inquiry গ্রহণ করছে না।");
-    if (product.seller_id === user().id) return say("নিজের পণ্যে Inquiry পাঠানো যাবে না।");
     const message = String(new FormData(form).get("message") || "").trim();
     const status = $("productInquiryStatus");
     const buttons = form.querySelectorAll("button");
     buttons.forEach(b => b.disabled = true);
     try {
-      const title = ("Product Inquiry • " + product.product_code + " • " + product.product_name + (message ? " • Buyer note: " + message : "")).slice(0, 900);
-      const result = await client().from("conversations").insert({conversation_type:"direct",created_by:user().id,title,status:"active"}).select("id").single();
-      if (result.error) throw result.error;
-      const own = await client().from("conversation_participants").insert({conversation_id:result.data.id,user_id:user().id,invited_by:user().id,invitation_status:"accepted",joined_at:new Date().toISOString()});
-      if (own.error) throw own.error;
-      const invite = await client().from("conversation_participants").insert({conversation_id:result.data.id,user_id:product.seller_id,invited_by:user().id,invitation_status:"pending"});
-      if (invite.error) throw invite.error;
+      const { error } = await client().rpc("create_product_inquiry", { p_product_id: product.id, p_message: message || null });
+      if (error) throw error;
       if (status) status.textContent = "Inquiry পাঠানো হয়েছে। Seller গ্রহণ করলে Private Chat চালু হবে।";
       form.reset();
       say("Seller-এর কাছে Inquiry পাঠানো হয়েছে।", true);
@@ -384,7 +378,6 @@
       if (controls) {
         if (!signedIn()) controls.innerHTML = '<button class="primary" type="button" id="productInquiryLogin">Buyer Login / Register</button>';
         else if (!activeBuyer()) controls.textContent = "এই সুবিধা ব্যবহার করতে সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।";
-        else if (user().id === selected.seller_id) controls.textContent = "এটি আপনার নিজের পণ্য।";
         else controls.innerHTML = '<form id="productInquiryForm"><label>আপনার বার্তা (ঐচ্ছিক)</label><textarea name="message" maxlength="500" placeholder="পরিমাণ, গুণগত মান বা পণ্য সম্পর্কে কী জানতে চান লিখুন"></textarea><div class="form-actions"><button class="primary" type="submit">Seller-এর কাছে Inquiry পাঠান</button></div></form>';
       }
       $("productInquiryForm")?.addEventListener("submit", e => submitProductInquiry(e, selected));
