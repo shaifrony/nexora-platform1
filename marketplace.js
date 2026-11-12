@@ -742,6 +742,17 @@
     finally { setBusy(form, false); }
   });
 
+  document.querySelectorAll("[data-nx-category]").forEach(button => {
+    button.addEventListener("click", () => {
+      const category = button.getAttribute("data-nx-category") || "";
+      const select = $("categoryFilter");
+      if (!select) return;
+      select.value = category;
+      renderProducts();
+      document.querySelector(".nx-search-panel")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  });
+
   ["productSearch","categoryFilter","priceMin","priceMax","priceCurrency","qualityFilter","originFilter","specFilter"].forEach(id => {
     const el = $(id);
     if (!el) return;
