@@ -2,6 +2,20 @@
 -- Staged migration only. Do not apply to hosted DB without explicit approval.
 begin;
 
+-- Logistics permissions are separately grantable by the Super Admin.
+insert into public.admin_departments(department_key,department_name,description,is_assignable)
+values('logistics','Logistics & Delivery','Transport Provider verification, delivery job assignment and operational oversight.',true)
+on conflict(department_key) do update
+set department_name=excluded.department_name,description=excluded.description,is_assignable=true;
+
+insert into public.admin_permission_catalog(permission_key,department_key,permission_name,description,is_sensitive)
+values
+ ('logistics.view','logistics','View Logistics','View approved transport providers, vehicles and delivery job operational/contact details.',true),
+ ('logistics.assign','logistics','Manage Delivery Assignments','Create, assign, reassign and cancel delivery jobs; approve or suspend transport providers and vehicles.',true)
+on conflict(permission_key) do update
+set department_key=excluded.department_key,permission_name=excluded.permission_name,
+    description=excluded.description,is_sensitive=excluded.is_sensitive;
+
 create table if not exists public.delivery_jobs (
   id uuid primary key default gen_random_uuid(),
   job_reference text not null unique,
