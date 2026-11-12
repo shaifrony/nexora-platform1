@@ -218,36 +218,17 @@ h2{font-size:24px}
 .nx-public-demands .section-head h2{font-size:19px}
 .nx-public-demands .section-head .muted{margin:2px 0 0}
 .nx-demand-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
-.nx-main-nav{align-items:center;gap:10px}
-.nx-main-nav>button{border:0}
-.nx-profile-wrap{position:relative}
-.nx-profile-toggle{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #e2e8f0;border-radius:28px;padding:5px 10px 5px 6px;color:#172b3d;min-width:0}
+/* Buyer-only dashboard styling */
+.nx-profile-wrap{position:relative}.nx-profile-toggle{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #e2e8f0;border-radius:28px;padding:5px 10px 5px 6px;color:#172b3d;min-width:0}
 .nx-avatar{width:38px;height:38px;border-radius:50%;display:inline-grid;place-items:center;background:linear-gradient(135deg,#0b79b7,#0b9875);color:#fff;font-weight:800;font-size:17px;flex:0 0 auto}
-.nx-profile-label{display:flex;flex-direction:column;text-align:left;line-height:1.25;max-width:130px}
-.nx-profile-label strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.nx-profile-label small,.nx-profile-summary small{font-size:11px;color:#718096}
+.nx-profile-label{display:flex;flex-direction:column;text-align:left;line-height:1.25;max-width:130px}.nx-profile-label strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nx-profile-label small,.nx-profile-summary small{font-size:11px;color:#718096}
 .nx-profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);width:270px;background:#fff;border:1px solid #e2e8f0;border-radius:15px;box-shadow:0 16px 42px #10243a24;padding:9px;z-index:50}
-.nx-profile-summary{display:flex;align-items:center;gap:11px;padding:10px 9px 14px;border-bottom:1px solid #edf1f5;margin-bottom:6px}
-.nx-profile-summary>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}
-.nx-avatar-large{width:48px;height:48px}
-.nx-profile-dropdown>button{display:block;width:100%;text-align:left;background:#fff;color:#263746;padding:10px 11px;border-radius:8px;font-weight:500}
-.nx-profile-dropdown>button:hover{background:#f1f7fb;color:#087f78}
-.nx-profile-dropdown .nx-profile-logout{border-top:1px solid #edf1f5;border-radius:0 0 8px 8px;margin-top:5px;color:#b42318}
-.nx-market-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:270px;padding:36px 40px;border-radius:20px;background:linear-gradient(112deg,#102d4b,#126b85 66%,#0b9875);color:#fff;overflow:hidden;position:relative;box-shadow:0 12px 30px #102b4324}
-.nx-market-hero-copy{position:relative;z-index:1;max-width:670px}
-.nx-hero-kicker{display:inline-block;padding:6px 11px;border:1px solid #ffffff55;border-radius:30px;font-size:11px;letter-spacing:1px;font-weight:700;color:#d6f5ed}
-.nx-market-hero h1{font-size:clamp(28px,4vw,44px);line-height:1.12;margin:14px 0 10px;color:#fff}
-.nx-market-hero h1 em{font-style:normal;color:#ffd978}
-.nx-market-hero p{color:#e1edf4;max-width:560px;line-height:1.6}
-.nx-hero-trust{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;font-size:12px;color:#e2f8f1;font-weight:700}
-.nx-hero-art{width:34%;min-width:210px;min-height:170px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid #ffffff40;border-radius:18px;background:linear-gradient(145deg,#ffffff22,#ffffff08);transform:rotate(-3deg);box-shadow:0 18px 40px #001b3033}
-.nx-hero-art span{font-size:12px;letter-spacing:5px;color:#d5f7f0}.nx-hero-art strong{font-size:clamp(36px,5vw,64px);letter-spacing:3px;color:#fff}.nx-hero-art small{font-size:11px;color:#d8eaf1}
-.nx-ad-strip{display:flex;justify-content:space-between;align-items:center;gap:15px;margin:18px 0 24px;padding:18px 22px;border:1px solid #f5dfb5;border-radius:14px;background:linear-gradient(90deg,#fff7e8,#fff)}
-.nx-ad-strip h3{margin:7px 0 4px;font-size:17px;color:#27394b}.nx-ad-strip p{margin:0;color:#718096;font-size:13px}
-.nx-ad-label{font-size:10px;letter-spacing:1px;font-weight:800;color:#a15b00;background:#ffedc7;padding:5px 8px;border-radius:20px}
-.nx-ad-mark{font-size:22px;font-weight:900;letter-spacing:2px;color:#0b817a;white-space:nowrap}
-@media(max-width:760px){.nx-market-hero{padding:27px 22px;min-height:0}.nx-hero-art{display:none}.nx-main-nav{width:auto;flex:1;justify-content:flex-end}.nx-profile-label{display:none}.nx-profile-toggle{padding:4px}.nx-profile-dropdown{right:0;width:min(270px,calc(100vw - 24px))}}
-@media(max-width:520px){.nx-main-nav{width:100%;justify-content:space-between}.nx-main-nav>button{padding:9px 8px;font-size:12px}.nx-ad-strip{padding:14px}.nx-ad-mark{font-size:16px}.nx-hero-trust{gap:9px;font-size:10px}}
+.nx-profile-summary{display:flex;align-items:center;gap:11px;padding:10px 9px 14px;border-bottom:1px solid #edf1f5;margin-bottom:6px}.nx-profile-summary>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}.nx-avatar-large{width:48px;height:48px}
+.nx-profile-dropdown>button{display:block;width:100%;text-align:left;background:#fff;color:#263746;padding:10px 11px;border-radius:8px;font-weight:500}.nx-profile-dropdown>button:hover{background:#f1f7fb;color:#087f78}.nx-profile-dropdown .nx-profile-logout{border-top:1px solid #edf1f5;margin-top:5px;color:#b42318}
+.nx-buyer-topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}.nx-buyer-topbar h2{margin:0}
+.nx-buyer-promo{padding:22px 24px;border-radius:15px;background:linear-gradient(110deg,#102d4b,#126b85 70%,#0b9875);color:#fff;margin-bottom:18px}.nx-buyer-promo h2{color:#fff;margin:8px 0}.nx-buyer-promo p{color:#e1edf4;margin:0;line-height:1.6}
+.nx-buyer-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:18px 0}#buyerProductList{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}#buyerProductList .card{margin:0;padding:12px}#buyerProductList .product-image{height:150px;object-fit:contain}
+@media(max-width:600px){.nx-profile-label{display:none}.nx-profile-toggle{padding:4px}.nx-profile-dropdown{width:min(270px,calc(100vw - 24px))}.nx-buyer-promo{padding:18px}#buyerProductList{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .demand-card{min-width:0;padding:12px 14px;background:#fff;border:1px solid #e4eaf0;border-radius:11px}
 .demand-card h3{margin:6px 0;font-size:15px;color:#172b3d}
 .demand-card p{margin:4px 0}
@@ -272,29 +253,12 @@ h2{font-size:24px}
 
 <header>
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <nav class="nx-main-nav" aria-label="প্রধান নেভিগেশন">
+  <nav aria-label="প্রধান নেভিগেশন">
     <button type="button" onclick="showSection('market')">Marketplace</button>
     <button type="button" id="nxHeaderLogin" onclick="showSection('accountSection')">Login / Register</button>
-    <button type="button" id="nxHeaderBuyerDashboard" class="hidden" onclick="showSection('buyerDashboard')">My Dashboard</button>
+    <button type="button" id="nxHeaderBuyerDashboard" class="hidden" onclick="showSection('buyerDashboard')">Buyer Dashboard</button>
     <button type="button" id="nxHeaderPostDemand" class="hidden" onclick="showSection('postDemand')">Post Demand</button>
-    <div id="nxBuyerProfileMenu" class="nx-profile-wrap hidden">
-      <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
-        <span id="nxBuyerAvatar" class="nx-avatar">B</span><span class="nx-profile-label"><strong id="nxBuyerHeaderName">Buyer</strong><small>Buyer Account</small></span><span aria-hidden="true">⌄</span>
-      </button>
-      <div id="nxBuyerProfileDropdown" class="nx-profile-dropdown hidden">
-        <div class="nx-profile-summary"><span id="nxBuyerMenuAvatar" class="nx-avatar nx-avatar-large">B</span><span><strong id="nxBuyerMenuName">Buyer</strong><small>Buyer Account</small></span></div>
-        <button type="button" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">My Profile</button>
-        <button type="button" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Account Settings</button>
-        <button type="button" onclick="showSection('buyerDashboard');toggleBuyerProfileMenu(false)">My Demands & Offers</button>
-        <button type="button" onclick="showSection('privateChat');toggleBuyerProfileMenu(false)">Messages</button>
-        <button type="button" onclick="showBuyerComingSoon('Payment Methods')">Payment Methods</button>
-        <button type="button" onclick="showBuyerComingSoon('My Orders')">My Orders</button>
-        <button type="button" onclick="showBuyerComingSoon('Saved Products')">Saved Products</button>
-        <button type="button" onclick="showBuyerComingSoon('Notifications')">Notifications</button>
-        <button type="button" onclick="showBuyerComingSoon('Security & Settings')">Security & Settings</button>
-        <button type="button" class="nx-profile-logout" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
-      </div>
-    </div>
+    <button type="button" id="nxHeaderAccount" class="hidden" onclick="showSection('accountSection')">Account</button>
     <button type="button" id="nxHeaderLogout" class="hidden" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
   </nav>
 </header>
@@ -303,19 +267,6 @@ h2{font-size:24px}
 
   <!-- PUBLIC WHOLESALE MARKETPLACE -->
   <section id="market" class="section">
-    <div class="nx-market-hero">
-      <div class="nx-market-hero-copy">
-        <span class="nx-hero-kicker">NEXORA WHOLESALE MARKETPLACE</span>
-        <h1>Discover Premium <em>Wholesale Products</em></h1>
-        <p>বিশ্বস্ত ব্যবসায়ীদের কাছ থেকে পাইকারি পণ্য খুঁজুন এবং সরাসরি যোগাযোগ করুন।</p>
-        <div class="nx-hero-trust"><span>✓ Verified Businesses</span><span>◆ Wholesale Deals</span><span>◎ Global Trade</span></div>
-      </div>
-      <div class="nx-hero-art" aria-hidden="true"><span>GLOBAL</span><strong>TRADE</strong><small>Buy Wholesale. Grow Business.</small></div>
-    </div>
-    <div class="nx-ad-strip">
-      <div><span class="nx-ad-label">FEATURED</span><h3>আপনার ব্যবসার জন্য সঠিক পাইকারি সরবরাহকারী খুঁজুন</h3><p>পণ্য অনুসন্ধান করুন, Seller-এর সঙ্গে যোগাযোগ করুন, সেরা অফার তুলনা করুন।</p></div>
-      <span class="nx-ad-mark">NEXORA</span>
-    </div>
     <div class="section-head">
       <h2>Marketplace</h2>
       <span id="productCount" class="muted">Products</span>
@@ -508,25 +459,37 @@ h2{font-size:24px}
     </div>
   </section>
 
-  <!-- BUYER DASHBOARD -->
+  <!-- BUYER-ONLY DASHBOARD -->
   <section id="buyerDashboard" class="section hidden">
-    <div class="section-head">
-      <h2>Buyer Dashboard</h2>
-      <span class="tag">আপনার পাইকারি চাহিদা</span>
-    </div>
-    <div class="grid">
-      <div class="card"><p class="muted">মোট চাহিদা</p><h2 id="buyerDemandTotal">০</h2></div>
-      <div class="card"><p class="muted">চলমান চাহিদা</p><h2 id="buyerDemandOpen">০</h2></div>
-      <div class="card"><p class="muted">মোট Price Offer</p><h2 id="buyerOfferTotal">০</h2></div>
-    </div>
-    <div class="card">
-      <div class="section-head">
-        <h3>আমার Buyer Demands</h3>
-        <button class="primary" type="button" onclick="showSection('postDemand')">+ নতুন চাহিদা পোস্ট</button>
+    <div class="nx-buyer-topbar">
+      <div><h2>Buyer Dashboard</h2><p class="muted">আপনার পাইকারি কেনাকাটার workspace</p></div>
+      <div id="nxBuyerProfileMenu" class="nx-profile-wrap">
+        <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
+          <span id="nxBuyerAvatar" class="nx-avatar">B</span><span class="nx-profile-label"><strong id="nxBuyerHeaderName">Buyer</strong><small>Buyer Account</small></span><span aria-hidden="true">⌄</span>
+        </button>
+        <div id="nxBuyerProfileDropdown" class="nx-profile-dropdown hidden">
+          <div class="nx-profile-summary"><span id="nxBuyerMenuAvatar" class="nx-avatar nx-avatar-large">B</span><span><strong id="nxBuyerMenuName">Buyer</strong><small>Buyer Account</small></span></div>
+          <button type="button" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Profile</button>
+          <button type="button" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Account Settings</button>
+          <button type="button" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'});toggleBuyerProfileMenu(false)">My Demands</button>
+          <button type="button" onclick="showSection('privateChat');toggleBuyerProfileMenu(false)">Messages & Inquiries</button>
+          <button type="button" onclick="showBuyerComingSoon('Payment Methods')">Payment Methods</button>
+          <button type="button" onclick="showBuyerComingSoon('My Orders')">My Orders</button>
+          <button type="button" onclick="showBuyerComingSoon('Saved Products')">Saved Products</button>
+          <button type="button" onclick="showBuyerComingSoon('Notifications')">Notifications</button>
+          <button type="button" onclick="showBuyerComingSoon('Security')">Security</button>
+          <button type="button" class="nx-profile-logout" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
+        </div>
       </div>
-      <p class="muted">এখানে শুধু আপনার নিজের জমা দেওয়া চাহিদা ও সেগুলোর Price Offer দেখা যাবে। অন্য Buyer-এর ব্যক্তিগত তথ্য দেখানো হবে না।</p>
-      <div id="buyerDemandList" aria-live="polite">আপনার চাহিদা লোড হচ্ছে…</div>
     </div>
+    <div class="nx-buyer-promo"><span class="hero-kicker">NEXORA BUYER SPACE</span><h2>আপনার ব্যবসার জন্য পাইকারি পণ্য খুঁজুন</h2><p>অনুমোদিত পণ্য দেখুন, অনুসন্ধান করুন এবং Seller-এর কাছে সরাসরি Inquiry পাঠান।</p></div>
+    <div class="section-head"><h2>পণ্য অনুসন্ধান ও বিজ্ঞাপন</h2><span id="buyerProductCount" class="muted">Products</span></div>
+    <div class="nx-buyer-search"><input id="buyerProductSearch" type="search" placeholder="পণ্যের নাম বা বিবরণ লিখুন…" aria-label="পণ্য অনুসন্ধান"><button class="primary" type="button" id="buyerProductSearchButton">Search</button></div>
+    <div id="buyerProductList" aria-live="polite"><p class="muted">পণ্য লোড হচ্ছে…</p></div>
+    <div class="grid" style="margin-top:20px">
+      <div class="card"><p class="muted">মোট চাহিদা</p><h2 id="buyerDemandTotal">০</h2></div><div class="card"><p class="muted">চলমান চাহিদা</p><h2 id="buyerDemandOpen">০</h2></div><div class="card"><p class="muted">মোট Price Offer</p><h2 id="buyerOfferTotal">০</h2></div>
+    </div>
+    <div class="card"><div class="section-head"><h3>আমার Buyer Demands</h3><button class="primary" type="button" onclick="showSection('postDemand')">+ নতুন চাহিদা পোস্ট</button></div><p class="muted">এখানে শুধু আপনার নিজের জমা দেওয়া চাহিদা ও সেগুলোর Price Offer দেখা যাবে। অন্য Buyer-এর ব্যক্তিগত তথ্য দেখানো হবে না।</p><div id="buyerDemandList" aria-live="polite">আপনার চাহিদা লোড হচ্ছে…</div></div>
   </section>
 
   <!-- POST DEMAND -->
