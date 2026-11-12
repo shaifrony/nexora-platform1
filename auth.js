@@ -133,7 +133,7 @@
     const adminManagePanel = document.getElementById("nxAdminManagement");
     if (adminManagePanel) adminManagePanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
     if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadAdminManagement();
-    if (isActiveAdmin) loadAdminOperations();
+    if (isActiveAdmin) { loadAdminOperations(); loadAdminAuditLogs(); }
     const requestPanel = document.getElementById("nxRoleRequestsPanel");
     if (requestPanel) requestPanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
     if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadRequests();
@@ -450,6 +450,31 @@
         return '<div class="offer"><b>'+escapeHtml(p.product_name)+'</b><div class="muted">'+escapeHtml(p.product_code)+' | '+escapeHtml(p.category)+' | Status: '+escapeHtml(p.listing_status)+'<br>জমা: '+safeDate(p.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
       }).join("");
     } else productsHost.textContent="এই বিভাগের পণ্য দেখার অনুমতি নেই।";
+  }
+
+  async function loadAdminAuditLogs() {
+    const host=document.getElementById("nxAdminAuditLogs");
+    if(!host || !currentUser || profile?.role!=="admin" || profile?.account_status!=="active" || adminStaff?.is_active!==true) return;
+    const isSuper=adminStaff.admin_level==="super_admin";
+    if(!isSuper) {
+      const {data,error}=await db.from("admin_permission_grants").select("permission_key").eq("admin_user_id",currentUser.id).eq("permission_key","security.audit_logs.view").eq("is_allowed",true).maybeSingle();
+      if(error || !data) {host.textContent="Audit Log দেখার অনুমতি নেই।";return;}
+    }
+    const {data,error}=await db.from("admin_audit_logs")
+      .select("id,actor_admin_code,action_key,target_type,target_id,reason,details,created_at")
+      .order("created_at",{ascending:false}).limit(50);
+    if(error) {host.textContent="Audit Log লোড হয়নি: "+error.message;return;}
+    if(!data?.length) {host.textContent="এখনো কোনো Audit Log নেই।";return;}
+    host.innerHTML=data.map(log=>{
+      const details=log.details && typeof log.details==="object" ? JSON.stringify(log.details) : "";
+      return '<div class="offer"><b>'+escapeHtml(log.action_key)+'</b>'+
+        '<div class="muted">Admin: '+escapeHtml(log.actor_admin_code||"—")+
+        ' | Target: '+escapeHtml(log.target_type||"—")+' / '+escapeHtml(log.target_id||"—")+
+        '<br>সময়: '+escapeHtml(new Date(log.created_at).toLocaleString("bn-BD"))+
+        (log.reason?'<br>কারণ: '+escapeHtml(log.reason):"")+
+        (details?'<br>বিস্তারিত: '+escapeHtml(details.slice(0,700)):"")+
+        '</div></div>';
+    }).join("");
   }
 
   document.getElementById("nxAdminOperations")?.addEventListener("click", async e=>{
