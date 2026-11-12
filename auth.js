@@ -447,7 +447,6 @@
         if(p.listing_status==="pending"&&isSuper) actions+='<button class="primary" data-admin-kind="product" data-admin-action="approve" data-id="'+p.id+'">Approve</button><button class="danger" data-admin-kind="product" data-admin-action="reject" data-id="'+p.id+'">Reject</button>';
         if(p.listing_status==="approved"&&can("products.suspend")) actions+='<button class="danger" data-admin-kind="product" data-admin-action="suspend" data-id="'+p.id+'">স্থগিত</button>';
         if(p.listing_status==="suspended"&&can("products.restore")) actions+='<button class="primary" data-admin-kind="product" data-admin-action="restore" data-id="'+p.id+'">পুনরায় চালু</button>';
-        if(p.listing_status!=="cancelled"&&can("products.cancel")) actions+='<button class="light" data-admin-kind="product" data-admin-action="cancel" data-id="'+p.id+'">বাতিল</button>';
         return '<div class="offer"><b>'+escapeHtml(p.product_name)+'</b><div class="muted">'+escapeHtml(p.product_code)+' | '+escapeHtml(p.category)+' | Status: '+escapeHtml(p.listing_status)+'<br>জমা: '+safeDate(p.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
       }).join("");
     } else productsHost.textContent="এই বিভাগের পণ্য দেখার অনুমতি নেই।";
