@@ -724,7 +724,7 @@
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
         <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.product_code,p.origin].join(" ").toLowerCase())}">
-          <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(p.listing_status || "unknown")}</span></div>
+          <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           <p class="muted">${esc(p.category)} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
