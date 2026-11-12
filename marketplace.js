@@ -21,6 +21,79 @@
   const activeSeller = () => profile()?.role === "seller" && profile()?.account_status === "active";
   const currencyOK = (v) => /^[A-Z]{3}$/.test(String(v || "").toUpperCase());
   const setBusy = (form, busy) => form.querySelectorAll("button").forEach(b => b.disabled = busy);
+  const listingImageBucket = "nexora-listing-images";
+  const listingImageTypes = new Set(["image/jpeg","image/png","image/webp","image/avif"]);
+  const listingImageExtensions = {"image/jpeg":"jpg","image/png":"png","image/webp":"webp","image/avif":"avif"};
+
+  function bindListingImagePicker(inputId, previewId, maxFiles) {
+    const input=$(inputId), preview=$(previewId);
+    if(!input||!preview||input.dataset.nxBound==="true")return;
+    input.dataset.nxBound="true";
+    input.addEventListener("change",()=>{
+      const selected=Array.from(input.files||[]);
+      if(selected.length>maxFiles){
+        const transfer=new DataTransfer();
+        selected.slice(0,maxFiles).forEach(file=>transfer.items.add(file));
+        input.files=transfer.files;
+        say("সর্বোচ্চ "+maxFiles+"টি ছবি নির্বাচন করা যাবে।");
+      }
+      preview.querySelectorAll("img").forEach(img=>{if(img.src.startsWith("blob:"))URL.revokeObjectURL(img.src);});
+      preview.replaceChildren();
+      Array.from(input.files||[]).forEach((file,index)=>{
+        const figure=document.createElement("figure");
+        const img=document.createElement("img");
+        img.src=URL.createObjectURL(file);img.alt="নির্বাচিত ছবি "+(index+1);
+        const caption=document.createElement("figcaption");caption.textContent=file.name;
+        const remove=document.createElement("button");remove.type="button";remove.textContent="বাদ দিন";remove.setAttribute("aria-label",file.name+" বাদ দিন");
+        remove.addEventListener("click",()=>{
+          const transfer=new DataTransfer();
+          Array.from(input.files||[]).forEach((item,i)=>{if(i!==index)transfer.items.add(item);});
+          input.files=transfer.files;input.dispatchEvent(new Event("change"));
+        });
+        figure.append(img,caption,remove);preview.appendChild(figure);
+      });
+    });
+  }
+
+  async function uploadListingImages(files,kind) {
+    const selected=Array.from(files||[]);
+    if(!selected.length)return {urls:[],paths:[]};
+    if(!user()?.id||!activeSeller()||!state.business||state.business.approval_status!=="approved")
+      throw new Error("ছবি আপলোড করতে সক্রিয় Seller এবং অনুমোদিত Business Profile প্রয়োজন।");
+    if(selected.some(file=>!listingImageTypes.has(file.type)||file.size>5*1024*1024))
+      throw new Error("শুধু JPG, PNG, WEBP বা AVIF ছবি দিন; প্রতিটি ছবির আকার সর্বোচ্চ ৫ MB।");
+    const urls=[],paths=[];
+    for(const file of selected){
+      const path=user().id+"/"+kind+"/"+crypto.randomUUID()+"."+listingImageExtensions[file.type];
+      const {error}=await client().storage.from(listingImageBucket).upload(path,file,{
+        contentType:file.type,cacheControl:"31536000",upsert:false
+      });
+      if(error){if(paths.length)await client().storage.from(listingImageBucket).remove(paths);throw error;}
+      paths.push(path);
+      const {data}=client().storage.from(listingImageBucket).getPublicUrl(path);
+      if(!data?.publicUrl){await client().storage.from(listingImageBucket).remove(paths);throw new Error("ছবির Public URL তৈরি করা যায়নি।");}
+      urls.push(data.publicUrl);
+    }
+    return {urls,paths};
+  }
+
+  async function removeListingImages(paths) {
+    const clean=(paths||[]).filter(Boolean);
+    if(!clean.length||!client())return;
+    const {error}=await client().storage.from(listingImageBucket).remove(clean);
+    if(error)console.warn("NEXORA listing image cleanup failed:",error.message);
+  }
+
+  function listingImagePathsFromUrls(urls) {
+    const marker="/storage/v1/object/public/"+listingImageBucket+"/";
+    return (urls||[]).flatMap(value=>{
+      try{const path=new URL(value).pathname;const index=path.indexOf(marker);return index>=0?[decodeURIComponent(path.slice(index+marker.length))]:[];}
+      catch(_){return [];}
+    });
+  }
+
+  bindListingImagePicker("nxProductImageFiles","nxProductImagePreview",5);
+  bindListingImagePicker("nxServiceImageFiles","nxServiceImagePreview",3);
 
   function refreshProductMarketCategoryOptions() {
     const select = $("nxProductMarketCategory");
@@ -760,7 +833,7 @@
           detailPanel.innerHTML=`
             <a class="nx-back-link" href="${esc(window.location.pathname)}">← সব সেবা দেখুন</a>
             <div class="nx-service-detail-hero">
-              <span class="nx-service-detail-icon" aria-hidden="true">${serviceCategoryIcons[selected.service_category]||"🧰"}</span>
+              ${selected.image_urls?.[0]?'<img class="nx-service-detail-image" src="'+esc(selected.image_urls[0])+'" alt="'+esc(selected.service_name)+'" loading="lazy">':'<span class="nx-service-detail-icon" aria-hidden="true">'+(serviceCategoryIcons[selected.service_category]||"🧰")+'</span>'}
               <div><span class="tag">${esc(serviceCategoryLabels[selected.service_category]||selected.service_category)}</span><span class="nx-service-detail-kicker">NEXORA SERVICE</span><h1>${esc(selected.service_name)}</h1><p>${esc([selected.service_area,selected.city,selected.country].filter(Boolean).join(", "))}</p></div>
             </div>
             <div class="nx-service-detail-grid">
@@ -779,7 +852,7 @@
       const icon=serviceCategoryIcons[s.service_category]||"🧰";
       const amount=s.price_amount!==null&&s.price_amount!==undefined?esc(Number(s.price_amount).toLocaleString("en-US"))+" "+esc(s.currency)+" · ":"";
       return `<article class="card nx-service-card">
-        <a class="nx-service-card-art" href="?service=${encodeURIComponent(s.service_code)}" aria-label="${esc(s.service_name)} বিস্তারিত দেখুন"><span aria-hidden="true">${icon}</span><small>NEXORA SERVICES</small></a>
+        <a class="nx-service-card-art" href="?service=${encodeURIComponent(s.service_code)}" aria-label="${esc(s.service_name)} বিস্তারিত দেখুন">${s.image_urls?.[0]?'<img class="nx-service-uploaded-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'<span aria-hidden="true">'+icon+'</span>'}<small>NEXORA SERVICES</small></a>
         <div class="nx-service-card-body"><span class="tag">${esc(serviceCategoryLabels[s.service_category]||s.service_category)}</span><h3><a href="?service=${encodeURIComponent(s.service_code)}">${esc(s.service_name)}</a></h3><p class="nx-service-card-description">${esc(s.description)}</p><p class="muted">📍 ${esc([s.service_area,s.city,s.country].filter(Boolean).join(", "))}</p><div class="nx-service-card-footer"><strong>${amount}${esc(servicePriceLabels[s.price_basis]||"আলোচনা সাপেক্ষে")}</strong><a href="?service=${encodeURIComponent(s.service_code)}">বিস্তারিত <span aria-hidden="true">→</span></a></div><small class="muted">Service ID: ${esc(s.service_code)}</small></div>
       </article>`;
     }).join("");
@@ -789,7 +862,7 @@
     host.innerHTML='<p class="muted">সেবা লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("service_listings")
-        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability")
+        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,image_urls")
         .eq("listing_status","approved").order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
       state.services=data||[];
@@ -816,7 +889,7 @@
     if(!activeSeller()||!signedIn()){host.textContent="সক্রিয় Seller হিসেবে লগইন করুন।";return;}
     try{
       const {data,error}=await client().from("service_listings")
-        .select("id,service_code,service_name,service_category,description,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note")
+        .select("id,service_code,service_name,service_category,description,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note,image_urls")
         .eq("seller_id",user().id).order("created_at",{ascending:false});
       if(error)throw error;
       if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
@@ -826,8 +899,11 @@
   }
   async function deleteService(id){
     if(!confirm("এই pending সেবাটি মুছে ফেলতে চান?"))return;
+    const {data:service,error:readError}=await client().from("service_listings").select("image_urls").eq("id",id).single();
+    if(readError)return say("সেবার তথ্য পাওয়া যায়নি: "+readError.message);
     const {error}=await client().from("service_listings").delete().eq("id",id);
     if(error)return say("সেবা মুছতে সমস্যা: "+error.message);
+    await removeListingImages(listingImagePathsFromUrls(service?.image_urls||[]));
     say("Pending সেবা মুছে ফেলা হয়েছে।",true);await loadSellerServices();
   }
   async function loadAdminServiceQueue(){
@@ -861,22 +937,32 @@
     if(!activeSeller()||!signedIn())return say("সেবা যোগ করতে সক্রিয় Seller হিসেবে লগইন করুন।");
     if(!state.business||state.business.approval_status!=="approved")return say("সেবা যোগ করার আগে Admin-এর Business Profile অনুমোদন প্রয়োজন।");
     const v=Object.fromEntries(new FormData(form));
+    const imageFiles=Array.from(form.querySelector('[name="service_image_files"]')?.files||[]);
+    if(imageFiles.length>3)return say("সর্বোচ্চ ৩টি Service Image আপলোড করুন।");
     if(v.price_amount!==""&&(!Number.isFinite(Number(v.price_amount))||Number(v.price_amount)<0))return say("সঠিক মূল্য লিখুন।");
     setBusy(form,true);
+    let uploadedPaths=[];
     try{
+      const uploaded=await uploadListingImages(imageFiles,"services");
+      uploadedPaths=uploaded.paths;
       const {error}=await client().from("service_listings").insert({
         seller_id:user().id,business_id:state.business.id,
         service_name:v.service_name.trim(),service_category:v.service_category,
         description:v.description.trim(),country:v.country.trim(),city:v.city.trim(),
         service_area:v.service_area.trim(),price_basis:v.price_basis,
         price_amount:v.price_amount===""?null:Number(v.price_amount),
-        currency:String(v.currency||"BDT").toUpperCase(),availability:v.availability.trim()||null
+        currency:String(v.currency||"BDT").toUpperCase(),availability:v.availability.trim()||null,
+        image_urls:uploaded.urls
       });
       if(error)throw error;
       form.reset();form.classList.add("hidden");
-      say("সেবা Admin Review-এ পাঠানো হয়েছে। অনুমোদনের পর Marketplace-এ দেখা যাবে।",true);
+      $("nxServiceImageFiles")?.dispatchEvent(new Event("change"));
+      say("সেবা ও ছবি Admin Review-এ পাঠানো হয়েছে। অনুমোদনের পর Marketplace-এ দেখা যাবে।",true);
       await loadSellerServices();
-    }catch(err){say("সেবা সংরক্ষণ হয়নি: "+err.message);}
+    }catch(err){
+      if(uploadedPaths.length)await removeListingImages(uploadedPaths);
+      say("সেবা সংরক্ষণ হয়নি: "+err.message);
+    }
     finally{setBusy(form,false);}
   });
 
@@ -1255,8 +1341,11 @@
 
   async function deleteProduct(id) {
     if (!confirm("এই pending পণ্যটি মুছে ফেলতে চান?")) return;
+    const {data:product,error:readError}=await client().from("products").select("image_urls").eq("id",id).single();
+    if(readError)return say("পণ্যের তথ্য পাওয়া যায়নি: "+readError.message);
     const { error } = await client().from("products").delete().eq("id", id);
     if (error) return say("পণ্য মুছতে সমস্যা: " + error.message);
+    await removeListingImages(listingImagePathsFromUrls(product?.image_urls||[]));
     say("পণ্য মুছে ফেলা হয়েছে।", true);
     await loadSellerDashboard(); await loadProducts();
   }
@@ -1267,15 +1356,21 @@
     if (!activeSeller()) return say("পণ্য যোগ করতে সক্রিয় Seller হিসেবে লগইন করুন।");
     if (!state.business || state.business.approval_status !== "approved") return say("পণ্য যোগ করার আগে Admin-এর Business Profile অনুমোদন প্রয়োজন।");
     const v = Object.fromEntries(new FormData(form));
-    const images = String(v.images || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
-    if (images.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
+    const externalImages = String(v.images || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+    if (externalImages.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
+    const imageFiles=Array.from(form.querySelector('[name="image_files"]')?.files||[]);
+    if(imageFiles.length>5)return say("সর্বোচ্চ ৫টি Product Image আপলোড করুন।");
     const allowedMarketCategories = Array.isArray(profile()?.seller_categories) ? profile().seller_categories : [];
     if (!["wholesale","retail"].includes(v.market_category) || !allowedMarketCategories.includes(v.market_category)) {
       return say("আপনার নিবন্ধিত Seller ক্যাটাগরির মধ্য থেকে Wholesale অথবা Retail নির্বাচন করুন।");
     }
     if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     setBusy(form, true);
+    let uploadedPaths=[];
     try {
+      const uploaded=await uploadListingImages(imageFiles,"products");
+      uploadedPaths=uploaded.paths;
+      const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
         product_name: v.name.trim(), category: v.category, market_category: v.market_category, image_urls: images,
@@ -1285,9 +1380,13 @@
       });
       if (error) throw error;
       form.reset(); form.classList.add("hidden");
-      say("পণ্য জমা হয়েছে। Marketplace-এ প্রকাশের আগে Admin অনুমোদন লাগবে।", true);
+      $("nxProductImageFiles")?.dispatchEvent(new Event("change"));
+      say("পণ্য ও ছবি জমা হয়েছে। Marketplace-এ প্রকাশের আগে Admin অনুমোদন লাগবে।", true);
       await loadSellerDashboard(); await loadProducts();
-    } catch (err) { say("পণ্য সংরক্ষণ হয়নি: " + err.message); }
+    } catch (err) {
+      if(uploadedPaths.length)await removeListingImages(uploadedPaths);
+      say("পণ্য সংরক্ষণ হয়নি: " + err.message);
+    }
     finally { setBusy(form, false); }
   });
 
