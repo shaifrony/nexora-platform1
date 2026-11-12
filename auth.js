@@ -193,6 +193,26 @@
     } catch(err) { showError(err); button.disabled=false; }
   });
 
+  window.toggleBuyerProfileMenu = function(force) {
+    const menu=document.getElementById("nxBuyerProfileDropdown");
+    const toggle=document.getElementById("nxBuyerProfileToggle");
+    if(!menu || !toggle) return;
+    const open=typeof force==="boolean" ? force : menu.classList.contains("hidden");
+    menu.classList.toggle("hidden",!open);
+    toggle.setAttribute("aria-expanded",String(open));
+  };
+  window.showBuyerComingSoon = function(feature) {
+    window.toggleBuyerProfileMenu?.(false);
+    const message=feature+" সুবিধাটি পরবর্তী ধাপে যুক্ত করা হবে।";
+    const status=document.getElementById("nxMessage");
+    if(status){status.textContent=message;status.style.color="#718096";window.showSection?.("accountSection");}
+    else alert(message);
+  };
+  document.addEventListener("click", event => {
+    const wrap=document.getElementById("nxBuyerProfileMenu");
+    if(wrap && !wrap.contains(event.target)) window.toggleBuyerProfileMenu?.(false);
+  });
+
   function render() {
     const current = document.getElementById("nxCurrent");
     const logged = document.getElementById("nxLogged");
@@ -201,18 +221,25 @@
     const signupView = document.getElementById("nxSignupView");
     const forgotView = document.getElementById("nxForgotView");
     const recoveryView = document.getElementById("nxPasswordRecoveryView");
-    if (!current) return;
+    const isActiveBuyer = !!(currentUser && profile?.role === "buyer" && profile?.account_status === "active");
     const headerLogin = document.getElementById("nxHeaderLogin");
     const headerBuyerDashboard = document.getElementById("nxHeaderBuyerDashboard");
     const headerPostDemand = document.getElementById("nxHeaderPostDemand");
     const headerAccount = document.getElementById("nxHeaderAccount");
     const headerLogout = document.getElementById("nxHeaderLogout");
-    const isActiveBuyer = !!(currentUser && profile?.role === "buyer" && profile?.account_status === "active");
+    const profileMenu = document.getElementById("nxBuyerProfileMenu");
+    const buyerName = String(profile?.full_name || currentUser?.email?.split("@")[0] || "Buyer").trim();
+    const initials = buyerName.split(/\\s+/).filter(Boolean).slice(0,2).map(part => part[0]).join("").toUpperCase() || "B";
     headerLogin?.classList.toggle("hidden", !!currentUser);
     headerBuyerDashboard?.classList.toggle("hidden", !isActiveBuyer);
     headerPostDemand?.classList.toggle("hidden", !isActiveBuyer);
     headerAccount?.classList.toggle("hidden", !currentUser);
     headerLogout?.classList.toggle("hidden", !currentUser);
+    profileMenu?.classList.toggle("hidden", !isActiveBuyer);
+    ["nxBuyerAvatar","nxBuyerMenuAvatar"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=initials; });
+    ["nxBuyerHeaderName","nxBuyerMenuName"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=buyerName; });
+    if (!isActiveBuyer) window.toggleBuyerProfileMenu?.(false);
+    if (!current) return;
     if (recoveryMode) {
       current.textContent = "নতুন পাসওয়ার্ড সেট করুন।";
       logged.classList.add("hidden");
