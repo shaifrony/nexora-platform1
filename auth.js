@@ -136,6 +136,7 @@
     currentUser = session?.user || null;
     try { await loadProfile(); render(); }
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
+    window.dispatchEvent(new Event("nexora:auth-change"));
   }
 
   document.getElementById("nxSignup").addEventListener("submit", async e => {
