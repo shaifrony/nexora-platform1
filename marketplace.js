@@ -1,7 +1,7 @@
 /* NEXORA Marketplace — Supabase-backed MVP */
 (() => {
   "use strict";
-  const state = { products: [], demands: [], business: null, offers: {} };
+  const state = { products: [], demands: [], business: null, businessMap: new Map(), offers: {} };
   const $ = (id) => document.getElementById(id);
   const client = () => window.NEXORA_AUTH?.client;
   const user = () => window.NEXORA_AUTH?.user;
@@ -171,6 +171,7 @@
   async function loadProducts() {
     const host = $("productList");
     if (!host || !client()) return;
+    if (!signedIn()) { host.textContent = "অনুমোদিত পণ্য দেখতে আগে লগইন করুন।"; return; }
     host.textContent = "পণ্য লোড হচ্ছে…";
     const { data, error } = await client().from("products")
       .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
@@ -179,11 +180,12 @@
     state.products = data || [];
     const { data: businesses } = await client().from("public_businesses")
       .select("business_id,display_name,country,city");
-    const businessMap = new Map((businesses || []).map(b => [b.business_id, b]));
-    renderProducts(businessMap);
+    state.businessMap = new Map((businesses || []).map(b => [b.business_id, b]));
+    renderProducts();
   }
 
-  function renderProducts(businessMap = new Map()) {
+  function renderProducts() {
+    const businessMap = state.businessMap;
     const host = $("productList");
     if (!host) return;
     const search = ($("productSearch")?.value || "").toLowerCase();
