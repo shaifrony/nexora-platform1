@@ -761,6 +761,31 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <p class="muted">Admin কার্যক্রমের রেকর্ড। সংবেদনশীল তথ্য সীমিতভাবে দেখানো হবে।</p>
         <div id="nxAdminAuditLogs" class="muted">Audit Log অনুমতি যাচাই হচ্ছে…</div>
       </div>
+      <section id="nxAdminLogistics" class="card">
+        <h4>Logistics & Porter Assignment</h4>
+        <p class="muted">অনুমোদিত Logistics permission থাকলে সক্রিয় Porter-কে ডেলিভারি কাজ বরাদ্দ করতে পারবেন। প্রতিটি কাজের সংগ্রহ ও গন্তব্যের যোগাযোগের তথ্য শুধু সংশ্লিষ্ট Porter ও অনুমোদিত Logistics Admin দেখতে পারবেন।</p>
+        <form id="nxAdminPorterJobForm" class="grid">
+          <label>Porter *</label><select name="assigned_porter_id" id="nxAdminPorterSelect" required><option value="">Porter তালিকা লোড হচ্ছে…</option></select>
+          <label>পণ্যের / প্যাকেজের বিবরণ *</label><input name="package_description" maxlength="1000" required>
+          <label>প্যাকেজ সংখ্যা *</label><input name="package_count" type="number" min="1" step="1" value="1" required>
+          <h5>পণ্য সংগ্রহের তথ্য</h5>
+          <label>যোগাযোগের নাম</label><input name="pickup_contact_name" maxlength="150">
+          <label>যোগাযোগের ফোন</label><input name="pickup_contact_phone" maxlength="40">
+          <label>সম্পূর্ণ সংগ্রহের ঠিকানা *</label><input name="pickup_address" maxlength="1000" required>
+          <label>শহর *</label><input name="pickup_city" maxlength="120" required>
+          <label>দেশ *</label><input name="pickup_country" maxlength="120" required>
+          <h5>ডেলিভারি গন্তব্য</h5>
+          <label>প্রাপকের নাম</label><input name="dropoff_contact_name" maxlength="150">
+          <label>প্রাপকের ফোন</label><input name="dropoff_contact_phone" maxlength="40">
+          <label>সম্পূর্ণ ডেলিভারি ঠিকানা *</label><input name="dropoff_address" maxlength="1000" required>
+          <label>শহর *</label><input name="dropoff_city" maxlength="120" required>
+          <label>দেশ *</label><input name="dropoff_country" maxlength="120" required>
+          <label>নির্ধারিত সংগ্রহের সময়</label><input name="scheduled_pickup_at" type="datetime-local">
+          <div class="form-actions"><button class="primary" type="submit">Porter-কে কাজ বরাদ্দ করুন</button></div>
+          <p class="muted">কাজ বরাদ্দের জন্য logistics.assign অনুমতি ও Admin MFA (AAL2) প্রয়োজন।</p>
+        </form>
+        <div id="nxAdminLogisticsStatus" class="muted" aria-live="polite"></div>
+      </section>
       <div id="nxRoleRequestsPanel">
         <h4>Pending Role Requests</h4>
         <div id="nxRequests" class="muted">আবেদন লোড হচ্ছে…</div>
