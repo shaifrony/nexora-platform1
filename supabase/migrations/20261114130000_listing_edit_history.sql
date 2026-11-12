@@ -38,52 +38,64 @@ using (
   )
 );
 
-create or replace function private.capture_listing_edit_request_history()
+create or replace function private.snapshot_listing_before_edit_request()
+returns trigger
+language plpgsql
+security definer
+set search_path=''
+as $$
+declare v_old jsonb;
+begin
+  if new.listing_type='product' then
+    select jsonb_build_object(
+      'product_name',p.product_name,'category',p.category,
+      'market_category',p.market_category,'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
+      'description',p.description,'origin',p.origin,
+      'specifications_quality',p.specifications_quality,'price',p.price,'currency',p.currency
+    ) into v_old
+    from public.products p
+    where p.id=new.product_id and p.seller_id=new.seller_id and p.listing_status='approved';
+  else
+    select jsonb_build_object(
+      'service_name',s.service_name,'service_category',s.service_category,
+      'description',s.description,'country',s.country,'city',s.city,
+      'service_area',s.service_area,'price_basis',s.price_basis,
+      'price_amount',s.price_amount,'currency',s.currency,
+      'availability',s.availability,'image_urls',coalesce(to_jsonb(s.image_urls),'[]'::jsonb)
+    ) into v_old
+    from public.service_listings s
+    where s.id=new.service_listing_id and s.seller_id=new.seller_id and s.listing_status='approved';
+  end if;
+  if v_old is null then
+    raise exception 'Approved listing snapshot could not be captured' using errcode='23514';
+  end if;
+  new.original_data:=v_old;
+  return new;
+end;
+$$;
+
+create or replace function private.log_listing_edit_request_event()
 returns trigger
 language plpgsql
 security definer
 set search_path=''
 as $$
 declare
-  v_old jsonb := '{}'::jsonb;
-  v_actor_role text := 'system';
   v_event text;
+  v_actor_role text;
+  v_old jsonb;
 begin
   if tg_op='INSERT' then
-    if new.listing_type='product' then
-      select jsonb_build_object(
-        'product_name',p.product_name,'category',p.category,
-        'market_category',p.market_category,'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
-        'description',p.description,'origin',p.origin,
-        'specifications_quality',p.specifications_quality,'price',p.price,'currency',p.currency
-      ) into v_old
-      from public.products p
-      where p.id=new.product_id and p.seller_id=new.seller_id and p.listing_status='approved';
-    else
-      select jsonb_build_object(
-        'service_name',s.service_name,'service_category',s.service_category,
-        'description',s.description,'country',s.country,'city',s.city,
-        'service_area',s.service_area,'price_basis',s.price_basis,
-        'price_amount',s.price_amount,'currency',s.currency,
-        'availability',s.availability,'image_urls',coalesce(to_jsonb(s.image_urls),'[]'::jsonb)
-      ) into v_old
-      from public.service_listings s
-      where s.id=new.service_listing_id and s.seller_id=new.seller_id and s.listing_status='approved';
-    end if;
-    if v_old is null then
-      raise exception 'Approved listing snapshot could not be captured' using errcode='23514';
-    end if;
-    new.original_data:=v_old;
     v_event:='submitted';
     v_actor_role:='seller';
+    v_old:=coalesce(new.original_data,'{}'::jsonb);
   elsif tg_op='UPDATE' and old.status='pending' and new.status in ('approved','rejected') then
-    v_old:=coalesce(old.original_data,'{}'::jsonb);
     v_event:=new.status;
     v_actor_role:='admin';
+    v_old:=coalesce(old.original_data,'{}'::jsonb);
   else
     return new;
   end if;
-
   insert into public.listing_edit_request_events(
     request_id,event_type,actor_user_id,actor_role,old_data,new_data,reason
   ) values (
@@ -97,11 +109,19 @@ $$;
 
 drop trigger if exists listing_edit_request_history_capture
   on public.listing_edit_requests;
-create trigger listing_edit_request_history_capture
-before insert or update of status on public.listing_edit_requests
-for each row execute function private.capture_listing_edit_request_history();
+drop trigger if exists listing_edit_request_snapshot
+  on public.listing_edit_requests;
+drop trigger if exists listing_edit_request_event_log
+  on public.listing_edit_requests;
+create trigger listing_edit_request_snapshot
+before insert on public.listing_edit_requests
+for each row execute function private.snapshot_listing_before_edit_request();
 
-revoke all on function private.capture_listing_edit_request_history() from public,anon,authenticated;
+create trigger listing_edit_request_event_log
+after insert or update of status on public.listing_edit_requests
+for each row execute function private.log_listing_edit_request_event();
+
+revoke all on function private.snapshot_listing_before_edit_request() from public,anon,authenticated;\nrevoke all on function private.log_listing_edit_request_event() from public,anon,authenticated;
 
 comment on table public.listing_edit_request_events is
   'Append-only audit timeline of Seller listing change submissions and Admin decisions, including before/after JSON snapshots.';
