@@ -222,7 +222,7 @@
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     if (id === "porterDashboard") loadPorterDashboard();
-    if (id === "accountSection") loadAdminPorterOptions();
+    if (id === "accountSection") { loadAdminPorterOptions(); loadAdminLogisticsMonitor(); }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -799,6 +799,76 @@
       const status=$("nxAdminLogisticsStatus");if(status)status.textContent="Porter তালিকা লোড হয়নি: "+err.message;
     }
   }
+  const logisticsStatusLabels = {
+    assigned:"নতুন বরাদ্দ",accepted:"গ্রহণ করা হয়েছে",pickup_in_progress:"সংগ্রহ চলছে",
+    picked_up:"পণ্য সংগ্রহ সম্পন্ন",in_transit:"পথে রয়েছে",delivered:"ডেলিভারি সম্পন্ন",
+    declined:"প্রত্যাখ্যাত",failed:"সমস্যা হয়েছে",cancelled:"বাতিল"
+  };
+  const logisticsActiveStatuses=["accepted","pickup_in_progress","picked_up","in_transit"];
+  async function loadAdminLogisticsMonitor(){
+    const host=$("nxAdminLogisticsJobs"), historyHost=$("nxAdminLogisticsHistory");
+    if(!host)return;
+    if(!signedIn()||profile()?.role!=="admin"||profile()?.account_status!=="active"){
+      host.textContent="শুধু সক্রিয় Admin অ্যাকাউন্টে এই অংশ ব্যবহার করা যাবে।";
+      if(historyHost)historyHost.textContent="";
+      return;
+    }
+    host.innerHTML='<p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p>';
+    try{
+      const {data:jobs,error}=await client().from("porter_delivery_jobs")
+        .select("id,job_code,assigned_porter_id,package_description,package_count,status,pickup_city,pickup_country,dropoff_city,dropoff_country,scheduled_pickup_at,created_at,updated_at,porter_note")
+        .order("created_at",{ascending:false}).limit(200);
+      if(error)throw error;
+      const rows=jobs||[];
+      const count=statuses=>rows.filter(job=>statuses.includes(job.status)).length;
+      const metric=(id,value)=>{const node=$(id);if(node)node.textContent=String(value);};
+      metric("nxLogisticsTotal",rows.length);
+      metric("nxLogisticsActive",count(logisticsActiveStatuses));
+      metric("nxLogisticsDelivered",count(["delivered"]));
+      metric("nxLogisticsIssues",count(["failed","declined"]));
+      const porterIds=[...new Set(rows.map(job=>job.assigned_porter_id).filter(Boolean))];
+      let porterNames={};
+      if(porterIds.length){
+        const {data:porters,error:porterError}=await client().from("profiles").select("id,full_name").in("id",porterIds);
+        if(!porterError)porterNames=Object.fromEntries((porters||[]).map(p=>[p.id,p.full_name||"Porter"]));
+      }
+      const filter=$("nxAdminLogisticsFilter")?.value||"all";
+      const filtered=rows.filter(job=>{
+        if(filter==="all")return true;
+        if(filter==="active")return logisticsActiveStatuses.includes(job.status);
+        if(filter==="issues")return ["failed","declined"].includes(job.status);
+        return job.status===filter;
+      });
+      host.innerHTML=filtered.length?filtered.map(job=>`
+        <article class="nx-logistics-job">
+          <div class="nx-logistics-job-head"><div><div class="nx-logistics-job-code">${esc(job.job_code)}</div><h5>${esc(job.package_description)}</h5></div><span class="nx-logistics-status">${esc(logisticsStatusLabels[job.status]||job.status)}</span></div>
+          <p><strong>Porter:</strong> ${esc(porterNames[job.assigned_porter_id]||"Assigned Porter")} · <strong>প্যাকেজ:</strong> ${esc(job.package_count)}</p>
+          <p><strong>সংগ্রহ:</strong> ${esc([job.pickup_city,job.pickup_country].filter(Boolean).join(", ")||"তথ্য নেই")} → <strong>গন্তব্য:</strong> ${esc([job.dropoff_city,job.dropoff_country].filter(Boolean).join(", ")||"তথ্য নেই")}</p>
+          <p>বরাদ্দ: ${esc(new Date(job.created_at).toLocaleString("bn-BD"))}${job.scheduled_pickup_at?" · নির্ধারিত সংগ্রহ: "+esc(new Date(job.scheduled_pickup_at).toLocaleString("bn-BD")):""}</p>
+          ${job.porter_note?'<p>সর্বশেষ নোট: '+esc(job.porter_note)+'</p>':""}
+        </article>`).join(""):'<p class="muted">এই ফিল্টারে কোনো ডেলিভারি কাজ পাওয়া যায়নি।</p>';
+      if(historyHost){
+        const jobIds=rows.map(job=>job.id);
+        if(!jobIds.length)historyHost.innerHTML='<p class="muted">এখনো কোনো ডেলিভারি ইতিহাস নেই।</p>';
+        else{
+          const {data:events,error:eventError}=await client().from("porter_delivery_job_events")
+            .select("id,job_id,from_status,to_status,note,created_at")
+            .in("job_id",jobIds).order("created_at",{ascending:false}).limit(100);
+          if(eventError)throw eventError;
+          const codes=Object.fromEntries(rows.map(job=>[job.id,job.job_code]));
+          historyHost.innerHTML=events?.length?events.map(event=>`
+            <article class="nx-logistics-event"><div><strong>${esc(codes[event.job_id]||"Delivery Job")} · ${esc(logisticsStatusLabels[event.to_status]||event.to_status)}</strong>
+            ${event.from_status?'<p>আগের অবস্থা: '+esc(logisticsStatusLabels[event.from_status]||event.from_status)+'</p>':""}
+            ${event.note?'<p>নোট: '+esc(event.note)+'</p>':""}</div><time>${esc(new Date(event.created_at).toLocaleString("bn-BD"))}</time></article>`).join(""):'<p class="muted">এখনো কোনো Status History নেই।</p>';
+        }
+      }
+    }catch(err){
+      host.innerHTML='<p class="muted">ডেলিভারি মনিটর লোড হয়নি: '+esc(err.message)+'</p>';
+      if(historyHost)historyHost.innerHTML='<p class="muted">ইতিহাস লোড করা যায়নি।</p>';
+    }
+  }
+  $("nxAdminLogisticsRefresh")?.addEventListener("click",loadAdminLogisticsMonitor);
+  $("nxAdminLogisticsFilter")?.addEventListener("change",loadAdminLogisticsMonitor);
   $("nxAdminPorterJobForm")?.addEventListener("submit",async e=>{
     e.preventDefault();
     const form=e.currentTarget, v=Object.fromEntries(new FormData(form));
@@ -824,7 +894,7 @@
       form.reset();
       if(status)status.textContent="ডেলিভারি কাজ বরাদ্দ হয়েছে। Job ID: "+data;
       say("Porter-কে ডেলিভারি কাজ বরাদ্দ হয়েছে।",true);
-      await loadAdminPorterOptions();
+      await loadAdminPorterOptions(); await loadAdminLogisticsMonitor();
     }catch(err){if(status)status.textContent="কাজ বরাদ্দ হয়নি: "+err.message;say("কাজ বরাদ্দ হয়নি: "+err.message);}
     finally{setBusy(form,false);}
   });
