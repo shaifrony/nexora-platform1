@@ -23,82 +23,6 @@
   `;
   document.head.appendChild(style);
 
-  const nav = document.querySelector("header nav");
-  const section = document.createElement("section");
-  section.id = "accountSection";
-  section.className = "section hidden";
-  section.innerHTML = `
-    <div class="section-head"><h2>Account & Login</h2><span class="tag">NEXORA Account</span></div>
-    <div class="card" id="nexoraAccount">
-      <p class="muted">Buyer, Seller, Porter ও Admin অ্যাকাউন্টের নিরাপদ প্রবেশ।</p>
-      <div id="nxCurrent" class="offer">লোড হচ্ছে…</div>
-      <div class="nx-grid">
-        <form id="nxSignup">
-          <h3>নতুন অ্যাকাউন্ট</h3>
-          <label>পূর্ণ নাম</label><input name="full_name" required autocomplete="name">
-          <label>অ্যাকাউন্টের ধরন</label>
-          <select name="role" required>
-            <option value="">ধরন নির্বাচন করুন</option>
-            <option value="buyer">Buyer — ক্রেতা</option>
-            <option value="seller">Seller — বিক্রেতা</option>
-            <option value="porter">Porter — পরিবহনকারী</option>
-          </select>
-          <p class="muted">Buyer ও Seller নিবন্ধনের পর ব্যবহার করতে পারবেন; Seller-এর ব্যবসা/Listing প্রকাশের আগে Admin অনুমোদন লাগবে। Porter-এর কাজ শুরু করার আগে Admin অনুমোদন লাগবে।</p>
-          <label>ইমেইল</label><input name="email" type="email" required autocomplete="email">
-          <label>পাসওয়ার্ড (কমপক্ষে ৬ অক্ষর)</label><input name="password" type="password" minlength="6" required autocomplete="new-password">
-          <div class="form-actions"><button class="primary" type="submit">Register</button></div>
-        </form>
-        <form id="nxLogin">
-          <h3>লগইন</h3>
-          <label>ইমেইল</label><input name="email" type="email" required autocomplete="email">
-          <label>পাসওয়ার্ড</label><input name="password" type="password" required autocomplete="current-password">
-          <div class="form-actions"><button class="secondary" type="submit">Login</button></div>
-        </form>
-      </div>
-      <div id="nxLogged" class="hidden">
-        <hr>
-        <h3>অ্যাকাউন্টের অবস্থা</h3>
-        <p id="nxProfile"></p>
-        <form id="nxRoleRequest">
-          <label>অ্যাকাউন্টের ধরন পরিবর্তনের আবেদন</label>
-          <select name="requested_role" required>
-            <option value="">Role নির্বাচন করুন</option><option value="seller">Seller</option><option value="porter">Porter</option>
-          </select>
-          <div class="form-actions"><button class="primary" type="submit">আবেদন পাঠান</button><button id="nxLogout" class="danger" type="button">Logout</button></div>
-        </form>
-      </div>
-      <div id="nxAdmin" class="hidden">
-        <hr><h3>Admin — Role আবেদন</h3><div id="nxRequests" class="muted">লোড হচ্ছে…</div>
-      </div>
-      <div id="nxMessage" class="nx-message" role="status" aria-live="polite"></div>
-    </div>
-  `;
-  const main = document.querySelector("main");
-  if (main) main.insertBefore(section, main.firstChild);
-
-  let buyerDemandButton = null;
-  if (nav) {
-    buyerDemandButton = document.createElement("button");
-    buyerDemandButton.type = "button";
-    buyerDemandButton.id = "buyerDemandNav";
-    buyerDemandButton.textContent = "Post a Demand";
-    buyerDemandButton.classList.add("hidden");
-    buyerDemandButton.addEventListener("click", () => window.showSection?.("postDemand"));
-    nav.appendChild(buyerDemandButton);
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.textContent = "Account / Login";
-    btn.addEventListener("click", () => {
-      // Show the dynamically added account section even if the site's
-      // original showSection() only knows about the four marketplace sections.
-      document.querySelectorAll("main .section").forEach(s => s.classList.add("hidden"));
-      section.classList.remove("hidden");
-      section.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    nav.appendChild(btn);
-  }
-
   function say(message, ok = false) {
     const node = document.getElementById("nxMessage");
     if (node) {
@@ -122,7 +46,6 @@
     const logged = document.getElementById("nxLogged");
     const admin = document.getElementById("nxAdmin");
     if (!current) return;
-    if (buyerDemandButton) buyerDemandButton.classList.add("hidden");
     if (!currentUser) {
       current.textContent = "আপনি লগইন করেননি।";
       logged.classList.add("hidden");
@@ -135,7 +58,6 @@
     document.getElementById("nxLogin").classList.add("hidden");
     logged.classList.remove("hidden");
     const p = profile || {};
-    if (buyerDemandButton) buyerDemandButton.classList.toggle("hidden", !(p.role === "buyer" && p.account_status === "active"));
     current.textContent = "লগইন: " + currentUser.email;
     document.getElementById("nxProfile").textContent =
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
