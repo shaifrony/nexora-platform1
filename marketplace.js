@@ -1389,7 +1389,7 @@
       '<label>নতুন ছবি যোগ করুন (প্রতিটি সর্বোচ্চ ৫ MB)</label><input id="nxEditServiceFiles-'+safeId+'" name="image_files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>'+
       '<div id="nxEditServicePreview-'+safeId+'" class="nx-upload-preview"></div>'+
       '<label>নতুন বাইরের HTTPS Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label><textarea name="images" placeholder="https://example.com/image.jpg"></textarea>'+
-      '<label>মুদ্রা<select name="currency"><option value="BDT" selected>BDT</option></select></label>'+
+      '<label>মুদ্রা<select name="currency">'+[["BDT","BDT"],["USD","USD"],["EUR","EUR"],["GBP","GBP"],["CNY","CNY"]].map(([v,label])=>'<option value="'+v+'" '+((s.currency||"BDT")===v?"selected":"")+'>'+label+'</option>').join("")+'</select></label>'+
       '<label>Availability<input name="availability" maxlength="300" value="'+esc(s.availability||"")+'"></label>'+
       '<div class="form-actions"><button class="primary" type="submit">পরিবর্তন সংরক্ষণ</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
       '</form>';
