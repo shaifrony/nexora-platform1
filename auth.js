@@ -133,6 +133,7 @@
     const adminManagePanel = document.getElementById("nxAdminManagement");
     if (adminManagePanel) adminManagePanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
     if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadAdminManagement();
+    if (isActiveAdmin) loadAdminOperations();
     const requestPanel = document.getElementById("nxRoleRequestsPanel");
     if (requestPanel) requestPanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
     if (isActiveAdmin && adminStaff?.admin_level === "super_admin") loadRequests();
@@ -394,6 +395,87 @@
     const host=document.getElementById("nxAssistantPermissions");
     if(host) host.innerHTML='<p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
   }
+
+  async function loadAdminOperations() {
+    const root=document.getElementById("nxAdminOperations");
+    if (!root || !currentUser || profile?.role!=="admin" || profile?.account_status!=="active" || adminStaff?.is_active!==true) return;
+    root.classList.remove("hidden");
+    const usersHost=document.getElementById("nxAdminUsers");
+    const businessHost=document.getElementById("nxAdminBusinesses");
+    const productsHost=document.getElementById("nxAdminProducts");
+    const isSuper=adminStaff.admin_level==="super_admin";
+    let permissions=new Set();
+    if (!isSuper) {
+      const {data,error}=await db.from("admin_permission_grants").select("permission_key").eq("admin_user_id",currentUser.id).eq("is_allowed",true);
+      if(error){[usersHost,businessHost,productsHost].forEach(x=>x.textContent="অনুমতি যাচাই হয়নি: "+error.message);return;}
+      permissions=new Set((data||[]).map(x=>x.permission_key));
+    }
+    const can=(key)=>isSuper||permissions.has(key);
+    const safeDate=(v)=>v?escapeHtml(new Date(v).toLocaleString("bn-BD")):"—";
+    if(can("users.view")||can("users.suspend")||can("users.restore")||can("users.cancel")) {
+      const {data,error}=await db.from("profiles").select("id,full_name,role,account_status,created_at").in("role",["buyer","seller","porter"]).order("created_at",{ascending:false}).limit(20);
+      if(error) usersHost.textContent="ব্যবহারকারী তালিকা লোড হয়নি: "+error.message;
+      else if(!data?.length) usersHost.textContent="কোনো ব্যবহারকারী পাওয়া যায়নি।";
+      else usersHost.innerHTML=data.map(u=>{
+        let actions="";
+        if(u.account_status==="active"&&can("users.suspend")) actions+='<button class="danger" data-admin-kind="user" data-admin-action="suspend" data-id="'+u.id+'">স্থগিত</button>';
+        if(u.account_status==="suspended"&&can("users.restore")) actions+='<button class="primary" data-admin-kind="user" data-admin-action="restore" data-id="'+u.id+'">পুনরায় চালু</button>';
+        if(u.account_status!=="cancelled"&&can("users.cancel")) actions+='<button class="light" data-admin-kind="user" data-admin-action="cancel" data-id="'+u.id+'">বাতিল</button>';
+        return '<div class="offer"><b>'+escapeHtml(u.full_name||"নাম নেই")+'</b><div class="muted">Role: '+escapeHtml(u.role)+' | Status: '+escapeHtml(u.account_status)+'<br>নিবন্ধন: '+safeDate(u.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
+      }).join("");
+    } else usersHost.textContent="এই বিভাগের ব্যবহারকারী দেখার অনুমতি নেই।";
+
+    if(can("businesses.view")||can("businesses.suspend")) {
+      const {data,error}=await db.from("business_profiles").select("id,display_name,country,city,approval_status,created_at").order("created_at",{ascending:false}).limit(20);
+      if(error) businessHost.textContent="ব্যবসার তালিকা লোড হয়নি: "+error.message;
+      else if(!data?.length) businessHost.textContent="এখনো কোনো ব্যবসার আবেদন নেই।";
+      else businessHost.innerHTML=data.map(b=>{
+        let actions="";
+        if(b.approval_status==="pending"&&isSuper) actions+='<button class="primary" data-admin-kind="business" data-admin-action="approve" data-id="'+b.id+'">Approve</button><button class="danger" data-admin-kind="business" data-admin-action="reject" data-id="'+b.id+'">Reject</button>';
+        if(b.approval_status==="approved"&&can("businesses.suspend")) actions+='<button class="danger" data-admin-kind="business" data-admin-action="suspend" data-id="'+b.id+'">স্থগিত</button>';
+        if(b.approval_status==="suspended"&&can("businesses.suspend")) actions+='<button class="primary" data-admin-kind="business" data-admin-action="restore" data-id="'+b.id+'">পুনরায় চালু</button>';
+        return '<div class="offer"><b>'+escapeHtml(b.display_name)+'</b><div class="muted">'+escapeHtml([b.city,b.country].filter(Boolean).join(", "))+' | Status: '+escapeHtml(b.approval_status)+'<br>জমা: '+safeDate(b.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
+      }).join("");
+    } else businessHost.textContent="এই বিভাগের ব্যবসা দেখার অনুমতি নেই।";
+
+    if(can("products.view")||can("products.suspend")||can("products.restore")||can("products.cancel")) {
+      const {data,error}=await db.from("products").select("id,product_code,product_name,category,listing_status,created_at").order("created_at",{ascending:false}).limit(20);
+      if(error) productsHost.textContent="পণ্যের তালিকা লোড হয়নি: "+error.message;
+      else if(!data?.length) productsHost.textContent="এখনো কোনো পণ্য জমা হয়নি।";
+      else productsHost.innerHTML=data.map(p=>{
+        let actions="";
+        if(p.listing_status==="pending"&&isSuper) actions+='<button class="primary" data-admin-kind="product" data-admin-action="approve" data-id="'+p.id+'">Approve</button><button class="danger" data-admin-kind="product" data-admin-action="reject" data-id="'+p.id+'">Reject</button>';
+        if(p.listing_status==="approved"&&can("products.suspend")) actions+='<button class="danger" data-admin-kind="product" data-admin-action="suspend" data-id="'+p.id+'">স্থগিত</button>';
+        if(p.listing_status==="suspended"&&can("products.restore")) actions+='<button class="primary" data-admin-kind="product" data-admin-action="restore" data-id="'+p.id+'">পুনরায় চালু</button>';
+        if(p.listing_status!=="cancelled"&&can("products.cancel")) actions+='<button class="light" data-admin-kind="product" data-admin-action="cancel" data-id="'+p.id+'">বাতিল</button>';
+        return '<div class="offer"><b>'+escapeHtml(p.product_name)+'</b><div class="muted">'+escapeHtml(p.product_code)+' | '+escapeHtml(p.category)+' | Status: '+escapeHtml(p.listing_status)+'<br>জমা: '+safeDate(p.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
+      }).join("");
+    } else productsHost.textContent="এই বিভাগের পণ্য দেখার অনুমতি নেই।";
+  }
+
+  document.getElementById("nxAdminOperations")?.addEventListener("click", async e=>{
+    const b=e.target.closest("button[data-admin-kind][data-admin-action][data-id]");
+    if(!b) return;
+    const kind=b.dataset.adminKind, action=b.dataset.adminAction, id=b.dataset.id;
+    const labels={approve:"অনুমোদন",reject:"প্রত্যাখ্যান",suspend:"স্থগিত",restore:"পুনরায় চালু",cancel:"বাতিল"};
+    if(!["user","business","product"].includes(kind)||!Object.hasOwn(labels,action)) return;
+    const note=window.prompt("কারণ / Admin Note (ঐচ্ছিক):","") ;
+    if(note===null) return;
+    if(!window.confirm("আপনি কি নিশ্চিতভাবে "+labels[action]+" করতে চান?")) return;
+    const buttons=b.closest(".offer")?.querySelectorAll("button")||[b];
+    buttons.forEach(x=>x.disabled=true);
+    const rpc=kind==="user"?"admin_manage_user":kind==="business"?"admin_moderate_business":"admin_moderate_product";
+    const args=kind==="user"?{p_user_id:id,p_action:action,p_reason:note}:{[kind==="business"?"p_business_id":"p_product_id"]:id,p_action:action,p_note:note};
+    try {
+      const {error}=await db.rpc(rpc,args);
+      if(error) throw error;
+      say("পরিবর্তন সংরক্ষিত হয়েছে।",true);
+      await loadAdminOperations();
+    } catch(err) {
+      say("পরিবর্তন হয়নি: "+(err.message||"অজানা সমস্যা"));
+      buttons.forEach(x=>x.disabled=false);
+    }
+  });
 
   async function loadRequests() {
     const host = document.getElementById("nxRequests");
