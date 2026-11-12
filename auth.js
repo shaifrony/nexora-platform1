@@ -649,7 +649,97 @@
         return '<div class="offer"><b>'+escapeHtml(p.product_name)+'</b><div class="muted">'+escapeHtml(p.product_code)+' | '+escapeHtml(p.category)+' | Status: '+escapeHtml(p.listing_status)+'<br>জমা: '+safeDate(p.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
       }).join("");
     } else productsHost.textContent="এই বিভাগের পণ্য দেখার অনুমতি নেই।";
+
+    await loadAdminTransportQueue(can("logistics.view"),can("logistics.assign"));
   }
+
+  async function loadAdminTransportQueue(canView,canReview) {
+    const host=document.getElementById("nxAdminTransportQueue");
+    if(!host) return;
+    if(!canView){host.textContent="Transport Provider ও Vehicle review দেখার অনুমতি নেই।";return;}
+    const [providers,vehicles]=await Promise.all([
+      db.from("transport_providers")
+        .select("id,owner_user_id,provider_type,display_name,legal_name,contact_phone,country,city,operating_address,business_registration_number,application_status,admin_note,created_at,reviewed_at")
+        .order("created_at",{ascending:false}).limit(100),
+      db.from("transport_vehicles")
+        .select("id,provider_id,vehicle_type,make_model,registration_number,registration_country,capacity_value,capacity_unit,is_available,approval_status,admin_note,created_at,reviewed_at")
+        .order("created_at",{ascending:false}).limit(200)
+    ]);
+    if(providers.error||vehicles.error){
+      host.textContent="Transport review queue লোড হয়নি: "+(providers.error?.message||vehicles.error?.message);
+      return;
+    }
+    const providerRows=providers.data||[], vehicleRows=vehicles.data||[];
+    const esc=escapeHtml, date=v=>v?esc(new Date(v).toLocaleString("bn-BD")):"—";
+    const providerLabel={pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"};
+    const vehicleLabel=providerLabel;
+    const actionButtons=(kind,id,status)=>{
+      if(!canReview) return '<p class="muted">আপনার review করার অনুমতি নেই।</p>';
+      let out='';
+      if(status!=="approved") out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Approve</button>';
+      if(status!=="rejected"&&status!=="approved") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="reject" data-id="'+esc(id)+'">Reject</button>';
+      if(status==="approved") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
+      if(status==="pending") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
+      if(status==="suspended"||status==="rejected") out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Re-approve</button>';
+      return out;
+    };
+    if(!providerRows.length&&!vehicleRows.length){
+      host.innerHTML='<p class="muted">এখনো কোনো Transport Provider বা Vehicle আবেদন জমা হয়নি।</p>';return;
+    }
+    const cards=providerRows.map(p=>{
+      const related=vehicleRows.filter(v=>v.provider_id===p.id);
+      const vehicleHtml=related.length?related.map(v=>`
+        <div class="offer">
+          <div class="section-head"><strong>${esc(v.vehicle_type)} ${v.make_model?"· "+esc(v.make_model):""}</strong><span class="tag">${esc(vehicleLabel[v.approval_status]||v.approval_status)}</span></div>
+          <p class="muted">Vehicle ID: ${esc(v.id)}</p>
+          <p class="muted">Registration: ${esc(v.registration_number)} · ${esc(v.registration_country)}</p>
+          <p class="muted">Capacity: ${esc(v.capacity_value)} ${esc(v.capacity_unit)} · ${v.is_available?"Available":"Unavailable"}</p>
+          <p class="muted">Submitted: ${date(v.created_at)} ${v.admin_note?"· Previous note: "+esc(v.admin_note):""}</p>
+          <div class="form-actions">${actionButtons("vehicle",v.id,v.approval_status)}</div>
+        </div>`).join(""):'<p class="muted">এই Provider-এর অধীনে এখনো কোনো Vehicle নেই।</p>';
+      return `
+        <article class="card">
+          <div class="section-head"><div><span class="tag">PROVIDER APPLICATION</span><h4>${esc(p.display_name)}</h4></div><span class="tag">${esc(providerLabel[p.application_status]||p.application_status)}</span></div>
+          <p class="muted">Provider ID: ${esc(p.id)} · Owner User ID: ${esc(p.owner_user_id)}</p>
+          <p class="muted">Type: ${esc(p.provider_type)} · Legal Name: ${esc(p.legal_name||"—")}</p>
+          <p class="muted">Phone: ${esc(p.contact_phone)} · Location: ${esc(p.city)}, ${esc(p.country)}</p>
+          <p class="muted">Operating Address: ${esc(p.operating_address)}</p>
+          <p class="muted">Business Registration: ${esc(p.business_registration_number||"—")}</p>
+          <p class="muted">Submitted: ${date(p.created_at)} · Reviewed: ${date(p.reviewed_at)} ${p.admin_note?"· Review note: "+esc(p.admin_note):""}</p>
+          <div class="form-actions">${actionButtons("provider",p.id,p.application_status)}</div>
+          <hr><h5>Registered Vehicles (${related.length})</h5>${vehicleHtml}
+        </article>`;
+    }).join("");
+    const orphan=vehicleRows.filter(v=>!providerRows.some(p=>p.id===v.provider_id));
+    host.innerHTML=cards+(orphan.length?'<p class="muted">কিছু Vehicle-এর parent Provider তালিকায় নেই; এগুলো আলাদাভাবে দেখানো হয়নি।</p>':"");
+  }
+
+  document.getElementById("nxAdminTransportQueue")?.addEventListener("click",async event=>{
+    const button=event.target.closest("button[data-transport-review][data-action][data-id]");
+    if(!button||button.disabled) return;
+    const kind=button.dataset.transportReview, action=button.dataset.action, id=button.dataset.id;
+    if(!["provider","vehicle"].includes(kind)||!["approve","reject","suspend"].includes(action)) return;
+    const label={approve:"অনুমোদন",reject:"প্রত্যাখ্যান",suspend:"স্থগিত"};
+    const reason=window.prompt(label[action]+" করার কারণ / Admin Note লিখুন:", "");
+    if(reason===null) return;
+    if(["reject","suspend"].includes(action)&&reason.trim().length<5){
+      window.alert("প্রত্যাখ্যান বা স্থগিতের জন্য কমপক্ষে ৫ অক্ষরের কারণ দিতে হবে।");return;
+    }
+    if(!window.confirm("আপনি কি নিশ্চিতভাবে এই "+(kind==="provider"?"Provider":"Vehicle")+"-কে "+label[action]+" করতে চান?")) return;
+    button.disabled=true;
+    const rpc=kind==="provider"?"review_transport_provider":"review_transport_vehicle";
+    const idArg=kind==="provider"?"p_provider_id":"p_vehicle_id";
+    try{
+      const {error}=await db.rpc(rpc,{[idArg]:id,p_action:action,p_reason:reason.trim()||null});
+      if(error) throw error;
+      say("Review সিদ্ধান্ত Audit Log-সহ সংরক্ষিত হয়েছে।",true);
+      await loadAdminOperations();
+      await loadAdminAuditLogs();
+    }catch(err){
+      say("Review সিদ্ধান্ত সংরক্ষণ হয়নি: "+(err.message||"অজানা সমস্যা"));
+      button.disabled=false;
+    }
+  });
 
   async function loadAdminAuditLogs() {
     const host=document.getElementById("nxAdminAuditLogs");
