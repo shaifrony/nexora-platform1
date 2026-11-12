@@ -163,8 +163,9 @@
         const {data,error}=await db.auth.mfa.challenge({factorId}); if(error) throw error;
         mfaChallengeFactorId=factorId; mfaChallengeId=data.id; renderMfaPanel();
       } else {
-        const code=String(document.getElementById("nxMfaCode")?.value||"").trim();
-        if(!/^\\d{6}$/.test(code)) throw new Error("৬ সংখ্যার সঠিক কোড লিখুন।");
+        const rawCode=String(document.getElementById("nxMfaCode")?.value||"").trim();
+        const code=rawCode.replace(/[০-৯]/g, d => String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/[٠-٩]/g, d => String("٠١٢٣٤٥٦٧٨٩".indexOf(d)));
+        if(!/^\d{6}$/.test(code)) throw new Error("৬ সংখ্যার কোড দিন (০-৯ বা 0-9)।");
         if(button.id==="nxMfaVerifyEnroll") {
           const factorId=mfaPendingFactor?.id; if(!factorId) throw new Error("MFA setup session পাওয়া যায়নি।");
           const challenge=await db.auth.mfa.challenge({factorId}); if(challenge.error) throw challenge.error;
