@@ -196,18 +196,21 @@ h2{font-size:24px}
 .product-image{height:180px;object-fit:contain;background:#f7f8fa}
 #productList .card h3{font-size:16px;min-height:38px}
 #productList .price{color:#e65d2f}
-.nx-search-panel{display:grid;gap:10px;margin-bottom:18px}
-.nx-search-main{display:grid;grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:10px}
-.nx-search-main input,.nx-search-main select{min-width:0}
-.nx-advanced-search{border:1px solid #e3e9f0;border-radius:11px;background:#f8fafc;padding:0 14px}
-.nx-advanced-search summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:13px 0;font-weight:700;color:#1769aa}
+.nx-search-panel{margin-bottom:18px}
+.nx-search-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.nx-search-toolbar>#productSearch{min-width:0;width:100%;padding:15px 18px;border-radius:10px;background:#fbfcfd}
+.nx-advanced-search{position:relative;min-width:104px}
+.nx-advanced-search summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid #d6dee8;border-radius:10px;background:#fff;color:#263746;font-weight:700;white-space:nowrap}
 .nx-advanced-search summary::-webkit-details-marker{display:none}
-.nx-advanced-search summary:after{content:"＋";margin-left:auto;font-size:18px}
-.nx-advanced-search[open] summary:after{content:"−"}
-.nx-filter-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;padding:4px 0 12px}
+.nx-advanced-search summary span{font-size:18px;line-height:1}
+.nx-advanced-search[open] summary{border-color:#087f78;color:#087f78;background:#f0faf7}
+.nx-filter-popover{position:absolute;right:0;top:calc(100% + 8px);z-index:15;width:min(620px,calc(100vw - 36px));padding:16px;background:#fff;border:1px solid #e1e7ed;border-radius:13px;box-shadow:0 14px 36px #172b3d20}
+.nx-filter-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.nx-filter-heading .muted{font-size:12px}
+.nx-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;padding:4px 0 12px}
 .nx-filter-grid label{margin:7px 0 5px;font-size:12px}
 .nx-filter-grid input,.nx-filter-grid select{padding:10px;font-size:13px}
-.nx-filter-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:0 0 13px}
+.nx-filter-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #edf0f3}
 .nx-filter-actions button{padding:9px 13px}
 #filterHint{font-size:12px}
 .nx-public-demands{margin-top:22px;padding:16px 18px;background:#f8fafc;border:1px solid #e6ebf0;border-radius:14px}
@@ -221,7 +224,8 @@ h2{font-size:24px}
 .demand-card .demand-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#718096}
 .demand-card .demand-date{font-size:11px;padding:5px 8px}
 .demand-card .demand-description{font-size:12px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-@media(max-width:760px){header{position:relative}nav{width:100%}nav input{flex:1;min-width:130px}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
+@media(max-width:760px){header{position:relative}nav{width:100%}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
+@media(max-width:420px){.nx-search-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}.nx-advanced-search{min-width:88px}.nx-advanced-search summary{padding:0 10px}.nx-filter-popover{right:-1px;width:calc(100vw - 24px);padding:12px}.nx-filter-grid{grid-template-columns:1fr}}
 @media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
 @media(max-width:760px){.nx-search-main{grid-template-columns:1fr}.nx-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.nx-public-demands{padding:12px}.nx-demand-grid{grid-template-columns:1fr}}
@@ -253,30 +257,27 @@ h2{font-size:24px}
       <span id="productCount" class="muted">Products</span>
     </div>
     <div class="nx-search-panel">
-      <div class="nx-search-main">
+      <div class="nx-search-toolbar">
         <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
-        <select id="categoryFilter" aria-label="পণ্যের বিভাগ">
-          <option value="">সব বিভাগ</option>
-          <option>Food & Agriculture</option>
-          <option>Textile & Garments</option>
-          <option>Electronics</option>
-          <option>Industrial Products</option>
-          <option>Handicrafts</option>
-          <option>Other</option>
-        </select>
+        <details class="nx-advanced-search">
+          <summary><span aria-hidden="true">☷</span> Filter</summary>
+          <div class="nx-filter-popover">
+            <div class="nx-filter-heading"><strong>পণ্য বাছাই করুন</strong><span class="muted">ঐচ্ছিক ফিল্টার</span></div>
+            <div class="nx-filter-grid">
+              <div><label for="categoryFilter">Category</label><select id="categoryFilter">
+                <option value="">সব বিভাগ</option><option>Food & Agriculture</option><option>Textile & Garments</option><option>Electronics</option><option>Industrial Products</option><option>Handicrafts</option><option>Other</option>
+              </select></div>
+              <div><label for="priceMin">সর্বনিম্ন দাম</label><input id="priceMin" type="number" min="0" step="any" placeholder="যেমন 100"></div>
+              <div><label for="priceMax">সর্বোচ্চ দাম</label><input id="priceMax" type="number" min="0" step="any" placeholder="যেমন 500"></div>
+              <div><label for="priceCurrency">মুদ্রা</label><select id="priceCurrency"><option value="">সব মুদ্রা</option><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+              <div><label for="qualityFilter">পণ্যের মান / Quality</label><input id="qualityFilter" type="search" placeholder="যেমন Premium, Grade A"></div>
+              <div><label for="originFilter">উৎপত্তির দেশ</label><input id="originFilter" type="search" placeholder="যেমন Bangladesh"></div>
+              <div><label for="specFilter">Specifications</label><input id="specFilter" type="search" placeholder="পণ্যের বৈশিষ্ট্য"></div>
+            </div>
+            <div class="nx-filter-actions"><button type="button" class="light" id="resetProductFilters">Reset</button><span id="filterHint" class="muted" role="status">একাধিক ফিল্টার একসঙ্গে ব্যবহার করতে পারবেন।</span></div>
+          </div>
+        </details>
       </div>
-      <details class="nx-advanced-search">
-        <summary><span>Advanced Filters</span><span class="muted">দাম, মান, দেশ ও বৈশিষ্ট্য অনুযায়ী খুঁজুন</span></summary>
-        <div class="nx-filter-grid">
-          <div><label for="priceMin">সর্বনিম্ন দাম</label><input id="priceMin" type="number" min="0" step="any" placeholder="যেমন 100"></div>
-          <div><label for="priceMax">সর্বোচ্চ দাম</label><input id="priceMax" type="number" min="0" step="any" placeholder="যেমন 500"></div>
-          <div><label for="priceCurrency">মুদ্রা</label><select id="priceCurrency"><option value="">সব মুদ্রা</option><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
-          <div><label for="qualityFilter">পণ্যের মান / Quality</label><input id="qualityFilter" type="search" placeholder="যেমন Premium, Grade A"></div>
-          <div><label for="originFilter">উৎপত্তির দেশ</label><input id="originFilter" type="search" placeholder="যেমন Bangladesh"></div>
-          <div><label for="specFilter">Specifications</label><input id="specFilter" type="search" placeholder="পণ্যের বৈশিষ্ট্য"></div>
-        </div>
-        <div class="nx-filter-actions"><button type="button" class="light" id="resetProductFilters">Reset Filters</button><span id="filterHint" class="muted" role="status">একাধিক ফিল্টার একসঙ্গে ব্যবহার করতে পারবেন।</span></div>
-      </details>
     </div>
     <div id="productList" class="grid" aria-live="polite"></div>
 
