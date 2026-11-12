@@ -196,8 +196,23 @@ h2{font-size:24px}
 .product-image{height:180px;object-fit:contain;background:#f7f8fa}
 #productList .card h3{font-size:16px;min-height:38px}
 #productList .price{color:#e65d2f}
+.nx-search-nav{display:inline-flex;align-items:center;gap:7px}
+.nx-search-nav span{font-size:20px;line-height:1}
+.nx-market-tools{grid-template-columns:minmax(0,2fr) minmax(190px,1fr)!important;gap:10px}
+.nx-public-demands{margin-top:22px;padding:16px 18px;background:#f8fafc;border:1px solid #e6ebf0;border-radius:14px}
+.nx-public-demands .section-head{margin-bottom:10px;padding-bottom:8px}
+.nx-public-demands .section-head h2{font-size:19px}
+.nx-public-demands .section-head .muted{margin:2px 0 0}
+.nx-demand-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.demand-card{min-width:0;padding:12px 14px;background:#fff;border:1px solid #e4eaf0;border-radius:11px}
+.demand-card h3{margin:6px 0;font-size:15px;color:#172b3d}
+.demand-card p{margin:4px 0}
+.demand-card .demand-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#718096}
+.demand-card .demand-date{font-size:11px;padding:5px 8px}
+.demand-card .demand-description{font-size:12px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 @media(max-width:760px){header{position:relative}nav{width:100%}nav input{flex:1;min-width:130px}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
 @media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
+@media(max-width:600px){.nx-market-tools{grid-template-columns:1fr!important}.nx-public-demands{padding:12px}.nx-demand-grid{grid-template-columns:1fr}}
 
   #nxAdminManagement .nx-permission-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
   #nxAdminManagement .nx-permission-option{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin:0;font-weight:400}
@@ -210,9 +225,9 @@ h2{font-size:24px}
 
 <header>
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
-  <nav>
+  <nav aria-label="প্রধান নেভিগেশন">
     <button type="button" onclick="showSection('market')">Marketplace</button>
-    <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্য অনুসন্ধান করুন…">
+    <button type="button" class="nx-search-nav" onclick="document.getElementById('market').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.getElementById('productSearch').focus(),250)"><span aria-hidden="true">⌕</span> Search</button>
     <button type="button" onclick="showSection('accountSection')">Login / Register</button>
   </nav>
 </header>
@@ -225,7 +240,8 @@ h2{font-size:24px}
       <h2>Marketplace</h2>
       <span id="productCount" class="muted">Products</span>
     </div>
-    <div class="grid">
+    <div class="grid nx-market-tools">
+      <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
       <select id="categoryFilter" aria-label="পণ্যের বিভাগ">
         <option value="">সব বিভাগ</option>
         <option>Food & Agriculture</option>
@@ -238,13 +254,12 @@ h2{font-size:24px}
     </div>
     <div id="productList" class="grid" aria-live="polite"></div>
 
-    <div id="publicDemandBoard" class="section">
+    <div id="publicDemandBoard" class="section nx-public-demands">
       <div class="section-head">
-        <h2>Public Buyer Demands</h2>
-        <span class="tag">Open Wholesale Requirements</span>
+        <div><h2>Buyer Demands</h2><p class="muted">প্রকাশ্য পাইকারি চাহিদা</p></div>
+        <span class="tag">Public</span>
       </div>
-      <p class="muted">প্রকাশিত ও চলমান পাইকারি চাহিদা সবাই দেখতে পারবেন। Buyer-এর ব্যক্তিগত পরিচয় এখানে প্রকাশ করা হয় না।</p>
-      <div id="demandList" aria-live="polite">প্রকাশ্য চাহিদা লোড হচ্ছে…</div>
+      <div id="demandList" class="nx-demand-grid" aria-live="polite">প্রকাশ্য চাহিদা লোড হচ্ছে…</div>
     </div>
   </section>
 
