@@ -90,6 +90,16 @@
   }
 
   window.showSection = function(id) {
+    if (id === "postDemand" && !(signedIn() && activeBuyer())) {
+      document.querySelectorAll("main section.section").forEach(s => s.classList.add("hidden"));
+      $("accountSection")?.classList.remove("hidden");
+      const hint = $("nxCurrent");
+      if (hint) hint.textContent = signedIn()
+        ? "Post a Demand ব্যবহার করতে Active Buyer অ্যাকাউন্ট প্রয়োজন।"
+        : "Post a Demand করতে আগে Buyer হিসেবে লগইন করুন।";
+      $("accountSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     if (id === "market") loadProducts();
     if (id === "demandBoard") loadDemands();
