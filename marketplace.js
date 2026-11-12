@@ -708,21 +708,50 @@
         .select("id,product_code,product_name,category,origin,price,currency,listing_status")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
-      $("sellerProducts").innerHTML = (data || []).length ? data.map(p => `
-        <div class="offer"><strong>${esc(p.product_name)}</strong>
-        <p class="muted">${esc(p.category)} | ${esc(p.origin)}</p>
-        <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
-        <p class="muted">Product ID: ${esc(p.product_code)} | Approval: ${esc(p.listing_status)}</p>
-        ${p.listing_status === "pending" ? `<button class="danger" data-delete-product="${esc(p.id)}">Delete</button>` : ""}
-        </div>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>';
-      $("sellerProducts").querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
+      const products = data || [];
+      const approvedCount = products.filter(p => p.listing_status === "approved").length;
+      const pendingCount = products.filter(p => p.listing_status === "pending").length;
+      const setMetric = (id, value) => { const node = $(id); if (node) node.textContent = String(value); };
+      setMetric("nxSellerTotalProducts", products.length);
+      setMetric("nxSellerApprovedProducts", approvedCount);
+      setMetric("nxSellerPendingProducts", pendingCount);
+      const businessStatus = state.business?.approval_status || "not_created";
+      setMetric("nxSellerBusinessStatus", ({
+        approved: "অনুমোদিত", pending: "পর্যালোচনাধীন",
+        rejected: "প্রত্যাখ্যাত", not_created: "তৈরি হয়নি"
+      })[businessStatus] || "অবস্থা অজানা");
+
+      const productHost = $("sellerProducts");
+      productHost.innerHTML = products.length ? products.map(p => `
+        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.product_code,p.origin].join(" ").toLowerCase())}">
+          <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(p.listing_status || "unknown")}</span></div>
+          <p class="muted">${esc(p.category)} | ${esc(p.origin)}</p>
+          <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
+          <p class="muted">Product ID: ${esc(p.product_code)}</p>
+          ${p.listing_status === "pending" ? `<button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button>` : ""}
+        </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে আপনার প্রথম পাইকারি পণ্য যোগ করুন।</p>';
+      productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
+
+      const applyProductFilters = () => {
+        const query = String($("nxSellerProductSearch")?.value || "").trim().toLowerCase();
+        const selectedStatus = $("nxSellerProductStatus")?.value || "all";
+        productHost.querySelectorAll("[data-seller-product]").forEach(card => {
+          const matchesText = !query || (card.dataset.search || "").includes(query);
+          const matchesStatus = selectedStatus === "all" || card.dataset.status === selectedStatus ||
+            (selectedStatus === "rejected" && ["rejected","declined"].includes(card.dataset.status));
+          card.hidden = !(matchesText && matchesStatus);
+        });
+      };
+      $("nxSellerProductSearch")?.addEventListener("input", applyProductFilters);
+      $("nxSellerProductStatus")?.addEventListener("change", applyProductFilters);
+      applyProductFilters();
 
       const matchedHost = $("matchedDemands");
       if (!state.business || state.business.approval_status !== "approved") {
         matchedHost.innerHTML = '<p class="muted">Business Profile Admin অনুমোদনের পর প্রাসঙ্গিক Buyer Demand ও Offer পাঠানোর সুবিধা চালু হবে।</p>';
         return;
       }
-      const approvedCategories = [...new Set((data || []).filter(p => p.listing_status === "approved").map(p => p.category).filter(Boolean))];
+      const approvedCategories = [...new Set(products.filter(p => p.listing_status === "approved").map(p => p.category).filter(Boolean))];
       if (!approvedCategories.length) {
         matchedHost.innerHTML = '<p class="muted">আপনার কোনো Admin অনুমোদিত পণ্য নেই। পণ্য অনুমোদিত হলে সংশ্লিষ্ট Category-এর Buyer Demand এখানে দেখানো হবে।</p>';
         return;
