@@ -630,7 +630,21 @@
   $("resetProductFilters")?.addEventListener("click", () => {
     ["productSearch","priceMin","priceMax","qualityFilter","originFilter","specFilter"].forEach(id => { if ($(id)) $(id).value = ""; });
     ["categoryFilter","priceCurrency"].forEach(id => { if ($(id)) $(id).value = ""; });
+    if ($("filterHint")) $("filterHint").textContent = "সব ফিল্টার মুছে ফেলা হয়েছে।";
     renderProducts();
+  });
+  $("applyProductFilters")?.addEventListener("click", () => {
+    const hasPriceRange = Boolean(($("priceMin")?.value || "").trim() || ($("priceMax")?.value || "").trim());
+    const currency = $("priceCurrency")?.value || "";
+    if (hasPriceRange && !currency) {
+      if ($("filterHint")) $("filterHint").textContent = "দামের ফিল্টার ব্যবহার করতে আগে মুদ্রা নির্বাচন করুন।";
+      $("priceCurrency")?.focus();
+      return;
+    }
+    renderProducts();
+    const filterDetails = $("applyProductFilters")?.closest("details");
+    if (filterDetails) filterDetails.open = false;
+    $("productList")?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
   $("nxAdmin")?.addEventListener("click", handleAssistantModeration);
   window.addEventListener("nexora:auth-change", async () => {
