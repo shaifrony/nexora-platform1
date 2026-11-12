@@ -497,6 +497,53 @@
       if (button) { button.disabled = false; button.innerHTML = '<span aria-hidden="true">▣</span> Chat with Seller'; }
     }
   }
+  async function loadListingReviews(listingType, listingId, hostId) {
+    const host=$(hostId); if(!host)return;
+    host.innerHTML='<p class="muted">Review লোড হচ্ছে…</p>';
+    try{
+      const {data,error}=await client().from("listing_reviews")
+        .select("id,rating,review_title,review_body,reviewer_label,purchased_quantity,created_at")
+        .eq("listing_type",listingType).eq("listing_id",listingId)
+        .eq("review_status","published").order("created_at",{ascending:false}).limit(30);
+      if(error)throw error;
+      const rows=data||[];
+      const average=rows.length?rows.reduce((sum,r)=>sum+Number(r.rating),0)/rows.length:0;
+      let eligibility={can_review:false,already_reviewed:false};
+      if(activeBuyer()&&signedIn()){
+        const result=await client().rpc("get_my_review_eligibility",{p_listing_type:listingType,p_listing_id:listingId});
+        if(!result.error&&Array.isArray(result.data)&&result.data[0])eligibility=result.data[0];
+      }
+      const summary=rows.length
+        ? '<div class="nx-review-summary"><strong>★ '+average.toFixed(1)+'/5</strong><span>'+rows.length+'টি Verified Review</span></div>'
+        : '<p class="muted">এখনো কোনো Verified Review নেই।';
+      const cards=rows.map(r=>'<article class="nx-review-card"><div class="nx-review-card-top"><strong>'+esc(r.reviewer_label||"Verified Buyer")+'</strong><span class="nx-review-stars" aria-label="'+Number(r.rating)+' out of 5 stars">'+('★'.repeat(Number(r.rating)))+('☆'.repeat(5-Number(r.rating)))+'</span></div>'+(r.review_title?'<h4>'+esc(r.review_title)+'</h4>':'')+'<p>'+esc(r.review_body)+'</p><small class="muted">'+new Date(r.created_at).toLocaleDateString('bn-BD')+(r.purchased_quantity?' · ক্রয়ের পরিমাণ: '+esc(r.purchased_quantity):'')+'</small></article>').join("");
+      const form=eligibility.can_review
+        ? '<form class="nx-review-form" data-nx-review-form><h3>আপনার কেনাকাটার অভিজ্ঞতা লিখুন</h3><label>Rating<select name="rating" required><option value="5">★★★★★ — চমৎকার</option><option value="4">★★★★☆ — ভালো</option><option value="3">★★★☆☆ — মোটামুটি</option><option value="2">★★☆☆☆ — খারাপ</option><option value="1">★☆☆☆☆ — খুব খারাপ</option></select></label><label>শিরোনাম (ঐচ্ছিক)<input name="title" maxlength="100" placeholder="সংক্ষেপে অভিজ্ঞতা"></label><label>আপনার Review<textarea name="body" minlength="10" maxlength="2000" required placeholder="আপনার প্রকৃত কেনাকাটার অভিজ্ঞতা লিখুন"></textarea></label><button class="primary" type="submit">Verified Review জমা দিন</button><p class="muted" data-review-status aria-live="polite"></p></form>'
+        : eligibility.already_reviewed
+          ? '<p class="nx-review-note">আপনি এই Listing-এর জন্য ইতিমধ্যে Review দিয়েছেন।</p>'
+          : '<p class="nx-review-note">শুধু NEXORA-তে সম্পন্ন ও যাচাইকৃত কেনাকাটা/সেবা গ্রহণকারী Buyer Review দিতে পারবেন। অর্ডার সম্পন্ন হওয়ার রেকর্ড না থাকলে Review দেওয়া যাবে না।</p>';
+      host.innerHTML='<div class="nx-reviews-heading"><h3>Review & Rating</h3>'+summary+'</div>'+cards+form;
+      const reviewForm=host.querySelector("[data-nx-review-form]");
+      reviewForm?.addEventListener("submit",async event=>{
+        event.preventDefault();
+        const button=reviewForm.querySelector("button[type=submit]"),status=reviewForm.querySelector("[data-review-status]");
+        const values=new FormData(reviewForm);button.disabled=true;status.textContent="জমা হচ্ছে…";
+        try{
+          const result=await client().rpc("submit_verified_listing_review",{
+            p_listing_type:listingType,p_listing_id:listingId,p_rating:Number(values.get("rating")),
+            p_review_title:values.get("title")||null,p_review_body:values.get("body")
+          });
+          if(result.error)throw result.error;
+          say("আপনার Verified Review জমা হয়েছে।",true);
+          await loadListingReviews(listingType,listingId,hostId);
+        }catch(err){status.textContent="Review জমা হয়নি: "+(err.message||"অজানা সমস্যা");button.disabled=false;}
+      });
+    }catch(err){
+      host.innerHTML='<p class="muted">Review লোড করা যায়নি। প্রয়োজনীয় Database Migration এখনো প্রয়োগ না হলে এটি স্বাভাবিক।</p>';
+      console.warn("NEXORA reviews:",err.message);
+    }
+  }
+
   function renderProducts() {
     const businessMap = state.businessMap;
     const host = $("productList");
@@ -537,7 +584,9 @@
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
         <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
+        <section id="nxProductReviews" class="nx-listing-reviews" aria-live="polite"></section>
       `;
+      loadListingReviews("product",selected.id,"nxProductReviews");
       const contactArea = $("productInquiryArea");
       if (contactArea) contactArea.classList.toggle("hidden", !(activeBuyer() && signedIn()));
       const controls = $("productInquiryControls");
@@ -840,7 +889,8 @@
             <div class="nx-service-detail-grid">
               <section class="nx-service-detail-main"><h2>সেবার বিবরণ</h2><p>${esc(selected.description)}</p><h3>সেবার এলাকা</h3><p>${esc([selected.service_area,selected.city,selected.country].filter(Boolean).join(", ")||"তথ্য দেওয়া হয়নি")}</p><h3>সময় ও Availability</h3><p>${esc(selected.availability||"সেবাদাতার সঙ্গে আলোচনা করুন")}</p></section>
               <aside class="nx-service-detail-aside"><span class="nx-service-detail-kicker">PRICE</span><strong>${amount}${esc(servicePriceLabels[selected.price_basis]||"আলোচনা সাপেক্ষে")}</strong><small>Service ID: ${esc(selected.service_code)}</small><p>সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা প্রকাশ করা হয় না। যোগাযোগের সুবিধা চালু হলে এই পৃষ্ঠা থেকে অনুরোধ করা যাবে।</p></aside>
-            </div>`;
+            </div><section id="nxServiceReviews" class="nx-listing-reviews" aria-live="polite"></section>`;
+          loadListingReviews("service",selected.id,"nxServiceReviews");
         }
       }
       return;
