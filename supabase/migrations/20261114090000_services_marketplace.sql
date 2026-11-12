@@ -83,8 +83,14 @@ using (seller_id=(select auth.uid()) and listing_status='pending');
 
 create policy service_listings_admin_all
 on public.service_listings for all to authenticated
-using (public.is_nexora_admin())
-with check (public.is_nexora_admin());
+using (
+  public.is_nexora_admin()
+  and (select auth.jwt()->>'aal') = 'aal2'
+)
+with check (
+  public.is_nexora_admin()
+  and (select auth.jwt()->>'aal') = 'aal2'
+);
 
 comment on table public.service_listings is
   'Service offers. Exact home address and personal phone are intentionally not collected or publicly exposed.';
