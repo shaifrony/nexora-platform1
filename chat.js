@@ -102,6 +102,7 @@
       head.textContent="যোগাযোগের অনুরোধ";
       host.innerHTML='<div class="offer">এই ব্যবহারকারী আপনার সঙ্গে যোগাযোগ করতে চান। গ্রহণ করলে চ্যাট শুরু হবে।<div class="form-actions"><button class="primary" id="acceptChatInvite">Accept</button><button class="danger" id="declineChatInvite">Decline</button></div></div>';
       $("chatComposer").classList.add("hidden");
+      $("chatCallPanel")?.classList.add("hidden");
       $("acceptChatInvite").onclick=()=>respondInvite(id,"accepted");
       $("declineChatInvite").onclick=()=>respondInvite(id,"declined");
       return;
@@ -110,6 +111,7 @@
     const others=state.participants.filter(p=>p.user_id!==user().id);
     head.textContent="Private Chat • "+others.length+" participant(s)";
     $("chatComposer").classList.remove("hidden");
+    $("chatCallPanel")?.classList.remove("hidden");
     await loadMessages(id);
     state.channel=db().channel("nexora-chat-"+id)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+id},payload=>{
@@ -141,14 +143,22 @@
     host.scrollTop=host.scrollHeight;
   }
 
-  function appendMessage(m){
+  async function appendMessage(m){
     const host=$("chatMessages");if(!host||host.querySelector('[data-message="'+m.id+'"]'))return;
     const own=m.sender_id===user()?.id;
     const item=document.createElement("div");
     item.className="offer";item.dataset.message=m.id;
     const time=new Date(m.created_at).toLocaleString();
     item.innerHTML=`<strong>${own?"You":"NEXORA User"}</strong><p>${esc(m.deleted_at?"এই বার্তাটি মুছে ফেলা হয়েছে।":m.body)}</p><span class="muted">${esc(time)}</span>`;
-    host.appendChild(item);host.scrollTop=host.scrollHeight;
+    host.appendChild(item);
+    if(m.message_type==="image"||m.message_type==="file"){
+      const {data:attachment}=await db().from("message_attachments").select("storage_path,file_name").eq("message_id",m.id).maybeSingle();
+      if(attachment){
+        const {data:signed}=await db().storage.from("nexora-chat-files").createSignedUrl(attachment.storage_path,3600);
+        if(signed?.signedUrl){const link=document.createElement("a");link.href=signed.signedUrl;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Open / Download: "+attachment.file_name;link.className="secondary";link.style.display="inline-block";link.style.padding="8px 10px";link.style.borderRadius="7px";item.appendChild(link);}
+      }
+    }
+    host.scrollTop=host.scrollHeight;
   }
 
   async function sendMessage(e){
