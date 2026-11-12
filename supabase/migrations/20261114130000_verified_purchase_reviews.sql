@@ -4,6 +4,7 @@ begin;
 
 create schema if not exists private;
 revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to service_role;
 
 create table if not exists private.review_purchase_eligibility (
   id uuid primary key default gen_random_uuid(),
@@ -45,6 +46,8 @@ create index if not exists listing_reviews_public_summary_idx
   on public.listing_reviews(listing_type, listing_id, review_status, created_at desc);
 create index if not exists listing_reviews_buyer_idx
   on public.listing_reviews(buyer_id, created_at desc);
+create unique index if not exists listing_reviews_one_per_buyer_listing_idx
+  on public.listing_reviews(listing_type, listing_id, buyer_id);
 
 alter table public.listing_reviews enable row level security;
 revoke all on public.listing_reviews from public, anon, authenticated;
@@ -124,8 +127,8 @@ declare
 begin
   if v_buyer is null then raise exception 'Authentication required'; end if;
   if p_listing_type not in ('product','service','logistics') then raise exception 'Invalid listing type'; end if;
-  if p_rating < 1 or p_rating > 5 then raise exception 'Rating must be between 1 and 5'; end if;
-  if length(btrim(coalesce(p_review_body,''))) < 10 or length(btrim(p_review_body)) > 2000 then
+  if p_rating is null or p_rating < 1 or p_rating > 5 then raise exception 'Rating must be between 1 and 5'; end if;
+  if p_review_body is null or length(btrim(p_review_body)) < 10 or length(btrim(p_review_body)) > 2000 then
     raise exception 'Review must contain 10 to 2000 characters';
   end if;
   if p_review_title is not null and length(btrim(p_review_title)) not between 2 and 100 then
