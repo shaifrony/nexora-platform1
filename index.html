@@ -650,6 +650,18 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-service-detail-aside p{margin-top:18px;color:#687c8a;font-size:11px;line-height:1.7}
 @media(max-width:600px){.nx-product-card-media{height:155px}.nx-product-card-body{padding:12px}.nx-product-card-body h3,.nx-service-card-body h3{font-size:15px}.nx-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nx-service-card-art{min-height:112px}.nx-service-card-art>span{width:50px;height:50px;font-size:26px}.nx-service-card-body{padding:11px}.nx-service-card-description{font-size:11px;min-height:65px}.nx-service-detail-hero{align-items:flex-start;padding:16px;gap:12px}.nx-service-detail-icon{flex-basis:55px;width:55px;height:55px;font-size:28px}.nx-service-detail-grid{grid-template-columns:1fr}.nx-service-detail-main,.nx-service-detail-aside{padding:14px}}
 @media(max-width:360px){.nx-service-grid{grid-template-columns:1fr}}
+
+/* Product detail page visual hierarchy */
+#productDetailPanel.nx-product-detail-panel{padding:clamp(16px,3vw,30px);border:1px solid #e3eaf0;border-radius:18px;background:#fff;box-shadow:0 7px 24px #10243a0b}
+#productDetailPanel.nx-product-detail-panel>h2{margin:14px 0;font-size:clamp(24px,4vw,34px);color:#17364a}
+#productDetailPanel.nx-product-detail-panel>.grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+#productDetailPanel.nx-product-detail-panel .product-image{height:230px;border-radius:13px}
+#productDetailPanel.nx-product-detail-panel>h3{margin:22px 0 10px;color:#17364a}
+#productDetailPanel.nx-product-detail-panel>p{line-height:1.75;color:#5f7282}
+#productDetailPanel.nx-product-detail-panel>.price{color:#087f78;font-size:22px}
+#productDetailPanel.nx-product-detail-panel>.nx-product-contact{margin-top:24px;padding:18px;border:1px solid #dcebe6;border-radius:14px;background:#f6fbf9}
+#productDetailPanel.nx-product-detail-panel>.nx-product-contact h3{margin:0 0 12px}
+@media(max-width:600px){#productDetailPanel.nx-product-detail-panel .product-image{height:170px}}
 </style>
 </head>
 
@@ -725,7 +737,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       </div>
     </section>
     <div class="nx-market-section-title"><div><span class="nx-market-eyebrow">EXPLORE SUPPLIERS</span><h2>পণ্য আবিষ্কার করুন</h2></div><span class="muted">পণ্য বাছাই ও অনুসন্ধান করুন</span></div>
-    <div id="productDetailPanel" class="card hidden" aria-live="polite"></div>
+    <div id="productDetailPanel" class="card nx-product-detail-panel hidden" aria-live="polite"></div>
     <div class="nx-search-panel">
       <div class="nx-search-toolbar">
         <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
