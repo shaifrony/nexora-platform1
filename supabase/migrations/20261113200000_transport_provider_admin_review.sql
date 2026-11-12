@@ -211,9 +211,9 @@ returns jsonb
 language sql
 security invoker
 set search_path = ''
-as $
+as $rpc$
   select private.review_transport_provider(p_provider_id,p_action,p_reason);
-$;
+$rpc$;
 
 create or replace function public.review_transport_vehicle(
   p_vehicle_id uuid,
@@ -224,9 +224,9 @@ returns jsonb
 language sql
 security invoker
 set search_path = ''
-as $
+as $rpc$
   select private.review_transport_vehicle(p_vehicle_id,p_action,p_reason);
-$;
+$rpc$;
 
 revoke all on function public.review_transport_provider(uuid,text,text) from public,anon;
 revoke all on function public.review_transport_vehicle(uuid,text,text) from public,anon;
