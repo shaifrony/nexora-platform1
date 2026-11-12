@@ -334,7 +334,7 @@
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
       } else render();
       if (!wasSignedIn && currentUser && profile?.role === "buyer" && profile?.account_status === "active") {
-        window.showSection?.("market");
+        window.showSection?.("buyerDashboard");
       }
     }
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
