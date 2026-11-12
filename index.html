@@ -202,6 +202,54 @@ h2{font-size:24px}
     <div id="productList" class="grid"></div>
   </section>
 
+  <!-- ACCOUNT / AUTHENTICATION -->
+  <section id="accountSection" class="section hidden">
+    <div class="section-head"><h2>Login / Register</h2></div>
+    <div class="card">
+      <p id="nxCurrent" class="muted" aria-live="polite">আপনি লগইন করেননি।</p>
+      <p id="nxMessage" class="muted" role="status" aria-live="polite"></p>
+      <div id="nxLogged" class="hidden">
+        <p id="nxProfile" class="muted"></p>
+        <form id="nxRoleRequest">
+          <label>Seller বা Porter হিসেবে কাজ করতে আবেদন করুন</label>
+          <select name="requested_role" required>
+            <option value="">অ্যাকাউন্টের ধরন নির্বাচন করুন</option>
+            <option value="seller">Seller</option>
+            <option value="porter">Porter</option>
+          </select>
+          <div class="form-actions"><button class="secondary" type="submit">আবেদন পাঠান</button></div>
+        </form>
+        <button id="nxLogout" class="danger" type="button">Logout</button>
+      </div>
+      <div class="grid">
+        <form id="nxLogin" class="card">
+          <h3>Login</h3>
+          <label>Email *</label><input name="email" type="email" autocomplete="email" required>
+          <label>Password *</label><input name="password" type="password" autocomplete="current-password" required>
+          <div class="form-actions"><button class="primary" type="submit">Login</button></div>
+        </form>
+        <form id="nxSignup" class="card">
+          <h3>Register</h3>
+          <label>আপনার নাম *</label><input name="full_name" required autocomplete="name">
+          <label>Email *</label><input name="email" type="email" required autocomplete="email">
+          <label>Password *</label><input name="password" type="password" minlength="8" required autocomplete="new-password">
+          <label>অ্যাকাউন্টের ধরন *</label>
+          <select name="role" required>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+            <option value="porter">Porter</option>
+          </select>
+          <div class="form-actions"><button class="primary" type="submit">Register</button></div>
+        </form>
+      </div>
+    </div>
+    <div id="nxAdmin" class="card hidden">
+      <h3>Admin Dashboard</h3>
+      <h4>Pending Role Requests</h4>
+      <div id="nxRequests" class="muted">আবেদন লোড হচ্ছে…</div>
+    </div>
+  </section>
+
   <!-- POST DEMAND -->
   <section id="postDemand" class="section hidden">
     <div class="section-head">
