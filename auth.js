@@ -118,7 +118,7 @@
     currentUser = session?.user || null;
     try {
       await loadProfile();
-      if (currentUser && profile && profile.account_status !== "active") {
+      if (currentUser && profile && profile.account_status !== "active" && !recoveryMode) {
         await db.auth.signOut({ scope: "global" });
         currentUser = null; profile = null; adminStaff = null;
         render();
