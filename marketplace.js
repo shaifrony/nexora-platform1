@@ -232,6 +232,8 @@
     document.querySelectorAll("main section.section").forEach(s => s.classList.toggle("hidden", s.id !== id));
     currentSection = id;
     if (id === "market") loadProducts();
+    if (id === "servicesMarketplace") loadServicesMarketplace();
+    if (id === "accountSection") loadAdminServiceQueue();
     if (id === "accountSection") loadAdminActions();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
@@ -720,6 +722,117 @@
     await loadDemands();
   }
 
+  const serviceCategoryLabels = {
+    household:"গৃহস্থালি সেবা",tutoring:"শিক্ষা ও টিউশন",plumbing:"প্লাম্বিং",
+    electrical:"ইলেকট্রিক্যাল",mechanic:"মেকানিক ও মেরামত",
+    appliance_repair:"ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত",
+    it_support:"আইটি ও কম্পিউটার",beauty_laundry:"বিউটি ও লন্ড্রি",other:"অন্যান্য"
+  };
+  const servicePriceLabels = {
+    negotiable:"আলোচনা সাপেক্ষে",per_hour:"প্রতি ঘণ্টা",per_day:"প্রতি দিন",
+    per_visit:"প্রতি ভিজিট",per_job:"প্রতি কাজ",per_month:"প্রতি মাস"
+  };
+  function renderServiceCards(rows,host) {
+    if(!host)return;
+    if(!rows.length){host.innerHTML='<div class="card muted">এই অনুসন্ধানে কোনো অনুমোদিত সেবা পাওয়া যায়নি।</div>';return;}
+    host.innerHTML=rows.map(s=>'<article class="card"><span class="tag">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+'</span><h3>'+esc(s.service_name)+'</h3><p>'+esc(s.description)+'</p><p class="muted">এলাকা: '+esc(s.service_area)+' · '+esc([s.city,s.country].filter(Boolean).join(", "))+'</p><p class="price">'+(s.price_amount!==null&&s.price_amount!==undefined?esc(s.price_amount.toLocaleString("en-US"))+" "+esc(s.currency)+" · ":"")+esc(servicePriceLabels[s.price_basis]||"আলোচনা সাপেক্ষে")+'</p><p class="muted">সময়: '+esc(s.availability||"সেবাদাতার সঙ্গে আলোচনা করুন")+'</p><small class="muted">Service ID: '+esc(s.service_code)+'</small></article>').join("");
+  }
+  async function loadServicesMarketplace() {
+    const host=$("nxServiceList"); if(!host)return;
+    host.innerHTML='<p class="muted">সেবা লোড হচ্ছে…</p>';
+    try{
+      const {data,error}=await client().from("service_listings")
+        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability")
+        .eq("listing_status","approved").order("created_at",{ascending:false}).limit(100);
+      if(error)throw error;
+      state.services=data||[];
+      applyServiceFilters();
+    }catch(err){host.innerHTML='<div class="card muted">সেবা তালিকা এখনো চালু হয়নি। Database migration প্রয়োগের পর এখানে অনুমোদিত সেবা দেখা যাবে।</div>';console.warn("Services marketplace unavailable:",err.message);}
+  }
+  function applyServiceFilters(){
+    const term=String($("nxServiceSearch")?.value||"").trim().toLowerCase();
+    const category=$("nxServiceCategoryFilter")?.value||"";
+    const area=String($("nxServiceAreaFilter")?.value||"").trim().toLowerCase();
+    const rows=(state.services||[]).filter(s=>
+      (!category||s.service_category===category)&&
+      (!area||[s.service_area,s.city,s.country].join(" ").toLowerCase().includes(area))&&
+      (!term||[s.service_name,s.description,s.service_area,s.city,s.country,serviceCategoryLabels[s.service_category]].join(" ").toLowerCase().includes(term))
+    );
+    if($("nxServiceCount"))$("nxServiceCount").textContent=rows.length+"টি সেবা";
+    renderServiceCards(rows,$("nxServiceList"));
+  }
+  ["nxServiceSearch","nxServiceCategoryFilter","nxServiceAreaFilter"].forEach(id=>{
+    $(id)?.addEventListener($(id)?.tagName==="SELECT"?"change":"input",applyServiceFilters);
+  });
+  async function loadSellerServices(){
+    const host=$("nxSellerServiceList"); if(!host)return;
+    if(!activeSeller()||!signedIn()){host.textContent="সক্রিয় Seller হিসেবে লগইন করুন।";return;}
+    try{
+      const {data,error}=await client().from("service_listings")
+        .select("id,service_code,service_name,service_category,description,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note")
+        .eq("seller_id",user().id).order("created_at",{ascending:false});
+      if(error)throw error;
+      if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
+      host.innerHTML=data.map(s=>'<article class="card"><div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button>':'')+'</article>').join("");
+      host.querySelectorAll("[data-delete-service]").forEach(b=>b.addEventListener("click",()=>deleteService(b.dataset.deleteService)));
+    }catch(err){host.innerHTML='<p class="muted">সেবা তালিকা লোড হয়নি: '+esc(err.message)+'</p>';}
+  }
+  async function deleteService(id){
+    if(!confirm("এই pending সেবাটি মুছে ফেলতে চান?"))return;
+    const {error}=await client().from("service_listings").delete().eq("id",id);
+    if(error)return say("সেবা মুছতে সমস্যা: "+error.message);
+    say("Pending সেবা মুছে ফেলা হয়েছে।",true);await loadSellerServices();
+  }
+  async function loadAdminServiceQueue(){
+    const host=$("nxAdminServiceQueue");if(!host)return;
+    if(!signedIn()||profile()?.role!=="admin"||profile()?.account_status!=="active"){
+      host.textContent="শুধু সক্রিয় Admin সেবা পর্যালোচনা করতে পারবেন।";return;
+    }
+    host.innerHTML='<p class="muted">সেবা আবেদন লোড হচ্ছে…</p>';
+    try{
+      const {data,error}=await client().from("service_listings")
+        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,seller_id")
+        .in("listing_status",["pending","approved"]).order("created_at",{ascending:true}).limit(100);
+      if(error)throw error;
+      host.innerHTML=(data||[]).map(s=>'<article class="card"><div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(s.listing_status)+'</span></div><p>'+esc(s.description)+'</p><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc([s.city,s.country].join(", "))+'</p><p class="muted">'+esc(servicePriceLabels[s.price_basis]||s.price_basis)+' '+(s.price_amount!==null?esc(s.price_amount)+" "+esc(s.currency):"")+'</p>'+(s.listing_status==="pending"?'<div class="grid"><button class="primary" type="button" data-service-review="approve" data-service-id="'+esc(s.id)+'">Approve</button><button class="danger" type="button" data-service-review="reject" data-service-id="'+esc(s.id)+'">Reject</button></div>':'')+'</article>').join("")||'<p class="muted">কোনো Pending সেবা নেই।</p>';
+      host.querySelectorAll("[data-service-review]").forEach(b=>b.addEventListener("click",()=>reviewService(b.dataset.serviceId,b.dataset.serviceReview)));
+    }catch(err){host.textContent="সেবা পর্যালোচনা লোড হয়নি: "+err.message;}
+  }
+  async function reviewService(id,action){
+    const reason=action==="reject"?prompt("প্রত্যাখ্যানের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):"):"";
+    if(action==="reject"&&(!reason||reason.trim().length<5))return say("প্রত্যাখ্যানের কারণ আবশ্যক।");
+    const {error}=await client().from("service_listings").update({
+      listing_status:action==="approve"?"approved":"rejected",
+      admin_note:reason.trim()||null,reviewed_by:user().id,reviewed_at:new Date().toISOString()
+    }).eq("id",id).eq("listing_status","pending");
+    if(error)return say("সেবা পর্যালোচনা ব্যর্থ: "+error.message);
+    say(action==="approve"?"সেবা অনুমোদিত হয়েছে।":"সেবা প্রত্যাখ্যান করা হয়েছে।",true);
+    await loadAdminServiceQueue();await loadServicesMarketplace();
+  }
+  $("nxServiceForm")?.addEventListener("submit",async e=>{
+    e.preventDefault();const form=e.currentTarget;
+    if(!activeSeller()||!signedIn())return say("সেবা যোগ করতে সক্রিয় Seller হিসেবে লগইন করুন।");
+    if(!state.business||state.business.approval_status!=="approved")return say("সেবা যোগ করার আগে Admin-এর Business Profile অনুমোদন প্রয়োজন।");
+    const v=Object.fromEntries(new FormData(form));
+    if(v.price_amount!==""&&(!Number.isFinite(Number(v.price_amount))||Number(v.price_amount)<0))return say("সঠিক মূল্য লিখুন।");
+    setBusy(form,true);
+    try{
+      const {error}=await client().from("service_listings").insert({
+        seller_id:user().id,business_id:state.business.id,
+        service_name:v.service_name.trim(),service_category:v.service_category,
+        description:v.description.trim(),country:v.country.trim(),city:v.city.trim(),
+        service_area:v.service_area.trim(),price_basis:v.price_basis,
+        price_amount:v.price_amount===""?null:Number(v.price_amount),
+        currency:String(v.currency||"BDT").toUpperCase(),availability:v.availability.trim()||null
+      });
+      if(error)throw error;
+      form.reset();form.classList.add("hidden");
+      say("সেবা Admin Review-এ পাঠানো হয়েছে। অনুমোদনের পর Marketplace-এ দেখা যাবে।",true);
+      await loadSellerServices();
+    }catch(err){say("সেবা সংরক্ষণ হয়নি: "+err.message);}
+    finally{setBusy(form,false);}
+  });
+
   async function loadSellerDashboard() {
     ensureBusinessForm();
     const status = $("businessProfileStatus");
@@ -731,6 +844,7 @@
     }
     try {
       await loadBusinessProfile();
+      await loadSellerServices();
       const { data, error } = await client().from("products")
         .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
@@ -1191,6 +1305,8 @@
     await loadAdminQueue();
     await loadAdminActions();
     if ($("market") && !$("market").classList.contains("hidden")) await loadProducts();
+    if ($("servicesMarketplace") && !$("servicesMarketplace").classList.contains("hidden")) await loadServicesMarketplace();
+    await loadAdminServiceQueue();
     if ($("demandBoard") && !$("demandBoard").classList.contains("hidden")) await loadDemands();
     if ($("sellerDashboard") && !$("sellerDashboard").classList.contains("hidden")) await loadSellerDashboard();
     if ($("buyerDashboard") && !$("buyerDashboard").classList.contains("hidden")) await loadBuyerDashboard();
@@ -1200,4 +1316,5 @@
   const localToday = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split("T")[0];
   if ($("requiredDate")) $("requiredDate").min = localToday;
   if ($("market")) { loadProducts(); loadDemands(); }
+  if ($("servicesMarketplace")) loadServicesMarketplace();
 })();
