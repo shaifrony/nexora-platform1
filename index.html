@@ -400,11 +400,8 @@ function escapeHTML(value){
 }
 
 function showSection(id){
-  document.querySelectorAll("main section").forEach(section=>{
-    if(section.id !== "market" && section.id !== "postDemand" &&
-       section.id !== "demandBoard" && section.id !== "sellerDashboard"){
-      return;
-    }
+  // Hide every page section, including the dynamically added Account section.
+  document.querySelectorAll("main section.section").forEach(section=>{
     section.classList.toggle("hidden",section.id !== id);
   });
 
