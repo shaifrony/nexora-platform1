@@ -343,6 +343,12 @@
   $("chatComposer")?.addEventListener("submit",sendMessage);
   $("chatFile")?.addEventListener("change",uploadChatFile);
   window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if(state.channel){db().removeChannel(state.channel);state.channel=null;}if(state.callChannel){db().removeChannel(state.callChannel);state.callChannel=null;}closeCall("Authentication state changed.");if(isSignedIn())setupCallNotifications();if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
+  window.NEXORA_OPEN_CONVERSATION = async function(conversationId) {
+    if (!isSignedIn() || !conversationId) throw new Error("লগইন প্রয়োজন।");
+    if (typeof window.showSection === "function") window.showSection("privateChat");
+    await loadChatHome();
+    await openConversation(conversationId);
+  };
   setChatVisible(true);
   if(isSignedIn())setupCallNotifications();
 })();
