@@ -222,6 +222,7 @@
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     if (id === "porterDashboard") loadPorterDashboard();
+    if (id === "accountSection") loadAdminPorterOptions();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -782,6 +783,51 @@
     } catch (err) { say("Seller Dashboard লোড হয়নি: " + err.message); }
   }
 
+
+
+  async function loadAdminPorterOptions() {
+    const select=$("nxAdminPorterSelect");
+    if(!select)return;
+    select.innerHTML='<option value="">Porter তালিকা লোড হচ্ছে…</option>';
+    try{
+      const {data,error}=await client().rpc("list_active_nexora_porters_for_logistics");
+      if(error)throw error;
+      select.innerHTML='<option value="">Porter নির্বাচন করুন</option>'+(data||[]).map(p=>'<option value="'+esc(p.porter_id)+'">'+esc(p.full_name||"Porter")+'</option>').join("");
+      if(!data?.length)select.innerHTML='<option value="">কোনো সক্রিয় Porter পাওয়া যায়নি</option>';
+    }catch(err){
+      select.innerHTML='<option value="">Logistics permission / database migration প্রয়োজন</option>';
+      const status=$("nxAdminLogisticsStatus");if(status)status.textContent="Porter তালিকা লোড হয়নি: "+err.message;
+    }
+  }
+  $("nxAdminPorterJobForm")?.addEventListener("submit",async e=>{
+    e.preventDefault();
+    const form=e.currentTarget, v=Object.fromEntries(new FormData(form));
+    const status=$("nxAdminLogisticsStatus");
+    if(!v.assigned_porter_id)return;
+    const args={
+      p_assigned_porter_id:v.assigned_porter_id,
+      p_package_description:v.package_description.trim(),
+      p_package_count:Number(v.package_count),
+      p_pickup_contact_name:v.pickup_contact_name.trim()||null,
+      p_pickup_contact_phone:v.pickup_contact_phone.trim()||null,
+      p_pickup_address:v.pickup_address.trim(),p_pickup_city:v.pickup_city.trim(),p_pickup_country:v.pickup_country.trim(),
+      p_dropoff_contact_name:v.dropoff_contact_name.trim()||null,
+      p_dropoff_contact_phone:v.dropoff_contact_phone.trim()||null,
+      p_dropoff_address:v.dropoff_address.trim(),p_dropoff_city:v.dropoff_city.trim(),p_dropoff_country:v.dropoff_country.trim(),
+      p_scheduled_pickup_at:v.scheduled_pickup_at?new Date(v.scheduled_pickup_at).toISOString():null
+    };
+    if(!Number.isInteger(args.p_package_count)||args.p_package_count<1)return say("প্যাকেজ সংখ্যা ১ বা তার বেশি পূর্ণসংখ্যা হতে হবে।");
+    setBusy(form,true);
+    try{
+      const {data,error}=await client().rpc("admin_assign_porter_delivery_job",args);
+      if(error)throw error;
+      form.reset();
+      if(status)status.textContent="ডেলিভারি কাজ বরাদ্দ হয়েছে। Job ID: "+data;
+      say("Porter-কে ডেলিভারি কাজ বরাদ্দ হয়েছে।",true);
+      await loadAdminPorterOptions();
+    }catch(err){if(status)status.textContent="কাজ বরাদ্দ হয়নি: "+err.message;say("কাজ বরাদ্দ হয়নি: "+err.message);}
+    finally{setBusy(form,false);}
+  });
 
   const porterStatusLabels = {
     assigned: "নতুন কাজ", accepted: "গ্রহণ করা হয়েছে",
