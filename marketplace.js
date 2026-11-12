@@ -185,6 +185,7 @@
     host.textContent = "পণ্য লোড হচ্ছে…";
     const { data, error } = await client().from("products")
       .select("id,product_code,slug,product_name,category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
+      .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
     if (error) { host.textContent = "পণ্য লোড হয়নি: " + error.message; return; }
     state.products = data || [];
