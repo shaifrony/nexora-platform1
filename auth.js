@@ -225,7 +225,10 @@
     else { say("আবেদনের সিদ্ধান্ত সংরক্ষিত হয়েছে।", true); await loadRequests(); }
   });
 
-  db.auth.onAuthStateChange((_event, session) => { sync(session); });
+  // Keep database reads outside the Auth callback to avoid holding the Auth lock.
+  db.auth.onAuthStateChange((_event, session) => {
+    setTimeout(() => { sync(session); }, 0);
+  });
   db.auth.getSession().then(({ data }) => sync(data.session));
   window.NEXORA_AUTH = { client: db, get user() { return currentUser; }, get profile() { return profile; } };
 })();
