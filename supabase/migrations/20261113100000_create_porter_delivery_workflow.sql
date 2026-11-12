@@ -245,3 +245,126 @@ as $function$
 $function$;
 revoke all on function public.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) from public,anon;
 grant execute on function public.admin_assign_porter_delivery_job(uuid,text,integer,text,text,text,text,text,text,text,text,text,text,timestamptz) to authenticated;
+
+-- Admin-only reassignment and cancellation. Direct table UPDATE remains revoked.
+create or replace function private.admin_reassign_porter_delivery_job(
+  p_job_id uuid,
+  p_new_porter_id uuid,
+  p_note text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path=''
+as $function$
+declare
+  v_uid uuid:=auth.uid();
+  v_job public.porter_delivery_jobs%rowtype;
+begin
+  if v_uid is null or not private.has_nexora_permission('logistics.assign') then
+    raise exception 'Logistics assignment permission with Admin MFA is required';
+  end if;
+  if p_new_porter_id is null or not exists(
+    select 1 from public.profiles p
+    where p.id=p_new_porter_id and p.role='porter' and p.account_status='active'
+  ) then
+    raise exception 'Selected Porter is not active';
+  end if;
+  if length(btrim(coalesce(p_note,'')))<5 then
+    raise exception 'A reassignment reason of at least 5 characters is required';
+  end if;
+  if length(p_note)>2000 then raise exception 'Note is too long'; end if;
+
+  select * into v_job from public.porter_delivery_jobs where id=p_job_id for update;
+  if not found then raise exception 'Delivery job not found'; end if;
+  if v_job.status not in ('assigned','accepted') then
+    raise exception 'Only newly assigned or accepted jobs can be reassigned';
+  end if;
+  if v_job.assigned_porter_id=p_new_porter_id then
+    raise exception 'This job is already assigned to the selected Porter';
+  end if;
+
+  update public.porter_delivery_jobs
+  set assigned_porter_id=p_new_porter_id,
+      status='assigned',
+      accepted_at=null,
+      porter_note=btrim(p_note),
+      updated_at=now()
+  where id=p_job_id;
+
+  insert into public.porter_delivery_job_events(job_id,actor_id,from_status,to_status,note)
+  values(p_job_id,v_uid,v_job.status,'assigned',
+    'Reassigned to another Porter: '||btrim(p_note));
+  return p_job_id;
+end;
+$function$;
+revoke all on function private.admin_reassign_porter_delivery_job(uuid,uuid,text) from public,anon,authenticated;
+grant execute on function private.admin_reassign_porter_delivery_job(uuid,uuid,text) to authenticated;
+
+create or replace function public.admin_reassign_porter_delivery_job(
+  p_job_id uuid,
+  p_new_porter_id uuid,
+  p_note text default null
+)
+returns uuid
+language sql
+security invoker
+set search_path=''
+as $function$
+  select private.admin_reassign_porter_delivery_job(p_job_id,p_new_porter_id,p_note);
+$function$;
+revoke all on function public.admin_reassign_porter_delivery_job(uuid,uuid,text) from public,anon;
+grant execute on function public.admin_reassign_porter_delivery_job(uuid,uuid,text) to authenticated;
+
+create or replace function private.admin_cancel_porter_delivery_job(
+  p_job_id uuid,
+  p_note text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path=''
+as $function$
+declare
+  v_uid uuid:=auth.uid();
+  v_job public.porter_delivery_jobs%rowtype;
+begin
+  if v_uid is null or not private.has_nexora_permission('logistics.assign') then
+    raise exception 'Logistics assignment permission with Admin MFA is required';
+  end if;
+  if length(btrim(coalesce(p_note,'')))<5 then
+    raise exception 'A cancellation reason of at least 5 characters is required';
+  end if;
+  if length(p_note)>2000 then raise exception 'Note is too long'; end if;
+
+  select * into v_job from public.porter_delivery_jobs where id=p_job_id for update;
+  if not found then raise exception 'Delivery job not found'; end if;
+  if v_job.status not in ('assigned','accepted') then
+    raise exception 'Only newly assigned or accepted jobs can be cancelled';
+  end if;
+
+  update public.porter_delivery_jobs
+  set status='cancelled',porter_note=btrim(p_note),updated_at=now()
+  where id=p_job_id;
+
+  insert into public.porter_delivery_job_events(job_id,actor_id,from_status,to_status,note)
+  values(p_job_id,v_uid,v_job.status,'cancelled',btrim(p_note));
+  return p_job_id;
+end;
+$function$;
+revoke all on function private.admin_cancel_porter_delivery_job(uuid,text) from public,anon,authenticated;
+grant execute on function private.admin_cancel_porter_delivery_job(uuid,text) to authenticated;
+
+create or replace function public.admin_cancel_porter_delivery_job(
+  p_job_id uuid,
+  p_note text
+)
+returns uuid
+language sql
+security invoker
+set search_path=''
+as $function$
+  select private.admin_cancel_porter_delivery_job(p_job_id,p_note);
+$function$;
+revoke all on function public.admin_cancel_porter_delivery_job(uuid,text) from public,anon;
+grant execute on function public.admin_cancel_porter_delivery_job(uuid,text) to authenticated;
