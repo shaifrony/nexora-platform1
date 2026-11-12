@@ -479,18 +479,20 @@
   function renderDemands() {
     const host = $("demandList");
     if (!host) return;
-    if (!state.demands.length) { host.innerHTML = '<div class="card">এখনো কোনো প্রকাশ্য খোলা চাহিদা নেই।</div>'; return; }
-    host.innerHTML = state.demands.map(d => `<article class="card">
-      <span class="tag">${esc(d.category)}</span><span class="tag">চলমান চাহিদা</span>
-      <h3>${esc(d.product_name)}</h3><p>${esc(d.description)}</p>
-      <p class="muted"><strong>Specifications & Quality:</strong> ${esc(d.specifications_quality || "উল্লেখ নেই")}</p>
-      <div class="grid">
-        <div><p class="muted">Required Quantity</p><strong>${esc(d.required_quantity)}</strong></div>
-        <div><p class="muted">Budget</p><strong>${d.budget == null ? "Not specified" : esc(d.budget) + " " + esc(d.currency)}</strong></div>
-        <div><p class="muted">Destination</p><strong>${esc(d.destination_city)}, ${esc(d.destination_country)}</strong></div>
+    if (!state.demands.length) {
+      host.innerHTML = '<div class="demand-card muted">এখনো কোনো প্রকাশ্য খোলা পাইকারি চাহিদা নেই।</div>';
+      return;
+    }
+    host.innerHTML = state.demands.map(d => `<article class="demand-card">
+      <span class="tag">${esc(d.category)}</span><span class="tag">চলমান</span>
+      <h3>${esc(d.product_name)}</h3>
+      <p class="demand-description">${esc(d.description)}</p>
+      <div class="demand-meta">
+        <span>পরিমাণ: <strong>${esc(d.required_quantity)}</strong></span>
+        <span>গন্তব্য: <strong>${esc(d.destination_city)}, ${esc(d.destination_country)}</strong></span>
       </div>
-      <p><span class="demand-date">Required by: ${esc(d.required_date)}</span></p>
-      <p class="muted">Demand ID: ${esc(d.demand_code)}</p>
+      <p><span class="demand-date">প্রয়োজন: ${esc(d.required_date)}</span></p>
+      <p class="muted" style="font-size:11px;margin:5px 0 0">Demand ID: ${esc(d.demand_code)}</p>
       ${activeSeller() ? `<button class="secondary" type="button" data-offer="${esc(d.id)}">Submit Price Offer</button>` : ""}
     </article>`).join("");
     host.querySelectorAll("button[data-offer]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offer)));
