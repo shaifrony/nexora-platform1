@@ -6,6 +6,10 @@ alter table public.profiles
   add column if not exists buyer_category text,
   add column if not exists seller_categories text[] not null default '{}'::text[];
 
+-- Backfill legacy rows as part of the trusted migration transaction.
+-- Temporarily disable only the client-update guard; it is re-enabled before commit.
+alter table public.profiles disable trigger protect_profile_updates;
+
 update public.profiles
 set buyer_category = 'wholesale'
 where role = 'buyer' and buyer_category is null;
@@ -13,6 +17,8 @@ where role = 'buyer' and buyer_category is null;
 update public.profiles
 set seller_categories = array['wholesale']::text[]
 where role = 'seller' and coalesce(cardinality(seller_categories), 0) = 0;
+
+alter table public.profiles enable trigger protect_profile_updates;
 
 alter table public.profiles drop constraint if exists profiles_market_categories_check;
 alter table public.profiles add constraint profiles_market_categories_check check (
