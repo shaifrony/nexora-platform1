@@ -38,7 +38,9 @@
   }
 
   async function loadAdminQueue() {
-    if (profile()?.role !== "admin" || profile()?.account_status !== "active") return;
+    if (profile()?.role !== "admin" || profile()?.account_status !== "active" ||
+        window.NEXORA_AUTH?.adminStaff?.admin_level !== "super_admin" ||
+        window.NEXORA_AUTH?.adminStaff?.is_active !== true) return;
     ensureAdminApprovalPanel();
     const businessHost = $("nxPendingBusinesses");
     const productHost = $("nxPendingProducts");
@@ -71,7 +73,9 @@
 
   async function handleAdminDecision(e) {
     const button = e.target.closest("button[data-review-type]");
-    if (!button || profile()?.role !== "admin" || profile()?.account_status !== "active") return;
+    if (!button || profile()?.role !== "admin" || profile()?.account_status !== "active" ||
+        window.NEXORA_AUTH?.adminStaff?.admin_level !== "super_admin" ||
+        window.NEXORA_AUTH?.adminStaff?.is_active !== true) return;
     const note = prompt("Admin note (ঐচ্ছিক):", "") || null;
     button.disabled = true;
     const type = button.dataset.reviewType;
