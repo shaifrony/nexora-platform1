@@ -183,3 +183,40 @@ Still pending:
 - Add Logistics permission catalog entries and assignable department policy before enabling Assistant Admin logistics review.
 - Enforce both Provider and Vehicle approved statuses in the eventual delivery-assignment workflow.
 - Private document/image Storage policies and upload flow.
+
+
+## 10. Delivery Assignment System (2026-11-13)
+
+Completed on `nexora-development`:
+- Added staged migration `supabase/migrations/20261113220000_delivery_assignment_system.sql`.
+- Added `delivery_jobs` with a generated NEXORA job reference, optional external order/shipment reference, package details, pickup and delivery contacts/addresses, requested pickup time, deadline and special instructions.
+- Every job is created already assigned to a selected Transport Provider and Vehicle; no unassigned/unknown Porter account is used.
+- Assignment validates inside the database that:
+  - the Provider is approved;
+  - the Vehicle is approved and currently available;
+  - the Vehicle belongs to the selected Provider.
+- Added `delivery_job_events` for assignment, reassignment and cancellation history.
+- Added private SECURITY DEFINER functions plus public invoker-rights RPC wrappers:
+  - `create_delivery_assignment`
+  - `reassign_delivery_job`
+  - `cancel_delivery_job`
+- All write operations require an authenticated active Admin, AAL2 and `logistics.assign`.
+- Reassignment is allowed only while a job is in `assigned` status and requires a reason.
+- Cancellation requires a reason and is blocked for delivered/already-cancelled jobs.
+- Delivery job and event tables are read-only to browser clients; no direct insert/update/delete grants are given.
+- RLS limits job/event reads to Logistics Admins with `logistics.view` and the owner of the assigned Provider.
+- Added assignable Logistics Admin department and sensitive permissions `logistics.view` / `logistics.assign`; no Assistant Admin receives these grants automatically.
+- Added Admin Console form and queue for creating, viewing, reassigning and cancelling Delivery Jobs. Provider and Vehicle choices are restricted to approved Provider and approved/available Vehicle records.
+
+Verification:
+- Provider + Delivery staged migrations were executed together inside one transaction and rolled back successfully.
+- `auth.js` passed JavaScript syntax compilation.
+- Admin Delivery form and queue markup are present in `index.html`.
+- No live migration, data insert, production deployment, paid resource, or `main` branch change was performed.
+
+Scope / pending:
+- Delivery jobs currently use an optional external reference; they are not yet automatically linked to a marketplace order because an approved order-to-logistics handoff model has not been implemented.
+- Provider-side job acceptance, pickup/in-transit/delivered status updates, proof of delivery, notifications, pricing, route planning and vehicle capacity scheduling remain future work.
+- The schema currently permits more than one active job to be assigned to a vehicle; concurrency/capacity scheduling policy is not yet defined.
+- Confirm the project's Data API exposure settings for the new public tables before applying migrations; Supabase changed new-table exposure defaults in 2026.
+- Add real browser tests and negative RLS/RPC tests with Admin MFA and Provider accounts before enabling in production.
