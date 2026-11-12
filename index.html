@@ -342,6 +342,18 @@ nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visi
 body:has(#buyerDashboard:not(.hidden))>header{display:none!important}
 body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
 
+/* WhatsApp-style call controls inside the conversation header */
+.nx-chat-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border,#e5e7eb);margin-bottom:12px}
+.nx-chat-topbar h3{margin:0;min-width:0}
+.nx-chat-call-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nx-chat-call-button{width:42px;height:42px;border:0;border-radius:50%;background:#e9f7f1;color:#087b5f;font-size:19px;cursor:pointer}
+.nx-chat-call-button:disabled{opacity:.45;cursor:not-allowed}
+.nx-chat-call-panel{margin-top:10px}
+.nx-chat-call-panel .grid{margin-top:10px}
+.nx-product-contact{margin-top:18px}
+.nx-contact-seller-button{min-width:190px}
+@media(max-width:600px){.nx-chat-topbar{padding:9px 6px}.nx-chat-call-button{width:38px;height:38px}}
+
 </style>
 </head>
 
@@ -832,7 +844,13 @@ body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
         <div id="chatConversationList">চ্যাট লোড হচ্ছে…</div>
       </div>
       <div class="card">
-        <h3 id="chatCurrentTitle">একটি Conversation নির্বাচন করুন</h3>
+        <div class="nx-chat-topbar">
+          <h3 id="chatCurrentTitle">একটি Conversation নির্বাচন করুন</h3>
+          <div class="nx-chat-call-actions" aria-label="Chat call actions">
+            <button class="nx-chat-call-button" id="startAudioCall" type="button" aria-label="Audio call" title="Audio call"><span aria-hidden="true">☎</span></button>
+            <button class="nx-chat-call-button" id="startVideoCall" type="button" aria-label="Video call" title="Video call"><span aria-hidden="true">▣</span></button>
+          </div>
+        </div>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <form id="chatComposer" class="hidden">
           <label>Message</label>
@@ -844,12 +862,8 @@ body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
           </div>
           <p class="muted">সর্বোচ্চ ফাইল ২০ MB। অনুমোদিত: JPG, PNG, WebP, PDF, TXT, DOCX, XLSX।</p>
         </form>
-        <div id="chatCallPanel" class="offer">
-          <strong>Audio / Video Calling</strong>
-          <p class="muted">একজন অংশগ্রহণকারী থাকলে Audio বা Video Call শুরু করুন। Browser-এর Microphone/Camera অনুমতি লাগবে।</p>
+        <div id="chatCallPanel" class="offer nx-chat-call-panel">
           <div class="form-actions">
-            <button class="secondary" id="startAudioCall" type="button">Audio Call</button>
-            <button class="secondary" id="startVideoCall" type="button">Video Call</button>
             <button class="danger hidden" id="endCall" type="button">End Call</button>
           </div>
           <div id="incomingCall" class="hidden">
