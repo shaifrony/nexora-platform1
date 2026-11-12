@@ -39,7 +39,7 @@
       section.classList.add("hidden");
       return;
     }
-    section.classList.remove("hidden");
+    // Keep the workspace hidden until the user explicitly opens it from the account navigation.
   }
 
   function providerFormMarkup() {
