@@ -570,6 +570,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
   <nav aria-label="প্রধান নেভিগেশন">
     <button type="button" onclick="showSection('market')">Marketplace</button>
+    <button type="button" onclick="showSection('servicesMarketplace')">সেবা</button>
     <button type="button" id="nxHeaderLogin" onclick="showSection('accountSection')">Login / Register</button>
     <button type="button" id="nxHeaderBuyerDashboard" class="hidden" onclick="showSection('buyerDashboard')">Buyer Dashboard</button>
     <button type="button" id="nxHeaderAccount" class="hidden" onclick="showSection('accountSection')">Account</button>
@@ -800,6 +801,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <div id="nxAdminBusinesses" class="muted">অনুমতি অনুযায়ী ব্যবসার তালিকা লোড হবে…</div>
         <h4>পণ্য Moderation</h4>
         <div id="nxAdminProducts" class="muted">অনুমতি অনুযায়ী পণ্যের তালিকা লোড হবে…</div>
+        <h4>Services Marketplace Review</h4>
+        <p class="muted">নতুন সেবা প্রকাশের আগে বিবরণ, বিভাগ ও সেবার এলাকা যাচাই করুন। ব্যক্তিগত ফোন ও সঠিক ঠিকানা এখানে প্রকাশ করা হয় না।</p>
+        <div id="nxAdminServiceQueue" class="muted">সেবা আবেদন লোড হচ্ছে…</div>
         <h4>Transport Provider & Vehicle Review</h4>
         <p class="muted">Provider এবং প্রতিটি Vehicle আলাদাভাবে যাচাই করুন। Reject/Suspend করার সময় কারণ লিখতে হবে। সব সিদ্ধান্ত Audit Log-এ সংরক্ষিত হবে।</p>
         <div id="nxAdminTransportQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর আবেদন দেখা যাবে…</div>
@@ -1047,6 +1051,23 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
     </div>
   </section>
 
+  <!-- SERVICES MARKETPLACE -->
+  <section id="servicesMarketplace" class="section hidden">
+    <div class="section-head">
+      <div><span class="nx-market-eyebrow">NEXORA SERVICES</span><h2>সেবা মার্কেটপ্লেস</h2><p class="muted">আপনার এলাকার প্রয়োজনীয় সেবাদাতা খুঁজুন।</p></div>
+      <span id="nxServiceCount" class="muted">সেবা</span>
+    </div>
+    <div class="card">
+      <div class="grid">
+        <label>সেবা খুঁজুন<input id="nxServiceSearch" type="search" placeholder="যেমন: গৃহশিক্ষক, প্লাম্বার, মেকানিক"></label>
+        <label>সেবার বিভাগ<select id="nxServiceCategoryFilter"><option value="">সব বিভাগ</option><option value="household">গৃহস্থালি সেবা</option><option value="tutoring">শিক্ষা ও টিউশন</option><option value="plumbing">প্লাম্বিং</option><option value="electrical">ইলেকট্রিক্যাল</option><option value="mechanic">মেকানিক ও মেরামত</option><option value="appliance_repair">ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত</option><option value="it_support">আইটি ও কম্পিউটার</option><option value="beauty_laundry">বিউটি ও লন্ড্রি</option><option value="other">অন্যান্য</option></select></label>
+        <label>এলাকা / শহর<input id="nxServiceAreaFilter" type="search" placeholder="যেমন: মিরপুর, ঢাকা"></label>
+      </div>
+      <p class="muted">সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা এখানে প্রকাশ করা হয় না।</p>
+    </div>
+    <div id="nxServiceList" class="grid"><p class="muted">সেবা লোড হচ্ছে…</p></div>
+  </section>
+
   <!-- SELLER DASHBOARD -->
   <section id="sellerDashboard" class="section hidden nx-role-workspace">
     <div class="nx-role-hero">
@@ -1076,6 +1097,28 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         আপনার যোগ করা পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন চাহিদাগুলো এখানে দেখানো হবে।
       </p>
       <div id="matchedDemands"></div>
+    </div>
+
+    <div class="card" id="sellerServicesCard">
+      <div class="section-head"><div><h3>আমার সেবাসমূহ</h3><p class="muted">সেবা যোগ করুন। প্রকাশের আগে Admin অনুমোদন প্রয়োজন।</p></div><button class="primary" type="button" onclick="document.getElementById('nxServiceForm')?.classList.toggle('hidden')">+ সেবা যোগ করুন</button></div>
+      <form id="nxServiceForm" class="hidden">
+        <label>সেবার নাম *<input name="service_name" minlength="2" maxlength="160" required placeholder="যেমন: বাসাবাড়ির প্লাম্বিং সার্ভিস"></label>
+        <label>সেবার বিভাগ *<select name="service_category" required><option value="">বিভাগ নির্বাচন করুন</option><option value="household">গৃহস্থালি সেবা</option><option value="tutoring">শিক্ষা ও টিউশন</option><option value="plumbing">প্লাম্বিং</option><option value="electrical">ইলেকট্রিক্যাল</option><option value="mechanic">মেকানিক ও মেরামত</option><option value="appliance_repair">ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত</option><option value="it_support">আইটি ও কম্পিউটার</option><option value="beauty_laundry">বিউটি ও লন্ড্রি</option><option value="other">অন্যান্য</option></select></label>
+        <label>সেবার বিবরণ *<textarea name="description" minlength="20" maxlength="3000" required placeholder="কী ধরনের সেবা দেবেন, অভিজ্ঞতা ও কাজের পরিধি লিখুন"></textarea></label>
+        <div class="grid">
+          <label>দেশ *<input name="country" value="Bangladesh" maxlength="100" required></label>
+          <label>শহর / জেলা *<input name="city" maxlength="100" required placeholder="যেমন: Dhaka"></label>
+        </div>
+        <label>যে এলাকা বা এলাকায় সেবা দেবেন *<input name="service_area" minlength="2" maxlength="300" required placeholder="যেমন: মিরপুর ১–১২, ঢাকা"></label>
+        <div class="grid">
+          <label>মূল্য নির্ধারণ *<select name="price_basis" required><option value="negotiable">আলোচনা সাপেক্ষে</option><option value="per_hour">প্রতি ঘণ্টা</option><option value="per_day">প্রতি দিন</option><option value="per_visit">প্রতি ভিজিট</option><option value="per_job">প্রতি কাজ</option><option value="per_month">প্রতি মাস</option></select></label>
+          <label>মূল্য (ঐচ্ছিক)<input name="price_amount" type="number" min="0" step="0.01" placeholder="৳"></label>
+        </div>
+        <label>মুদ্রা<select name="currency"><option value="BDT">BDT</option></select></label>
+        <label>সেবা দেওয়ার সময় / Availability<input name="availability" maxlength="300" placeholder="যেমন: প্রতিদিন সকাল ৯টা–সন্ধ্যা ৬টা"></label>
+        <div class="form-actions"><button class="primary" type="submit">সেবা Admin Review-এ পাঠান</button></div>
+      </form>
+      <div id="nxSellerServiceList" class="grid"><p class="muted">আপনার সেবার তালিকা এখানে দেখা যাবে।</p></div>
     </div>
 
     <div class="card" id="sellerProductsCard">
