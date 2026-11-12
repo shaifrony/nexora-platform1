@@ -883,6 +883,30 @@
         .eq("assigned_porter_id", user().id).order("created_at", {ascending:false});
       if (error) throw error;
       const jobs = data || [];
+      const historyHost = $("nxPorterHistory");
+      if (historyHost) {
+        if (!jobs.length) {
+          historyHost.innerHTML = '<p class="muted">এখনো কোনো ডেলিভারি ইতিহাস নেই।</p>';
+        } else {
+          try {
+            const { data: events, error: historyError } = await client().from("porter_delivery_job_events")
+              .select("id,job_id,from_status,to_status,note,created_at")
+              .in("job_id", jobs.map(job => job.id))
+              .order("created_at", { ascending: false }).limit(50);
+            if (historyError) throw historyError;
+            const jobCodes = Object.fromEntries(jobs.map(job => [job.id, job.job_code]));
+            historyHost.innerHTML = events?.length ? events.map(event => `
+              <article class="nx-porter-history-item">
+                <div><strong>${esc(jobCodes[event.job_id] || "Delivery Job")} · ${esc(porterStatusLabels[event.to_status] || event.to_status)}</strong>
+                ${event.note ? '<p>নোট: '+esc(event.note)+'</p>' : ""}
+                ${event.from_status ? '<p>আগের অবস্থা: '+esc(porterStatusLabels[event.from_status] || event.from_status)+'</p>' : ""}</div>
+                <time>${esc(new Date(event.created_at).toLocaleString("bn-BD"))}</time>
+              </article>`).join("") : '<p class="muted">এখনো কোনো স্ট্যাটাস পরিবর্তনের রেকর্ড নেই।</p>';
+          } catch (historyError) {
+            historyHost.innerHTML = '<p class="muted">ইতিহাস এখন লোড করা যাচ্ছে না: '+esc(historyError.message)+'</p>';
+          }
+        }
+      }
       const count = (statuses) => jobs.filter(j => statuses.includes(j.status)).length;
       const setMetric = (id,value) => {const n=$(id);if(n)n.textContent=String(value);};
       setMetric("nxPorterAssigned",count(["assigned"]));
