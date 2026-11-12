@@ -676,11 +676,15 @@
     const actionButtons=(kind,id,status)=>{
       if(!canReview) return '<p class="muted">আপনার review করার অনুমতি নেই।</p>';
       let out='';
-      if(status!=="approved") out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Approve</button>';
-      if(status!=="rejected"&&status!=="approved") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="reject" data-id="'+esc(id)+'">Reject</button>';
-      if(status==="approved") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
-      if(status==="pending") out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
-      if(status==="suspended"||status==="rejected") out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Re-approve</button>';
+      if(status==="pending"){
+        out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Approve</button>';
+        out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="reject" data-id="'+esc(id)+'">Reject</button>';
+        out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
+      } else if(status==="approved"){
+        out+='<button class="danger" type="button" data-transport-review="'+kind+'" data-action="suspend" data-id="'+esc(id)+'">Suspend</button>';
+      } else if(status==="rejected"||status==="suspended"){
+        out+='<button class="primary" type="button" data-transport-review="'+kind+'" data-action="approve" data-id="'+esc(id)+'">Re-approve</button>';
+      }
       return out;
     };
     if(!providerRows.length&&!vehicleRows.length){
