@@ -317,7 +317,7 @@ begin
 end;
 $$;
 
-comment on column public.products.minimum_order_quantity is 'Minimum purchasable quantity; Retail products are fixed to MOQ 1.';
+comment on column public.products.minimum_order_quantity is 'Seller-defined minimum purchasable quantity for this product.';
 comment on column public.products.stock_tracking is 'When true, stock_quantity is enforced and pending orders reserve stock.';
 comment on column public.products.reserved_quantity is 'Quantity reserved by pending/in-progress orders; changed only by order RPCs.';
 comment on column public.products.price_tiers is 'JSON array of {min_quantity, unit_price}; highest qualifying minimum quantity is used.';
