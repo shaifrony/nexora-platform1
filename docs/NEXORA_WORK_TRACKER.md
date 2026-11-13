@@ -8,9 +8,9 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 |---|---|---|
 | Single-domain architecture | Done (staged) | One root app, shared auth/backend, role-based workspaces |
 | Admin console moved into Administration route | Done (staged) | Existing Admin console moved from Login section into protected route; E2E pending |
-| Role-aware dashboard routing | Partial | Buyer/Seller/Admin routes staged; Porter public role and approval-gated routing require backend migration and E2E |
+| Role-aware dashboard routing | Partial | Buyer/Seller/Admin/Porter routes staged; browser E2E and hosted migration pending |
 | Public registration roles | Decision confirmed | Homepage must show exactly Buyer, Seller and Porter; no administrative roles |
-| Porter registration approval | Pending implementation | Porter signup must create a pending, non-operational account; Admin/Transport approval activates it |
+| Porter registration approval | Done (staged) | Signup, pending profile, review table, MFA + logistics.assign RPC, audit log and admin queue staged; migration/E2E pending |
 | Admin sign-in + MFA | Partial | Existing Auth MFA AAL2 flow; browser E2E pending |
 | Officer account management | Partial | Form/Edge Function/SQL migration staged; DB not migrated or integration-tested |
 | Marketplace Wholesale/Retail | Done (staged) | Product market categories and Seller entitlements staged |
@@ -39,9 +39,10 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Director, MD and department governance defined.
 - [x] Officer invite and permission backend staged.
 - [ ] Reconcile all migrations in order.
-- [ ] Add Porter to the profile role model and signup trigger without allowing user-metadata privilege escalation.
-- [ ] Ensure Porter starts pending; only audited Admin/Transport approval activates the account and provider workflow.
-- [ ] Route only approved active Porter accounts to Porter Dashboard; block all pending/rejected/suspended access.
+- [x] Add Porter to profile role model and Auth signup trigger; public metadata cannot create Admin identities.
+- [x] Ensure Porter starts pending; only audited Admin/Transport approval activates the account.
+- [x] Route only approved active Porter accounts to Porter Dashboard and Transport Provider Center; block pending/rejected/suspended access.
+- [ ] Run migration-chain checks and browser E2E for signup, approval, rejection, suspension and re-approval.
 - [ ] Test migration on isolated DB.
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
