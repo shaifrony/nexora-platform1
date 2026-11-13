@@ -33,6 +33,20 @@ SELECT
   AND to_regclass('public.buyer_demand_inbox') IS NOT NULL
   AND to_regclass('public.seller_offers') IS NOT NULL
   AND to_regclass('public.commerce_orders') IS NOT NULL
+  AND to_regprocedure('private.create_product_inquiry(uuid,text)') IS NOT NULL
+  AND to_regprocedure('private.create_commerce_order(text,uuid,numeric,text,text)') IS NOT NULL
+  AND to_regprocedure('private.route_new_buyer_demand_to_sellers()') IS NOT NULL
+  AND to_regprocedure('private.route_new_approved_product_to_open_demands()') IS NOT NULL
+  AND EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='profiles' AND column_name='buyer_category')
+  AND EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='profiles' AND column_name='seller_categories')
+  AND EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='products' AND column_name='market_category')
+  AND EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='products' AND column_name='subcategory')
+  AND EXISTS (SELECT 1 FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='products' AND column_name='minimum_order_quantity')
   AS marketplace_schema_ready
 \gset
 
