@@ -26,10 +26,10 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 
 ### Marketplace workspace
 
-- Wholesale-only product discovery; retail discovery and retail order flows are out of scope.
+- Dual-market product discovery: each Seller selects Wholesale or Retail per product listing. Buyers see only listings matching their registered Buyer category. A Seller may publish different products in different modes. Buyer category-change policy remains open.
 - Services Marketplace.
 - Buyer Demand and Seller Quotations.
-- Wholesale product details, wholesale quotations/orders, chat and verified reviews.
+- Wholesale and Retail product details, mode-appropriate quotations/orders, chat and verified reviews.
 - Buyer and Seller dashboards.
 
 ### Administration workspace
@@ -69,8 +69,8 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 - [ ] Test invite rollback, duplicate identities, privilege escalation, department scope, MFA bypass and revocation.
 
 ### M2 — Marketplace
-- [ ] Fully align existing Wholesale/Retail schema and UI to the approved wholesale-only model; see [Wholesale-Only Alignment](NEXORA_WHOLESALE_ONLY_ALIGNMENT.md).
-- [x] Existing marketplace foundation staged (contains legacy retail concepts; not yet compliant).
+- [ ] Align existing Wholesale/Retail schema and UI to the confirmed seller-selected per-product market model; enforce Buyer-category visibility and authorization server-side.
+- [x] Existing marketplace foundation staged; dual-market schema/UI alignment is in progress.
 - [x] Product/Service listing, image and edit workflow.
 - [x] Buyer Demand matching and Seller quotation.
 - [x] Commerce order and verified review workflow staged.
