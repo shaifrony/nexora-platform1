@@ -701,3 +701,14 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Attempted cross-role dashboard navigation (Buyer→Seller, Seller→Buyer, Porter→Buyer, AAL1 Admin→Administration); each unauthorized route was redirected to Account. No application JS exceptions occurred in the guarded run.
 - **Test boundary:** this was DOM/runtime smoke testing with a mocked Supabase client, not a real browser engine or authenticated Supabase API. It does not verify hosted JWT/PostgREST/RLS, Storage, Realtime, WebRTC, device behavior, or concurrency. Prior disposable SQL workflow results remain separately documented above.
 - No source code, hosted database, user data, `main`, Production, DNS or paid resource was changed in this check.
+
+
+## 2026-11-14 — Private communications security source audit
+
+- Reviewed `chat.js` and the private communications schema/RLS migrations on `nexora-development` at commit `4c8bea266ad1d7122d21a5e0e3dca585066e8fd2`.
+- `node --check chat.js` passed.
+- Source inspection confirms RLS is enabled on conversations, participants, messages, attachments, call sessions and call signals; public/anon table privileges are revoked. The private chat Storage bucket is configured as non-public with a 20 MB limit and an explicit MIME allowlist. Storage object reads/inserts are scoped to accepted conversation participants; signed URLs expire after one hour.
+- Message send/read, attachment metadata, call creation and call signaling policies require accepted conversation membership. Admin has no explicit read policy on private conversation tables. Incoming-call Realtime subscription filters by the authenticated recipient ID.
+- **Hardening follow-up before release:** the current `calls_participant_update` policy permits any accepted participant to update call status/timestamps, and column grants expose those fields without a database-enforced state-transition/actor rule. Review whether this should be narrowed to caller/callee-specific transitions or moved behind a guarded RPC. The participant self-status update policy also permits an already accepted participant to transition to declined/left; confirm the intended lifecycle.
+- **Test boundary:** this is a source-level security audit plus JavaScript syntax check only. No disposable Postgres policy execution, Storage upload/download, Realtime delivery, WebRTC media, browser/device E2E, JWT/PostgREST or concurrency test was run in this pass. No private messages, calls, attachments, user rows or Live data were read.
+- No application code, hosted database, `main`, Production, DNS or paid service was changed.
