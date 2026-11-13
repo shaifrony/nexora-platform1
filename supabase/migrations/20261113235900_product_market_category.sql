@@ -29,18 +29,14 @@ using (
     and exists (
       select 1 from public.profiles p
       where p.id = (select auth.uid())
+        and p.role = 'buyer'
         and p.account_status = 'active'
-        and (
-          (p.role = 'buyer' and p.buyer_category = products.market_category)
-          or
-          (p.role = 'seller' and products.market_category = any(p.seller_categories))
-        )
     )
   )
 );
 
--- A SECURITY DEFINER inquiry RPC must enforce the same market-category
--- boundary as the products SELECT policy; RLS alone is not sufficient here.
+-- The inquiry RPC independently verifies the active Buyer, approved listing and
+-- approved Business Profile; Buyer visibility does not depend on sale type.
 create or replace function private.create_product_inquiry(
   p_product_id uuid,
   p_message text default null
@@ -52,7 +48,6 @@ set search_path = ''
 as $function$
 declare
   v_user_id uuid := auth.uid();
-  v_buyer_category text;
   v_product record;
   v_conversation_id uuid;
   v_title text;
@@ -62,13 +57,11 @@ begin
     raise exception 'Login required' using errcode='42501';
   end if;
 
-  select p.buyer_category into v_buyer_category
-  from public.profiles p
-  where p.id=v_user_id and p.role='buyer' and p.account_status='active';
-
-  if not found or v_buyer_category not in ('wholesale','retail') then
-    raise exception 'Active Buyer account with a valid market category required'
-      using errcode='42501';
+  if not exists (
+    select 1 from public.profiles p
+    where p.id=v_user_id and p.role='buyer' and p.account_status='active'
+  ) then
+    raise exception 'Active Buyer account required' using errcode='42501';
   end if;
 
   select p.id,p.seller_id,p.product_code,p.product_name
@@ -79,7 +72,7 @@ begin
   where p.id=p_product_id
     and p.listing_status='approved'
     and b.approval_status='approved'
-    and p.market_category=v_buyer_category;
+;
 
   if not found then
     raise exception 'Product unavailable or does not match your Buyer category'
@@ -133,7 +126,6 @@ with check (
       and b.seller_id = (select auth.uid())
       and p.role = 'seller'
       and p.account_status = 'active'
-      and products.market_category = any(p.seller_categories)
   )
 );
 
