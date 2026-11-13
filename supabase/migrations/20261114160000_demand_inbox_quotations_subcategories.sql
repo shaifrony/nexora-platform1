@@ -158,17 +158,14 @@ after insert or update of listing_status,category,subcategory,market_category,bu
 on public.products for each row
 execute function private.route_new_approved_product_to_open_demands();
 
--- Backfill open demands to every currently eligible Seller whose approved product matches.
+-- Backfill open demands to Sellers with an approved product matching product taxonomy.
 insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
 select distinct d.id,pr.seller_id,'approved_product_category'
 from public.buyer_demands d
-join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
 join public.products pr on pr.category=d.category and pr.listing_status='approved'
 join public.profiles sp on sp.id=pr.seller_id and sp.role='seller' and sp.account_status='active'
 join public.public_businesses pb on pb.business_id=pr.business_id and pb.seller_id=pr.seller_id
 where d.demand_status='open'
-  and bp.buyer_category=pr.market_category
-  and pr.market_category=any(sp.seller_categories)
   and (nullif(btrim(d.subcategory),'') is null
     or lower(btrim(coalesce(pr.subcategory,'')))=lower(btrim(d.subcategory)))
 on conflict(demand_id,seller_id) do nothing;
@@ -255,10 +252,10 @@ begin
     raise exception 'Proposed listing changes are required' using errcode='22023';
   end if;
 
-  select seller_categories into v_seller_categories
-  from public.profiles
-  where id=v_actor and role='seller' and account_status='active';
-  if not found then
+  if not exists (
+    select 1 from public.profiles
+    where id=v_actor and role='seller' and account_status='active'
+  ) then
     raise exception 'An active Seller account is required' using errcode='42501';
   end if;
 
@@ -280,9 +277,6 @@ begin
     from public.products where id=p_listing_id for update;
     if not found or v_seller_id<>v_actor or v_listing_status<>'approved' then
       raise exception 'Only your approved Product listing can be submitted for re-review' using errcode='42501';
-    end if;
-    if not (coalesce(p_proposed_changes->>'market_category','')=any(coalesce(v_seller_categories,'{}'::text[]))) then
-      raise exception 'Seller is not registered for this sales category' using errcode='23514';
     end if;
     if length(btrim(coalesce(p_proposed_changes->>'product_name',''))) not between 2 and 180
        or length(btrim(coalesce(p_proposed_changes->>'category',''))) not between 2 and 120
@@ -446,11 +440,12 @@ begin
     where id=v_request.product_id and seller_id=v_request.seller_id and listing_status='approved'
     for update;
     if not found then raise exception 'Product is no longer approved or available' using errcode='23514'; end if;
-    select p.seller_categories into v_seller_categories
-    from public.profiles p join public.business_profiles b on b.seller_id=p.id
-    where p.id=v_request.seller_id and p.role='seller' and p.account_status='active'
-      and b.id=v_business_id and b.approval_status='approved';
-    if not found or not (coalesce(v_request.proposed_changes->>'market_category','')=any(coalesce(v_seller_categories,'{}'::text[]))) then
+    if not exists (
+      select 1 from public.profiles p
+      join public.business_profiles b on b.seller_id=p.id
+      where p.id=v_request.seller_id and p.role='seller' and p.account_status='active'
+        and b.id=v_business_id and b.approval_status='approved'
+    ) then
       raise exception 'Seller or Business eligibility changed; re-verify before approval' using errcode='23514';
     end if;
     select array(select jsonb_array_elements_text(v_request.proposed_changes->'image_urls')) into v_new_urls;
