@@ -537,7 +537,7 @@
     if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
     try{
       const {data,error}=await client().from("commerce_orders")
-        .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,currency,order_status,created_at,seller_note")
+        .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,delivery_charge,grand_total,currency,order_status,created_at,seller_note")
         .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
       if(error)throw error;
       const rows=data||[];
@@ -557,7 +557,7 @@
     if(!signedIn()||!activeSeller()){host.textContent="Active Seller লগইন প্রয়োজন।";return;}
     try{
       const {data,error}=await client().from("commerce_orders")
-        .select("id,order_code,listing_type,listing_id,buyer_id,quantity,unit_price,total_price,currency,fulfilment_location,buyer_note,order_status,created_at")
+        .select("id,order_code,listing_type,listing_id,buyer_id,quantity,unit_price,total_price,delivery_charge,grand_total,currency,fulfilment_location,buyer_note,order_status,created_at")
         .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
       const rows=data||[];
@@ -579,7 +579,7 @@
       if(error)throw error;
       say("অর্ডারের অবস্থা আপডেট হয়েছে।",true);
       await Promise.all([loadBuyerOrders(),loadSellerOrders()]);
-      if(action==="complete")say("অর্ডার সম্পন্ন হয়েছে। এখন আপনার Verified Review দেওয়ার অনুমতি তৈরি হয়েছে।",true);
+      if(action==="complete"&&listingType!=="buyer_demand")say("অর্ডার সম্পন্ন হয়েছে। এখন আপনার Verified Review দেওয়ার অনুমতি তৈরি হয়েছে।",true);
     }catch(err){say("অর্ডার আপডেট হয়নি: "+err.message);}
   }
 
