@@ -261,3 +261,13 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - No Live Supabase schema/data/history changed; no migration executed; no main, Production, DNS or deployment changed.
 
 - Extended the metadata evidence snapshot with all 22 public relations, the 37-function public/private inventory, 12 custom auth/storage triggers (including their function definitions), and four auth/storage policies. Ten selected Foundation function definitions are fully captured; a complete raw schema-only export and full ACL/default-privilege capture remain pending.
+
+
+## 2026-11-14 — Android-only recovery path
+
+- User confirmed Android/Termux is the only available device. Supabase CLI and Docker are not installed; Docker CLI alone is not a viable substitute for a Docker Engine.
+- Continued with connected Supabase MCP read-only catalog queries instead of asking the user to install unsupported tooling. The evidence JSON now includes the complete public/private relation and function inventories, view definitions, policy/trigger counts, and the complete 24-entry live migration version/name list.
+- Latest evidence update committed on `nexora-development`: `15480737ada1eca9b37e11a2f9ee1abc11a328fb`.
+- The connected catalog confirms 22 public relations (20 tables + 2 views), 37 public/private functions, 78 public RLS policies, 4 storage policies, 5 public triggers, 1 auth trigger, and 11 storage triggers. This is catalog evidence only, not a complete executable schema dump.
+- Next: capture remaining exact definitions and ACL/default-privilege/extension metadata through read-only catalog queries in bounded batches, then compare with branch migrations. No private user rows or message content will be queried.
+- No Live Supabase schema/data/history changed; no SQL migration executed; no main, Production, DNS or deployment changed.
