@@ -74,8 +74,8 @@
       say("শুধু সক্রিয় Buyer নিজের Marketplace ক্যাটাগরি পরিবর্তন করতে পারবেন।");
       return false;
     }
-    if (!["wholesale","retail"].includes(category)) {
-      say("সঠিক Buyer ক্যাটাগরি নির্বাচন করুন।");
+    if (category !== "wholesale") {
+      say("NEXORA শুধুমাত্র পাইকারি (Wholesale) Marketplace।");
       return false;
     }
     try {
@@ -386,13 +386,10 @@
     setBusy(form, true); say("");
     const f = new FormData(form);
     const requestedSignupRole = String(f.get("role") || "buyer");
-    const buyerCategory = String(f.get("buyer_category") || "wholesale");
-    const sellerCategories = f.getAll("seller_categories").map(v => String(v)).filter(v => ["wholesale","retail"].includes(v));
-    if (requestedSignupRole === "buyer" && !["wholesale","retail"].includes(buyerCategory)) {
-      setBusy(form, false); return say("Buyer-এর জন্য Wholesale অথবা Retail নির্বাচন করুন।");
-    }
-    if (requestedSignupRole === "seller" && (!sellerCategories.length || sellerCategories.length > 2)) {
-      setBusy(form, false); return say("Seller-এর জন্য অন্তত একটি ক্যাটাগরি নির্বাচন করুন।");
+    const buyerCategory = "wholesale";
+    const sellerCategories = requestedSignupRole === "seller" ? ["wholesale"] : [];
+    if (requestedSignupRole === "buyer" && String(f.get("buyer_category") || "wholesale") !== "wholesale") {
+      setBusy(form, false); return say("NEXORA শুধুমাত্র পাইকারি (Wholesale) Marketplace।");
     }
     if (!["buyer","seller","porter"].includes(requestedSignupRole)) {
       setBusy(form, false); return say("শুধু Buyer, Seller অথবা Porter অ্যাকাউন্ট তৈরি করা যাবে।");
@@ -424,6 +421,7 @@
 
   function updateSignupCategoryFields() {
     const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
+    document.querySelectorAll('#nxSignup option[value="retail"], #nxSignup input[name="seller_categories"][value="retail"]').forEach(node => { node.disabled = true; node.hidden = true; });
     const buyerFields = document.getElementById("nxBuyerCategoryFields");
     const sellerFields = document.getElementById("nxSellerCategoryFields");
     const porterNote = document.getElementById("nxPorterRegistrationNote");
@@ -436,6 +434,8 @@
     socialDivider?.classList.toggle("hidden", role !== "buyer");
     socialButtons?.classList.toggle("hidden", role !== "buyer");
     if (buyerSelect) {
+      const wholesaleOption = buyerSelect.querySelector('option[value="wholesale"]');
+      if (wholesaleOption) wholesaleOption.selected = true;
       buyerSelect.required = role === "buyer";
       buyerSelect.disabled = role !== "buyer";
     }
