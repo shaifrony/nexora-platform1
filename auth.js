@@ -351,6 +351,7 @@
   }
   async function sync(session) {
     const wasSignedIn = Boolean(currentUser);
+    const wasMfaVerified = mfaVerified;
     currentUser = session?.user || null;
     try {
       await loadProfile();
@@ -366,7 +367,7 @@
         render();
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
       } else render();
-      if (!wasSignedIn && currentUser && profile?.account_status === "active" && ["buyer","seller","admin"].includes(profile?.role)) {
+      if (currentUser && profile?.account_status === "active" && ["buyer","seller","admin"].includes(profile?.role) && (!wasSignedIn || (!wasMfaVerified && mfaVerified))) {
         window.openMyDashboard?.();
       }
       if (wasSignedIn && !currentUser) window.showSection?.("market");
