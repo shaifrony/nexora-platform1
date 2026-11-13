@@ -153,3 +153,15 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - The later inventory migration originally retained a legacy Buyer-category order gate; this was removed from the final Product Order RPC definition.
 - A local read-only verification script is staged at `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`. It checks catalog policy/grants and, when the complete marketplace schema and an active Buyer exist, compares anon, Buyer, Seller and Admin-visible approved listings. It creates no data and changes no schema.
 - This is staged source-code work only. No migration was run, no local SQL/browser tests were run in this turn, and Hosted Supabase remains untouched.
+
+
+
+## 9. B-03 Buyer Demand local behavior verification (2026-11-13)
+
+- User ran the immutable Termux runner at commit `f202a630dc4e2503daada8ef2130cab90f3b88a6` successfully on local `nexora_test`.
+- Local Demand privacy/routing catalog audit: 8 PASS checks.
+- Local transactional behavior suite: 12 PASS checks covering category/subcategory routing independent of Wholesale/Retail, approved-product update routing, anonymous safe projection, Buyer ownership/isolation, Wholesale and Retail Seller inbox access, unmatched Seller denial, direct inbox-write denial, duplicate quotation prevention, Buyer quotation visibility/isolation, Buyer ID spoof prevention, past required-date rejection, and retained RLS/private ACL boundaries.
+- Final output: `=== LOCAL B-03 DEMAND BEHAVIOR TESTS PASSED; ALL TEST DATA ROLLED BACK ===` and `All runner steps completed.` Test rows were rolled back.
+- A local-only policy dependency repair adds private boolean SECURITY DEFINER helpers for approved-business eligibility and Buyer Demand ownership; helper EXECUTE is restricted to authenticated and anon is denied. Seller identity remains unexposed. This is local fixture/test code, not a production deployment approval.
+- B-03 local fixture logic is PASS. Hosted Supabase JWT/RLS/PostgREST, Data API exposure, Storage/Realtime/Edge Functions, and browser E2E remain unverified. Do not claim production readiness.
+- No migration was applied; Live Supabase, Production and `main` remain untouched.
