@@ -712,3 +712,12 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - **Hardening follow-up before release:** the current `calls_participant_update` policy permits any accepted participant to update call status/timestamps, and column grants expose those fields without a database-enforced state-transition/actor rule. Review whether this should be narrowed to caller/callee-specific transitions or moved behind a guarded RPC. The participant self-status update policy also permits an already accepted participant to transition to declined/left; confirm the intended lifecycle.
 - **Test boundary:** this is a source-level security audit plus JavaScript syntax check only. No disposable Postgres policy execution, Storage upload/download, Realtime delivery, WebRTC media, browser/device E2E, JWT/PostgREST or concurrency test was run in this pass. No private messages, calls, attachments, user rows or Live data were read.
 - No application code, hosted database, `main`, Production, DNS or paid service was changed.
+
+
+## 2026-11-14 — Private Chat/File Sharing hardening; Calling paused
+
+- Per user direction, Audio/Video Calling is paused for now, not removed. The calling UI is hidden, incoming-call Realtime subscription is disabled, and the start-call handler reports that calling is paused. Existing calling code, tables and migrations are retained for later reactivation.
+- Hardened chat attachment upload flow: capture the target conversation before upload; reject zero-byte and over-20-MB files; sanitize and cap stored file names; reject completion if the user switches conversations during upload; and clean up a partially-created message and uploaded object when later upload steps fail.
+- `node --check chat.js` and `git diff --check` passed in the disposable Vercel Sandbox before applying the same source patch to this branch.
+- No Live/hosted database, private message, user row, Storage object, `main`, Production or DNS was accessed or changed. No migration was added or modified.
+- **Remaining validation:** disposable Postgres/PostgREST RLS test for Chat/File, Storage upload/download and signed URL behavior, browser/device E2E, and file cleanup behavior against actual Storage. Calling remains explicitly out of scope until user reactivates it.
