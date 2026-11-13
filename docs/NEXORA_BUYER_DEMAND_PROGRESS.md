@@ -96,3 +96,14 @@ No database schema, migration, hosted Supabase project, production deployment or
 - Final output confirms test transaction ROLLBACK and all test data rolled back. Runner completed without SQL errors.
 - Result: local reconstructed B-03 PostgreSQL logic test PASS. This does not establish production migration correctness or hosted Supabase Auth/JWT/PostgREST/RLS behavior. Browser E2E, Data API exposure and actual hosted role tests remain pending.
 - No migration/deployment was performed; Live Supabase, Production and `main` remain untouched.
+
+
+## 2026-11-14 — Buyer quotation negotiation and order workflow source review
+
+- Reviewed the staged migration `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` and the Buyer/Seller frontend handlers in `marketplace.js`.
+- Confirmed the Buyer Dashboard exposes accept/counter/reject actions for Seller quotations; the Seller Demand Inbox exposes accept/counter/reject actions after a Buyer counter-offer. Both call the same guarded RPC. This is source inspection only, not browser/runtime verification.
+- Fixed negotiation RPC validation so a NULL action is rejected explicitly.
+- Hardened Buyer Demand order transitions: only the active Buyer who owns the order or the active Seller assigned to it may change its status; NULL actions are explicitly rejected.
+- Corrected order conversion when the Seller accepts a Buyer counter-offer: the new order is created as accepted with `accepted_at`, and an accepted order event is recorded. When the Buyer accepts a Seller proposal, the order remains pending for Seller confirmation.
+- Re-fetched the migration after each change. Latest source checks confirm the new guards and balanced SQL function delimiters.
+- Remaining verification: isolated full-schema migration rehearsal, SQL behavior tests for both acceptance paths and inactive-account denial, Supabase JWT/PostgREST/RLS checks, and browser E2E. No SQL was executed; no Live Supabase, Production, `main`, DNS or deployment was changed.
