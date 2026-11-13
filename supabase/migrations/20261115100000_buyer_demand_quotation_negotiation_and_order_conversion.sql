@@ -10,7 +10,7 @@ alter table public.commerce_orders
 
 alter table public.commerce_orders
   add column if not exists source_demand_id uuid references public.buyer_demands(id) on delete restrict,
-  add column if not exists source_offer_id uuid references public.seller_offers(id) on delete restrict;
+  add column if not exists source_offer_id uuid references public.seller_offers(id) on delete restrict,\n  add column if not exists delivery_charge numeric(18,2) not null default 0 check (delivery_charge>=0),\n  add column if not exists grand_total numeric(18,2) generated always as (round(quantity*unit_price+delivery_charge,2)) stored;
 
 alter table public.commerce_orders
   drop constraint if exists commerce_orders_demand_source_check;
@@ -140,7 +140,7 @@ declare
   v_price numeric(18,2);
   v_order_id uuid;
   v_location text;
-  v_currency text;
+  v_currency text;\n  v_max_qty numeric(18,3);
 begin
   if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
   if p_action not in ('accept','counter','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
