@@ -3,6 +3,7 @@
 begin;
 
 alter table public.products add column if not exists subcategory text;
+grant select (subcategory) on public.products to anon;
 alter table public.buyer_demands add column if not exists subcategory text;
 alter table public.seller_offers
   add column if not exists product_brand text,
