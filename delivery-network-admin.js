@@ -26,7 +26,7 @@
             <label>যোগাযোগের ব্যক্তির নাম<input name="contact_name" maxlength="160"></label>
             <label>ফোন *<input name="contact_phone" minlength="5" maxlength="40" required></label>
             <label>Email<input name="contact_email" type="email" maxlength="254"></label>
-            <label>সেবা *<select name="service_modes" multiple required><option value="retail" selected>Retail</option><option value="wholesale">Wholesale</option></select></label>
+            <div><label>সেবা *</label><label><input type="checkbox" name="service_modes" value="retail" checked style="width:auto"> Retail</label><label><input type="checkbox" name="service_modes" value="wholesale" style="width:auto"> Wholesale</label></div>
             <label>দেশ *<input name="service_countries" value="Bangladesh" required></label>
             <label>সেবা-শহর (কমা দিয়ে)<input name="service_cities" placeholder="Dhaka, Gazipur, Narayanganj"></label>
             <label>Tracking Mode *<select name="tracking_mode"><option value="manual">Manual / Tracking Number</option><option value="api">API (পরবর্তী Integration)</option></select></label>
@@ -93,7 +93,7 @@
   }
   async function savePartner(event) {
     event.preventDefault(); if(!isAdmin()) return message("Admin account প্রয়োজন।");
-    const form=event.currentTarget, f=new FormData(form), modes=[...form.elements.service_modes.selectedOptions].map(o=>o.value);
+    const form=event.currentTarget, f=new FormData(form), modes=[...form.querySelectorAll('[name="service_modes"]:checked')].map(o=>o.value);
     const payload={
       p_partner_id:null,p_partner_kind:f.get("partner_kind"),p_display_name:String(f.get("display_name")).trim(),
       p_legal_name:String(f.get("legal_name")||"").trim()||null,p_contact_name:String(f.get("contact_name")||"").trim()||null,
@@ -108,7 +108,7 @@
     finally{btn.disabled=false;}
   }
   async function changePartnerStatus(btn) {
-    const status=btn.dataset.partnerStatus, reason=status==="suspended"?prompt("Suspend করার কারণ লিখুন (কমপক্ষে ৫ অক্ষর):"):"Admin approval reason (ঐচ্ছিক):";
+    const status=btn.dataset.partnerStatus, reason=status==="suspended"?prompt("Suspend করার কারণ লিখুন (কমপক্ষে ৫ অক্ষর):"):null;
     if(status==="suspended"&&!reason)return;
     btn.disabled=true;
     try{const {error}=await db().rpc("set_delivery_network_partner_status",{p_partner_id:btn.dataset.id,p_status:status,p_reason:reason||null});if(error)throw error;message("Partner status আপডেট হয়েছে।",true);await load();}
