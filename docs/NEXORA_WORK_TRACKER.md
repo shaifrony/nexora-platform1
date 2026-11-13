@@ -557,3 +557,12 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 
 
 - Additional guard hardening: Provider and Vehicle owner UPDATEs now also cannot alter primary IDs or original `created_at` timestamps. Re-fetched the migration and verified both immutable identity checks. Commit: `dedcd9b818e129635897a2c27a1b748dbc3bef2c`.
+
+
+## 2026-11-14 — Prevent vehicle double-booking
+
+- Static concurrency review found that the same approved/available vehicle could be assigned to multiple active delivery jobs because availability was checked without checking existing assignments.
+- Added active-job conflict checks to all three assignment paths: legacy job creation, legacy reassignment, and unified Provider assignment. Each path locks the selected vehicle row `FOR UPDATE` before checking active jobs, serializing competing assignments for the same vehicle.
+- Jobs in requested/assigned/accepted/picked_up/in_transit/out_for_delivery/partially_delivered/disputed states block reuse; completed, returned, failed, and cancelled work does not.
+- Commits: `5db82acaa711096c3666b145b004286db9518e1e` and `63f3d467ad4bd6b7e5ef1ce02e0d747f79df86cf`. Both migration files re-fetched; guard presence verified.
+- Source-level review only; no SQL concurrency test or database execution is available in the current environment.
