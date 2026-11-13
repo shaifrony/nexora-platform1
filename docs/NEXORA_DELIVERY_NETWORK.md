@@ -36,3 +36,12 @@
 - Partner/staff tables have RLS enabled and no browser write grants.
 - Public RPC wrappers are invoker-rights; privileged internal functions are in the private schema and check auth.uid(), active Admin membership, AAL2 and logistics.assign.
 - No service-role key or external API secret is exposed to the browser.
+
+
+## Phase 2 — Unified Delivery Jobs and Admin Assignment
+- Delivery jobs can be created as unassigned requests (`requested`) and assigned later by an Admin / Delivery Coordinator.
+- A job can be assigned to exactly one source: an approved independent transport provider, an approved NEXORA-owned team (optionally with an active staff member), or an approved courier company.
+- A vehicle is optional; when supplied for an independent provider it must be approved and belong to that provider. Courier partner jobs do not require a NEXORA vehicle record.
+- Assignment history is append-only and records the Admin actor, source, provider/partner/staff/vehicle, reason, and timestamp.
+- Job status vocabulary now supports request, assignment, acceptance, pickup, transit, out-for-delivery, delivered, failure, partial delivery, dispute, return, and cancellation.
+- This phase does not yet implement provider self-service acceptance/status updates, buyer charge checkout, tracking integrations, or completion OTP. Those remain later phases.
