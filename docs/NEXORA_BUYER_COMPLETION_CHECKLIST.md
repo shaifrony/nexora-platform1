@@ -32,7 +32,7 @@ Status: **Implementation review in progress — not complete**
 | Buyer Demand form | Frontend staged | Product, category, subcategory, description, specifications, quantity, optional budget, currency, destination এবং required date |
 | Public Demand Board | Migration + frontend staged | Open demands প্রকাশ; identity/contact fields view-তে নেই বলে migration-এ নির্ধারিত |
 | Buyer Demand privacy | Partially verified | Public view security_invoker; anon column grants সীমিত; hosted DB-তে grants/RLS পরীক্ষা বাকি |
-| Seller quotations | Frontend + migration staged | Buyer নিজের Demand-এর জন্য Seller offers দেখতে পারে |
+| Seller quotations | Frontend + migration staged | Buyer নিজের Demand-এর জন্য Seller offers দেখতে পারে; quotation compare/accept করার পূর্ণ workflow এখনো নেই |
 | Product inquiry/chat | Frontend + migration staged | Inquiry RPC conversation ও invitation তৈরি করে; গ্রহণের পর chat |
 | Orders | Frontend + migration staged | Product/service order request, status, cancel ও completion confirmation |
 | Verified reviews | Frontend + migration staged | Completed verified purchase ছাড়া review নয়; duplicate review block |
@@ -83,6 +83,7 @@ Status: **Implementation review in progress — not complete**
 - [ ] Buyer শুধু নিজের Demand create/read/update করতে পারে।
 - [ ] Seller শুধু তার নিজের `buyer_demand_inbox`-এ routed Demand দেখতে ও quotation দিতে পারে।
 - [ ] Buyer Demand close/cancel করলে নতুন quotation বন্ধ হয় এবং public board থেকে বাদ যায়।
+- [ ] Buyer একাধিক Seller quotation তুলনা করে একটি quotation গ্রহণ করতে পারবে কি না—business rule ও secure acceptance/order conversion workflow নির্ধারণ ও বাস্তবায়ন।
 - [ ] Required date, subcategory এবং field constraints final schema-তে মেলে।
 - [ ] Buyer category অনুযায়ী Demand matching-এর আচরণ Wholesale ও Retail উভয় ক্ষেত্রেই যাচাই।
 
@@ -93,7 +94,8 @@ Status: **Implementation review in progress — not complete**
 - [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
 
-### B-05 — Communications, reviews ও support
+### B-05 — Quotations, communications, reviews ও support
+- [ ] Buyer quotation acceptance: বর্তমানে Buyer Dashboard quotation দেখায়, কিন্তু গ্রহণ/প্রত্যাখ্যান বা quotation থেকে order তৈরির end-to-end action নেই। Seller-এর offer acceptance, quantity/price lock, order conversion এবং competing offer handling-এর নিয়ম নির্ধারণ প্রয়োজন।
 - [ ] Seller invitation accept না করা পর্যন্ত Buyer message পাঠাতে পারে না।
 - [ ] Audio/video/file sharing এবং history শুধু conversation participants দেখতে পারে।
 - [ ] Admin ব্যক্তিগত chat-এর content দেখতে পারে না—পূর্বের privacy decision অনুযায়ী।
