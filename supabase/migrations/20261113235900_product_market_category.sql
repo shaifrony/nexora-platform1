@@ -113,6 +113,7 @@ begin
 end;
 $function$;
 
+grant usage on schema private to authenticated;
 revoke all on function private.create_product_inquiry(uuid,text)
   from public,anon,authenticated;
 grant execute on function private.create_product_inquiry(uuid,text)
