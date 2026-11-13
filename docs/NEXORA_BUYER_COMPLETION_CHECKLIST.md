@@ -66,10 +66,12 @@ Status: **Implementation review in progress — not complete**
 - [x] Seller Product Listing-এ Wholesale/Retail দুটো sale type-ই বেছে নিতে পারে; account-level Seller category gate সরানো হয়েছে।
 - [x] Product SELECT RLS-এ সব authenticated user-কে approved Wholesale ও Retail listing দেখার অনুমতি দেওয়া হয়েছে।
 - [x] Anonymous visitor-এর জন্য approved listing-এর safe column projection এবং সীমিত public Business Display Name/Location access যোগ করা হয়েছে; seller_id ও admin review fields anon-এর জন্য grant করা হয়নি।
-- [x] Product Inquiry ও Order RPC থেকে Buyer category matching gate সরানো হয়েছে; active Buyer, approved listing ও Business validation বজায় আছে।
+- [x] Product Inquiry RPC থেকে Buyer category matching gate সরানো হয়েছে।
+- [x] পরবর্তী Inventory/MOQ migration-এর Product Order RPC-তেও থাকা legacy `buyer_category = market_category` gate সরানো হয়েছে; active Buyer, approved listing/business, MOQ ও stock validation বজায় আছে।
+- [x] Local-only read-only visibility verification script তৈরি হয়েছে: `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`; এখনো চালানো হয়নি।
 - [x] Buyer Demand matching থেকে Buyer/Seller account category condition সরানো হয়েছে; product category/subcategory ও approved Business Profile matching বজায় আছে।
 - [x] Auth trigger-এ legacy Buyer/Seller account market category NULL/empty রাখা হয়েছে।
-- [ ] Anonymous visitor, Buyer, Seller ও Admin session-এ দুই sale type visibility এবং safe-column boundary পরীক্ষা।
+- [ ] Read-only verification script চালিয়ে anonymous ও authenticated Buyer listing counts, safe-column grants এবং policy/RPC definitions যাচাই; marketplace schema না থাকলে script নিরাপদে SKIP করবে।
 - [ ] Product Inquiry, order creation, listing edit/review ও Buyer Demand routing local DB এবং real authenticated session-এ পরীক্ষা.
 
 ### B-03 — Buyer Demand privacy ও lifecycle
@@ -139,4 +141,6 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - Seller selects Wholesale or Retail separately on each Product Listing. This sale type remains visible as product information; it does not restrict who can view the listing.
 - Buyer Demand matching is based on product category/subcategory and Seller's approved public Business Profile, not Buyer/Seller account market categories.
 - Legacy profiles.buyer_category and profiles.seller_categories fields are retained only for migration compatibility, cleared to NULL/empty, and must not be used for authorization.
+- The later inventory migration originally retained a legacy Buyer-category order gate; this was removed from the final Product Order RPC definition.
+- A local read-only verification script is staged at `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`. It checks catalog policy/grants and, when the complete marketplace schema and an active Buyer exist, compares anon and Buyer-visible approved listings. It creates no data and changes no schema.
 - This is staged source-code work only. No migration was run, no local SQL/browser tests were run in this turn, and Hosted Supabase remains untouched.
