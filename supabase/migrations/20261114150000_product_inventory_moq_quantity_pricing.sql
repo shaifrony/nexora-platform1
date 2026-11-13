@@ -164,7 +164,6 @@ declare
   v_price numeric(18,2);
   v_currency text;
   v_order_id uuid;
-  v_market_category text;
   v_product public.products%rowtype;
   v_tier jsonb;
   v_tier_min numeric;
@@ -192,10 +191,7 @@ begin
     v_seller := v_product.seller_id;
     v_price := v_product.price;
     v_currency := v_product.currency;
-    v_market_category := v_product.market_category;
-    if not exists(select 1 from public.profiles p where p.id=v_buyer and p.buyer_category=v_market_category) then
-      raise exception 'Switch to the matching Buyer category before ordering' using errcode='42501';
-    end if;
+    -- Sale type affects Seller commercial rules only; it never restricts Buyer visibility or ordering.
     if p_quantity < v_product.minimum_order_quantity then
       raise exception 'Order quantity is below the Seller minimum order quantity';
     end if;
