@@ -8,10 +8,10 @@ Status: **Implementation review in progress — not complete**
 
 ## 1. Buyer-এর স্থায়ী ব্যবসায়িক নিয়ম
 
-- Buyer নিবন্ধনের সময় Wholesale অথবা Retail—একটি ক্যাটাগরি নির্বাচন করবে।
+- Buyer-এর কোনো Wholesale/Retail account category থাকবে না; সব Buyer সব approved Wholesale ও Retail পণ্য দেখতে ও অর্ডার করতে পারবে।
 - Buyer account তৈরি ও ব্যবহার করতে Admin approval লাগবে না (email confirmation বা platform-এর সাধারণ authentication শর্ত প্রযোজ্য)।
-- Buyer Dashboard থেকে নিজের ক্যাটাগরি Wholesale/Retail-এ পরিবর্তন করতে পারবে।
-- Wholesale Buyer কেবল Wholesale পণ্য এবং Retail Buyer কেবল Retail পণ্য দেখতে ও অর্ডার করতে পারবে।
+- Buyer Dashboard-এ কোনো category switch থাকবে না; Buyer visibility সবসময় universal।
+- Seller প্রতিটি Product Listing-এ Wholesale অথবা Retail নির্বাচন করবে; এই নির্বাচন Buyer-এর দেখার অধিকার সীমিত করবে না।
 - Seller প্রতিটি Product Listing-এর সময় Wholesale/Retail নির্বাচন করবে; Seller account-এর একটি global market category দিয়ে পণ্য সীমাবদ্ধ করা হবে না।
 - Buyer Demand প্রকাশ্য হতে পারে, কিন্তু Buyer-এর নাম, পূর্ণ Profile, email, phone বা ব্যক্তিগত যোগাযোগের তথ্য প্রকাশ করা যাবে না।
 - Buyer Demand-এ প্রয়োজনীয় পণ্যের বিবরণ, পরিমাণ, গন্তব্য এবং **প্রয়োজনের তারিখ** থাকবে।
@@ -25,8 +25,8 @@ Status: **Implementation review in progress — not complete**
 | Buyer signup | Frontend staged | Buyer category selector নেই; universal Buyer access; tests pending |
 | OAuth signup | Migration staged | Google/Facebook signup Buyer হিসেবে শুরু করার নিয়ম আছে; final trigger chain পরীক্ষা বাকি |
 | Buyer account activation | Partially verified | Buyer profile active করার migration logic আছে; hosted Auth flow পরীক্ষা বাকি |
-| Category switch | Frontend + migration staged | Buyer-only category update, দুই category allowlist ও column-level grant আছে |
-| Product discovery | Frontend staged | Approved products query; Buyer category অনুযায়ী client filter আছে |
+| Category switch | Removed | Buyer account-level category নেই; কোনো category-specific policy নেই |
+| Product discovery | Frontend staged | সব approved Wholesale ও Retail listing সব Buyer এবং public visitor দেখতে পারে |
 | Product visibility | Database migration staged | সব active Buyer উভয় market_category-এর approved listing দেখতে পারবে |
 | Product details | Frontend staged | Product ID, Business Display Name, specification, price, MOQ/stock/tiers দেখায় |
 | Buyer Demand form | Frontend staged | Product, category, subcategory, description, specifications, quantity, optional budget, currency, destination এবং required date |
@@ -44,10 +44,9 @@ Status: **Implementation review in progress — not complete**
 ## 3. Buyer-এর কাজের সম্পূর্ণ প্রবাহ
 
 1. Homepage থেকে Buyer নির্বাচন করে signup।
-2. Signup-এ Wholesale অথবা Retail নির্বাচন।
+2. Signup-এ কোনো market category নির্বাচন নেই।
 3. Authentication সম্পন্ন করে Buyer Dashboard-এ প্রবেশ।
-4. Dashboard থেকে category পরিবর্তন (প্রয়োজনে)।
-5. নিজের category-র approved products খোঁজা, filter করা ও details দেখা।
+4. সব approved Wholesale ও Retail product খোঁজা, filter করা ও details দেখা।
 6. Seller-এর সঙ্গে inquiry পাঠানো; invitation গ্রহণের পর chat/call/file sharing।
 7. পণ্য অর্ডার request পাঠানো; Seller-এর order response দেখা।
 8. Seller পণ্য পাঠানোর/সেবা সম্পন্নের পর Buyer receipt/completion নিশ্চিত করা।
@@ -87,7 +86,7 @@ Status: **Implementation review in progress — not complete**
 - [ ] Buyer Demand matching product category/subcategory ও approved Seller business অনুযায়ী হয়; market_category নির্বিশেষে যাচাই।
 
 ### B-04 — Orders, stock ও pricing
-- [ ] Buyer-এর category মেলে না এমন product order server-side reject হয়।
+- [ ] Buyer account category ছাড়া যেকোনো approved Wholesale/Retail product order করতে পারে যাচাই।
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
 - [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
@@ -102,7 +101,7 @@ Status: **Implementation review in progress — not complete**
 - [ ] Complaint/support escalation এবং Buyer-এর support status দেখা।
 
 ### B-06 — Dashboard completeness
-- [ ] Wholesale-only লেখা, label ও demo text সব জায়গায় dual-market অনুযায়ী সংশোধন।
+- [ ] Sale type label ও demo text product-এর নির্বাচিত Wholesale/Retail ধরন ঠিকভাবে দেখায় যাচাই।
 - [ ] Wallet balance placeholder-কে বাস্তব wallet না বলা; wallet/payment feature বাস্তবায়ন না হওয়া পর্যন্ত স্পষ্টভাবে unavailable/coming later রাখা।
 - [ ] Buyer delivery tracking ও Porter handoff UI সংযুক্ত।
 - [ ] Mobile responsive, keyboard accessibility, loading/error/empty states পরীক্ষা।
