@@ -51,5 +51,5 @@ No database schema, migration, hosted Supabase project, production deployment or
 2. Inspect `buyer_demands` RLS and INSERT/SELECT/UPDATE policies, including ownership and allowed status transitions.
 3. Inspect demand matching logic and `buyer_demand_inbox` access to confirm only eligible approved Sellers receive relevant demand records.
 4. Confirm Seller quotations cannot reveal Buyer contact data before an accepted communication/consent flow.
-5. Align Demand matching with the dual-market model: route a Buyer Demand only to eligible Sellers/listings in the Buyer’s selected Wholesale or Retail category; verify both paths and keep Buyer identity/contact private.
+5. Align Demand matching with the universal visibility model: route a Buyer Demand to every eligible Seller with an approved product matching category/subcategory, regardless of Wholesale/Retail sale type; keep Buyer identity/contact private.
 6. Add focused tests for privacy, ownership, unauthorized Seller access, closed/cancelled demands, required-date validation and quotation eligibility.
