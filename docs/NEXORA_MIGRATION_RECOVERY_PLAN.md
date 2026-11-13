@@ -779,3 +779,26 @@ A fresh read-only call to the connected Supabase migration-list endpoint reconfi
 The source move and old-path removal are being committed atomically on `nexora-development`. No SQL execution, migration-history repair, schema/data mutation, paid resource, `main`, Production or Live change is part of this repair. Disposable-database rehearsal remains the next separate gate.
 
 The Supabase CLI v3 guidance was rechecked on 2026-11-14: migration files belong under `supabase/migrations/`; database commands are local by default, and hosted targets require explicit `--remote`. No Live SQL, migration history, schema, data, or deployment was changed.
+
+
+## 2026-11-14 — Disposable replay and core workflow validation completed
+
+**Migration version repair:** resolved. The CLI-generated Product Conversation migration at `20261113203025` is later than the latest applied Live version `20261112162234` and all direct prerequisites. It has no dependency on Delivery Network/assignment/tracking. The old colliding path was removed, the unchanged SQL body was moved, and the active branch inventory now has 38 files with 38 unique versions.
+
+**Source corrections found during replay:**
+- `20261114130000_listing_edit_history.sql`: replaced an accidental literal `\n` token between statements with a real newline.
+- `20261114130100_verified_purchase_reviews.sql`: repaired an invalid single-dollar function-body delimiter to the matching double-dollar delimiter.
+- `20261115110000_product_price_negotiation.sql`: removed three appended duplicate/alternative fragments and retained the first complete transaction, which includes `conversation_id`, product-linked inquiry creation and system Chat event messages.
+
+**Disposable test result:**
+- Supabase CLI v3.1.0 Native Runtime ran in a non-persistent, zero-cost Hobby Sandbox; no Docker Engine was needed.
+- A local-only prerequisite baseline was reconstructed from read-only Live catalog metadata to model objects absent from the branch's 11 Live-only migration records. It included the RLS DDL event trigger, profile/Admin baseline objects and the Live-only Admin audit-log table. Only synthetic Buyer/Seller accounts, a synthetic business/product/demand and synthetic conversations/orders were created. No personal rows or private Live content was accessed.
+- All 38 branch migrations applied to the disposable local database; the local history count reached 38 and the final version was `20261115120000`.
+- `supabase db lint --level warning --fail-on error`: **No schema errors found** after the test-only baseline was completed.
+- 40 public tables were checked; zero lacked RLS.
+- Direct SQL role/JWT tests confirmed one own-profile row per Buyer/Seller; a pending Seller invite did not expose messages; the accepted Buyer could read the conversation message. A public Buyer Demand was visible to `anon` through the safe projection, with no Buyer identity/contact columns in that view.
+- Product negotiation/counter/accept converted to a pending Commerce Order, linked a `product` conversation to the correct Product ID, and reserved stock. Seller accept → Seller ready → Buyer completion succeeded and set the expected timestamps.
+
+**Important limits:** this was a schema replay and focused SQL/RLS/function test against a reconstructed local baseline, not a complete recreation of the 11 Live-only migrations. Browser E2E, PostgREST/HTTP JWT, actual Storage transfer, WebRTC, concurrency/load, and full cross-role API tests remain outstanding. The disposable stack was stopped and destroyed. No Live database migration, repair, schema/data write, `main`, Production, DNS or paid resource was used.
+
+**Next gate:** continue with broader Buyer/Seller/Porter/Admin role tests and API-level integration checks on a fresh disposable environment before any deployment decision.
