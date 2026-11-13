@@ -45,3 +45,11 @@
 - Assignment history is append-only and records the Admin actor, source, provider/partner/staff/vehicle, reason, and timestamp.
 - Job status vocabulary now supports request, assignment, acceptance, pickup, transit, out-for-delivery, delivered, failure, partial delivery, dispute, return, and cancellation.
 - This phase does not yet implement provider self-service acceptance/status updates, buyer charge checkout, tracking integrations, or completion OTP. Those remain later phases.
+
+
+## Phase 3 — Tracking and operational statuses
+- Added append-only `delivery_tracking_events` and a guarded status transition RPC.
+- Independent Provider owners can update only jobs assigned to their own Provider. Admin / Delivery Coordinator can update with AAL2 and `logistics.assign`.
+- Status transitions are validated in the database; every transition records previous/new status, time, actor, optional location, note, and external tracking code.
+- Courier Partner and NEXORA staff updates remain Admin-entered until partner API and staff field access are built.
+- `delivered` is a logistics status only. It does not mark a Commerce Order completed; Buyer handover verification and completion report are a separate next phase.
