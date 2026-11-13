@@ -10162,8 +10162,46 @@
     ],
     "corrections": [
       "profiles_market_categories_check in Porter registration already existed from 20261113230000 and intentionally keeps deprecated profile category fields empty; not a new conflict.",
-      "Delivery service_modes/delivery_mode are logistics concepts, separate from product marketplace visibility and were not changed."
+      "Delivery service_modes/delivery_mode are logistics concepts, separate from product marketplace visibility and were not changed.",
+      "Earlier Wholesale-only/dual-market UI documentation is superseded by the user's latest unified Marketplace decision; index.html and marketplace.js still need coordinated alignment."
     ],
-    "safety": "No Live database writes, migrations, or user-row queries. All edits are on nexora-development."
+    "safety": "No Live database writes, migrations, or user-row queries. All edits are on nexora-development.",
+    "product_decision_mismatch": {
+      "current_decision": "No product Wholesale/Retail segmentation. All users can see all approved products; Seller sets product price and quantity.",
+      "source_evidence": [
+        {
+          "file": "marketplace.js",
+          "blob_sha": "d8a76c8c155fab3db7247c82c07dfba1f5a02425",
+          "findings": [
+            "market_category in product selects and insert/edit payloads",
+            "Wholesale/Retail badges and buyer/seller filters",
+            "Retail-specific product detail price label",
+            "demo catalog includes Wholesale and Retail products"
+          ]
+        },
+        {
+          "file": "index.html",
+          "blob_sha": "ed1eee694ba3dd353d685cc0120ddc49a51d8681",
+          "findings": [
+            "Wholesale/Retail discovery cards and benefits",
+            "product form market_category selector",
+            "Seller workspace market-type filter",
+            "Buyer/Seller copy still describes Wholesale/Retail segmentation"
+          ]
+        }
+      ],
+      "migration_evidence": [
+        {
+          "file": "supabase/migrations/20261113235900_product_market_category.sql",
+          "finding": "adds products.market_category in ('wholesale','retail') and anonymous column grant"
+        },
+        {
+          "file": "supabase/migrations/20261114150000_product_inventory_moq_quantity_pricing.sql",
+          "finding": "rejects Retail products unless minimum_order_quantity=1"
+        }
+      ],
+      "required_alignment": "Coordinated UI, product schema, listing insert/edit/history, marketplace query/display, and any market-category-specific pricing rules. Do not partially remove schema before frontend payloads are aligned.",
+      "status": "Pending; not changed in this audit."
+    }
   }
 }
