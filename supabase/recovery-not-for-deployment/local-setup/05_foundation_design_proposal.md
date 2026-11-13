@@ -232,3 +232,126 @@ Additional Porter dispatch rule: an approved Porter account alone is insufficien
 - No recovery draft has been executed.
 - No Live Supabase database, migration history, production deployment, DNS or `main` branch has been changed.
 - This document must not be treated as a deployable migration or as recovered historical schema.
+
+
+## 7. Authoritative design resolutions (2026-11-13)
+
+This section resolves the earlier open conflicts using the user's latest explicit NEXORA decisions and the approved governance charter. Where an older migration or design note disagrees, this section is the intended product direction. It still remains a **design proposal**, not a migration.
+
+### 7.1 Account roles and public registration
+
+The homepage registration form exposes exactly:
+- `buyer`
+- `seller`
+- `porter`
+
+No Admin, Director, Managing Director, department-head or officer role is displayed or selectable in public registration.
+
+The internal profile role vocabulary is:
+- `buyer`
+- `seller`
+- `porter`
+- `admin` (internal staff only; never public signup)
+
+A Porter is a person-level NEXORA account role. A Transport Provider is a separate provider/service profile linked to an approved Porter account. Therefore:
+- Public Porter registration creates a `profiles.role='porter'` profile with `account_status='pending'` and a pending `porter_account_reviews` record.
+- Porter cannot use the Porter workspace, register an active provider workflow, or receive delivery assignments until the Porter account is approved.
+- After approval, Porter may submit a separate provider profile and one or more vehicles.
+- Provider and each vehicle have independent Admin review states.
+- Dispatch eligibility requires active approved Porter account + approved provider + approved/available vehicle.
+- Buyer or Seller accounts do not own Porter provider profiles under this model.
+- A provider is not another user role and never appears in the homepage role selector.
+
+This supersedes the older `NEXORA_PORTER_ARCHITECTURE.md` statement that Porter is not an account role. That document must be updated to avoid contradictory instructions.
+
+### 7.2 Wholesale-only category model
+
+The approved marketplace is Wholesale-Only. There is no retail category or retail-only order flow.
+
+Foundation contract:
+- Buyer: `buyer_category='wholesale'`.
+- Seller: `seller_categories` contains only `wholesale`; for a single-category implementation, exactly `['wholesale']`.
+- Porter/Admin: `buyer_category IS NULL` and `seller_categories='{}'`.
+- Signup metadata containing `retail`, mixed categories, or unsupported values is rejected; it must not be silently normalized into permission.
+- The Buyer/Seller category migration and frontend registration/category-switch controls that allow retail are legacy conflicts. Do not replay them unchanged. Any correction requires a separately reviewed change to active branch files and dependent UI.
+
+### 7.3 Business/listing approval and account lifecycle
+
+| Account | Public signup | Initial account status | Additional review | What is blocked |
+|---|---|---|---|---|
+| Buyer | Yes | active after valid signup | None for basic account | No restriction beyond normal authorization |
+| Seller | Yes | active after valid signup | Business Profile and listing must be approved before public marketplace visibility | Unapproved business/listings stay private |
+| Porter | Yes | pending | Porter account approval, then provider approval and each vehicle approval | Porter workspace/delivery work until account approval; dispatch until all provider/vehicle gates pass |
+| Admin staff | No | provisioned only by protected Director workflow | Invitation/appointment, MFA and explicit permissions | All staff access until active appointment and required MFA |
+
+Account status, role, review status, verification status and protected category entitlements are server-controlled. A seller's active account does not imply a publicly approved business or product.
+
+### 7.4 Transport provider and vehicle ownership
+
+The current `transport_provider_vehicle_model` migration's owner policy allowing active Buyer/Seller accounts is incompatible with the latest Porter workflow.
+
+Target policy:
+- `transport_providers.owner_user_id` must reference an active, approved `profiles.role='porter'`.
+- Provider creation is allowed only after `porter_account_reviews.review_status='approved'` and `profiles.account_status='active'`.
+- The provider owner may submit and edit their own non-review fields only.
+- Provider approval metadata/status is Admin-controlled.
+- Vehicles belong to a provider and may be submitted by that provider's Porter owner.
+- Each vehicle's approval and availability are separately controlled.
+- Only Transport-authorized staff with required MFA may review provider/vehicle and assign delivery work.
+
+### 7.5 Public identity and profile privacy
+
+No Buyer, Seller or Porter may browse another user's full/private profile. The public identity layer is a narrow projection, not a profile endpoint.
+
+Allowed public identity fields are limited to the minimum needed for a particular marketplace interaction, such as:
+- approved display name (personal name or Business display name, depending on role/context);
+- explicitly approved profile image;
+- non-sensitive, approved public descriptors.
+
+Never expose through public identity projection:
+- email, phone, private address, legal identity documents, private verification data, account status, internal notes, Admin data, private activity or full profile columns.
+
+Buyer Demand/Requirement Marketplace must not reveal the Buyer's name, profile ID, avatar, business identity, contact details or any joinable identifier. A public demand card exposes only demand information needed by potential Sellers, including product/requirement, quantity/specification and required date. Buyer identity/contact is revealed only through a separately authorized interaction after the appropriate request/consent workflow.
+
+The existing `public_identities.full_name` projection must be redesigned as a context-safe public display identity. It must not be joined into public Buyer Demand results. Do not assume that RLS on `profiles` protects a separate globally-readable projection.
+
+### 7.6 Internal Admin governance hierarchy
+
+Use the approved `docs/NEXORA_ORGANIZATION_GOVERNANCE.md` as the authority model:
+
+**Director → Managing Director (MD) → Department Heads → Department Officers**
+
+Initial departments:
+- Marketing
+- Transport & Logistics
+- Accounts & Finance
+
+Director is the single highest constitutional authority and alone may change the organization chart, create/retire departments, modify protected permission definitions, appoint/remove MD and department heads, and approve core governance/security policy changes. Director actions require protected server-side controls, MFA and audit; succession/recovery must prevent permanent lockout.
+
+MD runs day-to-day operations, coordinates department heads and may assign operational work within explicit permissions. MD cannot restructure departments, change the protected permission catalogue, grant protected powers to themselves, appoint/remove the Director, or approve their own financial claims/settlements.
+
+Department Heads manage their department within the Director-approved remit and staffing limits. Officers receive only explicit least-privilege permissions scoped to their department. Job title alone never grants access. Cross-department permissions require explicit Director authorization and audit.
+
+Separation of duties:
+- Marketing may source/recruit providers but cannot approve its own provider/vehicle applications.
+- Transport reviews providers/vehicles and assigns eligible delivery work, but cannot alter finance ledger or approve its own partner invoices.
+- Accounts reconciles financial records and prepares refunds/payouts/settlements; the requester cannot approve their own transaction.
+- No officer can silently change marketplace roles, account status or verification state without a narrowly scoped permission and audited workflow.
+
+The Director's initial root identity must be provisioned through a secure, out-of-band bootstrap/controlled recovery process, not public signup and not a client-side role update. The exact recovery ceremony and key custody are implementation prerequisites.
+
+### 7.7 `role_requests` and `profile_change_requests`
+
+- `role_requests` is not a way to self-upgrade to Admin or Porter. If retained, its only permitted role transition is Buyer → Seller, and the transition requires an authorized review. Public signup can directly create Buyer, Seller or Porter according to the public registration form.
+- Porter review is handled by `porter_account_reviews`, not `role_requests`.
+- `profile_change_requests` records proposed personal-name changes. It does not directly modify `profiles`; approval applies the change through a protected server-side action. Multiple pending request policy must be enforced consistently.
+
+### 7.8 Superseded source files and implementation scope
+
+The following current branch artifacts are known to conflict with these decisions and must be reviewed before any migration replay:
+- `docs/NEXORA_PORTER_ARCHITECTURE.md`: says Porter is not an account role and provider owners are ordinary Buyer/Seller.
+- `supabase/migrations/20261113180000_transport_provider_vehicle_model.sql`: permits Buyer/Seller provider owners and does not enforce approved Porter ownership.
+- `supabase/migrations/20261113230000_buyer_seller_market_categories.sql`: permits `retail` in Buyer/Seller categories.
+- `supabase/migrations/20261112050241_secure_public_profile_identity_projection.sql`: exposes `full_name` through an authenticated-wide public identity projection.
+
+This task only records the target design. It does not edit those active migrations or frontend behavior. A separate compatibility remediation plan must map every dependent policy, RPC, UI path and test before changing them.
