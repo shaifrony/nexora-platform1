@@ -497,6 +497,67 @@
       if (button) { button.disabled = false; button.innerHTML = '<span aria-hidden="true">▣</span> Chat with Seller'; }
     }
   }
+  const orderStatusLabels={pending:"Seller-এর অপেক্ষায়",accepted:"Seller গ্রহণ করেছেন",ready_for_confirmation:"সম্পন্ন নিশ্চিত করুন",completed:"সম্পন্ন",cancelled:"বাতিল",rejected:"Seller গ্রহণ করেননি"};
+  async function submitCommerceOrder(listingType,listingId,quantity,location,note,statusNode,button){
+    if(!activeBuyer()||!signedIn())return say("অর্ডার করতে Active Buyer হিসেবে লগইন করুন।");
+    if(button)button.disabled=true;
+    if(statusNode)statusNode.textContent="অর্ডার অনুরোধ পাঠানো হচ্ছে…";
+    try{
+      const {data,error}=await client().rpc("create_commerce_order",{
+        p_listing_type:listingType,p_listing_id:listingId,p_quantity:Number(quantity),
+        p_fulfilment_location:String(location||"").trim(),p_buyer_note:String(note||"").trim()||null
+      });
+      if(error)throw error;
+      say("অর্ডার অনুরোধ পাঠানো হয়েছে। Seller গ্রহণ করলে অগ্রগতি দেখতে পারবেন।",true);
+      if(statusNode)statusNode.textContent="অর্ডার নম্বর: "+data;
+      await loadBuyerOrders();
+      if(button)button.disabled=false;
+      return data;
+    }catch(err){
+      if(statusNode)statusNode.textContent="অর্ডার হয়নি: "+(err.message||"অজানা সমস্যা");
+      if(button)button.disabled=false;
+      return null;
+    }
+  }
+  async function loadBuyerOrders(){
+    const host=$("nxBuyerOrders");if(!host)return;
+    if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
+    try{
+      const {data,error}=await client().from("commerce_orders")
+        .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,currency,order_status,created_at,seller_note")
+        .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
+      if(error)throw error;
+      const rows=data||[];
+      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":"সেবা বুকিং")+' · '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong>'+(o.seller_note?'<p class="muted">'+esc(o.seller_note)+'</p>':'')+(o.order_status==="ready_for_confirmation"?'<button class="primary" type="button" data-order-action="complete" data-order-id="'+esc(o.id)+'">আমি পণ্য/সেবা পেয়েছি — সম্পন্ন করুন</button>':'')+(o.order_status==="pending"?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'">অর্ডার বাতিল</button>':'')+'</article>').join("")||'<p class="muted">আপনার কোনো অর্ডার নেই।</p>';
+      host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction)));
+    }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
+  }
+  async function loadSellerOrders(){
+    const host=$("nxSellerOrders");if(!host)return;
+    if(!signedIn()||!activeSeller()){host.textContent="Active Seller লগইন প্রয়োজন।";return;}
+    try{
+      const {data,error}=await client().from("commerce_orders")
+        .select("id,order_code,listing_type,listing_id,buyer_id,quantity,unit_price,total_price,currency,fulfilment_location,buyer_note,order_status,created_at")
+        .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(100);
+      if(error)throw error;
+      const rows=data||[];
+      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":"সেবা বুকিং")+' · পরিমাণ '+esc(o.quantity)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong><p><b>ডেলিভারি/সেবার স্থান:</b> '+esc(o.fulfilment_location)+'</p>'+(o.buyer_note?'<p><b>Buyer-এর নোট:</b> '+esc(o.buyer_note)+'</p>':'')+(o.order_status==="pending"?'<div class="form-actions"><button class="primary" data-order-action="accept" data-order-id="'+esc(o.id)+'">অর্ডার গ্রহণ</button><button class="danger" data-order-action="reject" data-order-id="'+esc(o.id)+'">প্রত্যাখ্যান</button></div>':'')+(o.order_status==="accepted"?'<button class="primary" data-order-action="ready" data-order-id="'+esc(o.id)+'">'+(o.listing_type==="service"?"সেবা সম্পন্ন হয়েছে":"পণ্য পাঠানো হয়েছে")+'</button>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো অর্ডার আসেনি।</p>';
+      host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction)));
+    }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
+  }
+  async function transitionCommerceOrder(orderId,action){
+    let note=null;
+    if(action==="reject"){note=prompt("অর্ডার প্রত্যাখ্যানের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):");if(!note||note.trim().length<5)return say("কারণ দেওয়া আবশ্যক।");}
+    if(action==="ready")note=prompt("পাঠানো/সেবা সম্পন্নের তথ্য (ঐচ্ছিক):")||null;
+    try{
+      const {error}=await client().rpc("transition_commerce_order",{p_order_id:orderId,p_action:action,p_note:note});
+      if(error)throw error;
+      say("অর্ডারের অবস্থা আপডেট হয়েছে।",true);
+      await Promise.all([loadBuyerOrders(),loadSellerOrders()]);
+      if(action==="complete")say("অর্ডার সম্পন্ন হয়েছে। এখন আপনার Verified Review দেওয়ার অনুমতি তৈরি হয়েছে।",true);
+    }catch(err){say("অর্ডার আপডেট হয়নি: "+err.message);}
+  }
+
   async function loadListingReviews(listingType, listingId, hostId) {
     const host=$(hostId); if(!host)return;
     host.innerHTML='<p class="muted">Review লোড হচ্ছে…</p>';
@@ -588,6 +649,7 @@
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
         <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
+        ${activeBuyer()&&signedIn()?`<form id="nxProductOrderForm" class="card nx-order-form"><h3>অর্ডার অনুরোধ</h3><label>পরিমাণ *<input name="quantity" type="number" min="1" step="1" value="1" required></label><label>ডেলিভারি ঠিকানা/গন্তব্য *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>অতিরিক্ত নির্দেশনা (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">অর্ডার অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">এটি অর্ডার অনুরোধ; পেমেন্ট বা ডেলিভারি বুকিং এখনো অন্তর্ভুক্ত নয়।</small></form>`:""}
         <section id="nxProductReviews" class="nx-listing-reviews" aria-live="polite"></section>
       `;
       loadListingReviews("product",selected.id,"nxProductReviews");
@@ -598,6 +660,7 @@
         controls.innerHTML = '<button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
       }
       $("productContactSeller")?.addEventListener("click", () => startProductChat(selected));
+      $("nxProductOrderForm")?.addEventListener("submit",e=>{e.preventDefault();const v=new FormData(e.currentTarget);submitCommerceOrder("product",selected.id,v.get("quantity"),v.get("location"),v.get("note"),e.currentTarget.querySelector("[data-order-status]"),e.currentTarget.querySelector("button[type=submit]"));});
       return;
     }
     if (detailPanel) detailPanel.classList.add("hidden");
@@ -710,6 +773,7 @@
 
   async function loadBuyerDashboard() {
     loadBuyerDashboardProducts();
+    loadBuyerOrders();
     const host = $("buyerDemandList");
     if (!host) return;
     if (!signedIn() || !activeBuyer()) {
@@ -893,8 +957,9 @@
             <div class="nx-service-detail-grid">
               <section class="nx-service-detail-main"><h2>সেবার বিবরণ</h2><p>${esc(selected.description)}</p><h3>সেবার এলাকা</h3><p>${esc([selected.service_area,selected.city,selected.country].filter(Boolean).join(", ")||"তথ্য দেওয়া হয়নি")}</p><h3>সময় ও Availability</h3><p>${esc(selected.availability||"সেবাদাতার সঙ্গে আলোচনা করুন")}</p></section>
               <aside class="nx-service-detail-aside"><span class="nx-service-detail-kicker">PRICE</span><strong>${amount}${esc(servicePriceLabels[selected.price_basis]||"আলোচনা সাপেক্ষে")}</strong><small>Service ID: ${esc(selected.service_code)}</small><p>সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা প্রকাশ করা হয় না। যোগাযোগের সুবিধা চালু হলে এই পৃষ্ঠা থেকে অনুরোধ করা যাবে।</p></aside>
-            </div><section id="nxServiceReviews" class="nx-listing-reviews" aria-live="polite"></section>`;
+            </div>${activeBuyer()&&signedIn()&&selected.price_amount?`<form id="nxServiceOrderForm" class="card nx-order-form"><h3>সেবা বুকিং অনুরোধ</h3><label>সেবা গ্রহণের ঠিকানা/এলাকা *<textarea name="location" minlength="5" maxlength="500" required></textarea></label><label>কাজের বিবরণ (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">সেবা বুকিং অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">আলোচনা সাপেক্ষ মূল্য হলে আগে Seller-এর সঙ্গে মূল্য নিশ্চিত করুন।</small></form>`:""}<section id="nxServiceReviews" class="nx-listing-reviews" aria-live="polite"></section>`;
           loadListingReviews("service",selected.id,"nxServiceReviews");
+          $("nxServiceOrderForm")?.addEventListener("submit",e=>{e.preventDefault();const v=new FormData(e.currentTarget);submitCommerceOrder("service",selected.id,1,v.get("location"),v.get("note"),e.currentTarget.querySelector("[data-order-status]"),e.currentTarget.querySelector("button[type=submit]"));});
         }
       }
       return;
@@ -1034,6 +1099,7 @@
     try {
       await loadBusinessProfile();
       await loadSellerServices();
+      await loadSellerOrders();
       const { data, error } = await client().from("products")
         .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
