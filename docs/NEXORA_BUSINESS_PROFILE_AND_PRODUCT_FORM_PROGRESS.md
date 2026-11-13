@@ -52,7 +52,7 @@ The Seller product workspace's Retail filter was removed and replaced with a dis
 ## Important limits
 
 - These are staged frontend changes only. They have not been deployed.
-- Existing legacy Retail data, database constraints, Buyer category controls, edit-request workflow, demand matching, order creation and other Retail-specific database logic remain to be reconciled.
+- Existing legacy Retail data, database constraints, edit-request workflow, demand matching and order creation must be checked against universal Buyer visibility; Seller sale type remains per product only.
 - Existing future-dated migrations in the branch must not be replayed into hosted Supabase because migration-history mismatch is unresolved.
 - No local browser test or hosted Supabase test is claimed.
 - The existing business profile schema and logic were inspected, not newly recreated or migrated in this change.
