@@ -39,6 +39,85 @@ using (
   )
 );
 
+-- A SECURITY DEFINER inquiry RPC must enforce the same market-category
+-- boundary as the products SELECT policy; RLS alone is not sufficient here.
+create or replace function private.create_product_inquiry(
+  p_product_id uuid,
+  p_message text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = ''
+as $function$
+declare
+  v_user_id uuid := auth.uid();
+  v_buyer_category text;
+  v_product record;
+  v_conversation_id uuid;
+  v_title text;
+  v_message text := left(btrim(coalesce(p_message, '')), 500);
+begin
+  if v_user_id is null then
+    raise exception 'Login required' using errcode='42501';
+  end if;
+
+  select p.buyer_category into v_buyer_category
+  from public.profiles p
+  where p.id=v_user_id and p.role='buyer' and p.account_status='active';
+
+  if not found or v_buyer_category not in ('wholesale','retail') then
+    raise exception 'Active Buyer account with a valid market category required'
+      using errcode='42501';
+  end if;
+
+  select p.id,p.seller_id,p.product_code,p.product_name
+    into v_product
+  from public.products p
+  join public.business_profiles b on b.id=p.business_id
+  join public.public_businesses pb on pb.business_id=p.business_id
+  where p.id=p_product_id
+    and p.listing_status='approved'
+    and b.approval_status='approved'
+    and p.market_category=v_buyer_category;
+
+  if not found then
+    raise exception 'Product unavailable or does not match your Buyer category'
+      using errcode='42501';
+  end if;
+
+  if v_product.seller_id=v_user_id then
+    raise exception 'You cannot send an inquiry to your own product'
+      using errcode='42501';
+  end if;
+
+  v_title:=left(
+    'Product Inquiry • '||v_product.product_code||' • '||
+    v_product.product_name||
+    case when v_message<>'' then ' • Buyer note: '||v_message else '' end,
+    900
+  );
+
+  insert into public.conversations(conversation_type,created_by,title,status)
+  values('direct',v_user_id,v_title,'active')
+  returning id into v_conversation_id;
+
+  insert into public.conversation_participants(
+    conversation_id,user_id,invited_by,invitation_status,joined_at
+  )
+  values
+    (v_conversation_id,v_user_id,v_user_id,'accepted',now()),
+    (v_conversation_id,v_product.seller_id,v_user_id,'pending',null);
+
+  return v_conversation_id;
+end;
+$function$;
+
+revoke all on function private.create_product_inquiry(uuid,text)
+  from public,anon,authenticated;
+grant execute on function private.create_product_inquiry(uuid,text)
+  to authenticated;
+
 drop policy if exists products_approved_seller_insert on public.products;
 create policy products_approved_seller_insert
 on public.products for insert to authenticated
