@@ -19,10 +19,9 @@ drop policy if exists products_public_approved_read on public.products;
 -- Public visitors may read only the approved listing projection columns.
 -- Sensitive ownership/review columns (seller_id, reviewed_by, admin_note) remain unavailable.
 grant select (
-  id,product_code,slug,product_name,category,subcategory,market_category,
+  id,product_code,slug,product_name,category,market_category,
   image_urls,description,origin,specifications_quality,price,currency,
-  listing_status,business_id,minimum_order_quantity,stock_tracking,
-  stock_quantity,reserved_quantity,price_tiers,created_at
+  listing_status,business_id,created_at
 ) on public.products to anon;
 
 -- Public business identity is intentionally limited to display name and location.
