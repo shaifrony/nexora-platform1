@@ -957,5 +957,487 @@
   ],
   "captured_at": "2026-11-13T18:19:10.806061+00:00",
   "project_ref": "qsjdeqljpnjumceewsjq",
-  "server_version": "17.11"
+  "server_version": "17.11",
+  "live_inventory": {
+    "public_relations": [
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_audit_logs"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_departments"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_permission_catalog"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_permission_grants"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_staff"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "business_profiles"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "buyer_demands"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "call_sessions"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "call_signals"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversation_participants"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversations"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "message_attachments"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "messages"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "products"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "profile_change_requests"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "profiles"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "public_businesses"
+      },
+      {
+        "rls": false,
+        "kind": "v",
+        "name": "public_buyer_demands"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "public_identities"
+      },
+      {
+        "rls": false,
+        "kind": "v",
+        "name": "public_profiles"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "role_requests"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "seller_offers"
+      }
+    ],
+    "function_inventory": [
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "admin_manage_user",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_business_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_business",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_product_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_product",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_product_id uuid, p_message text",
+        "name": "create_product_inquiry",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_permission_key text",
+        "name": "has_nexora_permission",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_active_nexora_user",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_creator",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_invited",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_member",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_nexora_active_admin_staff",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_nexora_super_admin",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_business_id uuid",
+        "name": "is_public_business",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+        "name": "manage_marketplace_listing",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+        "name": "manage_nexora_assistant_admin",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "manage_nexora_user",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "protect_profile_role_and_status",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+        "name": "review_profile_change_request",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "request_id uuid, decision text",
+        "name": "review_role_request",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "touch_conversation_on_message",
+        "schema": "private",
+        "security_definer": true
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "admin_manage_user",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_business_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_business",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_product_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_product",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_product_id uuid, p_message text",
+        "name": "create_product_inquiry",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "guard_profile_updates",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "handle_new_user",
+        "schema": "public",
+        "security_definer": true
+      },
+      {
+        "args": "p_permission_key text",
+        "name": "has_nexora_permission",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "is_nexora_admin",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "is_nexora_super_admin",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_business_id uuid",
+        "name": "is_public_business",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+        "name": "manage_marketplace_listing",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+        "name": "manage_nexora_assistant_admin",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "manage_nexora_user",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+        "name": "review_profile_change_request",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "request_id uuid, decision text",
+        "name": "review_role_request",
+        "schema": "public",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "rls_auto_enable",
+        "schema": "public",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "sync_public_business",
+        "schema": "public",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "sync_public_identity",
+        "schema": "public",
+        "security_definer": true
+      }
+    ],
+    "auth_storage_policies": [
+      {
+        "name": "nexora_chat_files_delete",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "objects",
+        "using": "((bucket_id = 'nexora-chat-files'::text) AND (owner_id = (( SELECT auth.uid() AS uid))::text) AND (EXISTS ( SELECT 1\n   FROM conversation_participants cp\n  WHERE ((cp.conversation_id = ((storage.foldername(objects.name))[1])::uuid) AND (cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.invitation_status = 'accepted'::text)))))",
+        "schema": "storage",
+        "command": "DELETE",
+        "with_check": null
+      },
+      {
+        "name": "nexora_chat_files_insert",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "objects",
+        "using": null,
+        "schema": "storage",
+        "command": "INSERT",
+        "with_check": "((bucket_id = 'nexora-chat-files'::text) AND (EXISTS ( SELECT 1\n   FROM conversation_participants cp\n  WHERE ((cp.conversation_id = ((storage.foldername(objects.name))[1])::uuid) AND (cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.invitation_status = 'accepted'::text)))))"
+      },
+      {
+        "name": "nexora_chat_files_read",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "objects",
+        "using": "((bucket_id = 'nexora-chat-files'::text) AND (EXISTS ( SELECT 1\n   FROM conversation_participants cp\n  WHERE ((cp.conversation_id = ((storage.foldername(objects.name))[1])::uuid) AND (cp.user_id = ( SELECT auth.uid() AS uid)) AND (cp.invitation_status = 'accepted'::text)))))",
+        "schema": "storage",
+        "command": "SELECT",
+        "with_check": null
+      },
+      {
+        "name": "storage_active_account_gate",
+        "roles": [
+          "authenticated"
+        ],
+        "table": "objects",
+        "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+        "schema": "storage",
+        "command": "ALL",
+        "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+      }
+    ],
+    "auth_storage_triggers": [
+      {
+        "name": "on_auth_user_created",
+        "table": "users",
+        "schema": "auth",
+        "definition": "CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION handle_new_user()",
+        "function_definition": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n    v_role text;\n    v_full_name text;\n    v_account_status text;\n    v_provider text;\nBEGIN\n    v_provider := lower(coalesce(NEW.app_metadata ->> 'provider', ''));\n\n    -- Social OAuth accounts always start as Buyer; never trust profile metadata for their role.\n    IF v_provider IN ('google', 'facebook') THEN\n        v_role := 'buyer';\n    ELSE\n        v_role := lower(trim(coalesce(NEW.raw_user_meta_data ->> 'role', 'buyer')));\n        IF v_role = '' THEN\n            v_role := 'buyer';\n        END IF;\n    END IF;\n\n    IF v_role NOT IN ('buyer', 'seller', 'porter') THEN\n        RAISE EXCEPTION 'Invalid registration role';\n    END IF;\n\n    v_full_name := nullif(trim(coalesce(\n        NEW.raw_user_meta_data ->> 'full_name',\n        NEW.raw_user_meta_data ->> 'name'\n    )), '');\n\n    IF v_full_name IS NOT NULL AND length(v_full_name) > 150 THEN\n        RAISE EXCEPTION 'Full name is too long';\n    END IF;\n\n    IF v_role = 'porter' THEN\n        v_account_status := 'pending';\n    ELSE\n        v_account_status := 'active';\n    END IF;\n\n    INSERT INTO public.profiles (id, full_name, role, account_status)\n    VALUES (NEW.id, v_full_name, v_role, v_account_status)\n    ON CONFLICT (id) DO NOTHING;\n\n    RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "enforce_bucket_name_length_trigger",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER enforce_bucket_name_length_trigger BEFORE INSERT OR UPDATE OF name ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_name_length()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.enforce_bucket_name_length()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nbegin\n    if length(new.name) > 100 then\n        raise exception 'bucket name \"%\" is too long (% characters). Max is 100.', new.name, length(new.name);\n    end if;\n    return new;\nend;\n$function$\n"
+      },
+      {
+        "name": "enforce_versioning_status_transition",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER enforce_versioning_status_transition BEFORE UPDATE OF versioning_status ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_versioning_status_transition()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.enforce_versioning_status_transition()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    IF NEW.versioning_status = OLD.versioning_status THEN\n        RETURN NEW;\n    END IF;\n\n    IF NEW.versioning_status = 'DISABLED' OR\n       (OLD.versioning_status = 'DISABLED' AND NEW.versioning_status = 'SUSPENDED') THEN\n        RAISE EXCEPTION 'Cannot transition bucket versioning status from % to %',\n            OLD.versioning_status, NEW.versioning_status;\n    END IF;\n\n    RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_active_lifecycle_states",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_active_lifecycle_states BEFORE DELETE ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.protect_active_lifecycle_states()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.protect_active_lifecycle_states()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN\n    IF EXISTS (\n        SELECT 1 FROM storage.bucket_lifecycle_states\n        WHERE bucket_id = OLD.id\n          AND NOT (\n              continuation IS NULL\n              OR (continuation @> '{\"continuationVersion\": 1}' AND continuation #> '{batch,inFlight}' IS NULL)\n          )\n    ) THEN\n        RAISE EXCEPTION 'update or delete on table \"buckets\" violates foreign key constraint \"bucket_lifecycle_states_bucket_id_fkey\" on table \"bucket_lifecycle_states\"'\n            USING ERRCODE = 'foreign_key_violation',\n                  DETAIL = format('Key (id)=(%s) is still referenced from table \"bucket_lifecycle_states\".', OLD.id),\n                  SCHEMA = 'storage',\n                  TABLE = 'bucket_lifecycle_states',\n                  CONSTRAINT = 'bucket_lifecycle_states_bucket_id_fkey';\n    END IF;\n    RETURN OLD;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_bucket_control_insert",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_bucket_control_insert BEFORE INSERT ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.protect_bucket_control_columns('service_role')",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.protect_bucket_control_columns()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE\n  configuration_changed boolean;\nBEGIN\n  IF TG_OP = 'INSERT' THEN\n    IF NEW.lifecycle_configuration IS NOT NULL\n       OR NEW.lifecycle_configuration_generation IS NOT NULL THEN\n      IF NOT pg_has_role(current_user, TG_ARGV[0], 'MEMBER') THEN\n        RAISE EXCEPTION 'only members of the configured storage service role may insert lifecycle policy state'\n          USING ERRCODE = '42501',\n                HINT = format(\n                  'Insert with both lifecycle columns NULL and configure lifecycle through the Storage API afterward, or insert as a member of %I.',\n                  TG_ARGV[0]\n                );\n      END IF;\n    END IF;\n\n    RETURN NEW;\n  END IF;\n\n  configuration_changed =\n    OLD.lifecycle_configuration IS DISTINCT FROM NEW.lifecycle_configuration\n    OR OLD.lifecycle_configuration_generation IS DISTINCT FROM NEW.lifecycle_configuration_generation;\n\n  IF NOT configuration_changed THEN\n    RETURN NEW;\n  END IF;\n\n  IF NEW.type IS DISTINCT FROM 'STANDARD' THEN\n    RAISE EXCEPTION 'bucket versioning and lifecycle controls require a Standard bucket'\n      USING ERRCODE = '0A000';\n  END IF;\n\n  IF NEW.lifecycle_configuration IS NULL\n     AND NEW.lifecycle_configuration_generation IS NULL THEN\n    RETURN NEW;\n  END IF;\n\n  IF NEW.lifecycle_configuration IS NULL\n     OR NEW.lifecycle_configuration_generation IS NULL\n     OR OLD.lifecycle_configuration IS NOT DISTINCT FROM NEW.lifecycle_configuration\n     OR OLD.lifecycle_configuration_generation IS NOT DISTINCT FROM NEW.lifecycle_configuration_generation THEN\n    RAISE EXCEPTION 'a changed lifecycle policy requires a new non-null generation'\n      USING ERRCODE = '22023';\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_bucket_control_update",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_bucket_control_update BEFORE UPDATE OF lifecycle_configuration, lifecycle_configuration_generation ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.protect_bucket_control_columns()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.protect_bucket_control_columns()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE\n  configuration_changed boolean;\nBEGIN\n  IF TG_OP = 'INSERT' THEN\n    IF NEW.lifecycle_configuration IS NOT NULL\n       OR NEW.lifecycle_configuration_generation IS NOT NULL THEN\n      IF NOT pg_has_role(current_user, TG_ARGV[0], 'MEMBER') THEN\n        RAISE EXCEPTION 'only members of the configured storage service role may insert lifecycle policy state'\n          USING ERRCODE = '42501',\n                HINT = format(\n                  'Insert with both lifecycle columns NULL and configure lifecycle through the Storage API afterward, or insert as a member of %I.',\n                  TG_ARGV[0]\n                );\n      END IF;\n    END IF;\n\n    RETURN NEW;\n  END IF;\n\n  configuration_changed =\n    OLD.lifecycle_configuration IS DISTINCT FROM NEW.lifecycle_configuration\n    OR OLD.lifecycle_configuration_generation IS DISTINCT FROM NEW.lifecycle_configuration_generation;\n\n  IF NOT configuration_changed THEN\n    RETURN NEW;\n  END IF;\n\n  IF NEW.type IS DISTINCT FROM 'STANDARD' THEN\n    RAISE EXCEPTION 'bucket versioning and lifecycle controls require a Standard bucket'\n      USING ERRCODE = '0A000';\n  END IF;\n\n  IF NEW.lifecycle_configuration IS NULL\n     AND NEW.lifecycle_configuration_generation IS NULL THEN\n    RETURN NEW;\n  END IF;\n\n  IF NEW.lifecycle_configuration IS NULL\n     OR NEW.lifecycle_configuration_generation IS NULL\n     OR OLD.lifecycle_configuration IS NOT DISTINCT FROM NEW.lifecycle_configuration\n     OR OLD.lifecycle_configuration_generation IS NOT DISTINCT FROM NEW.lifecycle_configuration_generation THEN\n    RAISE EXCEPTION 'a changed lifecycle policy requires a new non-null generation'\n      USING ERRCODE = '22023';\n  END IF;\n\n  RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_bucket_control_update_role",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_bucket_control_update_role AFTER UPDATE OF lifecycle_configuration, lifecycle_configuration_generation ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.enforce_bucket_lifecycle_service_role('service_role')",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.enforce_bucket_lifecycle_service_role()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN\n  IF current_user::text IS DISTINCT FROM TG_ARGV[0] THEN\n    -- Keep this check AFTER caller RLS accepts the proposed row. The API\n    -- recognizes this exact signal after rolling back its permission probe.\n    RAISE EXCEPTION 'bucket control columns may only be changed by the configured storage service role'\n      USING ERRCODE = 'PST01',\n            SCHEMA = TG_TABLE_SCHEMA,\n            TABLE = TG_TABLE_NAME,\n            CONSTRAINT = TG_NAME;\n  END IF;\n\n  RETURN NULL;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_buckets_delete",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_buckets_delete BEFORE DELETE ON storage.buckets FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.protect_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    -- Check if storage.allow_delete_query is set to 'true'\n    IF COALESCE(current_setting('storage.allow_delete_query', true), 'false') != 'true' THEN\n        RAISE EXCEPTION 'Direct deletion from storage tables is not allowed. Use the Storage API instead.'\n            USING HINT = 'This prevents accidental data loss from orphaned objects.',\n                  ERRCODE = '42501';\n    END IF;\n    RETURN NULL;\nEND;\n$function$\n"
+      },
+      {
+        "name": "wake_lifecycle_on_policy_write",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER wake_lifecycle_on_policy_write AFTER INSERT OR UPDATE OF lifecycle_configuration_generation ON storage.buckets FOR EACH ROW EXECUTE FUNCTION storage.wake_lifecycle_state()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.wake_lifecycle_state()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN\n    IF TG_OP = 'INSERT' AND NEW.lifecycle_configuration IS NULL THEN\n        RETURN NEW;\n    END IF;\n\n    PERFORM storage.reconcile_lifecycle_state(NEW.id, false);\n    RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "wake_lifecycle_on_versioning_enable",
+        "table": "buckets",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER wake_lifecycle_on_versioning_enable AFTER UPDATE OF versioning_status ON storage.buckets FOR EACH ROW WHEN (new.lifecycle_configuration IS NOT NULL) EXECUTE FUNCTION storage.wake_lifecycle_state()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.wake_lifecycle_state()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nBEGIN\n    IF TG_OP = 'INSERT' AND NEW.lifecycle_configuration IS NULL THEN\n        RETURN NEW;\n    END IF;\n\n    PERFORM storage.reconcile_lifecycle_state(NEW.id, false);\n    RETURN NEW;\nEND;\n$function$\n"
+      },
+      {
+        "name": "protect_objects_delete",
+        "table": "objects",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER protect_objects_delete BEFORE DELETE ON storage.objects FOR EACH STATEMENT EXECUTE FUNCTION storage.protect_delete()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.protect_delete()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    -- Check if storage.allow_delete_query is set to 'true'\n    IF COALESCE(current_setting('storage.allow_delete_query', true), 'false') != 'true' THEN\n        RAISE EXCEPTION 'Direct deletion from storage tables is not allowed. Use the Storage API instead.'\n            USING HINT = 'This prevents accidental data loss from orphaned objects.',\n                  ERRCODE = '42501';\n    END IF;\n    RETURN NULL;\nEND;\n$function$\n"
+      },
+      {
+        "name": "update_objects_updated_at",
+        "table": "objects",
+        "schema": "storage",
+        "definition": "CREATE TRIGGER update_objects_updated_at BEFORE UPDATE ON storage.objects FOR EACH ROW EXECUTE FUNCTION storage.update_updated_at_column()",
+        "function_definition": "CREATE OR REPLACE FUNCTION storage.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n    NEW.updated_at = now();\n    RETURN NEW; \nEND;\n$function$\n"
+      }
+    ]
+  },
+  "migration_history_entry_count": 24,
+  "inventory_notes": {
+    "public_tables": 20,
+    "public_views": 2,
+    "all_public_tables_rls_enabled": true,
+    "public_non_internal_trigger_count": 5,
+    "public_private_function_count": 37,
+    "security_definer_function_count": 23,
+    "auth_storage_custom_trigger_count": 12,
+    "auth_storage_custom_policy_count": 4,
+    "migration_history_note": "24 live migration history entries were listed read-only during the same session; no history was changed."
+  }
 }
