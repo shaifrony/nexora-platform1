@@ -10,15 +10,7 @@ alter table public.profiles add constraint profiles_role_check
 
 alter table public.profiles drop constraint if exists profiles_market_categories_check;
 alter table public.profiles add constraint profiles_market_categories_check check (
-  (role = 'buyer' and buyer_category is not null
-    and buyer_category in ('wholesale','retail') and seller_categories = '{}'::text[])
-  or
-  (role = 'seller' and buyer_category is null
-    and cardinality(seller_categories) between 1 and 2
-    and seller_categories <@ array['wholesale','retail']::text[])
-  or
-  (role in ('porter','admin') and buyer_category is null
-    and seller_categories = '{}'::text[])
+  buyer_category is null and seller_categories = '{}'::text[]
 );
 
 -- A separate review record preserves the difference between rejected and suspended
@@ -54,66 +46,29 @@ declare
   v_role text;
   v_full_name text;
   v_provider text;
-  v_buyer_category text;
-  v_seller_categories text[];
-  v_account_status text;
+  v_account_status text := 'active';
 begin
   v_provider := lower(coalesce(new.raw_app_meta_data ->> 'provider', ''));
-
   if v_provider in ('google','facebook') then
     v_role := 'buyer';
   else
     v_role := lower(trim(coalesce(new.raw_user_meta_data ->> 'role','buyer')));
   end if;
-
   if v_role not in ('buyer','seller','porter') then
     raise exception 'Invalid public registration role';
   end if;
-
   v_full_name := nullif(trim(coalesce(new.raw_user_meta_data ->> 'full_name', new.raw_user_meta_data ->> 'name')), '');
   if v_full_name is not null and length(v_full_name) > 150 then
     raise exception 'Full name is too long';
   end if;
-
-  if v_role = 'buyer' then
-    v_buyer_category := lower(trim(coalesce(new.raw_user_meta_data ->> 'buyer_category','wholesale')));
-    if v_buyer_category not in ('wholesale','retail') then
-      raise exception 'Invalid Buyer market category';
-    end if;
-    v_seller_categories := '{}'::text[];
-    v_account_status := 'active';
-  elsif v_role = 'seller' then
-    v_buyer_category := null;
-    if jsonb_typeof(new.raw_user_meta_data -> 'seller_categories') = 'array' then
-      select coalesce(array_agg(category order by category), array[]::text[])
-      into v_seller_categories
-      from (
-        select distinct jsonb_array_elements_text(new.raw_user_meta_data -> 'seller_categories') as category
-      ) selected
-      where category in ('wholesale','retail');
-    else
-      v_seller_categories := array['wholesale']::text[];
-    end if;
-    if coalesce(cardinality(v_seller_categories),0) = 0 then
-      raise exception 'Select at least one Seller market category';
-    end if;
-    v_account_status := 'active';
-  else
-    v_buyer_category := null;
-    v_seller_categories := '{}'::text[];
-    v_account_status := 'pending';
-  end if;
-
+  if v_role='porter' then v_account_status:='pending'; end if;
   insert into public.profiles (id,full_name,role,account_status,buyer_category,seller_categories)
-  values (new.id,v_full_name,v_role,v_account_status,v_buyer_category,v_seller_categories)
+  values (new.id,v_full_name,v_role,v_account_status,null,'{}'::text[])
   on conflict (id) do nothing;
-
-  if v_role = 'porter' then
+  if v_role='porter' then
     insert into public.porter_account_reviews(user_id,review_status)
-    values (new.id,'pending')
-    on conflict (user_id) do nothing;
+    values(new.id,'pending') on conflict(user_id) do nothing;
   end if;
-
   return new;
 end;
 $function$;
