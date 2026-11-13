@@ -416,3 +416,17 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 - No Live writes or private user/message data reads. No SQL runtime, PostgreSQL parser, JWT/RLS or E2E tests.
 
 Documentation commit for Recovery Plan section 18: `1aee6768a2c46df557d9a5c6f45a005b480072ad`.
+
+
+## 2026-11-14 — Delivery Network and Porter approval Live catalog audit
+
+- Reverified `nexora-development` HEAD before audit: `4ecaf5223b27338e7c2b301e3e529e8b2073ace7`.
+- Live catalog has no `transport_providers`, `transport_vehicles`, `delivery_jobs`, or `delivery_tracking_events` relations. These related delivery migrations remain pending.
+- Provider/vehicle review RPCs, unified network job/assignment RPCs, delivery tracking status RPC, `porter_account_reviews`, and `review_porter_account` are absent from Live.
+- Live profiles role constraint already includes Porter; Live role_requests requested_role constraint also includes Porter. This is only partial structural alignment and does not prove the new Porter registration + Admin review workflow is installed.
+- The old individual-Porter delivery migration is a documented no-op/superseded file; do not apply it.
+- Dependency sequence recorded in Recovery Plan section 19: provider/vehicle base → provider/vehicle review → delivery job base → unified network assignment → delivery tracking; Porter account approval is a distinct activation gate.
+- Shared version `20261114180000` remains unresolved and blocks migration execution.
+- No private data or Auth identities queried; no Live writes, migration execution or history repair. No PostgreSQL/JWT/RLS/E2E tests.
+
+Recovery Plan section 19 commit: `cab90a9f2d52a910632ce0cfc16be1d772bc58c7`.
