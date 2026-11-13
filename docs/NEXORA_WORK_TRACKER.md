@@ -721,3 +721,16 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - `node --check chat.js` and `git diff --check` passed in the disposable Vercel Sandbox before applying the same source patch to this branch.
 - No Live/hosted database, private message, user row, Storage object, `main`, Production or DNS was accessed or changed. No migration was added or modified.
 - **Remaining validation:** disposable Postgres/PostgREST RLS test for Chat/File, Storage upload/download and signed URL behavior, browser/device E2E, and file cleanup behavior against actual Storage. Calling remains explicitly out of scope until user reactivates it.
+
+
+## 2026-11-14 — Disposable Chat / File privacy verification
+
+- Replayed all **38 active migrations** on an isolated Vercel Sandbox Supabase native PostgreSQL stack; latest applied version: `20261115120000`. The disposable database used the repository's explicitly synthetic local foundation fixture plus local-only compatibility helpers; it is not a faithful copy of hosted schema or data. The fixture's admin authorization helper stubs always return false.
+- `supabase db lint --level warning --fail-on error`: **No schema errors found**. `node --check chat.js` and `git diff --check`: passed.
+- RLS is enabled on `conversations`, `conversation_participants`, `messages`, and `message_attachments`.
+- Synthetic Buyer created a conversation and invited a Seller. Buyer could read/send messages. Pending invitee, unrelated Buyer and Admin test identity could not read message content. Pending invitee could not send a message or read attachment metadata / Storage object rows; attempted pending upload was rejected with RLS SQLSTATE `42501`.
+- After Seller accepted the invitation, Seller could read and send messages and insert attachment metadata. Accepted Buyer and Seller could read the synthetic Storage object row; unrelated Buyer and Admin test identity saw zero rows. Spoofing `uploaded_by` in attachment metadata was rejected with `42501`.
+- Anonymous role saw zero rows in the private chat bucket and could not query `public.messages` (permission denied). Bucket metadata confirmed `public=false`, 20 MiB limit and the configured MIME allowlist (JPEG, PNG, WebP, PDF, TXT, DOCX, XLSX).
+- Supabase Storage prevents direct SQL deletion from `storage.objects` (its guard instructs callers to use the Storage API). This pass tested PostgreSQL RLS and a synthetic Storage object row, **not** actual binary upload/download, signed-URL issuance/expiry, Storage API deletion, browser/device E2E or Realtime delivery. Those remain pending. File cleanup behavior after real Storage API failure also remains pending.
+- No hosted/Live database, user rows, real auth identities, private messages, real attachments, calls, `main`, Production, DNS or paid service was accessed or changed. All test identities/content were synthetic. Disposable native stack and Vercel Sandbox were stopped after the run.
+- Audio/Video Calling remains paused and untouched; its earlier source-audit findings are deferred until the user authorizes reactivation.
