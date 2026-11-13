@@ -146,7 +146,7 @@ declare
   v_max_qty numeric(18,3);
 begin
   if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
-  if p_action not in ('accept','counter','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
+  if p_action is null or p_action not in ('accept','counter','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
   if length(coalesce(p_note,''))>1000 then raise exception 'Note is too long' using errcode='22023'; end if;
 
   select * into v_offer from public.seller_offers where id=p_offer_id for update;
