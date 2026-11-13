@@ -2,7 +2,7 @@
 
 Updated: 2026-11-13
 
-Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md).
+Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md).
 
 Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Repeated local logic testing is closed; two-session concurrency remains unverified and is not a blocker for continuing product implementation. Hosted deployment remains blocked.
 
@@ -19,7 +19,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Officer account management | Partial | Form/Edge Function/SQL migration staged; DB not migrated or integration-tested |
 | Marketplace wholesale-only alignment | Partial | Signup client and initial Product Listing form now wholesale-only; legacy database/edit/order paths remain; see NEXORA_WHOLESALE_ONLY_ALIGNMENT.md and NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md |
 | Services Marketplace | Partial | Listing flow staged; security/E2E remain |
-| Buyer Demands & quotations | Partial | Matching and quotations staged; acceptance/conversion/notifications pending |
+| Buyer Demands & quotations | Partial | Existing form captures product, category/subcategory, specs, quantity, optional budget, currency, destination and required date; submission and public-board/Seller-inbox paths inspected. Underlying view/RLS/matching privacy review still pending; see NEXORA_BUYER_DEMAND_PROGRESS.md |
 | Commerce orders | Partial | Order lifecycle staged; payments/disputes/refunds absent |
 | Verified reviews | Partial | Verified-purchase workflow staged; E2E pending |
 | Delivery Network | Partial | Partner/team, assignment and tracking staged; receipt, finance and API integration pending |
@@ -60,7 +60,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
 - [x] Initial Product Listing form reduced to the approved seven fields; new inserts force wholesale and use database defaults for MOQ/stock/tier fields.
 - [x] Product/Service listing, image upload and editing (legacy edit flow still needs wholesale-only alignment).
-- [x] Buyer Demand matching and Seller quotations.
+- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected; existing matching and Seller quotations staged (database privacy and matching security review pending).
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
 - [ ] E2E, mobile and accessibility.
