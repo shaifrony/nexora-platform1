@@ -165,3 +165,16 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - A local-only policy dependency repair adds private boolean SECURITY DEFINER helpers for approved-business eligibility and Buyer Demand ownership; helper EXECUTE is restricted to authenticated and anon is denied. Seller identity remains unexposed. This is local fixture/test code, not a production deployment approval.
 - B-03 local fixture logic is PASS. Hosted Supabase JWT/RLS/PostgREST, Data API exposure, Storage/Realtime/Edge Functions, and browser E2E remain unverified. Do not claim production readiness.
 - No migration was applied; Live Supabase, Production and `main` remain untouched.
+
+
+## 10. Product-linked private Conversation (Buyer + Seller)
+- [x] Staged frontend Chat List cards show Product thumbnail, Product name, counterpart name, original price snapshot, last-message preview, and direct Product Page link for both Buyer and Seller.
+- [x] Staged conversation header displays the Product thumbnail/name, price snapshot at conversation creation, and Product Page link.
+- [x] Staged database source adds Product/Seller context to a private conversation and enforces one active Product conversation per Buyer + Seller + Product.
+- [x] Existing Buyer-to-Seller product inquiry RPC is staged to reuse the same active thread rather than create duplicates; invitation consent remains required before the Seller can message or call.
+- [x] Public Product price is not modified by private negotiation; conversation context price is a snapshot only.
+- [ ] Run migration and RLS behavior tests in an isolated, reconciled development database.
+- [ ] Verify Buyer and Seller each see only their own participant conversations under real Supabase JWT/PostgREST.
+- [ ] Browser/mobile E2E: open Product from Marketplace, create thread, Seller accepts, both see same image/name/link, multiple products create separate threads, repeat click reuses same active thread, unrelated accounts cannot read thread.
+- [ ] Verify Realtime, attachments, Audio/Video call and history in hosted-compatible environment.
+- This source work is not a deployment approval. Migration history divergence remains a blocker; no Hosted Supabase/Production/main changes were made.
