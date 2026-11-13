@@ -54,7 +54,7 @@
   async function loadProfile() {
     if (!currentUser) { profile = null; adminStaff = null; pendingRoleRequest = null; return; }
     const { data, error } = await db.from("profiles")
-      .select("id,full_name,role,account_status,buyer_category,seller_categories")
+      .select("id,full_name,role,account_status")
       .eq("id", currentUser.id).maybeSingle();
     if (error) throw error;
     profile = data;
@@ -68,29 +68,6 @@
     if (pending.error) throw pending.error;
     pendingRoleRequest = pending.data || null;
     adminStaff = null;
-  }
-  async function setBuyerCategory(category) {
-    if (!currentUser || profile?.role !== "buyer" || profile?.account_status !== "active") {
-      say("শুধু সক্রিয় Buyer নিজের Marketplace ক্যাটাগরি পরিবর্তন করতে পারবেন।");
-      return false;
-    }
-    if (!["wholesale","retail"].includes(category)) {
-      say("সঠিক Buyer Marketplace ক্যাটাগরি নির্বাচন করুন।");
-      return false;
-    }
-    try {
-      const { data, error } = await db.from("profiles").update({ buyer_category: category }).eq("id", currentUser.id).select("id,buyer_category").maybeSingle();
-      if (error) throw error;
-      if (!data || data.buyer_category !== category) throw new Error("Database update policy অনুমতি দেয়নি বা কোনো profile update হয়নি।");
-      profile = { ...profile, buyer_category: data.buyer_category };
-      render();
-      window.dispatchEvent(new Event("nexora:auth-change"));
-      say("আপনার Marketplace ক্যাটাগরি পরিবর্তন হয়েছে।", true);
-      return true;
-    } catch (err) {
-      say("ক্যাটাগরি পরিবর্তন হয়নি: " + (err.message || "অজানা সমস্যা"));
-      return false;
-    }
   }
   async function loadAdminStaff() {
     adminStaff = null;
@@ -260,8 +237,6 @@
     ["nxBuyerAvatar","nxBuyerMenuAvatar"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=initials; });
     ["nxBuyerHeaderName","nxBuyerMenuName"].forEach(id => { const node=document.getElementById(id); if(node) node.textContent=buyerName; });
     if (!isActiveBuyer) window.toggleBuyerProfileMenu?.(false);
-    const buyerCategorySelect = document.getElementById("nxBuyerCategorySelect");
-    if (buyerCategorySelect && profile?.role === "buyer") buyerCategorySelect.value = profile.buyer_category || "wholesale";
     const sellerCategorySummary = document.getElementById("nxSellerCategorySummary");
     if (sellerCategorySummary && profile?.role === "seller") {
       sellerCategorySummary.textContent = "প্রতিটি পণ্য যোগ করার সময় বিক্রয়ের ধরন নির্বাচন করুন।";
@@ -386,12 +361,7 @@
     setBusy(form, true); say("");
     const f = new FormData(form);
     const requestedSignupRole = String(f.get("role") || "buyer");
-    const buyerCategory = String(f.get("buyer_category") || "wholesale");
-    // Seller market mode is selected independently on each Product Listing.
-    const sellerCategories = requestedSignupRole === "seller" ? ["wholesale"] : [];
-    if (requestedSignupRole === "buyer" && !["wholesale","retail"].includes(buyerCategory)) {
-      setBusy(form, false); return say("পাইকারি অথবা খুচরা Buyer ক্যাটাগরি নির্বাচন করুন।");
-    }
+    // Buyer visibility is universal; Seller chooses a sales mode per Product Listing.
     if (!["buyer","seller","porter"].includes(requestedSignupRole)) {
       setBusy(form, false); return say("শুধু Buyer, Seller অথবা Porter অ্যাকাউন্ট তৈরি করা যাবে।");
     }
@@ -402,8 +372,8 @@
         options: { data: {
           full_name: String(f.get("full_name")).trim(),
           role: requestedSignupRole,
-          buyer_category: requestedSignupRole === "buyer" ? buyerCategory : null,
-          seller_categories: requestedSignupRole === "seller" ? [...new Set(sellerCategories)] : []
+          buyer_category: null,
+          seller_categories: []
         } }
       });
       if (error) throw error;
@@ -422,32 +392,17 @@
 
   function updateSignupCategoryFields() {
     const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
-    const buyerFields = document.getElementById("nxBuyerCategoryFields");
     const sellerFields = document.getElementById("nxSellerCategoryFields");
     const porterNote = document.getElementById("nxPorterRegistrationNote");
     const socialDivider = document.getElementById("nxSocialDivider");
     const socialButtons = document.getElementById("nxSocialButtons");
-    const buyerSelect = document.querySelector('#nxSignup select[name="buyer_category"]');
-    buyerFields?.classList.toggle("hidden", role !== "buyer");
     sellerFields?.classList.toggle("hidden", role !== "seller");
     porterNote?.classList.toggle("hidden", role !== "porter");
     socialDivider?.classList.toggle("hidden", role !== "buyer");
     socialButtons?.classList.toggle("hidden", role !== "buyer");
-    if (buyerSelect) {
-      // Keep the user's selected Buyer market category when switching signup roles.
-      buyerSelect.required = role === "buyer";
-      buyerSelect.disabled = role !== "buyer";
-    }
-    document.querySelectorAll('#nxSignup input[name="seller_categories"]').forEach(input => {
-      input.disabled = role !== "seller";
-    });
   }
   document.querySelector('#nxSignup select[name="role"]')?.addEventListener("change", updateSignupCategoryFields);
   updateSignupCategoryFields();
-  window.changeBuyerCategory = async function() {
-    const value = document.getElementById("nxBuyerCategorySelect")?.value || "";
-    await setBuyerCategory(value);
-  };
 
   document.getElementById("nxForgotOpen")?.addEventListener("click", () => {
     forgotMode = true;
