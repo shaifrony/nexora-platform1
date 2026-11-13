@@ -172,7 +172,9 @@ begin
   where offer_id=p_offer_id order by created_at desc,id desc limit 1;
 
   if p_action='reject' then
-    if v_role='buyer' and v_demand.buyer_id<>v_actor then raise exception 'Only the Demand owner may reject'; end if;
+    if v_latest.actor_role=v_role then
+      raise exception 'You can reject only after the other party makes the latest proposal' using errcode='42501';
+    end if;
     update public.seller_offers set offer_status='rejected',negotiation_status='declined',updated_at=now() where id=p_offer_id;
     insert into public.seller_offer_negotiations(offer_id,actor_id,actor_role,action,note)
     values(p_offer_id,v_actor,v_role,'rejected',nullif(btrim(p_note),''));
