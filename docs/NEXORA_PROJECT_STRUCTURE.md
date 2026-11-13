@@ -3,81 +3,95 @@
 Last updated: 2026-11-13
 Branch: `nexora-development`
 
-## Product split
+## Approved architecture: one domain
 
-NEXORA will be delivered as two independent web applications backed by one shared Supabase project initially.
+NEXORA uses one website, one homepage, one login system and one shared backend. The planned production domain is `nexora.com`. Marketplace and Administration are separate protected workspaces/routes inside this single application. A separate `admin.nexora.com` is not required.
 
-| App | Intended hostname | Vercel project root | Primary users |
-|---|---|---|---|
-| Marketplace | `nexora.com` / `www.nexora.com` | repository root (existing app) | Buyers, Sellers, public visitors |
-| Administration | `admin.nexora.com` | `admin/` | Director, MD, Marketing, Transport, Accounts |
+### Login and dashboard routing
 
-The correct admin subdomain is `admin.nexora.com`; not `NEXORA/AMDIN.COM`.
-Do not purchase a domain, change DNS, attach domains, or deploy until explicitly authorized.
+- Buyer → Buyer Dashboard.
+- Seller → Seller Dashboard.
+- Director / MD / Marketing / Transport / Accounts officer → Administration Dashboard, only when account is active, the user has an active Admin Staff record and MFA AAL2 is verified.
+- Inactive, unknown or unauthorized accounts do not receive privileged dashboard access.
+- Navigation visibility is not authorization. Supabase RLS and server-side RPC/Edge Function checks remain mandatory for every protected data operation.
 
-## Architecture boundaries
+### Marketplace workspace
 
-- Marketplace owns public discovery, Buyer/Seller dashboards, listing management, Buyer Demands, quotations, commerce orders, chat and reviews.
-- Administration owns internal staff sign-in, MFA, roles, permissions, department dashboards, delivery operations, financial operations, reports, audit and governance.
-- Supabase Auth and the existing database are shared initially. Each app must independently enforce server-side authorization; hiding UI is never an access-control boundary.
-- Keep staff/admin pages out of the public marketplace navigation. The legacy root app still contains old Admin sections and must be migrated module-by-module before they are removed.
-- Admin hostname will be connected later to a separate Vercel project configured with Root Directory `admin`. Marketplace remains a separate Vercel project rooted at repository root. Both projects may point to the same Git repository and development branch during preview testing.
+- Wholesale and Retail product discovery.
+- Services Marketplace.
+- Buyer Demand and Seller Quotations.
+- Product/Service details, commerce orders, chat and verified reviews.
+- Buyer and Seller dashboards.
 
-## Delivery workstreams
+### Administration workspace
 
-### M0 — Foundation and separation
-- [x] Record the two-app architecture.
-- [x] Create a separate Admin application shell.
-- [x] Add a staff-only login gate with MFA challenge and active-admin check.
-- [ ] Move all admin-only UI and scripts out of the Marketplace root.
-- [ ] Configure two separate Vercel projects and preview domains (requires explicit release approval).
-- [ ] Browser E2E and cross-app session/redirect tests.
+- Director: governance, officer accounts, permissions, audit and oversight.
+- MD: daily operations and cross-department coordination, without structural authority.
+- Marketing: leads, onboarding, campaigns and growth.
+- Transport & Logistics: partners, delivery assignments, tracking and exceptions.
+- Accounts & Finance: ledger, reconciliation, fees, refunds and settlements.
+- Permission-filtered reports and audit.
+
+## Repository layout
+
+- Root `index.html`, `auth.js`, `marketplace.js`: active single-domain app.
+- `admin/`: earlier separate-app prototype retained temporarily as reference only. It is not part of the active user journey. Do not create a separate Vercel project or domain for it.
+- Supabase Auth, Database and Storage are shared.
+
+## Workstreams
+
+### M0 — One-app foundation
+- [x] Record single-domain architecture.
+- [x] Move the existing Admin console UI into a protected Administration Dashboard section.
+- [x] Add role-aware Dashboard navigation and post-login routing for Buyer/Seller/Admin.
+- [x] Require active Admin Staff + MFA for the Administration route.
+- [ ] Browser E2E: Buyer, Seller, Director, MD and each department; include MFA and unauthorized deep links.
+- [ ] Verify Admin MFA enrollment/verification redirects into Administration Dashboard.
+- [ ] Remove/archive the unused separate Admin prototype after code review.
+- [ ] Configure the single production domain only after release approval.
 
 ### M1 — Identity and governance
-- [x] Define Director, MD, department head and department officer position model in governance plan.
-- [x] Stage central officer provisioning endpoint and SQL migration on development branch.
-- [ ] Reconcile the full Supabase migration history before any database application.
-- [ ] Test invite rollback/cleanup and duplicate email/account cases in isolated DB.
-- [ ] Enforce server-side department-scoped permission checks for every operational RPC.
-- [ ] Complete permission change history, revocation/session refresh and staff lifecycle tests.
+- [x] Define Director, MD and department positions in governance plan.
+- [x] Stage central officer invite endpoint and SQL permission model.
+- [ ] Reconcile complete ordered Supabase migration history.
+- [ ] Test on isolated database.
+- [ ] Test invite rollback, duplicate identities, privilege escalation, department scope, MFA bypass and revocation.
 
 ### M2 — Marketplace
-- [x] Wholesale/Retail category model.
-- [x] Product and Service listings, listing images/edit workflow.
-- [x] Buyer Demand matching and seller quotations.
-- [x] Commerce order and verified-purchase review workflow staged.
+- [x] Wholesale/Retail product category model.
+- [x] Product/Service listing, image and edit workflow.
+- [x] Buyer Demand matching and Seller quotation.
+- [x] Commerce order and verified review workflow staged.
 - [ ] Payment, refunds, disputes, inventory reservation and notifications.
-- [ ] Marketplace browser E2E, mobile accessibility and performance checks.
+- [ ] Marketplace browser E2E, mobile accessibility and performance.
 
 ### M3 — Transport & Logistics
-- [x] Provider, Courier Partner and NEXORA Team model staged.
-- [x] Unified delivery job and Admin assignment workflow staged.
-- [x] Tracking and delivery status transitions staged.
-- [ ] Buyer receipt OTP/confirmation and completion report.
-- [ ] Buyer-paid delivery charges, provider cost and NEXORA fee settlement.
-- [ ] Courier API/webhook adapters and automated tracking.
-- [ ] Retail/Wholesale delivery E2E and negative authorization tests.
+- [x] NEXORA Team, Courier Partner and Independent Provider model.
+- [x] Unified delivery jobs, assignment and tracking staged.
+- [ ] Buyer receipt OTP/digital confirmation and completion report.
+- [ ] Buyer-paid delivery charge, fee and settlement.
+- [ ] Courier API/webhooks and automated tracking.
+- [ ] Retail/Wholesale E2E and negative authorization tests.
 
-### M4 — Administration departments
-- [ ] Director: organization chart, officer accounts, permissions, audit and oversight.
-- [ ] MD: daily operations overview, cross-department coordination, escalation and reports; no constitutional/structure permissions.
-- [ ] Marketing: leads, onboarding, campaigns, conversion and growth reports.
-- [ ] Transport: delivery queue, partner/staff readiness, assignment, tracking, exceptions and performance.
-- [ ] Accounts: ledger, reconciliation, charges, refunds and settlement with maker-checker approvals.
-- [ ] Department-scoped dashboards and exports.
+### M4 — Administration operations
+- [ ] Director officer lifecycle, permissions and audit screens.
+- [ ] MD daily operations, coordination and escalation.
+- [ ] Marketing lead, onboarding and campaign workflows.
+- [ ] Transport partner, assignment and delivery operations.
+- [ ] Accounts ledger, reconciliation and maker-checker.
+- [ ] Permission-filtered reports and exports.
 
-### M5 — Reports, quality and release
-- [ ] Shared reporting definitions and filters.
-- [ ] Audit-ready export and scheduled reports.
-- [ ] Security review, RLS/RPC negative tests and MFA checks.
-- [ ] Isolated DB migration rehearsal.
-- [ ] Browser E2E, backup/restore and release checklist.
-- [ ] Explicit approval before production migration, DNS or deployment.
+### M5 — Quality and release
+- [ ] Security review, RLS/RPC negative tests and MFA tests.
+- [ ] Isolated database migration rehearsal.
+- [ ] Browser E2E, mobile and accessibility tests.
+- [ ] Backup/restore and release checklist.
+- [ ] Explicit approval before production migration or deployment.
 
-## Current release constraints
+## Release constraints
 
-- Development-only work on `nexora-development`.
-- `main` remains unchanged by this plan.
-- No Live Database migration, production deployment, DNS change or paid service activation.
-- Supabase hosted migration history is behind the staged migration chain; new staged migrations must not be applied until the complete ordered chain is reconciled and tested on an isolated database.
-- No isolated development database currently available for SQL integration tests.
+- Work only on `nexora-development`; `main` remains untouched.
+- No Live DB migration, production deployment, DNS change or paid activation without explicit approval.
+- Hosted Supabase migration history is behind staged migrations. Reconcile the complete ordered chain before any migration.
+- No isolated Supabase development DB is currently available for SQL integration testing.
+- Previous Vercel deployment reached a rolling 24-hour cap; do not retry without approval.
