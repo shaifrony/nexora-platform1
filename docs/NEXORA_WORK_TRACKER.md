@@ -259,3 +259,5 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - This narrows the baseline recovery blocker but does not equal a full schema-only dump or original historical SQL. All ACL/default privileges, complete Auth/Storage customizations, and remaining functions still need a complete export and review.
 - Next: obtain a schema-only export locally, preserve credentials only on the user's device, compare live objects against branch migrations, then rehearse selected migrations only on a disposable local database.
 - No Live Supabase schema/data/history changed; no migration executed; no main, Production, DNS or deployment changed.
+
+- Extended the metadata evidence snapshot with all 22 public relations, the 37-function public/private inventory, 12 custom auth/storage triggers (including their function definitions), and four auth/storage policies. Ten selected Foundation function definitions are fully captured; a complete raw schema-only export and full ACL/default-privilege capture remain pending.
