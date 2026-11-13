@@ -179,6 +179,13 @@ begin
    end if;
  else raise exception 'Unsupported assignment source' using errcode='22023';
  end if;
+ if p_vehicle_id is not null and exists(
+   select 1 from public.delivery_jobs j
+   where j.assigned_vehicle_id=p_vehicle_id and j.id<>p_job_id
+     and j.job_status in ('requested','assigned','accepted','picked_up','in_transit','out_for_delivery','partially_delivered','disputed')
+ ) then
+   raise exception 'Selected Vehicle already has another active Delivery Job' using errcode='23514';
+ end if;
  update public.delivery_jobs set assigned_provider_id=p_provider_id,assigned_vehicle_id=p_vehicle_id,
    assigned_partner_id=p_partner_id,assigned_staff_id=p_staff_id,assignment_source=p_assignment_source,
    job_status='assigned',assigned_by=v_actor,assigned_at=now(),updated_at=now()
