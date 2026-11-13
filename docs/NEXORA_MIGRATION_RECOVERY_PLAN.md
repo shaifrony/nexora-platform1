@@ -309,3 +309,12 @@ The Android-only read-only path has now captured all 37 public/private function 
 ### Addendum — Role, event-trigger and SECURITY DEFINER review
 
 Read-only evidence now includes non-platform role attributes and memberships, schema ACLs, seven event-trigger registrations, and both public view definitions/options. A targeted review found 17 public/private SECURITY DEFINER functions executable by authenticated, zero executable by anon, and zero with an explicit PUBLIC EXECUTE grant. All 17 definitions are stored for review. Because they are under the private schema and contain identity/permission checks, this is not labeled a vulnerability without verifying Data API exposed schemas and call paths. No grants, roles, functions, policies or schema settings were changed.
+
+
+### Addendum — API exposure, RLS privacy and advisors (2026-11-14)
+
+Read-only review confirms the only relation with anon SELECT grant in public is `public_buyer_demands`. That view is configured `security_invoker=true` and its selected columns exclude `buyer_id`; the underlying `buyer_demands` table does contain `buyer_id`, but anon has no SELECT grant on that base table. All public tables have RLS enabled, and no RLS-enabled public table was found without policies. The `private` schema denies USAGE to anon and grants it to authenticated. This is structural evidence only, not an end-to-end HTTP security test.
+
+The exact PostgREST Exposed Schemas list remains unverified: `current_setting('pgrst.db_schemas', true)` returned NULL and no role/database-level override was found. Verify in Dashboard > Project Settings > Data API before any conclusion about schema exposure.
+
+Advisors report: leaked-password protection disabled (WARN); 6 unindexed foreign keys (INFO); 20 unused-index candidates (INFO); 8 multiple-permissive-policy warnings (WARN). No changes were made. Do not blindly drop unused indexes or merge permissive policies: first validate workload and logical equivalence. Evidence JSON includes this audit snapshot.
