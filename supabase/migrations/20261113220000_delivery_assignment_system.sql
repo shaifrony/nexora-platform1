@@ -185,6 +185,11 @@ begin
     raise exception 'Selected Vehicle is not approved, available, or linked to this Provider'
       using errcode='23514';
   end if;
+  if exists(select 1 from public.delivery_jobs j
+    where j.assigned_vehicle_id=p_vehicle_id
+      and j.job_status in ('requested','assigned','accepted','picked_up','in_transit','out_for_delivery','partially_delivered','disputed')) then
+    raise exception 'Selected Vehicle already has an active Delivery Job' using errcode='23514';
+  end if;
 
   v_job_id:=gen_random_uuid();
   v_job_reference:='NXD-'||upper(substr(replace(v_job_id::text,'-',''),1,12));
@@ -274,6 +279,11 @@ begin
      or v_available is distinct from true then
     raise exception 'New Vehicle must be approved, available and belong to the selected Provider'
       using errcode='23514';
+  end if;
+  if exists(select 1 from public.delivery_jobs j
+    where j.assigned_vehicle_id=p_vehicle_id and j.id<>p_job_id
+      and j.job_status in ('requested','assigned','accepted','picked_up','in_transit','out_for_delivery','partially_delivered','disputed')) then
+    raise exception 'New Vehicle already has another active Delivery Job' using errcode='23514';
   end if;
   if v_old_provider=p_provider_id and v_old_vehicle=p_vehicle_id then
     raise exception 'The selected Provider and Vehicle are already assigned' using errcode='22023';
