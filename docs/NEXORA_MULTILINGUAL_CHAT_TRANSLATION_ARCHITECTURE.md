@@ -100,3 +100,23 @@ Create a human-reviewed, consented test set with at least 100 short messages in 
 - **No translation engine is selected or enabled.** The best zero-provider-cost candidate for a later isolated test is self-hosted LibreTranslate/Argos, conditional on available hosting and a successful Bangla/Arabic pilot.
 - Do not use public demo endpoints or send private conversation content to them. Do not put provider credentials in browser code.
 - The next implementation milestone is a provider-neutral, disabled-by-default server adapter plus an isolated provider test harness only after a hosting target and consent policy are approved. No Edge Function was added in this research-only change.
+
+## 9. Bengali ↔ English evaluation (2026-11-13)
+
+### Confirmed model availability
+- Argos package index currently lists Bengali → English (`bn→en`, package 1.9 / Argos 1.9.0, about 67 MB) and English → Bengali (`en→bn`, package 1.9 / Argos 1.9.0, about 68 MB). LibreTranslate confirms both directions and documents pivoting through English when a direct pair is absent.
+- This confirms installable package availability only. No trustworthy, model-specific public BLEU/chrF++/COMET benchmark for these exact Argos package versions was found in the reviewed sources. Do not infer translation quality from package presence or file size.
+
+### Stronger candidate for a Bengali-English pilot: AI4Bharat IndicTrans2
+- IndicTrans2 explicitly supports Bengali (`ben_Beng`) and English (`eng_Latn`) in both directions and publishes evaluation tooling for FLORES, IN22-Gen and IN22-Conv using chrF++, BLEU and COMET.
+- The official AI4Bharat model repository documents separate inference/evaluation paths for English→Indic and Indic→English. The Hugging Face model card for `ai4bharat/indictrans2-en-indic-dist-200M` identifies the checkpoint as MIT-licensed; the paired Indic→English checkpoint must also be license-checked at the exact selected revision before deployment.
+- IndicTrans2 is therefore the preferred first benchmark candidate for NEXORA's Bengali ↔ English pilot, ahead of Argos. This is a candidate selection for testing, not a production approval or a claim that it has already been run by NEXORA.
+
+### Practical constraints
+- A 200M-parameter model is not a free hosted API. Self-hosting requires suitable CPU/RAM or GPU capacity, model downloads, runtime, monitoring and maintenance. Measure actual memory, latency and throughput on the intended server before deciding.
+- IndicTrans2 is an Indic-language specialist; it does not replace a general multilingual engine for Arabic, Chinese, French or other non-Indic targets. Keep the provider interface language-pair-aware so the system can use different approved models for different language pairs.
+
+### Bengali-English pilot decision
+- Benchmark IndicTrans2 En↔Bn and Argos En↔Bn on the same consented, human-reviewed sample (at least 100 examples per direction). Include formal Bengali, colloquial Bengali, Banglish, short chat, business terms, negation, questions, dates, units, currency and names/IDs.
+- Score meaning preservation, fluency, omissions/additions and protected-token accuracy with two bilingual reviewers; also compute chrF++/COMET where reference translations are available. BLEU alone is not an approval criterion.
+- No automatic translation is enabled until the pilot, commercial-license review for both checkpoints, hosting-cost review, privacy/consent gate and server-side security review pass.
