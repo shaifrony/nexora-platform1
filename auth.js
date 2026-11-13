@@ -79,9 +79,10 @@
       return false;
     }
     try {
-      const { error } = await db.from("profiles").update({ buyer_category: category }).eq("id", currentUser.id);
+      const { data, error } = await db.from("profiles").update({ buyer_category: category }).eq("id", currentUser.id).select("id,buyer_category").maybeSingle();
       if (error) throw error;
-      profile = { ...profile, buyer_category: category };
+      if (!data || data.buyer_category !== category) throw new Error("Database update policy অনুমতি দেয়নি বা কোনো profile update হয়নি।");
+      profile = { ...profile, buyer_category: data.buyer_category };
       render();
       window.dispatchEvent(new Event("nexora:auth-change"));
       say("আপনার Marketplace ক্যাটাগরি পরিবর্তন হয়েছে।", true);
@@ -433,8 +434,7 @@
     socialDivider?.classList.toggle("hidden", role !== "buyer");
     socialButtons?.classList.toggle("hidden", role !== "buyer");
     if (buyerSelect) {
-      const wholesaleOption = buyerSelect.querySelector('option[value="wholesale"]');
-      if (wholesaleOption) wholesaleOption.selected = true;
+      // Keep the user's selected Buyer market category when switching signup roles.
       buyerSelect.required = role === "buyer";
       buyerSelect.disabled = role !== "buyer";
     }
