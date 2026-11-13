@@ -64,3 +64,15 @@ The companion instructions are in:
 `supabase/recovery-not-for-deployment/local-setup/README.md`
 
 A read-only catalog inventory script has been added at `supabase/recovery-not-for-deployment/local-setup/01_local_catalog_audit.sql`; it is committed but has not yet been executed on the phone. Do not claim migration replay, pgTAP execution, or Supabase RLS/Auth verification until separately evidenced. The active migration chain remains blocked by history divergence.
+
+
+## Android local catalog audit result (2026-11-13)
+
+The user executed the read-only audit in `nexora_test`. All 11 selected application tables were reported `NOT RESTORED`; no public-schema RLS policies, constraints, indexes, or triggers were present. This is the expected empty application-schema baseline because no application migration has been applied. The captured function inventory showed pgcrypto functions, not an evidenced NEXORA application function inventory. No migration failure occurred.
+
+A source-based dependency assessment is recorded in:
+`supabase/recovery-not-for-deployment/local-setup/02_schema_dependency_assessment.md`
+
+Key blocker: the core marketplace migration depends on `public.profiles`, `public.is_nexora_admin()`, and `auth.uid()`; the follow-up RLS migration additionally references `role_requests`, `profile_change_requests`, and admin helpers. Communications/delivery migrations also depend on Supabase Realtime publication and platform-specific objects. The Android scaffold does not supply a full Supabase environment.
+
+**Decision:** do not replay all 36 migrations or execute recovery drafts. Next work is a separately labelled local-only baseline reconstruction after exact foundational definitions/dependencies are reviewed. Keep all local-only scripts under `supabase/recovery-not-for-deployment/local-setup/`. No Live Supabase changes were made.
