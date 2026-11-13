@@ -84,3 +84,15 @@ No database schema, migration, hosted Supabase project, production deployment or
 - Added `27_run_local_buyer_demand_tests_termux.sh`: one-command runner with local DB/schema/session preflight. Runs fixture 25, read-only audit 24, then behavior tests 26. It performs no cleanup and no migration replay.
 - Fixture is a deliberately limited reconstruction, not the original complete production schema. It tests local PostgreSQL policy/trigger logic only; not actual Supabase Auth, JWT validation, PostgREST, Storage, Realtime, Edge Functions, MFA/AAL2 or browser E2E.
 - User has not run the new runner yet; no B-03 local test PASS claimed. No active migration executed, no Hosted Supabase/Production/main changed.
+
+
+
+## 2026-11-13 — B-03 local Demand behavior tests PASSED
+
+- User ran the latest immutable Termux runner (runner commit `f202a630dc4e2503daada8ef2130cab90f3b88a6`) on local `nexora_test`; preflight passed and the existing complete Demand fixture was reused.
+- Policy dependency patch applied successfully. It replaced policy subqueries that attempted direct access to private `public_businesses.seller_id` and Buyer Demand ownership with private boolean SECURITY DEFINER helpers. Authenticated has narrowly scoped EXECUTE; anon is denied; Seller ID is not exposed through a public projection.
+- Read-only catalog audit: all 8 checks PASS, including RLS, SECURITY INVOKER safe view projection, public/private grants, Buyer ownership, Seller Inbox isolation, quotation constraints, required date and category/subcategory routing without a Wholesale/Retail gate.
+- Behavior tests: all 12 PASS. Covered approved taxonomy routing and late product match, anonymous projection and private-data denial, Buyer ownership and cross-Buyer isolation, Wholesale and Retail Seller routing, unmatched Seller denial, direct Inbox write denial, duplicate quotation prevention, Buyer quotation read/isolation, Buyer-ID spoof denial, past required-date rejection and RLS/private ACL boundaries.
+- Final output confirms test transaction ROLLBACK and all test data rolled back. Runner completed without SQL errors.
+- Result: local reconstructed B-03 PostgreSQL logic test PASS. This does not establish production migration correctness or hosted Supabase Auth/JWT/PostgREST/RLS behavior. Browser E2E, Data API exposure and actual hosted role tests remain pending.
+- No migration/deployment was performed; Live Supabase, Production and `main` remain untouched.
