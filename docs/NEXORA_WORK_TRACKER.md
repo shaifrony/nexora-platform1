@@ -223,3 +223,10 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Added `scripts/translation_pilot/run_bn_en_pilot.py` and `docs/NEXORA_BN_EN_MODEL_RUNBOOK.md` for local offline inference, raw CSV capture and per-case latency. The runner does not calculate a winner; human review remains mandatory.
 - Runtime not executed: this environment has no configured model runtime/weights and cannot provide a verified local inference host. No private chat content used; no model quality score claimed; no paid compute started.
 - No SQL, migration execution, Supabase, Edge Function, Live, Production, DNS or `main` change. Translation remains disabled.
+
+
+## 2026-11-13 — Colab notebook prepared for actual model inference
+- Added `notebooks/NEXORA_BN_EN_Model_Pilot.ipynb` for phone-friendly browser execution on a temporary Colab runtime.
+- Notebook clones only the development branch, prompts for Hugging Face token securely, resolves immutable checkpoint SHAs per session, runs the same synthetic corpus, and downloads raw CSV outputs.
+- Google Colab free compute is not guaranteed and limits vary; no paid runtime was started. Notebook has not been executed; no model outputs/quality score are claimed.
+- Private NEXORA chat data must never be uploaded. Automatic translation remains disabled.
