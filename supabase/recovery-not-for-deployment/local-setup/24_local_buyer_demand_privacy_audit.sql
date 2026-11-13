@@ -124,7 +124,8 @@ BEGIN
     RAISE EXCEPTION 'FAIL: Seller inbox SELECT policy is not scoped to the active owning Seller';
   END IF;
   IF has_any_column_privilege('authenticated','public.buyer_demand_inbox','INSERT')
-     OR has_any_column_privilege('authenticated','public.buyer_demand_inbox','UPDATE') THEN
+     OR has_any_column_privilege('authenticated','public.buyer_demand_inbox','UPDATE')
+     OR has_table_privilege('authenticated','public.buyer_demand_inbox','DELETE') THEN
     RAISE EXCEPTION 'FAIL: authenticated users have direct write access to Demand routing rows';
   END IF;
   RAISE NOTICE 'PASS: Seller inbox is owner-scoped and browser users cannot write routing rows';
