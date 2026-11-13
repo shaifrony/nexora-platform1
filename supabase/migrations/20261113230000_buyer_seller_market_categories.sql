@@ -63,26 +63,8 @@ $function$;
 drop trigger if exists profiles_guard_market_categories on public.profiles;
 drop function if exists private.guard_profile_market_categories();
 
-grant update (buyer_category) on public.profiles to authenticated;
-
--- The baseline profile table has no general self-UPDATE policy.
--- Add a narrowly scoped policy; column grants and trigger guard protect all
--- identity and authorization fields.
 drop policy if exists profiles_owner_update_buyer_category on public.profiles;
-create policy profiles_owner_update_buyer_category
-on public.profiles
-for update to authenticated
-using (
-  id=(select auth.uid())
-  and role='buyer'
-  and account_status='active'
-)
-with check (
-  id=(select auth.uid())
-  and role='buyer'
-  and account_status='active'
-  and buyer_category in ('wholesale','retail')
-);
+revoke update (buyer_category,seller_categories) on public.profiles from authenticated;
 
 comment on column public.profiles.buyer_category is 'Deprecated legacy field. Buyer visibility is universal; must remain NULL.';
 comment on column public.profiles.seller_categories is 'Deprecated legacy field. Seller sale type is selected per product; must remain empty.';
