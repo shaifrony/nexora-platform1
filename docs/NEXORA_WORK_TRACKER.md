@@ -487,3 +487,9 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Buyer/Seller order cards display delivery-inclusive `grand_total` with a separate delivery-charge breakdown when non-zero. Syntax-only JavaScript and isolated required-date/order-total checks are documented; they do not establish SQL runtime, JWT/PostgREST/RLS, concurrency or browser E2E correctness.
 - Full isolated database rehearsal remains blocked by migration-history/version collision and absence of a trusted complete baseline; local reconstructed fixtures do not contain the full Commerce/Negotiation schema. No SQL or hosted migration executed; no Live Supabase, Production, `main`, DNS or deployment changed.
 - Checklist correction commit: `415df2d77fc0609f203f90153adc5eba0e82dbc8`.
+
+
+## 2026-11-14 — Buyer workflow static verification (not runtime test)
+- Reviewed Buyer/Seller quotation UI and `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql`: source includes active-role and participant checks, open-demand and expiry checks, negotiation turn-taking, quantity/price validation, unique source-offer order index, participant-scoped negotiation-history RLS, generated delivery-inclusive order total, and guarded Buyer/Seller order transitions.
+- Corrected Buyer acceptance toast to state the newly created order awaits Seller confirmation; code commit `db377422c117cab4bf9acf851da9e1407e21cb08`.
+- Verification is static source review only. No SQL runtime, disposable DB, hosted JWT/PostgREST/RLS, concurrency or browser E2E tests ran. Existing GitHub Pages workflow success is not a Buyer test suite. Migration collision and absent trusted complete local DB baseline remain blockers. No Live/Production/main changes.
