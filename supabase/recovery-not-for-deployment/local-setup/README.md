@@ -200,3 +200,45 @@ It covers eight Foundation tables and ten selected functions, including exact co
 The live project inventory at capture time showed PostgreSQL 17.11, 20 public tables plus two views, all 20 tables with RLS enabled, five non-internal public triggers, and 24 migration-history entries. Do not infer that this snapshot is a complete backup.
 
 Full schema export is still required. Use the current Supabase CLI supabase db dump documentation or a locally installed pg_dump --schema-only against the connection string shown in the Supabase Dashboard. Keep the database password and complete connection string on the user's device; never send them in chat or commit them. Do not run a restore against the live project. A disposable local target must be confirmed before any restore or migration rehearsal.
+
+## Full schema-only export — safe local recovery procedure
+
+The live catalog snapshot has now also recorded:
+- all 22 public relations (20 tables and 2 views);
+- an inventory of 37 public/private functions (the complete definitions of ten selected foundation functions are included in the snapshot);
+- 12 non-internal triggers in auth/storage and their trigger-function definitions;
+- four auth/storage RLS policies.
+
+This still does not replace a full SQL export, especially for exact grants/default privileges and all public/private function definitions.
+
+### Do not use db pull on the live project for this recovery step
+
+The current Supabase CLI workflow documents that db pull writes a baseline entry into the remote migration history. That would alter the live project's migration history, which is outside the current authorization. Do not run db pull, db push, db reset --linked, migration repair, or any migration command that writes to the remote project.
+
+### Export public/private schema without table data
+
+First check the locally installed PostgreSQL client:
+
+```sh
+pg_dump --version
+```
+
+Use pg_dump 17 or newer for the live PostgreSQL 17.11 project. If it is missing or older, stop and report the exact version/error; do not install random packages or improvise.
+
+If pg_dump is compatible, copy the connection string from the Supabase Dashboard's Connect panel on your own device. Prefer the Session Pooler if the direct connection is unavailable on your network. Then run this from the Termux shell:
+
+```sh
+read -r -s -p "Paste the database connection string (hidden; do not send it in chat): " NEXORA_DB_URL
+printf '\\n'
+pg_dump --dbname="$NEXORA_DB_URL" --schema-only --no-owner --schema=public --schema=private --file="$HOME/nexora-live-public-private-schema.sql"
+unset NEXORA_DB_URL
+if [ -s "$HOME/nexora-live-public-private-schema.sql" ]; then
+  echo "SCHEMA-ONLY EXPORT CREATED: $HOME/nexora-live-public-private-schema.sql"
+else
+  echo "EXPORT NOT VERIFIED — stop and share the exact error"
+fi
+```
+
+This command exports schema definitions only for public/private, including table definitions, policies, functions, triggers, indexes and ACL statements emitted by pg_dump. It does not export table rows. The auth.users trigger and Storage customizations are separately preserved as catalog evidence in the JSON snapshot; do not attempt to restore Supabase-managed auth/storage schemas over a local Supabase stack.
+
+**Do not upload the connection string, database password, data dump, auth.users rows, or production user data to GitHub or ChatGPT.** The schema-only SQL file should remain on the device until we inspect it. Do not restore it to the live project. A restore/rehearsal must target a disposable local database only, after confirming the database name and PostgreSQL major version.
