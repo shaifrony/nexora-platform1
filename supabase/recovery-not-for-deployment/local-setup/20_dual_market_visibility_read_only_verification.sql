@@ -37,6 +37,8 @@ SELECT
   AND to_regprocedure('private.create_commerce_order(text,uuid,numeric,text,text)') IS NOT NULL
   AND to_regprocedure('private.route_new_buyer_demand_to_sellers()') IS NOT NULL
   AND to_regprocedure('private.route_new_approved_product_to_open_demands()') IS NOT NULL
+  AND to_regprocedure('private.submit_listing_edit_request(text,uuid,jsonb)') IS NOT NULL
+  AND to_regprocedure('private.review_listing_edit_request(uuid,text,text)') IS NOT NULL
   AND EXISTS (SELECT 1 FROM information_schema.columns
               WHERE table_schema='public' AND table_name='profiles' AND column_name='buyer_category')
   AND EXISTS (SELECT 1 FROM information_schema.columns
@@ -176,6 +178,16 @@ SELECT
         !~* 'buyer_category|seller_categories'
     THEN 'PASS' ELSE 'FAIL' END AS result,
     'Buyer Demand routing is independent of Buyer/Seller account categories' AS check_name;
+
+  SELECT
+    CASE WHEN
+      pg_get_functiondef('private.submit_listing_edit_request(text,uuid,jsonb)'::regprocedure)
+        !~* 'buyer_category|seller_categories'
+      AND
+      pg_get_functiondef('private.review_listing_edit_request(uuid,text,text)'::regprocedure)
+        !~* 'buyer_category|seller_categories'
+    THEN 'PASS' ELSE 'FAIL' END AS result,
+    'Seller listing edit/review workflow validates per-product sale type, not account category' AS check_name;
 
   -- E. Role-scoped visibility smoke check. No rows are inserted or changed.
   -- A local active Buyer is selected only to set the compatibility helper claim.
