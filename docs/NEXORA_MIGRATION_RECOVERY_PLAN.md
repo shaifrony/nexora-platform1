@@ -351,3 +351,10 @@ Product model conflict: `20261113235900_product_market_category.sql` and the Ret
 The repeated `profiles_market_categories_check` in Porter registration is intentional legacy-field deprecation: it was already created in 132300 and keeps profile-level buyer/seller categories empty. It is not treated as a new defect.
 
 CLI-based migration version repair is blocked because this workflow has no local Supabase CLI or Docker Engine. Per Supabase skill, do not hand-author a new migration filename; wait for a supported `supabase migration new` workflow. No Live writes or migration execution. Source fixes have not been SQL-runtime-tested; isolated disposable-database rehearsal is still required.
+
+
+### Unified Marketplace decision alignment (2026-11-14)
+
+The latest user decision supersedes the older dual-market and wholesale-only UI assumptions: do not split Marketplace products into Wholesale vs Retail categories; all users can view all approved products, while each Seller sets product price and quantity. Current branch source is not yet aligned: `marketplace.js` still selects/displays `market_category`, shows Wholesale/Retail badges and filters, submits `market_category` on product insert/edit, and includes Retail-specific copy; `index.html` still contains Wholesale/Retail discovery cards, seller category selectors, and market-type filters. The staged `20261113235900_product_market_category.sql` adds the product classification and `20261114150000_product_inventory_moq_quantity_pricing.sql` enforces MOQ=1 for Retail. These must be reconciled before rehearsal; no removal was made in this audit to avoid partial UI/schema changes.
+
+The older `docs/NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md` statement that the form is wholesale-only is superseded by the latest decision and must be revised with the coordinated UI/schema change.
