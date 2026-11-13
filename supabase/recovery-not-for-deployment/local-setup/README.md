@@ -97,7 +97,7 @@ No trusted schema-only export or pre-change SQL backup is available. A new desig
 
 It is explicitly **not original, not recovered, and not deployable**. It documents the proposed identity/account lifecycle, Admin organization and permission model, Auth provisioning, Porter approval gates, privacy requirements, migration conflicts and open decisions. It is a design document only; it creates no database objects.
 
-In particular, review the wholesale-only vs current `retail` category conflict, the Porter vs Buyer/Seller transport-provider ownership conflict, and the public identity projection privacy risk before any local-only SQL fixture is authored. Do not execute active migrations or recovery drafts.
+In particular, review the superseded Wholesale-Only / Buyer-category-gated migrations, the Porter vs Buyer/Seller transport-provider ownership conflict, and the public identity projection privacy risk before any local-only SQL fixture is authored. Do not execute active migrations or recovery drafts.
 
 
 ## Foundation design conflict resolution (2026-11-13)
@@ -130,7 +130,7 @@ It creates the proposed identity/account lifecycle, role/profile-change requests
 - It is a new reconstruction for local SQL testing, not the original schema and not deployable.
 - It does not apply any active migration or recovery draft.
 - The fixture's local Auth trigger is only a PostgreSQL test stub; it does not emulate Supabase Auth signup, sessions, OAuth, JWT validation or MFA/AAL2.
-- Do not run the 36 active migrations on top of this fixture. The branch/hosted migration-history divergence remains unresolved, and known legacy migrations conflict with the approved Wholesale-Only and Porter account decisions.
+- Do not run the 36 active migrations on top of this fixture. The branch/hosted migration-history divergence remains unresolved, and known legacy migrations conflict with the current universal Wholesale/Retail visibility and Porter account decisions.
 - SQL syntax and runtime behavior have **not yet been tested on the user's Android PostgreSQL instance**. After review, run the command below and share the complete output.
 
 Run from the Termux shell (not inside the psql prompt):
@@ -156,7 +156,7 @@ After the fixture has completed successfully, run:
 curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/07_foundation_smoke_tests.sql' -o "$HOME/07_foundation_smoke_tests.sql" && psql -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/07_foundation_smoke_tests.sql"
 ```
 
-It checks local Buyer/Seller/Porter signup behavior, Porter pending review, OAuth Buyer-only behavior, rejection of public Admin and ignores legacy Wholesale/Retail signup metadata, and profile-role immutability. All test rows are rolled back. It does not validate real Supabase Auth, PostgREST, actual JWT/RLS session behavior, Storage, Realtime or MFA/AAL2.
+It checks local Buyer/Seller/Porter signup behavior, Porter pending review, OAuth Buyer-only behavior, rejection of public Admin signup, ignored legacy Buyer/Seller category metadata, and profile-role immutability. All test rows are rolled back. It does not validate real Supabase Auth, PostgREST, actual JWT/RLS session behavior, Storage, Realtime or MFA/AAL2.
 
 
 ## Current universal marketplace visibility decision (2026-11-13)
