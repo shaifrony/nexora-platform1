@@ -41,6 +41,23 @@
     await Promise.all([loadDirectory(),loadConversationList()]);
   }
 
+  function systemEventFromMessage(message){
+    if(message?.message_type!=="system")return null;
+    try{const value=JSON.parse(message.body||"{}");return value?.kind==="product_negotiation"?value:null;}catch(_){return null;}
+  }
+  function systemEventLabel(event){
+    const labels={buyer_countered:"Buyer নতুন দর প্রস্তাব করেছেন",seller_countered:"Seller পাল্টা দর প্রস্তাব করেছেন",rejected:"দরদাম প্রত্যাখ্যান করা হয়েছে",ordered:"দরদাম সম্মত হয়েছে — Order তৈরি হয়েছে"};
+    return labels[event?.action]||"দরদামের আপডেট";
+  }
+  function messagePreview(message){
+    if(!message)return "এখনো কোনো মেসেজ নেই";
+    const event=systemEventFromMessage(message);
+    if(event)return systemEventLabel(event);
+    if(message.message_type==="image")return "ছবি";
+    if(message.message_type==="file")return "ফাইল";
+    return (message.sender_id===user()?.id?"আপনি: ":"")+String(message.body||"").slice(0,120);
+  }
+
   async function loadConversationList() {
     const host=$("chatConversationList");
     if(!host || !isSignedIn()) return;
@@ -74,7 +91,7 @@
       const product=c.context_type==="product";
       const title=product?(c.context_product_name||c.title||"পণ্য Conversation"):(c.title||"Private Conversation");
       const last=lastMap.get(c.id);
-      const preview=last?(last.message_type==="image"?"ছবি":last.message_type==="file"?"ফাইল":(last.sender_id===user().id?"আপনি: ":"")+last.body):(mine?.invitation_status==="pending"?"যোগাযোগের অনুরোধ গ্রহণের অপেক্ষায়":"এখনো কোনো মেসেজ নেই");
+      const preview=last?messagePreview(last):(mine?.invitation_status==="pending"?"যোগাযোগের অনুরোধ গ্রহণের অপেক্ষায়":"এখনো কোনো মেসেজ নেই");
       const price=product&&c.context_product_price!==null?Number(c.context_product_price).toLocaleString()+" "+(c.context_product_currency||""):"";
       const image=product&&c.context_product_image_url?'<img class="nx-chat-product-thumb" src="'+esc(c.context_product_image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<span class="nx-chat-product-placeholder" aria-hidden="true">▣</span>';
       const link=product&&c.context_product_slug?'<a class="nx-chat-product-link" href="'+esc(window.location.pathname+'?product='+encodeURIComponent(c.context_product_slug))+'" target="_blank" rel="noopener noreferrer">পণ্য দেখুন ↗</a>':'';
@@ -190,7 +207,20 @@
     const item=document.createElement("div");
     item.className="offer";item.dataset.message=m.id;
     const time=new Date(m.created_at).toLocaleString();
-    item.innerHTML=`<strong>${own?"You":"NEXORA User"}</strong><p>${esc(m.deleted_at?"এই বার্তাটি মুছে ফেলা হয়েছে।":m.body)}</p><span class="muted">${esc(time)}</span>`;
+    const event=systemEventFromMessage(m);
+    if(event){
+      item.className="offer nx-chat-negotiation-event";
+      const heading=document.createElement("strong");heading.textContent=systemEventLabel(event);item.appendChild(heading);
+      if(event.quantity!==undefined&&event.unit_price!==undefined){
+        const terms=document.createElement("p");terms.textContent="পরিমাণ: "+event.quantity+" × প্রতি ইউনিট "+event.unit_price+" "+(event.currency||"");item.appendChild(terms);
+      }
+      if(event.note){const noteText=document.createElement("p");noteText.textContent=event.note;item.appendChild(noteText);}
+      if(event.order_id){const order=document.createElement("p");order.textContent="Order ID: "+event.order_id;item.appendChild(order);}
+    }else{
+      const who=document.createElement("strong");who.textContent=own?"You":"NEXORA User";item.appendChild(who);
+      const body=document.createElement("p");body.textContent=m.deleted_at?"এই বার্তাটি মুছে ফেলা হয়েছে।":m.body;item.appendChild(body);
+    }
+    const stamp=document.createElement("span");stamp.className="muted";stamp.textContent=time;item.appendChild(stamp);
     host.appendChild(item);
     if(m.message_type==="image"||m.message_type==="file"){
       const {data:attachment}=await db().from("message_attachments").select("id,message_id,storage_path,file_name").eq("message_id",m.id).maybeSingle();
