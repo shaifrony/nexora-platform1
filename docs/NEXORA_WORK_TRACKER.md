@@ -402,3 +402,17 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 - Detailed per-file classification and limits are recorded in Recovery Plan section 18.
 
 **Current status:** branch-only migration inventory and initial object mapping complete; exact function/trigger/policy/grant replacement audit remains. The `20261114180000` version collision still blocks all migration runners. No file renamed/deleted, no SQL run, no Live writes, no user data queried, no paid Development Branch created.
+
+
+## 2026-11-14 — Product conversation migration effect audit
+
+- Verified branch HEAD before audit: `3dc6b5be89254b978e864d23fbf16dedd11beef5`.
+- Compared `20261114180000_product_linked_private_conversations.sql` with Live catalog metadata.
+- Live `conversations` has no `context_%` columns, matching context constraints or product-context indexes.
+- Live `private.create_product_inquiry(uuid,text)` is the earlier generic-thread implementation; the newer product context snapshot, active-Seller check, duplicate-thread guard and optional first message in branch source are not present in Live.
+- Function privilege metadata: anon cannot execute either wrapper/private implementation; authenticated can execute. Private function is SECURITY DEFINER with empty search_path; public wrapper is SECURITY INVOKER.
+- Classified the product-linked conversation migration as pending on Live (not already applied). Full comparison and limits are in Recovery Plan section 18.
+- Collision at migration version `20261114180000` remains unresolved; do not run migrations or edit version filenames until a supported CLI-generated repair is available.
+- No Live writes or private user/message data reads. No SQL runtime, PostgreSQL parser, JWT/RLS or E2E tests.
+
+Documentation commit for Recovery Plan section 18: `1aee6768a2c46df557d9a5c6f45a005b480072ad`.
