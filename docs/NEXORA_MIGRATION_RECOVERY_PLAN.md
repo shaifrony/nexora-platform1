@@ -380,3 +380,77 @@ Static verification fetched the modified files from GitHub. Both frontend files 
 
 
 **Disposable database availability check (2026-11-14):** no existing Supabase development branches are present. A new isolated Supabase development branch is available as a testing route, but the current quote is **US$0.01344 per hour**. It has not been created. Explicit user approval of this recurring cost is required before provisioning; do not use the Live project for migration rehearsal. Android/Termux still has no local Supabase CLI or Docker Engine, so CLI-generated unique migration timestamps and a local disposable PostgreSQL rehearsal remain blocked until an approved test environment is available.
+
+
+## 16. Refreshed reconciliation audit — 2026-11-14
+
+The earlier baseline counts in Sections 2, 10 and 12 are historical and are superseded by this refreshed read-only check. The current branch was verified directly from GitHub and the current Live ledger was re-read from Supabase.
+
+### 16.1 Current inventory
+
+| Evidence | Refreshed observation |
+|---|---:|
+| GitHub SQL migration files | 40 |
+| Unique branch migration versions | 39 |
+| Live Supabase migration history entries | 24 |
+| Exact version + name matches | 13 |
+| Branch-only files | 27 |
+| Branch-only unique versions | 26 |
+| Live-only history entries | 11 |
+
+Verified branch HEAD: `8aba6fb3c4c827492aef5abe0bf395e73eaaa2cf`.
+
+### 16.2 Duplicate SQL content — exact hash evidence
+
+| Branch files | Git blob SHA | Live history |
+|---|---|---|
+| `20261112051711_update_conversation_timestamp_on_message.sql` and `20261112051801_update_conversation_timestamp_on_message.sql` | `2e053e7bf7b47c089e70218c2b2397686cf153dc` | 51711 present; 51801 absent |
+| `20261112051906_fix_conversation_insert_returning_visibility.sql` and `20261112052010_fix_conversation_insert_returning_visibility.sql` | `bd3d3d323c81d9d265f927ffa8affca4eeb1d974` | 51906 present; 52010 absent |
+
+The later branch-only copies are exact byte-identical Git blobs, not merely similar SQL. They are strong candidates for exclusion from the future canonical migration sequence, but they remain untouched until the archive/canonical-source approach is reviewed. Do not delete applied files or rewrite Live history.
+
+### 16.3 Distinct migration version collision — execution blocker
+
+Two different SQL files use version `20261114180000`:
+
+- `20261114180000_product_linked_private_conversations.sql`
+- `20261114180000_unified_delivery_jobs_assignment.sql`
+
+The files implement separate feature groups and are not duplicate content. Both remain in `supabase/migrations/`; no timestamp was invented and no rename was performed. A supported Supabase CLI workflow is required to generate a unique version for a new migration. The current Android/Termux environment has no Supabase CLI or local PostgreSQL/Docker Engine, so this is not yet safely repairable here. Do not execute the migration directory while the collision remains.
+
+### 16.4 Live/branch timestamp mismatch
+
+Branch source file:
+`20261112153000_publish_open_demands_without_buyer_identity.sql`
+
+Live history entry:
+`20261112153453_publish_open_demands_without_buyer_identity`
+
+The Live catalog snapshot contains a public Buyer Demand projection without `buyer_id` and safe anonymous access evidence. This supports functional correspondence at the object level only; it does not prove the branch SQL is the exact historical SQL. Keep both identifiers documented. Do not silently rename the branch file or insert/repair migration history.
+
+### 16.5 Live-only entries — evidence interpretation
+
+The 11 Live-only versions remain:
+- `20261112063728_add_wholesale_product_pricing_fields`
+- `20261112092911_restrict_public_products_to_approved_businesses`
+- `20261112093024_limit_anonymous_product_columns`
+- `20261112093107_expose_safe_public_business_check_for_anon_policy`
+- `20261112094305_public_business_safe_anon_read`
+- `20261112094341_make_public_business_check_invoker_safe`
+- `20261112094441_revoke_postgres_default_public_api_grants`
+- `20261112115158_allow_cancelled_account_status`
+- `20261112145135_require_aal2_for_nexora_admin_access`
+- `20261112153453_publish_open_demands_without_buyer_identity`
+- `20261112160835_secure_public_buyer_demand_projection`
+
+The current metadata snapshot contains evidence for several resulting objects/policies/grants/functions, including public product pricing fields, approved-product visibility, safe anonymous product/business column grants, public-business helper wrappers, cancelled account status, AAL2 admin helpers, and the privacy-preserving Buyer Demand view. This is not a complete per-migration semantic comparison. Do not label all 11 as reconstructed, equivalent, or safe to replay. Each requires an object-by-object comparison against the complete SQL body before a future canonical baseline is designed.
+
+### 16.6 Current safe next steps
+
+1. Keep the two duplicate-content pairs and the version collision unchanged until a supported migration-source plan is approved.
+2. Continue static inspection of each branch-only migration and compare its resulting object definitions against metadata already captured, without reading user rows.
+3. Keep all recovery SQL outside `supabase/migrations/` until it is explicitly reviewed.
+4. When a free local PostgreSQL/Supabase runtime and supported CLI are available, generate any new migration with `supabase migration new`, validate the unique sequence, and rehearse on a disposable database. Do not provision a paid Supabase branch without explicit approval.
+5. Do not run, repair, or insert Live migration history; do not change `main`, Production, DNS or deployment.
+
+**Actions not taken:** no SQL was executed, no Live schema/history/data was changed, no migration file was renamed/deleted, no paid branch was created, and no private user rows/messages/auth identities/storage contents were queried.
