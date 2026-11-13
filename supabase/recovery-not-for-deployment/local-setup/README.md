@@ -247,3 +247,8 @@ Continue recovery using the connected Supabase read-only catalog interface and S
 `supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json`
 
 It currently records relation/function inventories, view definitions, policies/triggers metadata, selected function definitions, and live migration history identifiers. This is not a complete schema-only SQL dump or a verified disposable database baseline. Keep collecting metadata in bounded, read-only batches; never query private user rows, message bodies, auth user records, or storage object contents. Do not perform DDL/DML, migration execution/repair, remote linking, or deployment.
+
+
+### Expanded recovery metadata captured
+
+Using connected Supabase catalog-only SELECT queries, the snapshot now also contains all 37 public/private function definitions, table/routine grants, default privileges, and extension names/versions. These are metadata only; no user records were queried. This still does not replace a full schema-only SQL dump, and it is not yet a verified restore-ready baseline.
