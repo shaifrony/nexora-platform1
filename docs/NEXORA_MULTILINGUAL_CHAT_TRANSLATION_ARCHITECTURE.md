@@ -120,3 +120,10 @@ Create a human-reviewed, consented test set with at least 100 short messages in 
 - Benchmark IndicTrans2 En↔Bn and Argos En↔Bn on the same consented, human-reviewed sample (at least 100 examples per direction). Include formal Bengali, colloquial Bengali, Banglish, short chat, business terms, negation, questions, dates, units, currency and names/IDs.
 - Score meaning preservation, fluency, omissions/additions and protected-token accuracy with two bilingual reviewers; also compute chrF++/COMET where reference translations are available. BLEU alone is not an approval criterion.
 - No automatic translation is enabled until the pilot, commercial-license review for both checkpoints, hosting-cost review, privacy/consent gate and server-side security review pass.
+
+
+## 10. Reproducible Bengali ↔ English pilot corpus (2026-11-13)
+- Added `docs/NEXORA_BN_EN_PILOT_CORPUS.md`: 24 synthetic parallel examples, usable in both directions (24 cases per direction), covering trade chat, negation, offers, quantity, price/currency, delivery, dates, units and protected IDs.
+- The references are seed references, not ground truth. Two independent bilingual reviewers must validate them before scoring; disputed examples are excluded until resolved.
+- The corpus includes protected-token checks, raw-output retention, per-direction human scoring, optional chrF++/COMET, and a results table that explicitly remains blank until actual inference.
+- No private NEXORA chat content is used. No model was downloaded or run; no model winner/quality score is claimed. Production translation remains disabled.
