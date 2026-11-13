@@ -9,6 +9,8 @@
   const state = { preferredLanguage: 'bn', conversationId: null, channel: null, callChannel: null, conversations: [], participants: [], directory: [], messages: [], pc: null, localStream: null, activeCall: null, incomingCall: null, pendingIce: [] };
   const note = (msg, ok=false) => { const n=$("chatNotice"); if(n){n.textContent=msg;n.style.color=ok?"#087b5f":"#b42318";} };
   const isSignedIn = () => Boolean(user()?.id);
+  // Audio/video calling is intentionally paused; keep implementation and schema for a later release.
+  const CALLING_ENABLED = false;
 
   function setChatVisible(id) {
     if (!id) return;
@@ -201,8 +203,8 @@
     if(mine?.invitation_status!=="accepted"){note("এই চ্যাটে আপনার প্রবেশাধিকার নেই।");return;}
     head.textContent=otherName;
     $("chatComposer").classList.remove("hidden");
-    $("chatCallPanel")?.classList.remove("hidden");
-    $("nxChatCallActions")?.classList.remove("hidden");
+    $("chatCallPanel")?.classList.add("hidden");
+    $("nxChatCallActions")?.classList.add("hidden");
     await loadMessages(id);
     state.channel=db().channel("nexora-chat-"+id)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+id},payload=>{
@@ -291,28 +293,45 @@
   }
 
   async function uploadChatFile(e){
-    const file=e.target.files?.[0];if(!file||!state.conversationId)return;
-    if(file.size>20*1024*1024){note("ফাইলের সর্বোচ্চ সীমা ২০ MB।");e.target.value="";return;}
+    const file=e.target.files?.[0];
+    const conversationId=state.conversationId;
+    if(!file||!conversationId)return;
+    if(file.size<=0||file.size>20*1024*1024){note("ফাইলের সাইজ ১ byte থেকে ২০ MB-এর মধ্যে হতে হবে।");e.target.value="";return;}
     const allowed=["image/jpeg","image/png","image/webp","application/pdf","text/plain","application/vnd.openxmlformats-officedocument.wordprocessingml.document","application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
     if(!allowed.includes(file.type)){note("এই ফাইলের ধরন অনুমোদিত নয়।");e.target.value="";return;}
-    const path=state.conversationId+"/"+crypto.randomUUID()+"/"+file.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+    const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,120)||"attachment";
+    const path=conversationId+"/"+crypto.randomUUID()+"/"+safeName;
+    let uploaded=false;
+    let messageId=null;
     try{
       const {error:uploadError}=await db().storage.from("nexora-chat-files").upload(path,file,{contentType:file.type,upsert:false});
       if(uploadError)throw uploadError;
+      uploaded=true;
+      if(state.conversationId!==conversationId)throw new Error("Conversation পরিবর্তিত হয়েছে; ফাইল পাঠানো বাতিল করা হয়েছে।");
       const {data:msg,error:msgError}=await db().from("messages").insert({
-        conversation_id:state.conversationId,sender_id:user().id,body:file.name,message_type:file.type.startsWith("image/")?"image":"file"
+        conversation_id:conversationId,sender_id:user().id,body:safeName,message_type:file.type.startsWith("image/")?"image":"file"
       }).select("id,conversation_id,sender_id,body,message_type,created_at").single();
       if(msgError)throw msgError;
+      messageId=msg.id;
       const {error:metaError}=await db().from("message_attachments").insert({
-        message_id:msg.id,conversation_id:state.conversationId,uploaded_by:user().id,
-        storage_path:path,file_name:file.name,mime_type:file.type,size_bytes:file.size
+        message_id:msg.id,conversation_id:conversationId,uploaded_by:user().id,
+        storage_path:path,file_name:safeName,mime_type:file.type,size_bytes:file.size
       });
       if(metaError)throw metaError;
-      appendMessage(msg);note("ফাইল পাঠানো হয়েছে।",true);
-    }catch(err){note("ফাইল পাঠানো যায়নি: "+err.message);}
-    finally{e.target.value="";}
+      if(state.conversationId===conversationId)appendMessage(msg);
+      note("ফাইল পাঠানো হয়েছে।",true);
+    }catch(err){
+      if(messageId){
+        const {error:messageCleanupError}=await db().from("messages").delete().eq("id",messageId);
+        if(messageCleanupError)note("বার্তা পরিষ্কার করা যায়নি: "+messageCleanupError.message);
+      }
+      if(uploaded){
+        const {error:cleanupError}=await db().storage.from("nexora-chat-files").remove([path]);
+        if(cleanupError)note("ফাইল পাঠানো যায়নি; অস্থায়ী ফাইল পরিষ্কার করা যায়নি: "+cleanupError.message);
+        else note("ফাইল পাঠানো যায়নি: "+err.message);
+      }else note("ফাইল পাঠানো যায়নি: "+err.message);
+    }finally{e.target.value="";}
   }
-
 
   function setCallStatus(message){const n=$("callStatus");if(n)n.textContent=message;}
   async function sendCallSignal(signalType,payload={}){
@@ -324,7 +343,7 @@
     if(error)note("Call signaling error: "+error.message);
   }
   async function setupCallNotifications(){
-    if(!isSignedIn()||state.callChannel)return;
+    if(!CALLING_ENABLED || !isSignedIn()||state.callChannel)return;
     state.callChannel=db().channel("nexora-incoming-calls-"+user().id)
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"call_signals",filter:"recipient_id=eq."+user().id},payload=>handleCallSignal(payload.new))
       .subscribe();
@@ -375,6 +394,7 @@
     $("endCall").classList.remove("hidden");
   }
   async function startCall(type){
+    if(!CALLING_ENABLED){note("Audio/Video Calling আপাতত স্থগিত আছে।");return;}
     if(!state.conversationId)return;
     const others=state.participants.filter(p=>p.user_id!==user().id&&p.invitation_status==="accepted");
     if(others.length!==1){note("এখন এক-টু-এক Audio/Video Call সমর্থিত; Group Call পরে যোগ হবে।");return;}
