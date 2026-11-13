@@ -68,3 +68,12 @@ These are point-in-time observations. They do not reveal the original SQL text o
 - No existing migration file overwritten or deleted.
 - No `main` branch or Production deployment changed.
 - Recovery drafts are stored outside `supabase/migrations/` so normal migration discovery will not pick them up.
+
+
+## Draft audit completed
+
+See [NEXORA Missing Migration Draft Audit](../../docs/NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md) for per-file catalog evidence, dependency relationships, manual SQL review, security test requirements, and current Supabase Advisor findings.
+
+The default-privilege draft was narrowed during review to Data API-facing grants only (table CRUD, sequence USAGE/SELECT, function EXECUTE); it does not revoke service_role defaults. This remains a reconstructed proposal, not verified original SQL.
+
+No PostgreSQL parser or isolated replay test was available, so no draft is certified as execution-ready.
