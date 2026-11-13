@@ -958,7 +958,7 @@
         .eq("seller_id",user().id).eq("buyer_demands.demand_status","open")
         .order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
-      const rows=(data||[]).map(r=>({...r.demand,...{inbox_created_at:r.created_at}})).filter(d=>d.id);
+      const rows=(data||[]).map(r=>({...r.buyer_demands,inbox_created_at:r.created_at})).filter(d=>d.id);
       if(!rows.length){host.innerHTML='<p class="muted">আপনার অনুমোদিত পণ্যের Category ও Subcategory-এর সঙ্গে মেলে এমন কোনো খোলা Buyer Demand নেই। নতুন মিল পাওয়া গেলে এখানে আসবে।</p>';return;}
       const ids=rows.map(d=>d.id);
       const {data:offers,error:offerError}=await client().from("seller_offers")
