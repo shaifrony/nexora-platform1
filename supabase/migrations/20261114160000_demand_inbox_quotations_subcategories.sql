@@ -64,7 +64,15 @@ grant select on public.buyer_demand_inbox to authenticated;
 drop policy if exists buyer_demand_inbox_seller_read on public.buyer_demand_inbox;
 create policy buyer_demand_inbox_seller_read
 on public.buyer_demand_inbox for select to authenticated
-using (seller_id=(select auth.uid()) or public.is_nexora_admin());
+using (
+  public.is_nexora_admin()
+  or (
+    seller_id=(select auth.uid())
+    and exists(select 1 from public.profiles p
+      where p.id=(select auth.uid()) and p.role='seller' and p.account_status='active')
+    and exists(select 1 from public.public_businesses b where b.seller_id=(select auth.uid()))
+  )
+);
 
 create or replace function private.route_new_buyer_demand_to_sellers()
 returns trigger
@@ -173,10 +181,15 @@ on public.buyer_demands for select to authenticated
 using (
   buyer_id=(select auth.uid())
   or public.is_nexora_admin()
-  or (demand_status='open' and exists(
-    select 1 from public.buyer_demand_inbox i
-    where i.demand_id=buyer_demands.id and i.seller_id=(select auth.uid())
-  ))
+  or (demand_status='open'
+    and exists(select 1 from public.profiles p
+      where p.id=(select auth.uid()) and p.role='seller' and p.account_status='active')
+    and exists(select 1 from public.public_businesses b where b.seller_id=(select auth.uid()))
+    and exists(
+      select 1 from public.buyer_demand_inbox i
+      where i.demand_id=buyer_demands.id and i.seller_id=(select auth.uid())
+    )
+  )
 );
 
 -- Seller quotation creation is allowed only for a demand routed to that Seller.
