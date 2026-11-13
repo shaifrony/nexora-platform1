@@ -127,7 +127,7 @@ language plpgsql security definer set search_path=''
 as $$
 declare
  v_actor uuid:=auth.uid();v_admin_code text;v_status text;
- v_provider_status text;v_partner_kind text;v_partner_status text;v_staff_partner uuid;v_vehicle_status text;v_vehicle_provider uuid;
+ v_provider_status text;v_partner_kind text;v_partner_status text;v_staff_partner uuid;v_vehicle_status text;v_vehicle_provider uuid;v_vehicle_available boolean;
 begin
  if v_actor is null or (select auth.jwt()->>'aal') is distinct from 'aal2'
     or not private.has_nexora_permission('logistics.assign') then
@@ -144,8 +144,8 @@ begin
    select application_status into v_provider_status from public.transport_providers where id=p_provider_id for update;
    if v_provider_status is distinct from 'approved' then raise exception 'Independent Provider is not approved' using errcode='23514'; end if;
    if p_vehicle_id is not null then
-     select approval_status,provider_id into v_vehicle_status,v_vehicle_provider from public.transport_vehicles where id=p_vehicle_id for update;
-     if v_vehicle_status is distinct from 'approved' or v_vehicle_provider is distinct from p_provider_id then
+     select approval_status,provider_id,is_available into v_vehicle_status,v_vehicle_provider,v_vehicle_available from public.transport_vehicles where id=p_vehicle_id for update;
+     if v_vehicle_status is distinct from 'approved' or v_vehicle_provider is distinct from p_provider_id or v_vehicle_available is distinct from true then
        raise exception 'Vehicle must be approved and belong to the selected Provider' using errcode='23514';
      end if;
    end if;
