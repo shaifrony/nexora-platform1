@@ -180,3 +180,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Future translation service must preserve original message text, cache translations, handle system/negotiation events and per-recipient language preferences, avoid translating IDs/prices/quantities/currency/product codes, and respect private-chat consent/privacy. Translation provider and cost/privacy review remain open; no paid provider is assumed.
 - Cross-department impact: shared chat layer applies uniformly; no role-based access expansion. Admin does not gain private-chat content access. Buyer/Seller negotiations remain in the same conversation; translated negotiation cards must be generated from structured event data, not by mutating order/price values. Porter delivery updates can later use the same per-recipient translation path.
 - Source-level review only. No SQL was run and no browser/hosted RLS test was performed. Migration history divergence remains a deployment blocker; Live Supabase, Production, DNS and `main` were not changed.
+
+
+## 2026-11-13 — Multilingual translation engine architecture and privacy gate
+- Added `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` defining recipient-specific translation, immutable originals, accepted-participant authorization, trusted server-side cache writes, fallback behavior, structured commercial-event handling and staged rollout.
+- Confirmed no translation provider is selected/configured. Automatic translation stays disabled; no private message is sent to a third-party service by this work.
+- LibreTranslate/Argos is recorded only as a self-hostable evaluation candidate, not as a selected or guaranteed zero-cost provider. Hosting costs, language-pair coverage (especially Bangla↔Arabic), quality, licensing, consent and cross-border data handling require evaluation.
+- The browser must never hold provider/API secrets. Future endpoint must validate caller JWT + accepted conversation membership before provider access and trusted cache writes; no message body/token/secret logging.
+- First release scope is text-only. Attachments and voice/video are excluded. Negotiation/system messages must use typed templates so prices, quantities, currency, IDs and dates remain unchanged.
+- No Edge Function, provider configuration, consent switch, SQL execution, hosted test or browser E2E was added/run in this architecture package. Migration history divergence remains a deployment blocker; Live Supabase, Production, DNS and `main` untouched.
