@@ -8800,5 +8800,664 @@
       "public_execute": false,
       "authenticated_execute": true
     }
-  ]
+  ],
+  "visibility_and_rls_review": {
+    "public_view_columns": [
+      {
+        "type": "uuid",
+        "view": "public_businesses",
+        "column": "business_id"
+      },
+      {
+        "type": "uuid",
+        "view": "public_businesses",
+        "column": "seller_id"
+      },
+      {
+        "type": "text",
+        "view": "public_businesses",
+        "column": "display_name"
+      },
+      {
+        "type": "text",
+        "view": "public_businesses",
+        "column": "country"
+      },
+      {
+        "type": "text",
+        "view": "public_businesses",
+        "column": "city"
+      },
+      {
+        "type": "timestamp with time zone",
+        "view": "public_businesses",
+        "column": "updated_at"
+      },
+      {
+        "type": "uuid",
+        "view": "public_buyer_demands",
+        "column": "id"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "demand_code"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "product_name"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "category"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "description"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "specifications_quality"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "required_quantity"
+      },
+      {
+        "type": "numeric",
+        "view": "public_buyer_demands",
+        "column": "budget"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "currency"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "destination_country"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "destination_city"
+      },
+      {
+        "type": "date",
+        "view": "public_buyer_demands",
+        "column": "required_date"
+      },
+      {
+        "type": "text",
+        "view": "public_buyer_demands",
+        "column": "demand_status"
+      },
+      {
+        "type": "timestamp with time zone",
+        "view": "public_buyer_demands",
+        "column": "created_at"
+      },
+      {
+        "type": "uuid",
+        "view": "public_identities",
+        "column": "id"
+      },
+      {
+        "type": "text",
+        "view": "public_identities",
+        "column": "full_name"
+      },
+      {
+        "type": "timestamp with time zone",
+        "view": "public_identities",
+        "column": "updated_at"
+      },
+      {
+        "type": "uuid",
+        "view": "public_profiles",
+        "column": "id"
+      },
+      {
+        "type": "text",
+        "view": "public_profiles",
+        "column": "full_name"
+      }
+    ],
+    "buyer_demand_privacy": {
+      "view_security_invoker": true,
+      "anon_select_on_base_table": false,
+      "anon_select_on_public_view": true,
+      "base_table_buyer_id_exists": true,
+      "public_view_exposes_buyer_id": false
+    },
+    "private_schema_access": {
+      "anon_usage": false,
+      "service_role_usage": false,
+      "authenticated_usage": true
+    },
+    "pgrst_config_visibility": {
+      "note": "These settings are not exposed through SQL session/catalog context; verify in Supabase Dashboard Data API settings before declaring exposed schema list.",
+      "db_schemas": null,
+      "db_anon_role": null,
+      "db_extra_search_path": null
+    },
+    "all_public_relations_rls": true,
+    "public_table_api_select_grants": [
+      {
+        "table": "admin_audit_logs",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "admin_departments",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "admin_permission_catalog",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "admin_permission_grants",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "admin_staff",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "business_profiles",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "buyer_demands",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "call_sessions",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "call_signals",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "conversation_participants",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "conversations",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "message_attachments",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "messages",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "products",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "profile_change_requests",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "profiles",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "public_businesses",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "public_buyer_demands",
+        "anon_select": true,
+        "authenticated_select": true
+      },
+      {
+        "table": "public_identities",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "public_profiles",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "role_requests",
+        "anon_select": false,
+        "authenticated_select": true
+      },
+      {
+        "table": "seller_offers",
+        "anon_select": false,
+        "authenticated_select": true
+      }
+    ]
+  },
+  "advisor_snapshot_20261114": {
+    "security": [
+      {
+        "name": "auth_leaked_password_protection",
+        "title": "Leaked Password Protection Disabled",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "SECURITY"
+        ],
+        "description": "Leaked password protection is currently disabled.",
+        "remediation": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection",
+        "count": 1,
+        "findings": [
+          {
+            "detail": "Supabase Auth prevents the use of compromised passwords by checking against HaveIBeenPwned.org. Enable this feature to enhance security.",
+            "metadata": {
+              "type": "auth",
+              "entity": "Auth"
+            }
+          }
+        ]
+      }
+    ],
+    "performance": [
+      {
+        "name": "unindexed_foreign_keys",
+        "title": "Unindexed foreign keys",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Identifies foreign key constraints without a covering index, which can impact database performance.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys",
+        "count": 6,
+        "findings": [
+          {
+            "detail": "Table \\`public.admin_audit_logs\\` has a foreign key \\`admin_audit_logs_actor_user_id_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_audit_logs",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_audit_logs_actor_user_id_fkey",
+              "fkey_columns": [
+                2
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_permission_catalog\\` has a foreign key \\`admin_permission_catalog_department_key_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_permission_catalog",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_permission_catalog_department_key_fkey",
+              "fkey_columns": [
+                2
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_permission_grants\\` has a foreign key \\`admin_permission_grants_granted_by_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_permission_grants",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_permission_grants_granted_by_fkey",
+              "fkey_columns": [
+                5
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_permission_grants\\` has a foreign key \\`admin_permission_grants_permission_key_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_permission_grants",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_permission_grants_permission_key_fkey",
+              "fkey_columns": [
+                3
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_staff\\` has a foreign key \\`admin_staff_created_by_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_staff",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_staff_created_by_fkey",
+              "fkey_columns": [
+                7
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_staff\\` has a foreign key \\`admin_staff_department_key_fkey\\` without a covering index. This can lead to suboptimal query performance.",
+            "metadata": {
+              "name": "admin_staff",
+              "type": "table",
+              "schema": "public",
+              "fkey_name": "admin_staff_department_key_fkey",
+              "fkey_columns": [
+                5
+              ]
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          }
+        ]
+      },
+      {
+        "name": "unused_index",
+        "title": "Unused Index",
+        "level": "INFO",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if an index has never been used and may be a candidate for removal.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index",
+        "count": 20,
+        "findings": [
+          {
+            "detail": "Index \\`calls_conversation_created_idx\\` on table \\`public.call_sessions\\` has not been used",
+            "metadata": {
+              "name": "call_sessions",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`business_profiles_reviewed_by_idx\\` on table \\`public.business_profiles\\` has not been used",
+            "metadata": {
+              "name": "business_profiles",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`products_business_seller_fk_idx\\` on table \\`public.products\\` has not been used",
+            "metadata": {
+              "name": "products",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`products_reviewed_by_idx\\` on table \\`public.products\\` has not been used",
+            "metadata": {
+              "name": "products",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`profile_change_requests_reviewed_by_idx\\` on table \\`public.profile_change_requests\\` has not been used",
+            "metadata": {
+              "name": "profile_change_requests",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`products_seller_created_idx\\` on table \\`public.products\\` has not been used",
+            "metadata": {
+              "name": "products",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`offers_seller_created_idx\\` on table \\`public.seller_offers\\` has not been used",
+            "metadata": {
+              "name": "seller_offers",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`offers_demand_created_idx\\` on table \\`public.seller_offers\\` has not been used",
+            "metadata": {
+              "name": "seller_offers",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`public_businesses_seller_id_idx\\` on table \\`public.public_businesses\\` has not been used",
+            "metadata": {
+              "name": "public_businesses",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`call_sessions_initiated_by_idx\\` on table \\`public.call_sessions\\` has not been used",
+            "metadata": {
+              "name": "call_sessions",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`call_signals_call_id_idx\\` on table \\`public.call_signals\\` has not been used",
+            "metadata": {
+              "name": "call_signals",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`call_signals_conversation_id_idx\\` on table \\`public.call_signals\\` has not been used",
+            "metadata": {
+              "name": "call_signals",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`conversation_participants_invited_by_idx\\` on table \\`public.conversation_participants\\` has not been used",
+            "metadata": {
+              "name": "conversation_participants",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`conversations_created_by_idx\\` on table \\`public.conversations\\` has not been used",
+            "metadata": {
+              "name": "conversations",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`message_attachments_message_id_idx\\` on table \\`public.message_attachments\\` has not been used",
+            "metadata": {
+              "name": "message_attachments",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`message_attachments_uploaded_by_idx\\` on table \\`public.message_attachments\\` has not been used",
+            "metadata": {
+              "name": "message_attachments",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`messages_reply_to_id_idx\\` on table \\`public.messages\\` has not been used",
+            "metadata": {
+              "name": "messages",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`messages_conversation_created_idx\\` on table \\`public.messages\\` has not been used",
+            "metadata": {
+              "name": "messages",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`messages_sender_created_idx\\` on table \\`public.messages\\` has not been used",
+            "metadata": {
+              "name": "messages",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Index \\`attachments_conversation_created_idx\\` on table \\`public.message_attachments\\` has not been used",
+            "metadata": {
+              "name": "message_attachments",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          }
+        ]
+      },
+      {
+        "name": "multiple_permissive_policies",
+        "title": "Multiple Permissive Policies",
+        "level": "WARN",
+        "facing": "EXTERNAL",
+        "categories": [
+          "PERFORMANCE"
+        ],
+        "description": "Detects if multiple permissive row level security policies are present on a table for the same \\`role\\` and \\`action\\` (e.g. insert). Multiple permissive policies are suboptimal for performance as each policy must be executed for every relevant query.",
+        "remediation": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies",
+        "count": 8,
+        "findings": [
+          {
+            "detail": "Table \\`public.admin_permission_grants\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"admin grants self or superadmin read\",\"admin grants superadmin manage\"}\\`",
+            "metadata": {
+              "name": "admin_permission_grants",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.admin_staff\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"admin staff self or superadmin read\",\"admin staff superadmin manage\"}\\`",
+            "metadata": {
+              "name": "admin_staff",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.business_profiles\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{assistant_admin_businesses_moderate,assistant_admin_businesses_view,business_select_owner_or_admin}\\`",
+            "metadata": {
+              "name": "business_profiles",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.products\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{assistant_admin_products_moderate,assistant_admin_products_view,products_select_owner_approved_or_admin}\\`",
+            "metadata": {
+              "name": "products",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.profile_change_requests\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can view all profile change requests\",\"Users can view own profile change requests\"}\\`",
+            "metadata": {
+              "name": "profile_change_requests",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.profiles\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can view all profiles\",\"Users can view own profile\",assistant_admin_users_manage_view,assistant_admin_users_view}\\`",
+            "metadata": {
+              "name": "profiles",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.profiles\\` has multiple permissive policies for role \\`authenticated\\` for action \\`UPDATE\\`. Policies include \\`{\"Admins can update all profiles\",\"Users can update own profile\"}\\`",
+            "metadata": {
+              "name": "profiles",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          },
+          {
+            "detail": "Table \\`public.role_requests\\` has multiple permissive policies for role \\`authenticated\\` for action \\`SELECT\\`. Policies include \\`{\"Admins can view all role requests\",\"Users can view own role requests\"}\\`",
+            "metadata": {
+              "name": "role_requests",
+              "type": "table",
+              "schema": "public"
+            },
+            "observed_at": "2026-11-13T18:32:45.010Z"
+          }
+        ]
+      }
+    ]
+  }
 }
