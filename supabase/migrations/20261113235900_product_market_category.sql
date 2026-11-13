@@ -1,4 +1,4 @@
--- Unified product Marketplace: no Wholesale/Retail sale-channel field.
+-- Unified product Marketplace: no per-product sale-channel field.
 -- Staged on nexora-development only; do not apply to the hosted database without approval.
 begin;
 
