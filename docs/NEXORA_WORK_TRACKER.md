@@ -584,3 +584,12 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Follow-up UI correction: untouched `price_basis='total'` quotations now display the exact total on Buyer and Seller quotation cards; order cards use the exact agreed subtotal rather than implying the rounded derived unit price multiplied by quantity is authoritative. Frontend commit: `db7368a9b05ffcedcebdaef69c0360271ca37f5b`; Buyer progress addendum: `9cef760d1b864beead8c2a6d069249d0f8ceb92b`.
 
 - Migration clarity follow-up: documented `source_offer_total` as the authoritative goods subtotal for Buyer Demand quotation orders; the legacy `total_price` remains the quantity × rounded-unit-price projection. Migration comment commit: `34a650cc702304f3d7f35b80d6e89dfc1d8a5a33`.
+
+
+## 2026-11-14 — Follow-up Buyer Demand quotation/order source audit
+
+- Re-fetched the staged Buyer Demand quotation migration and current `marketplace.js` from `nexora-development` and reviewed the total-price quotation, Buyer response, Seller counter-response, order creation, and Buyer/Seller order-card paths.
+- Confirmed the staged flow preserves an original total-price quotation as an authoritative `source_offer_total`, prorates it against the original offered availability when the Buyer accepts a smaller quantity, and uses negotiated quantity × unit price after a counter-offer. The Buyer and Seller order queries both select the exact subtotal and generated `grand_total`.
+- Confirmed the Seller acceptance UI is shown for Buyer counter-offers and routes through the same server RPC; the SQL checks the latest negotiation actor before accepting. This is source-level review only, not proof of runtime behavior.
+- No additional source change was justified by this pass. The migration version collision at `20261114180000` remains the top blocker; do not hand-invent a replacement timestamp. No SQL was executed, no Disposable Database was created, and no hosted schema/data was changed.
+- Supabase CLI v3 changelog/docs rechecked on 2026-11-14: database commands default to local; hosted changes require explicit remote targeting and confirmation. Sources: Supabase CLI v3 migration guide (updated 2026-11-03) and changelog entry (2026-11-04).
