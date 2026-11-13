@@ -254,7 +254,16 @@ begin
   select * into v_order from public.commerce_orders
   where id=p_order_id and listing_type='buyer_demand' for update;
   if not found then raise exception 'Buyer Demand order not found'; end if;
+  if not exists(
+    select 1 from public.profiles p
+    where p.id=v_actor and p.account_status='active'
+      and ((p.role='buyer' and p.id=v_order.buyer_id)
+        or (p.role='seller' and p.id=v_order.seller_id))
+  ) then
+    raise exception 'An active Buyer or assigned Seller account is required' using errcode='42501';
+  end if;
   if length(coalesce(p_note,''))>1500 then raise exception 'Note is too long'; end if;
+  if p_action is null then raise exception 'Unsupported order action' using errcode='22023'; end if;
 
   if p_action='accept' then
     if v_actor<>v_order.seller_id or v_order.order_status<>'pending' then raise exception 'Only the assigned Seller may accept a pending order' using errcode='42501'; end if;
