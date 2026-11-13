@@ -430,3 +430,16 @@ Documentation commit for Recovery Plan section 18: `1aee6768a2c46df557d9a5c6f45a
 - No private data or Auth identities queried; no Live writes, migration execution or history repair. No PostgreSQL/JWT/RLS/E2E tests.
 
 Recovery Plan section 19 commit: `cab90a9f2d52a910632ce0cfc16be1d772bc58c7`.
+
+
+## 2026-11-14 — Commerce and Demand Live catalog audit
+
+- Live base relations `buyer_demands` and `seller_offers` exist with RLS enabled.
+- Live `commerce_orders`, `commerce_order_events`, `buyer_demand_inbox`, `product_price_negotiations`, and `product_price_negotiation_events` were not found.
+- Commerce order create/transition and product price negotiation RPCs were not found.
+- Demand inbox routing triggers and the newer subcategory/quotation extension columns were not found in the inspected metadata.
+- Classified the Commerce Order, Demand Inbox/quotation extension, demand negotiation/order conversion and product price negotiation features as pending on Live. Detailed limits and dependencies recorded in Recovery Plan section 20.
+- Required-by date remains a product requirement and must be preserved in Buyer Demand; its Live column was not established by this catalog check.
+- No private data reads, Live writes, migration execution, or history repair. No runtime SQL, JWT/RLS or E2E tests.
+
+Recovery Plan section 20 commit: `4b1d65a197f0415489672401aee2ad66ddf84f89`.
