@@ -212,7 +212,7 @@ VALUES
  ('finance.transactions.view','accounts','Transactions view','View authorized transactions.',false),
  ('finance.transactions.manage','accounts','Transactions management','Manage permitted finance records.',true),
  ('finance.refunds.request','accounts','Refund request','Prepare refund requests.',true),
- ('finance.refunds.approve','accounts','Refund approval','Approve another person's eligible refund request.',true),
+ ('finance.refunds.approve','accounts','Refund approval','Approve another person''s eligible refund request.',true),
  ('finance.payouts.manage','accounts','Payout management','Prepare and manage payout workflow.',true),
  ('audit.view','managing_director','Audit view','View audit records within authorized scope.',true)
 ON CONFLICT (permission_key) DO NOTHING;
