@@ -271,3 +271,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - The connected catalog confirms 22 public relations (20 tables + 2 views), 37 public/private functions, 78 public RLS policies, 4 storage policies, 5 public triggers, 1 auth trigger, and 11 storage triggers. This is catalog evidence only, not a complete executable schema dump.
 - Next: capture remaining exact definitions and ACL/default-privilege/extension metadata through read-only catalog queries in bounded batches, then compare with branch migrations. No private user rows or message content will be queried.
 - No Live Supabase schema/data/history changed; no SQL migration executed; no main, Production, DNS or deployment changed.
+
+
+- Further Android-only catalog recovery completed through read-only queries: all 37 public/private function definitions captured; 578 table-grant rows, 68 routine-grant rows, 136 default-privilege ACL entries, and five extension/version records captured in the evidence JSON. Snapshot re-fetched and parsed successfully after commit; current file blob SHA `9ca8701bcc5e448d32ea98651321fca5cb7698a`.
+- This substantially improves the recoverable baseline, but it is still not a complete `pg_dump --schema-only`: complete DDL for all Auth/Storage internals, role attributes/membership, event triggers, publications/replication settings and object-level restore ordering still require separate review. No user rows were queried or exported.
