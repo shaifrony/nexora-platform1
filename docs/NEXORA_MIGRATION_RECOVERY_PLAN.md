@@ -336,3 +336,18 @@ Migration inventory: branch contains 40 SQL files and 39 unique migration versio
 Current Live catalog contains evidence for several effects from Live-only migrations: product pricing columns; anon approved-product RLS; safe column-level anon grants; public-business anon projection; private SECURITY DEFINER/public SECURITY INVOKER public-business helper; cancelled account status constraint; AAL2-enforcing admin helper functions; and a security-invoker Buyer Demand projection without buyer_id. Object-level presence does not establish exact SQL equivalence or migration reproducibility.
 
 Snapshot JSON records the complete version/name ledger, branch-only/live-only lists, duplicate version/content SHA evidence, and corrected anon column grants. No Live writes, migrations, or private user-data reads were performed.
+
+
+## 2026-11-14 — Dependency audit and static safety fixes
+
+Static dependency graph is consistent for the main workflow: marketplace/products and private communications precede product inquiry; transport provider/vehicle foundation precedes legacy assignment; delivery network + commerce orders + legacy delivery jobs precede unified delivery assignment; tracking follows unified assignment. However, the two separate migrations timestamped `20261114180000` collide and must not be run until a supported CLI-generated unique version is assigned.
+
+Static source corrections on `nexora-development`:
+- Officer management now rejects NULL actions and correctly accumulates whether any assigned permission is sensitive, preventing a NULL action from falling into deactivation and preventing a trailing non-sensitive permission from erasing the reason requirement.
+- Unified delivery assignment now checks an assigned vehicle's `is_available` flag as well as its approval status and provider relationship.
+
+Product model conflict: `20261113235900_product_market_category.sql` and the Retail-specific MOQ branch in `20261114150000_product_inventory_moq_quantity_pricing.sql` conflict with the current unified Marketplace decision (no separate retail/wholesale product classification; all users see all products; Sellers choose price/quantity). Remove/redesign those product category rules before rehearsal. Logistics delivery/service modes remain separate and were not modified.
+
+The repeated `profiles_market_categories_check` in Porter registration is intentional legacy-field deprecation: it was already created in 132300 and keeps profile-level buyer/seller categories empty. It is not treated as a new defect.
+
+CLI-based migration version repair is blocked because this workflow has no local Supabase CLI or Docker Engine. Per Supabase skill, do not hand-author a new migration filename; wait for a supported `supabase migration new` workflow. No Live writes or migration execution. Source fixes have not been SQL-runtime-tested; isolated disposable-database rehearsal is still required.
