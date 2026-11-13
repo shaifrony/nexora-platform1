@@ -246,3 +246,13 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Execute the same frozen corpus on exact IndicTrans2 and Argos checkpoint/package versions; record raw output and hardware/runtime details.
 - [ ] Compute optional chrF++/COMET and compare critical-error rate, human scores, latency and hosting cost.
 - **Status:** test corpus prepared only. Neither model was run; no quality winner or score is claimed. Automatic translation remains disabled.
+
+
+## 14. Bengali ↔ English exact checkpoint and local runner
+- [x] Identify official IndicTrans2 En→Bn and Bn→En distilled checkpoint IDs; upstream cards display MIT license.
+- [x] Record Hugging Face gating: operator must accept access conditions and pin immutable 40-character revisions before downloading.
+- [x] Record Argos package index versions (1.9 / Argos 1.9.0) in both directions; artifact license is not stated in index and remains a production approval blocker.
+- [x] Add local-only runner and runbook: `scripts/translation_pilot/run_bn_en_pilot.py`, `docs/NEXORA_BN_EN_MODEL_RUNBOOK.md`.
+- [ ] Run on a suitable Linux/macOS host after model access, exact revisions and dependency environment are prepared; do not run on Android phone.
+- [ ] Two bilingual reviewers validate references and score outputs; record latency, peak memory, critical-token errors and package versions.
+- **Status:** source preparation complete; runner not executed/runtime-tested. No model winner or quality score claimed; automatic translation remains disabled.
