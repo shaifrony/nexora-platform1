@@ -720,3 +720,21 @@ The two exact duplicate SQL-content pairs also remain unchanged pending a CLI-su
 - `20261112051906_fix_conversation_insert_returning_visibility.sql` and `20261112052010_fix_conversation_insert_returning_visibility.sql`
 
 Do not run a migration runner while the version collision remains. Do not manufacture a timestamp or directly edit `supabase_migrations.schema_migrations`.
+
+
+### 22.4 Focused source audit of the shared-version pair (2026-11-14)
+
+Both files were re-fetched from `nexora-development` and their complete SQL bodies inspected. Their Git blob IDs differ, confirming they are not duplicate-content copies:
+
+| File | Blob SHA | Source-level purpose | Dependency / disposition |
+|---|---|---|---|
+| `20261114180000_product_linked_private_conversations.sql` | `10816b40e1ca6a7352fe8cccab8be7ccabe8013c` | Adds immutable product-context snapshot fields/indexes to existing conversations and replaces the Product Inquiry RPC with active Buyer/Seller checks, duplicate active-thread handling, participant creation and optional first message. | Depends on the existing conversations, participants, messages, products, business profiles and profile-role foundation. Live catalog comparison in section 18 found the product-context fields/indexes and new RPC behavior pending. |
+| `20261114180000_unified_delivery_jobs_assignment.sql` | `cda4fb0969a8eae388cebaef7e87cfe50142eca2` | Evolves delivery jobs for provider/team/partner assignment, assignment history, commerce-order linkage and Admin AAL2-gated job creation/assignment RPCs. | Depends on delivery job/event base, transport provider/vehicle tables, delivery-network partner/staff tables, Admin permission/AAL2 helpers and Commerce Orders. The delivery/commerce dependency relations are absent from the inspected Live catalog (sections 19–21); this migration is therefore not independently runnable ahead of its foundations. |
+
+**Conclusion:** the shared timestamp is a real version collision between two distinct feature migrations, not a harmless pair of identical files. The dependency graph establishes that the unified-delivery migration belongs after several foundation migrations; it does not by itself establish which file should keep the old version or what replacement timestamp should be used. No timestamp was fabricated. Neither file was renamed, deleted, rewritten or executed.
+
+**Supported repair gate:** Supabase CLI documentation says migration filenames are generated as `<timestamp>_<name>.sql` and the migration should be created using `supabase migration new <name>`. The current environment has no Supabase CLI or local PostgreSQL/Docker runtime. Supabase CLI v3 also targets the local stack by default; hosted database commands require an explicit `--remote` target and hosted mutations require explicit confirmation. Therefore this source-only audit does not authorize any hosted command. When a supported CLI environment is available, first establish a complete trusted local baseline and compare the full migration ledger; then generate a new unique-version repair through the CLI, preserve the original source for audit, and rehearse the complete ordered chain on an isolated disposable database. Never repair the Live migration ledger directly as a shortcut.
+
+**Duplicate-content pairs:** the two pairs in section 22.3 remain byte-identical according to their previously recorded matching Git blob SHAs. They are redundant branch sources, but deleting one now could remove an auditable historical source or affect branch migration ordering. Keep them unchanged until the full local/Live ledger reconciliation determines a safe archive disposition.
+
+**Verification scope:** complete source inspection and existing catalog/dependency evidence only. No SQL parser/runtime, local DB, disposable DB, migration runner, PostgREST/RLS/JWT or browser E2E test was run. No Live writes, user data access, paid service, `main`, Production or DNS change.
