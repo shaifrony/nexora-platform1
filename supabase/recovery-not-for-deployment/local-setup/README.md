@@ -169,3 +169,22 @@ The older Wholesale-Only and Buyer-category-gated model above is superseded. The
 - Buyer Demand routing uses Product category/subcategory and approved Business eligibility only; it does not filter on `market_category`.
 - The old recovery draft at `supabase/recovery-not-for-deployment/dual-market/01_dual_market_alignment_recovery_draft.sql` is marked SUPERSEDED / DO NOT EXECUTE.
 - The local visibility fixture tests the public approved-listing projection only. It does not contain the complete Demand/Inbox/Quotation schema.
+
+
+## Buyer Demand quotation / Order workflow contract audit (local only)
+
+A read-only contract audit is available at:
+
+- `29_local_buyer_demand_order_contract_audit.sql`
+
+It checks the installed Buyer Demand quotation and order RPC definitions, NULL-action guards, negotiation turn-taking on rejection, active-account checks, Seller acceptance state, negotiation-history RLS, one-order-per-offer uniqueness, source consistency constraint and denial of private RPC execution to `anon`.
+
+Run it only from the Termux shell and only after the full required schema plus migration `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` have been installed in the local database `nexora_test`:
+
+```sh
+curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/29_local_buyer_demand_order_contract_audit.sql' -o "$HOME/29_local_buyer_demand_order_contract_audit.sql" && psql -X -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/29_local_buyer_demand_order_contract_audit.sql"
+```
+
+If the workflow is not installed, the script prints `SKIP`; it does not create tables, install functions or change data. A `PASS` is a catalog/source-contract check only, not proof of all business behavior.
+
+**Important migration-history blocker:** the current branch does not contain a trusted original foundation DDL/export for all prerequisite identity, Admin and Auth objects. The existing Android local database fixtures are explicitly reconstructed test fixtures, not the production schema. Do not replay the active migration directory on top of them or claim a full-chain rehearsal. A complete disposable rehearsal requires a trusted schema-only export (or the exact original baseline migration set) and a reconciled migration history. The audit above is safe to prepare now, but it will correctly SKIP until its prerequisites exist.
