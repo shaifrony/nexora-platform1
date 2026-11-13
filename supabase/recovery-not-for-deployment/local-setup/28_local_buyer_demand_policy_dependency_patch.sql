@@ -102,3 +102,49 @@ BEGIN
 END
 $verify$;
 
+
+
+-- Buyer quotation visibility: avoid policy subquery requiring direct SELECT
+-- on buyer_demands for a Buyer whose row is filtered by its own RLS.
+BEGIN;
+
+CREATE OR REPLACE FUNCTION private.is_buyer_demand_owner(p_demand_id uuid,p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path=''
+AS $function$
+  SELECT EXISTS (
+    SELECT 1 FROM public.buyer_demands d
+    WHERE d.id=p_demand_id AND d.buyer_id=p_user_id
+  );
+$function$;
+
+REVOKE ALL ON FUNCTION private.is_buyer_demand_owner(uuid,uuid)
+  FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION private.is_buyer_demand_owner(uuid,uuid)
+  TO authenticated;
+
+DROP POLICY IF EXISTS offers_buyer_seller_admin_read ON public.seller_offers;
+CREATE POLICY offers_buyer_seller_admin_read
+ON public.seller_offers FOR SELECT TO authenticated
+USING (
+  seller_id=(SELECT auth.uid())
+  OR public.is_nexora_admin()
+  OR private.is_buyer_demand_owner(demand_id,(SELECT auth.uid()))
+);
+
+COMMIT;
+
+DO $verify_offer_policy$
+BEGIN
+  IF NOT has_function_privilege('authenticated',
+       'private.is_buyer_demand_owner(uuid,uuid)','EXECUTE')
+     OR has_function_privilege('anon',
+       'private.is_buyer_demand_owner(uuid,uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: Buyer-demand ownership helper ACL is not narrow';
+  END IF;
+  RAISE NOTICE 'PASS: Buyer quotation visibility uses private ownership helper without direct Demand-table policy dependency';
+END
+$verify_offer_policy$;
