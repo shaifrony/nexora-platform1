@@ -238,6 +238,7 @@ end;
 $$;
 
 revoke all on function private.review_porter_account(uuid,text,text) from public,anon;
+grant usage on schema private to authenticated;
 grant execute on function private.review_porter_account(uuid,text,text) to authenticated;
 
 create or replace function public.review_porter_account(
