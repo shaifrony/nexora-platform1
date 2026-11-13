@@ -202,3 +202,9 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Updated `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` with evidence, privacy boundaries and a human-reviewed pilot quality gate.
 - Decision: no provider selected, no Edge Function or provider adapter enabled, no private messages sent to external services. Self-hosted Argos remains a conditional proof-of-concept candidate only; hosting is not free by default.
 - No SQL, provider quality test, Edge Function deployment, browser test or hosted test was run. Live Supabase, Production, DNS and `main` untouched.
+
+## 2026-11-13 — Bengali ↔ English translation candidate review
+- Confirmed Argos package availability in both directions (bn→en 67 MB; en→bn 68 MB, package 1.9). No reliable model-specific public quality benchmark for those exact Argos packages was found; package availability is not quality proof.
+- Identified AI4Bharat IndicTrans2 as a stronger first Bengali-English pilot candidate: official project supports `ben_Beng` + `eng_Latn` both directions and supplies FLORES/IN22 evaluation tooling with chrF++, BLEU and COMET. The English→Indic distilled 200M model card shows MIT; exact license/revision for the paired Indic→English checkpoint must be confirmed before deployment.
+- Decision: benchmark IndicTrans2 and Argos on the same consented bilingual test set before choosing. No model was run in this environment, no translation quality is claimed as tested, and no engine is enabled.
+- Hosting/RAM/latency/throughput, exact paired-model licenses, privacy/consent and server security remain approval gates. IndicTrans2 covers Indic languages, not Arabic or all global languages.
