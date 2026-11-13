@@ -275,3 +275,8 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 - Further Android-only catalog recovery completed through read-only queries: all 37 public/private function definitions captured; 578 table-grant rows, 68 routine-grant rows, 136 default-privilege ACL entries, and five extension/version records captured in the evidence JSON. Snapshot re-fetched and parsed successfully after commit; current file blob SHA `9ca8701bcc5e448d32ea98651321fca5cb7698a`.
 - This substantially improves the recoverable baseline, but it is still not a complete `pg_dump --schema-only`: complete DDL for all Auth/Storage internals, role attributes/membership, event triggers, publications/replication settings and object-level restore ordering still require separate review. No user rows were queried or exported.
+
+
+- Continued Android-only read-only recovery: captured role attributes, role memberships, schema ACLs, seven event-trigger registrations, and exact security options/definitions for both public views. Stored in the evidence JSON.
+- Reviewed all 17 SECURITY DEFINER functions in public/private that are executable by API roles: none is executable by anon or PUBLIC; all 17 are executable by authenticated. Their definitions were stored for explicit authorization review. This is not by itself a confirmed vulnerability: functions are in the private schema, and bodies include identity/permission checks; next review must verify exposed-schema configuration and each function's call path before changing anything.
+- Evidence update commit: `5fc5dc852e0ad244d98d332418550930075d5e92`. All operations were catalog-only SELECTs; no user rows or message bodies accessed.
