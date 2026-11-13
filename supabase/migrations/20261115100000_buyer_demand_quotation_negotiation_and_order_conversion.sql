@@ -201,8 +201,9 @@ begin
   -- Acceptance is permitted only by the party receiving the latest proposal.
   if v_role='buyer' then
     if v_latest.actor_role<>'seller' then raise exception 'The Seller must make the latest proposal before Buyer acceptance'; end if;
+    v_max_qty:=case when v_latest.action='counter' then v_latest.proposed_quantity else nullif(v_offer.available_quantity,'')::numeric end;
     v_qty:=coalesce(p_quantity,v_offer.current_quantity);
-    if v_qty is null or v_qty<=0 or v_qty>coalesce(nullif(v_offer.available_quantity,'')::numeric,0) then
+    if v_qty is null or v_qty<=0 or v_qty>coalesce(v_max_qty,0) then
       raise exception 'Choose a quantity greater than zero and no greater than Seller availability' using errcode='22023';
     end if;
     v_price:=coalesce(v_offer.current_unit_price,
