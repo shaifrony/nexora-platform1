@@ -41,9 +41,9 @@ WHERE id IN (
 
 INSERT INTO public.admin_staff(user_id,admin_code,admin_level,department_key,is_active,position_key)
 VALUES
- ('21000000-0000-4000-8000-000000000001','LOCAL-EXT-AUTH','assistant_admin','managing_director',true,'managing_director'),
- ('21000000-0000-4000-8000-000000000002','LOCAL-EXT-INACTIVE','assistant_admin','managing_director',false,'managing_director'),
- ('21000000-0000-4000-8000-000000000003','LOCAL-EXT-NOPERM','assistant_admin','managing_director',true,'managing_director');
+ ('21000000-0000-4000-8000-000000000001','LOCAL-EXT-AUTH','assistant_admin','managing_director',true,'department_officer'),
+ ('21000000-0000-4000-8000-000000000002','LOCAL-EXT-INACTIVE','assistant_admin','managing_director',false,'department_officer'),
+ ('21000000-0000-4000-8000-000000000003','LOCAL-EXT-NOPERM','assistant_admin','managing_director',true,'department_officer');
 
 INSERT INTO public.admin_permission_grants(admin_user_id,permission_key,is_allowed)
 VALUES
