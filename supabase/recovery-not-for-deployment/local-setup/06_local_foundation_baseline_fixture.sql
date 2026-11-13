@@ -334,7 +334,13 @@ BEGIN
     RAISE EXCEPTION 'Full name is too long';
   END IF;
 
-  IF v_role='seller' THEN
+  IF v_role='buyer' THEN
+    IF lower(trim(coalesce(NEW.raw_user_meta_data->>'buyer_category','wholesale'))) <> 'wholesale' THEN
+      RAISE EXCEPTION 'NEXORA is Wholesale-Only; Buyer category must be wholesale';
+    END IF;
+    INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
+    VALUES(NEW.id,v_name,'buyer','active','wholesale','{}'::text[]);
+  ELSIF v_role='seller' THEN
     IF jsonb_typeof(NEW.raw_user_meta_data->'seller_categories')='array' THEN
       SELECT coalesce(array_agg(DISTINCT x),'{}'::text[])
       INTO v_categories
@@ -354,10 +360,6 @@ BEGIN
     VALUES(NEW.id,v_name,'porter',v_status,NULL,'{}'::text[]);
     INSERT INTO public.porter_account_reviews(user_id,review_status)
     VALUES(NEW.id,'pending');
-  ELSE
-    v_status:='active';
-    INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
-    VALUES(NEW.id,v_name,'buyer',v_status,'wholesale','{}'::text[]);
   END IF;
   RETURN NEW;
 END;
