@@ -70,6 +70,7 @@ Status: **Implementation review in progress — not complete**
 - [x] পরবর্তী Inventory/MOQ migration-এর Product Order RPC-তেও থাকা legacy `buyer_category = market_category` gate সরানো হয়েছে; active Buyer, approved listing/business, MOQ ও stock validation বজায় আছে।
 - [x] Local-only read-only visibility verification script তৈরি হয়েছে: `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`; এখনো চালানো হয়নি।
 - [x] Buyer Demand matching থেকে Buyer/Seller account category condition সরানো হয়েছে; product category/subcategory ও approved Business Profile matching বজায় আছে।
+- [x] সর্বশেষ কার্যকর Seller listing edit/review RPC-তে account-level `seller_categories` gate নেই; per-product sale type ও commercial validation থাকে।
 - [x] Auth trigger-এ legacy Buyer/Seller account market category NULL/empty রাখা হয়েছে।
 - [ ] Read-only verification script চালিয়ে anonymous ও authenticated Buyer listing counts, safe-column grants এবং policy/RPC definitions যাচাই; marketplace schema না থাকলে script নিরাপদে SKIP করবে।
 - [ ] Product Inquiry, order creation, listing edit/review ও Buyer Demand routing local DB এবং real authenticated session-এ পরীক্ষা.
