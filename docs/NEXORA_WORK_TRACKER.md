@@ -195,3 +195,10 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - During the multilingual architecture source recheck, found that `private.append_product_negotiation_chat_event` in `20261115110000_product_price_negotiation.sql` still had an invalid single-$ PL/pgSQL body delimiter.
 - Corrected it to a matching `$$ ... $$` dollar-quoted body and re-fetched the branch file. Static delimiter check now reports no malformed single-dollar function block and a valid matching double-dollar block.
 - This is source inspection only; the migration was not executed and no SQL behavior is claimed as tested.
+
+## 2026-11-13 — Translation provider evaluation gate
+- Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.
+- Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.
+- Updated `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` with evidence, privacy boundaries and a human-reviewed pilot quality gate.
+- Decision: no provider selected, no Edge Function or provider adapter enabled, no private messages sent to external services. Self-hosted Argos remains a conditional proof-of-concept candidate only; hosting is not free by default.
+- No SQL, provider quality test, Edge Function deployment, browser test or hosted test was run. Live Supabase, Production, DNS and `main` untouched.
