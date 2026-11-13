@@ -43,8 +43,9 @@ alter table public.seller_offers
   add constraint seller_offers_warranty_length_check
     check (warranty is null or length(warranty)<=300);
 
-create index if not exists products_category_subcategory_market_status_idx
-  on public.products(category,subcategory,market_category,listing_status);
+drop index if exists public.products_category_subcategory_market_status_idx;
+create index if not exists products_category_subcategory_listing_status_idx
+  on public.products(category,subcategory,listing_status);
 create index if not exists buyer_demands_category_subcategory_status_idx
   on public.buyer_demands(category,subcategory,demand_status,created_at desc);
 
@@ -142,7 +143,7 @@ $$;
 revoke all on function private.route_new_approved_product_to_open_demands() from public,anon,authenticated;
 drop trigger if exists approved_product_route_open_demands on public.products;
 create trigger approved_product_route_open_demands
-after insert or update of listing_status,category,subcategory,market_category,business_id
+after insert or update of listing_status,category,subcategory,business_id
 on public.products for each row
 execute function private.route_new_approved_product_to_open_demands();
 
@@ -250,11 +251,11 @@ begin
     if exists(
       select 1 from jsonb_object_keys(p_proposed_changes) as keys(key)
       where key <> all(array[
-        'product_name','category','subcategory','market_category','image_urls','description',
+        'product_name','category','subcategory','image_urls','description',
         'origin','specifications_quality','price','currency','minimum_order_quantity','price_tiers'
       ]::text[])
     ) or not (p_proposed_changes ?& array[
-      'product_name','category','subcategory','market_category','image_urls','description',
+      'product_name','category','subcategory','image_urls','description',
       'origin','specifications_quality','price','currency','minimum_order_quantity','price_tiers'
     ]) then
       raise exception 'Product change fields are invalid or incomplete' using errcode='22023';
@@ -269,11 +270,9 @@ begin
        or length(btrim(coalesce(p_proposed_changes->>'category',''))) not between 2 and 120
        or length(btrim(coalesce(p_proposed_changes->>'description',''))) not between 1 and 10000
        or length(btrim(coalesce(p_proposed_changes->>'origin',''))) not between 2 and 160
-       or coalesce(p_proposed_changes->>'market_category','') not in ('wholesale','retail')
        or length(btrim(coalesce(p_proposed_changes->>'subcategory',''))) not between 2 and 120
        or coalesce(p_proposed_changes->>'minimum_order_quantity','') !~ '^[0-9]+([.][0-9]{1,3})?$'
        or (p_proposed_changes->>'minimum_order_quantity')::numeric <= 0
-       or (p_proposed_changes->>'market_category'='retail' and (p_proposed_changes->>'minimum_order_quantity')::numeric <> 1)
        or jsonb_typeof(p_proposed_changes->'price_tiers')<>'array'
        or jsonb_array_length(p_proposed_changes->'price_tiers')>20
        or exists(
@@ -440,7 +439,6 @@ begin
         product_name=v_request.proposed_changes->>'product_name',
         category=v_request.proposed_changes->>'category',
         subcategory=v_request.proposed_changes->>'subcategory',
-        market_category=v_request.proposed_changes->>'market_category',
         image_urls=v_new_urls,
         description=v_request.proposed_changes->>'description',
         origin=v_request.proposed_changes->>'origin',
@@ -528,7 +526,7 @@ begin
   if new.listing_type='product' then
     select jsonb_build_object(
       'product_name',p.product_name,'category',p.category,'subcategory',p.subcategory,
-      'market_category',p.market_category,'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
+      'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
       'description',p.description,'origin',p.origin,
       'specifications_quality',p.specifications_quality,'price',p.price,'currency',p.currency,
       'minimum_order_quantity',p.minimum_order_quantity,'price_tiers',p.price_tiers
