@@ -1,7 +1,7 @@
 # NEXORA Migration Recovery — Test Plan
 
 **Branch:** `nexora-development`  
-**Status:** Test harness prepared; execution blocked by missing local database runtime.
+**Status:** Android local PostgreSQL runtime available; guarded Supabase-compatibility scaffold authored; scaffold execution and migration tests pending.
 
 ## Objective
 
@@ -9,7 +9,7 @@ Establish a repeatable verification gate for the 11 missing-history recovery dra
 
 ## Environment decision
 
-The current workspace has no `psql`, `postgres`, `docker`, `supabase`, or `pg_prove` executable. A zero-cost local PostgreSQL runtime is therefore not presently available. A Supabase Branch is not selected because it incurs recurring cost and has not been authorized.
+The user has PostgreSQL 18.6 running in Termux on Android 16, with a local `nexora_test` database. `pgcrypto` and `uuid-ossp` are available; `pgtap` is not listed in the selected Termux repository. This is a PostgreSQL-only environment, not a full Supabase stack. A Supabase Branch is not selected because it incurs recurring cost and has not been authorized.
 
 ## Safe test sequence
 
@@ -37,8 +37,8 @@ The current workspace has no `psql`, `postgres`, `docker`, `supabase`, or `pg_pr
 
 | Work item | Status |
 |---|---|
-| Check for local PostgreSQL / Docker / Supabase CLI | BLOCKED — none installed |
-| Create pgTAP catalog/privilege suite | PREPARED — not executed |
+| Local PostgreSQL runtime | PASS — PostgreSQL 18.6 in Termux; `nexora_test` created |\n| Supabase compatibility scaffold | PREPARED — committed; not yet executed on device |\n| Available extensions | `pgcrypto`, `uuid-ossp` available; `pgtap` not found in Termux package search |
+| Create pgTAP catalog/privilege suite | PREPARED — not executed; pgTAP unavailable locally |
 | Fixture-based RLS tests | NOT RUN |
 | AAL2/JWT context tests | NOT RUN |
 | Default-privilege object-creation test | NOT RUN |
@@ -48,3 +48,18 @@ The current workspace has no `psql`, `postgres`, `docker`, `supabase`, or `pg_pr
 ## Important Supabase CLI note
 
 Supabase CLI v3 changes database command defaults to local-first and uses `--remote` for hosted targets. Any future CLI workflow must inspect the installed version and its `--help` output first. Never rely on old command assumptions or target Live by accident.
+
+
+## Android local PostgreSQL update (2026-11-13)
+
+The user has installed PostgreSQL 18.6 in Termux on Android 16 and created the local database `nexora_test`. A consolidated readiness query confirmed the connection and version. Termux package search did not return a `pgtap` package. The local database reports `pgcrypto` 1.4 and `uuid-ossp` 1.1 as available extensions.
+
+A guarded compatibility scaffold has been committed at:
+`supabase/recovery-not-for-deployment/local-setup/00_bootstrap_supabase_compat.sql`
+
+It refuses to run unless the current database is exactly `nexora_test`. It creates local test roles, minimal auth/storage schemas and fixtures, and stub `auth.uid()`, `auth.jwt()`, and `auth.role()` helpers. It is deliberately not a Supabase emulator and has not yet been run on the user's device.
+
+The companion instructions are in:
+`supabase/recovery-not-for-deployment/local-setup/README.md`
+
+Do not claim scaffold execution, migration replay, pgTAP execution, or Supabase RLS/Auth verification until separately evidenced. The active migration chain remains blocked by history divergence.
