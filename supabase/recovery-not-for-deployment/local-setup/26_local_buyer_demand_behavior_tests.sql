@@ -38,6 +38,14 @@ INSERT INTO auth.users(id,email,raw_app_meta_data,raw_user_meta_data) VALUES
 ('25000000-0000-4000-8000-000000000014','b03-seller-no-match@nexora.invalid',
  '{"provider":"email"}','{"role":"seller","full_name":"B03 Unmatched Seller"}');
 
+INSERT INTO public.business_profiles(
+  business_id,seller_id,display_name,country,city,sales_center_address,approval_status
+) VALUES
+('25100000-0000-4000-8000-000000000011','25000000-0000-4000-8000-000000000011','B03 Wholesale Business','Bangladesh','Dhaka','Local test address','approved'),
+('25100000-0000-4000-8000-000000000012','25000000-0000-4000-8000-000000000012','B03 Retail Business','Bangladesh','Dhaka','Local test address','approved'),
+('25100000-0000-4000-8000-000000000013','25000000-0000-4000-8000-000000000013','B03 Late Match Business','Bangladesh','Dhaka','Local test address','approved'),
+('25100000-0000-4000-8000-000000000014','25000000-0000-4000-8000-000000000014','B03 Unmatched Business','Bangladesh','Dhaka','Local test address','approved');
+
 INSERT INTO public.public_businesses(business_id,seller_id,display_name,country,city) VALUES
 ('25100000-0000-4000-8000-000000000011','25000000-0000-4000-8000-000000000011','B03 Wholesale Business','Bangladesh','Dhaka'),
 ('25100000-0000-4000-8000-000000000012','25000000-0000-4000-8000-000000000012','B03 Retail Business','Bangladesh','Dhaka'),
