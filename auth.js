@@ -426,9 +426,11 @@
     const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
     const buyerFields = document.getElementById("nxBuyerCategoryFields");
     const sellerFields = document.getElementById("nxSellerCategoryFields");
+    const porterNote = document.getElementById("nxPorterRegistrationNote");
     const buyerSelect = document.querySelector('#nxSignup select[name="buyer_category"]');
     buyerFields?.classList.toggle("hidden", role !== "buyer");
     sellerFields?.classList.toggle("hidden", role !== "seller");
+    porterNote?.classList.toggle("hidden", role !== "porter");
     if (buyerSelect) {
       buyerSelect.required = role === "buyer";
       buyerSelect.disabled = role !== "buyer";
