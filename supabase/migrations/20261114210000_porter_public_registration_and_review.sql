@@ -58,7 +58,7 @@ declare
   v_seller_categories text[];
   v_account_status text;
 begin
-  v_provider := lower(coalesce(new.app_metadata ->> 'provider', ''));
+  v_provider := lower(coalesce(new.raw_app_meta_data ->> 'provider', ''));
 
   if v_provider in ('google','facebook') then
     v_role := 'buyer';
