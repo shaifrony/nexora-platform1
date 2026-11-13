@@ -8,11 +8,6 @@ alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check
   check (role = any (array['buyer'::text,'seller'::text,'porter'::text,'admin'::text]));
 
-alter table public.profiles drop constraint if exists profiles_market_categories_check;
-alter table public.profiles add constraint profiles_market_categories_check check (
-  buyer_category is null and seller_categories = '{}'::text[]
-);
-
 -- A separate review record preserves the difference between rejected and suspended
 -- while profiles.account_status gates every authenticated workspace.
 create table if not exists public.porter_account_reviews (
@@ -62,8 +57,8 @@ begin
     raise exception 'Full name is too long';
   end if;
   if v_role='porter' then v_account_status:='pending'; end if;
-  insert into public.profiles (id,full_name,role,account_status,buyer_category,seller_categories)
-  values (new.id,v_full_name,v_role,v_account_status,null,'{}'::text[])
+  insert into public.profiles (id,full_name,role,account_status)
+  values (new.id,v_full_name,v_role,v_account_status)
   on conflict (id) do nothing;
   if v_role='porter' then
     insert into public.porter_account_reviews(user_id,review_status)
