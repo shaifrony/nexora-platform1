@@ -497,7 +497,7 @@
     try {
       const { data, error } = await client().rpc("create_product_inquiry", {
         p_product_id: product.id,
-        p_message: null
+        p_message: String($("productInquiryMessage")?.value || "").trim() || null
       });
       if (error) throw error;
       const conversationId = typeof data === "string" ? data : data?.conversation_id || data?.id;
@@ -736,7 +736,7 @@
       if (contactArea) contactArea.classList.toggle("hidden", !(activeBuyer() && signedIn()));
       const controls = $("productInquiryControls");
       if (controls && activeBuyer() && signedIn()) {
-        controls.innerHTML = '<button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
+        controls.innerHTML = '<label for="productInquiryMessage">প্রাথমিক বার্তা (ঐচ্ছিক)</label><textarea id="productInquiryMessage" maxlength="500" placeholder="পণ্যের পরিমাণ, মান বা দাম সম্পর্কে জানতে লিখুন"></textarea><button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
       }
       $("productContactSeller")?.addEventListener("click", () => startProductChat(selected));
       $("nxProductOrderForm")?.addEventListener("submit",e=>{e.preventDefault();const v=new FormData(e.currentTarget);submitCommerceOrder("product",selected.id,v.get("quantity"),v.get("location"),v.get("note"),e.currentTarget.querySelector("[data-order-status]"),e.currentTarget.querySelector("button[type=submit]"));});
