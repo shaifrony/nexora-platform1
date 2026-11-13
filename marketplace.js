@@ -100,13 +100,11 @@
   function refreshProductMarketCategoryOptions() {
     const select = $("nxProductMarketCategory");
     if (!select) return;
-    const allowed = Array.isArray(profile()?.seller_categories) ? profile().seller_categories.filter(x => ["wholesale","retail"].includes(x)) : [];
     const labels = { wholesale: "Wholesale (পাইকারি)", retail: "Retail (খুচরা)" };
     const current = select.value;
     select.innerHTML = '<option value="">বিক্রয় ক্যাটাগরি নির্বাচন করুন</option>' +
-      allowed.map(category => '<option value="' + category + '">' + labels[category] + '</option>').join("");
-    if (allowed.includes(current)) select.value = current;
-    else if (allowed.length === 1) select.value = allowed[0];
+      ["wholesale","retail"].map(category => '<option value="' + category + '">' + labels[category] + '</option>').join("");
+    if (["wholesale","retail"].includes(current)) select.value = current;
   }
   window.toggleProductForm = function() {
     refreshProductMarketCategoryOptions();
@@ -484,7 +482,6 @@
     let productQuery = client().from("products")
       .select("id,product_code,slug,product_name,category,subcategory,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
       .eq("listing_status", "approved");
-    if (activeBuyer()) productQuery = productQuery.eq("market_category", profile()?.buyer_category || "wholesale");
     const { data, error } = await productQuery.order("created_at", { ascending: false });
     if (error) {
       console.error("NEXORA products could not be loaded:", error.message);
@@ -661,8 +658,7 @@
       document.querySelector(".nx-search-panel")?.classList.add("hidden");
       host.classList.add("hidden");
       $("publicDemandBoard")?.classList.add("hidden");
-      const buyerCategory = activeBuyer() ? profile()?.buyer_category : null;
-      const selected = state.products.find(p => p.slug === requestedSlug && (!buyerCategory || p.market_category === buyerCategory));
+      const selected = state.products.find(p => p.slug === requestedSlug);
       if (!selected) {
         detailPanel.classList.remove("hidden");
         detailPanel.innerHTML = '<p>পণ্যটি পাওয়া যায়নি অথবা বর্তমানে অনুমোদিত নয়।</p><a href="' + esc(window.location.pathname) + '">Marketplace-এ ফিরে যান</a>';
@@ -722,9 +718,7 @@
     const spec = ($("specFilter")?.value || "").trim().toLowerCase();
     const min = minRaw === "" ? null : Number(minRaw);
     const max = maxRaw === "" ? null : Number(maxRaw);
-    const buyerCategory = activeBuyer() ? profile()?.buyer_category : null;
     const rows = state.products.filter(p => {
-      if (buyerCategory && p.market_category !== buyerCategory) return false;
       const searchable = [p.product_name,p.description,p.origin,p.specifications_quality].join(" ").toLowerCase();
       const productPrice = Number(p.price);
       const productCurrency = String(p.currency || "").toUpperCase();
@@ -750,7 +744,6 @@
         {name:"Retail Cotton T-Shirt",market_category:"retail",category:"Textile & Garments",description:"খুচরা বিক্রয়ের জন্য নমুনা টি-শার্ট বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
         {name:"Retail Home Decor",market_category:"retail",category:"Handicrafts",description:"খুচরা ক্রেতাদের জন্য নমুনা ঘর সাজানোর পণ্য।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"}
       ].filter(p =>
-        (!buyerCategory || p.market_category === buyerCategory) &&
         (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
         (!category || p.category === category)
       );
@@ -799,7 +792,7 @@
     const host = $("buyerProductList");
     if (!host) return;
     const term = ($("buyerProductSearch")?.value || "").trim().toLowerCase();
-    const rows = (state.buyerProducts || []).filter(p => p.market_category === profile()?.buyer_category && [p.product_name,p.category,p.description,p.origin].join(" ").toLowerCase().includes(term));
+    const rows = (state.buyerProducts || []).filter(p => [p.product_name,p.category,p.description,p.origin].join(" ").toLowerCase().includes(term));
     if ($("buyerProductCount")) $("buyerProductCount").textContent = rows.length + " Products";
     if (!rows.length) { host.innerHTML = '<div class="card muted">এখনো কোনো Admin অনুমোদিত পণ্য নেই অথবা অনুসন্ধানের সঙ্গে মেলে এমন পণ্য পাওয়া যায়নি।</div>'; return; }
     host.innerHTML = rows.map(p => {
