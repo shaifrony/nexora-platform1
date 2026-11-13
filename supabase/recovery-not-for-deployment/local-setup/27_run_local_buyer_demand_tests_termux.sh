@@ -13,7 +13,7 @@ cd "$WORK_DIR"
 echo "Downloading immutable local-only SQL files ..."
 curl -fL --retry 3 "$BASE/cf3dc4991cad964d664ecb47f031c72e19914114/supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql" -o 25_local_buyer_demand_fixture.sql
 curl -fL --retry 3 "$BASE/7c8bb362e082cbc76de22c6e9defac2198d6952b/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
-curl -fL --retry 3 "$BASE/ba27de10d133fdacdca74a8e2b13a5ff779f5bdd/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
+curl -fL --retry 3 "$BASE/844304bbb79e8984fefdb9d3085997c78f69eab1/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
 
 echo
 echo "Preflight: verifying local target and prerequisites ..."
