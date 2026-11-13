@@ -304,3 +304,8 @@ This is a structured catalog snapshot, not a full schema-only SQL export. Remain
 ### Addendum — Expanded metadata capture
 
 The Android-only read-only path has now captured all 37 public/private function definitions, 578 table-grant entries, 68 routine-grant entries, 136 default-privilege ACL entries, and five extension/version records. The evidence file was fetched and parsed after the update to verify these sections were committed. This remains a structured recovery snapshot rather than a complete schema-only dump; full Auth/Storage DDL, role attributes/membership, event triggers and restore-order validation remain outstanding.
+
+
+### Addendum — Role, event-trigger and SECURITY DEFINER review
+
+Read-only evidence now includes non-platform role attributes and memberships, schema ACLs, seven event-trigger registrations, and both public view definitions/options. A targeted review found 17 public/private SECURITY DEFINER functions executable by authenticated, zero executable by anon, and zero with an explicit PUBLIC EXECUTE grant. All 17 definitions are stored for review. Because they are under the private schema and contain identity/permission checks, this is not labeled a vulnerability without verifying Data API exposed schemas and call paths. No grants, roles, functions, policies or schema settings were changed.
