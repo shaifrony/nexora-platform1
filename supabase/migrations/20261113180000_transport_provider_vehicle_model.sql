@@ -60,7 +60,9 @@ create index if not exists transport_vehicles_dispatch_idx
 create or replace function private.guard_transport_provider_update()
 returns trigger language plpgsql set search_path='' as $$
 begin
- if private.has_nexora_permission('logistics.assign') then
+ -- Privileged SECURITY DEFINER review RPCs execute under their function owner;
+ -- ordinary authenticated table updates must remain owner-scoped and review-field protected.
+ if current_user <> 'authenticated' then
    new.updated_at:=now(); return new;
  end if;
  if auth.uid() is null or auth.uid()<>old.owner_user_id then
@@ -81,7 +83,9 @@ create or replace function private.guard_transport_vehicle_update()
 returns trigger language plpgsql set search_path='' as $$
 declare v_owner uuid;
 begin
- if private.has_nexora_permission('logistics.assign') then
+ -- Privileged SECURITY DEFINER review RPCs execute under their function owner;
+ -- ordinary authenticated table updates must remain owner-scoped and review-field protected.
+ if current_user <> 'authenticated' then
    new.updated_at:=now(); return new;
  end if;
  select owner_user_id into v_owner from public.transport_providers where id=old.provider_id;
