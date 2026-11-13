@@ -2,12 +2,14 @@
 -- Staged only. Do not apply to hosted DB without explicit approval.
 begin;
 
+-- Preserve the existing public Porter role while adding transport-provider records.
+-- Porter account activation remains governed by the separate Porter review workflow.
 alter table public.profiles drop constraint if exists profiles_role_check;
 alter table public.profiles add constraint profiles_role_check
-  check (role = any (array['buyer'::text,'seller'::text,'admin'::text]));
+  check (role = any (array['buyer'::text,'seller'::text,'porter'::text,'admin'::text]));
 alter table public.role_requests drop constraint if exists role_requests_requested_role_check;
 alter table public.role_requests add constraint role_requests_requested_role_check
-  check (requested_role = 'seller'::text);
+  check (requested_role = any (array['seller'::text,'porter'::text]));
 
 create table if not exists public.transport_providers (
  id uuid primary key default gen_random_uuid(),
