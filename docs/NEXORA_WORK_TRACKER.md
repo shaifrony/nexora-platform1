@@ -17,7 +17,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Porter registration approval | Done (staged) | Signup, pending profile, review table, MFA + logistics.assign RPC, audit log and admin queue staged; migration/E2E pending |
 | Admin sign-in + MFA | Partial | Existing Auth MFA AAL2 flow; browser E2E pending |
 | Officer account management | Partial | Form/Edge Function/SQL migration staged; DB not migrated or integration-tested |
-| Marketplace wholesale-only alignment | Partial | Signup client and initial Product Listing form now wholesale-only; legacy database/edit/order paths remain; see NEXORA_WHOLESALE_ONLY_ALIGNMENT.md and NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md |
+| Marketplace Wholesale + Retail alignment | Decision confirmed; implementation pending | Seller chooses Wholesale or Retail per product listing; Buyer sees only listings matching the Buyer’s registered category. One Seller may publish different products in different market modes. Existing wholesale-only UI/Auth assumptions must be reversed. Buyer category-change policy remains to be confirmed. |
 | Services Marketplace | Partial | Listing flow staged; security/E2E remain |
 | Buyer Demands & quotations | Partial | Existing form captures product, category/subcategory, specs, quantity, optional budget, currency, destination and required date; submission and public-board/Seller-inbox paths inspected. Underlying view/RLS/matching privacy review still pending; see NEXORA_BUYER_DEMAND_PROGRESS.md |
 | Commerce orders | Partial | Order lifecycle staged; payments/disputes/refunds absent |
@@ -54,12 +54,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
 ## M2 — Marketplace
-- [ ] Remove legacy Retail flows and enforce wholesale-only consistently in UI, Auth trigger, database constraints, RLS/RPC and order logic.
-- [ ] Reconcile the Seller edit-request workflow with the seven approved initial Product Listing fields and wholesale-only rules.
-- [x] Public Buyer/Seller signup client aligned to wholesale-only metadata (frontend only; not a security boundary).
+- [ ] Align existing Wholesale/Retail schema and UI with the confirmed seller-selected per-product market mode; enforce Buyer-category visibility in database/RLS/RPC and order logic.
+- [ ] Reconcile Seller edit-request workflow with the dual-market model and mode-specific product fields.
+- [ ] Replace wholesale-only Buyer/Seller signup assumptions with the dual-market model; Seller chooses market mode per product, Buyer visibility is category-scoped (frontend is not a security boundary).
 - [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
-- [x] Initial Product Listing form reduced to the approved seven fields; new inserts force wholesale and use database defaults for MOQ/stock/tier fields.
-- [x] Product/Service listing, image upload and editing (legacy edit flow still needs wholesale-only alignment).
+- [ ] Update Product Listing form and insert/edit paths so Seller selects Wholesale or Retail for each product; confirm mode-specific fields against existing schema.
+- [x] Product/Service listing, image upload and editing foundation exists; dual-market edit and visibility alignment pending.
 - [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected; existing matching and Seller quotations staged (database privacy and matching security review pending).
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
