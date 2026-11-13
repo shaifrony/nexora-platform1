@@ -72,7 +72,7 @@ Status: **Implementation review in progress — not complete**
 - [x] Buyer Demand matching থেকে Buyer/Seller account category condition সরানো হয়েছে; product category/subcategory ও approved Business Profile matching বজায় আছে।
 - [x] সর্বশেষ কার্যকর Seller listing edit/review RPC-তে account-level `seller_categories` gate নেই; per-product sale type ও commercial validation থাকে।
 - [x] Auth trigger-এ legacy Buyer/Seller account market category NULL/empty রাখা হয়েছে।
-- [ ] Read-only verification script চালিয়ে anonymous ও authenticated Buyer listing counts, safe-column grants এবং policy/RPC definitions যাচাই; marketplace schema না থাকলে script নিরাপদে SKIP করবে।
+- [ ] Read-only verification script চালিয়ে anonymous, Buyer, Seller ও Admin listing counts, safe-column grants এবং policy/RPC definitions যাচাই; marketplace schema না থাকলে script নিরাপদে SKIP করবে।
 - [ ] Product Inquiry, order creation, listing edit/review ও Buyer Demand routing local DB এবং real authenticated session-এ পরীক্ষা.
 
 ### B-03 — Buyer Demand privacy ও lifecycle
@@ -143,5 +143,5 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - Buyer Demand matching is based on product category/subcategory and Seller's approved public Business Profile, not Buyer/Seller account market categories.
 - Legacy profiles.buyer_category and profiles.seller_categories fields are retained only for migration compatibility, cleared to NULL/empty, and must not be used for authorization.
 - The later inventory migration originally retained a legacy Buyer-category order gate; this was removed from the final Product Order RPC definition.
-- A local read-only verification script is staged at `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`. It checks catalog policy/grants and, when the complete marketplace schema and an active Buyer exist, compares anon and Buyer-visible approved listings. It creates no data and changes no schema.
+- A local read-only verification script is staged at `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`. It checks catalog policy/grants and, when the complete marketplace schema and an active Buyer exist, compares anon, Buyer, Seller and Admin-visible approved listings. It creates no data and changes no schema.
 - This is staged source-code work only. No migration was run, no local SQL/browser tests were run in this turn, and Hosted Supabase remains untouched.
