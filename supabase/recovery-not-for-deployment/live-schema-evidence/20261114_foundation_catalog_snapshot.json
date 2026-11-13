@@ -10128,5 +10128,42 @@
     "anon_product_policy": "listing_status='approved' AND is_public_business(business_id)",
     "anon_business_policy": "USING (true) on public_businesses; data comes from approved-only synchronized projection",
     "security_helpers": "private.is_nexora_active_admin_staff, private.is_nexora_super_admin, private.has_nexora_permission all enforce auth.jwt()->>'aal' = 'aal2'."
+  },
+  "migration_dependency_security_audit_20261114": {
+    "static_fixes": [
+      {
+        "file": "supabase/migrations/20261114200000_centralized_officer_account_management.sql",
+        "checks": [
+          "p_action NULL explicitly rejected",
+          "sensitive permission flag accumulates across the entire permission array"
+        ],
+        "blob_sha": "a3bacad95dca366e41e57ff4da582690844538d6",
+        "runtime_tested": false
+      },
+      {
+        "file": "supabase/migrations/20261114180000_unified_delivery_jobs_assignment.sql",
+        "checks": [
+          "independent-provider assigned vehicle must be approved, linked to selected provider, and is_available=true"
+        ],
+        "blob_sha": "cda4fb0969a8eae388cebaef7e87cfe50142eca2",
+        "runtime_tested": false
+      }
+    ],
+    "dependency_order": [
+      "20261112050345_marketplace_core_schema -> 20261112050854_private_communications -> 20261112050951_harden_private_communications_rls -> 20261114180000_product_linked_private_conversations",
+      "20261113180000_transport_provider_vehicle_model -> 20261113220000_delivery_assignment_system",
+      "20261113180000_transport_provider_vehicle_model + 20261113220000_delivery_assignment_system + 20261114170000_delivery_network_management + 20261114140000_commerce_orders_and_review_completion -> 20261114180000_unified_delivery_jobs_assignment -> 20261114190000_delivery_tracking_status_history"
+    ],
+    "unresolved": [
+      "Two migrations share version 20261114180000; CLI-generated version repair required before any migration runner.",
+      "Exact duplicate SQL-content pairs 20261112051711/20261112051801 and 20261112051906/20261112052010 need controlled cleanup plan.",
+      "Product market_category retail/wholesale split and Retail MOQ=1 conflict with current unified Marketplace decision.",
+      "No disposable PostgreSQL/Supabase runtime rehearsal available on Android-only workflow; static fixes untested."
+    ],
+    "corrections": [
+      "profiles_market_categories_check in Porter registration already existed from 20261113230000 and intentionally keeps deprecated profile category fields empty; not a new conflict.",
+      "Delivery service_modes/delivery_mode are logistics concepts, separate from product marketplace visibility and were not changed."
+    ],
+    "safety": "No Live database writes, migrations, or user-row queries. All edits are on nexora-development."
   }
 }
