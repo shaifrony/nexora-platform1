@@ -172,6 +172,9 @@ $$;
 
 revoke all on function private.create_commerce_order(text,uuid,numeric,text,text) from public,anon,authenticated;
 revoke all on function private.transition_commerce_order(uuid,text,text) from public,anon,authenticated;
+grant usage on schema private to authenticated;
+grant execute on function private.create_commerce_order(text,uuid,numeric,text,text) to authenticated;
+grant execute on function private.transition_commerce_order(uuid,text,text) to authenticated;
 
 create or replace function public.create_commerce_order(
   p_listing_type text,p_listing_id uuid,p_quantity numeric,
