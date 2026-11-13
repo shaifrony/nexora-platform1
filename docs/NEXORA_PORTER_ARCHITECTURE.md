@@ -240,3 +240,13 @@ Implementation staging:
 - A staged database migration is required to persist `profiles.buyer_category` and `profiles.seller_categories`, validate registration metadata in `handle_new_user()`, and permit only the active Buyer to update their own Buyer category.
 - Marketplace visibility filtering and product listing sale-mode are intentionally a separate follow-up: each product's wholesale/retail listing representation and price model must be finalized before filtering product rows. Do not assume one listing has dual prices.
 - No hosted migration or deployment is performed as part of this design stage.
+
+
+## 2026-11-14 — Porter registration and approval runtime validation
+
+- Using a disposable local Auth/Postgres stack and a test-only copy of the Live `on_auth_user_created` trigger definition, synthetic public Porter signup created a pending Porter profile and pending review record.
+- An Admin session with `aal2` successfully approved the Porter; the profile transitioned to active and the review record to approved. An AAL1 Admin attempt left a second Porter pending. Public signup with `role=admin` was rejected and created no auth user.
+- The approved Porter then submitted an independent transport-provider application; Admin approval succeeded.
+- The Admin-managed NEXORA Team path was also tested: create partner → create staff → create delivery job → assign staff → tracking transitions through accepted, picked_up, in_transit, out_for_delivery and delivered. Five append-only tracking events were recorded and the job ended delivered.
+- All tests used synthetic local records. Full independent-provider tracking UI, actual courier integrations, receipt proof, payments/settlement, dispute/return and browser E2E remain untested.
+- **Historical decision note:** the Buyer/Seller Wholesale/Retail category-registration section above is superseded by the later unified Marketplace decision (no Buyer/Seller wholesale/retail category split). Transport/Delivery modes remain a separate logistics concept.

@@ -817,3 +817,14 @@ The Supabase CLI v3 guidance was rechecked on 2026-11-14: migration files belong
 - This closes the database-level Buyer Demand privacy/quotation/order test gate, but not full product acceptance: Browser E2E, PostgREST/HTTP JWT authorization, real Storage transfer, WebRTC, concurrency/load and broader Porter/Admin role tests remain outstanding.
 
 **Updated next gate:** Buyer Demand identity privacy and matched Seller quotation/order conversion have now passed focused disposable SQL/RLS tests. Continue with broader Porter/Admin/Delivery Network tests and API-level integration checks; deployment remains blocked until those and Browser E2E checks are completed.
+
+
+## 2026-11-14 — Porter/Admin and Delivery Network disposable runtime validation
+
+- Repeated the 38-migration local replay with a test-only baseline; latest history 38 at `20261115120000`, 41 public tables, zero without RLS, and `db lint` reported no schema errors.
+- Recreated the existing Live Auth `on_auth_user_created` trigger in the disposable baseline; no Live user data was copied.
+- Verified synthetic Porter signup → pending review → AAL2 Admin approval → active Porter. AAL1 Admin could not approve a second pending Porter; public `role=admin` signup was blocked.
+- Verified approved Porter independent-provider application and AAL2 Admin approval.
+- Verified Admin-managed NEXORA Team partner/staff/job creation and assignment, followed by five successful tracking transitions ending in `delivered`.
+- All synthetic test records and local database were destroyed after the run. No Live mutation, `main`, Production or DNS change occurred.
+- Remaining: independent-provider self-service tracking, external courier integration, receipt confirmation/proof, payment/settlement, dispute/return, PostgREST/HTTP and browser E2E, and concurrency/load testing.

@@ -81,3 +81,15 @@ Before any real buyer delivery is enabled:
 4. Complete delivery charge/payment and settlement model.
 5. Run end-to-end tests for Retail, Wholesale partial shipments, Courier Partner manual tracking, NEXORA team, Independent Provider, disputes, failed delivery and returns.
 6. Obtain explicit approval before any hosted migration or production deployment.
+
+
+## 2026-11-14 — Disposable Porter and NEXORA Team workflow test
+
+- Replayed all 38 active migrations in a fresh local Supabase CLI v3.1.0 Native Runtime database. Final local history: 38 applied through `20261115120000`; 41 public tables checked, zero without RLS; `db lint --level warning --fail-on error` reported no schema errors.
+- The local-only baseline recreated the existing Live `auth.users` `on_auth_user_created` trigger because it is a Live catalog object not created by the branch migration files. No Live auth identities or user rows were copied.
+- Synthetic Porter signup through that trigger created a `porter` profile in `pending` state and a pending `porter_account_reviews` record. A synthetic Super Admin with AAL2 approved it; the profile became active and review became approved. A second Porter remained pending after an AAL1 Admin approval attempt. A public signup attempt requesting role `admin` did not create an auth user.
+- The approved Porter created an independent `transport_providers` application; an AAL2 Admin approved the application.
+- Synthetic Super Admin created an approved `nexora_team` delivery partner, created a staff record, created a delivery job, and assigned the job to that partner/staff member.
+- Admin tracking transitions succeeded in order: `accepted → picked_up → in_transit → out_for_delivery → delivered`. The job ended `delivered` and exactly five tracking events were recorded.
+- This validates database registration/review and the Admin-managed NEXORA Team assignment/tracking path with synthetic data. It does not yet validate independent-provider self-service tracking, external courier APIs/webhooks, receipt OTP/digital proof, delivery payments/settlement, disputes/returns, or browser/device E2E.
+- The disposable local stack and all synthetic records were stopped and destroyed. No Live schema/history/data, `main`, Production, DNS or paid resource was changed.
