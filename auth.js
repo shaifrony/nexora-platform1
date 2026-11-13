@@ -338,7 +338,7 @@
     admin.classList.toggle("hidden", !isActiveAdmin || !mfaVerified);
     const adminIdentity = document.getElementById("nxAdminIdentity");
     if (adminIdentity) {
-      const dept = adminStaff?.admin_level === "super_admin" ? "Super Admin" : (adminStaff?.department_key || "Assistant Admin");
+      const dept = adminStaff?.admin_level === "super_admin" ? "Director" : (adminStaff?.department_key || "বিভাগীয় কর্মকর্তা");
       adminIdentity.textContent = "Admin ID: " + (adminStaff?.admin_code || "—") + " | দায়িত্ব: " + dept;
     }
     const adminManagePanel = document.getElementById("nxAdminManagement");
@@ -523,7 +523,7 @@
   testAccountForm?.addEventListener("submit", async e => {
     e.preventDefault();
     if (adminStaff?.admin_level !== "super_admin" || profile?.role !== "admin" || profile?.account_status !== "active") {
-      return say("শুধু সক্রিয় Super Admin Test Account তৈরি করতে পারবেন।");
+      return say("শুধু সক্রিয় Director Test Account তৈরি করতে পারবেন।");
     }
     const form = e.currentTarget;
     const f = new FormData(form);
@@ -619,16 +619,16 @@
       return '<div class="offer"><b>'+escapeHtml(s.admin_code)+'</b> — '+escapeHtml(s.profiles?.full_name||"নাম নেই")+
         '<div class="muted">বিভাগ: '+escapeHtml(s.department_key)+' | অনুমতি: '+count+' | অবস্থা: '+(s.is_active?'সক্রিয়':'নিষ্ক্রিয়')+
         '<br>অ্যাকাউন্ট ইমেইল দিয়ে নিচের ফর্মে Update বা Deactivate করতে পারবেন।</div></div>';
-    }).join("") : '<p class="muted">এখনো কোনো Assistant Admin নেই।</p>';
+    }).join("") : '<p class="muted">এখনো কোনো বিভাগীয় কর্মকর্তা নিয়োগ করা হয়নি।</p>';
   }
   document.getElementById("nxAssistantAdminForm")?.addEventListener("submit", async e => {
     e.preventDefault();
-    if (adminStaff?.admin_level !== "super_admin" || !currentUser) return say("শুধু Super Admin এই কাজ করতে পারবেন।");
+    if (adminStaff?.admin_level !== "super_admin" || !currentUser) return say("শুধু Director এই কাজ করতে পারবেন।");
     const form=e.currentTarget, f=new FormData(form);
     const action=String(f.get("action")), email=String(f.get("email")||"").trim();
     const department=String(f.get("department")||"");
     const permissions=[...form.querySelectorAll('input[name="assistant_permission"]:checked')].map(x=>x.value);
-    if (!email) return say("Assistant Admin-এর নিবন্ধিত ইমেইল দিন।");
+    if (!email) return say("বিভাগীয় কর্মকর্তার নিবন্ধিত ইমেইল দিন।");
     if (action!=="deactivate" && !department) return say("বিভাগ নির্বাচন করুন।");
     setBusy(form,true); say("");
     try {
