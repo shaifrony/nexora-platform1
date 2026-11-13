@@ -87,7 +87,7 @@ Status: **Implementation review in progress — not complete**
 - [x] Buyer UI closes/cancels only own open Demand; quotation INSERT policy blocks closed/cancelled Demand; public board view filters open only.
 - [x] Required date is NOT NULL and constrained to current_date or later; subcategory constraints and public projection field are present in final migration.
 - [x] Demand routing source uses approved Product category/subcategory + active Seller + approved public Business Profile; no Buyer/Seller account-category or Wholesale/Retail market_category gate.
-- [ ] Run read-only local catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. It will SKIP if the complete Marketplace Demand schema is absent.
+- [x] Read-only local catalog audit executed. Result: SKIP because full Marketplace Demand schema is absent from the limited local fixture; no changes made. This is not a Demand security PASS.
 - [ ] Verify privacy, ownership, Seller inbox, quotations and status transitions under real JWT/PostgREST sessions and browser E2E.
 - [ ] Buyer quotation acceptance, counter-offer and quotation-to-order conversion workflow remains unimplemented.
 
