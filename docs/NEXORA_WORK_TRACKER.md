@@ -569,3 +569,14 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 
 
 - Compatibility fix: the original Admin Provider/Vehicle assignment RPC inserts into `delivery_jobs` after the later unified migration has removed the `assigned_at` default. Its INSERT now explicitly sets `assigned_at=now()`, preserving the assignment timestamp for legacy Admin-created jobs. Verified by re-fetching the migration. Commit: `7f998239a335784e361765bc9c1e0429adb09d0b`.
+
+
+## 2026-11-14 — Buyer Demand total-price rounding correction
+
+- Static review found that a total-price Seller quotation could lose cents when divided into a two-decimal unit price before Order conversion (example: BDT 100 / 3 units became BDT 99.99).
+- Added `commerce_orders.source_offer_total` to the staged Buyer Demand conversion migration. Buyer Demand Order `grand_total` now uses the exact agreed goods subtotal plus delivery charge; other order types retain the quantity × unit-price fallback.
+- Original total-price quotes are prorated against the original quoted availability and rounded once to currency precision. Negotiated per-unit counter-offers continue to calculate subtotal from quantity × unit price.
+- Updated Buyer and Seller order SELECTs and delivery-charge breakdowns to display the exact source subtotal when present.
+- Commits: migration `84d97644765dbcc08b63f3309a0d193f6d2f3826`; frontend `db24dec3314dee3b5b26f9b25e8bd229009ba1ec`; Buyer progress note `3404a66e7dfa528bdc93d3f77df67a45d0eb2501`.
+- Re-fetched both code files and verified the exact-total column, generated-total formula, proportional calculation, INSERT mapping, both order queries and both UI breakdowns. Arithmetic spot-checks: 100/3 at 3 units = 100.00; 2 units = 66.67; +5 delivery = 105.00.
+- Static verification only. No SQL execution, disposable DB, browser or order E2E test. This does not clear the outstanding migration version collision or release gate.
