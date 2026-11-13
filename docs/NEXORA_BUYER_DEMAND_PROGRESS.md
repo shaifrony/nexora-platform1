@@ -155,3 +155,18 @@ No database schema, migration, hosted Supabase project, production deployment or
 
 - This section supersedes earlier statements in this document that described quotation acceptance/counter-offer/order conversion as unimplemented. The staged UI and migration now include these actions and guarded RPC paths.
 - Reconciled Buyer Completion Checklist and Work Tracker to match the current source. No database changes were made.
+
+
+## 2026-11-14 — Buyer order workflow verification review
+
+### Static source review
+- Reviewed the full Buyer/Seller quotation UI paths and the negotiation/order migration sections.
+- Confirmed staged server-side checks for active Buyer/Seller role, Buyer Demand ownership, assigned Seller identity, open Demand, offer expiry, latest-proposal turn-taking, positive quantity/price, Seller availability ceiling, unique Commerce Order per source offer, and role/status-guarded order transitions.
+- Confirmed `seller_offer_negotiations` is RLS-enabled, authenticated SELECT is participant-scoped, and direct table privileges are limited to SELECT; mutation is routed through RPCs.
+- Confirmed `commerce_orders.grand_total` is generated from quantity × unit price + delivery charge.
+- Found and fixed a misleading Buyer success message: Buyer acceptance creates a pending order awaiting Seller confirmation (not an immediately accepted order). Code commit: `db377422c117cab4bf9acf851da9e1407e21cb08`.
+
+### Verification limits / NOT PASS
+- No SQL execution, migration replay, Disposable Database, live JWT/PostgREST/RLS, concurrency, or browser E2E test was run. These remain BLOCKED by the known migration version collision and lack of a complete trusted local schema/runtime; no hosted writes permitted.
+- Latest GitHub Actions run available at review time was GitHub Pages build/deployment for earlier commit `77a31085e01746ec6fcd4030dd3b07c9e8c64bd2` (success); it is not a Buyer test suite and does not cover the later Buyer message fix.
+- Do not label the Buyer module fully tested or complete. Static source review only.
