@@ -299,3 +299,8 @@ The eight foundation tables and ten selected public/private function definitions
 The user has only an Android/Termux device; Supabase CLI and Docker are absent. Do not ask them to install Docker CLI as a workaround: a Docker Engine is not available through that alone. Recovery is continuing through the already connected Supabase database tool using catalog-only SELECT queries. The evidence JSON now contains the 22 public relations, public/private function inventory, public/private view definitions, policy/trigger counts, and all 24 live migration version/name entries.
 
 This is a structured catalog snapshot, not a full schema-only SQL export. Remaining evidence includes complete function bodies for non-foundation routines, grants and default privileges, extension/version metadata, and a verified local/disposable rehearsal route. Keep all queries metadata-only; never inspect user rows, chat contents, auth identities or storage object records. No remote writes, migrations, deployment or migration-history repair are authorized.
+
+
+### Addendum — Expanded metadata capture
+
+The Android-only read-only path has now captured all 37 public/private function definitions, 578 table-grant entries, 68 routine-grant entries, 136 default-privilege ACL entries, and five extension/version records. The evidence file was fetched and parsed after the update to verify these sections were committed. This remains a structured recovery snapshot rather than a complete schema-only dump; full Auth/Storage DDL, role attributes/membership, event triggers and restore-order validation remain outstanding.
