@@ -1517,7 +1517,7 @@
       '<label>Product Description *<textarea name="description" required>'+esc(p.description||"")+'</textarea></label>'+
       '<label>Origin *<input name="origin" required value="'+esc(p.origin||"")+'"></label>'+
       '<label>Specifications & Quality<textarea name="specifications">'+esc(p.specifications_quality||"")+'</textarea></label>'+
-      '<div class="grid"><label>MOQ *<input name="minimum_order_quantity" type="number" min="1" step="0.001" required value="'+esc(p.minimum_order_quantity||1)+'"></label><label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক)<textarea name="price_tiers" placeholder="100=95">'+(p.price_tiers||[]).map(t=>esc(t.min_quantity+"="+t.unit_price)).join("\\n")+'</textarea></label></div><p class="muted">Retail পণ্যের MOQ ১।</p>'+
+      '<div class="grid"><label>MOQ *<input name="minimum_order_quantity" type="number" min="1" step="0.001" required value="'+esc(p.minimum_order_quantity||1)+'"></label><label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক)<textarea name="price_tiers" placeholder="100=95">'+(p.price_tiers||[]).map(t=>esc(t.min_quantity+"="+t.unit_price)).join("\n")+'</textarea></label></div><p class="muted">Retail পণ্যের MOQ ১।</p>'+
       '<div class="grid"><label>মূল্য *<input name="price" type="number" min="0.01" step="0.01" required value="'+esc(p.price)+'"></label>'+
       '<label>Currency *<select name="currency" required>'+currencyOptions+'</select></label></div>'+
       '<div class="form-actions"><button class="primary" type="submit">'+(requestMode?'পরিবর্তন Admin Review-এ পাঠান':'পরিবর্তন সংরক্ষণ')+'</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
