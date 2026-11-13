@@ -1,31 +1,15 @@
--- Separate marketplace sale channel from the product's own taxonomy.
+-- Unified product Marketplace: no Wholesale/Retail sale-channel field.
 -- Staged on nexora-development only; do not apply to the hosted database without approval.
 begin;
 
-alter table public.products
-  add column if not exists market_category text not null default 'wholesale';
-
--- Existing products with no sale-type value are backfilled as Wholesale; every
--- new listing must explicitly select its own sale type in the Product Listing form.
-update public.products set market_category='wholesale' where market_category is null;
-alter table public.products alter column market_category set not null;
-alter table public.products alter column market_category drop default;
-
-alter table public.products
-  drop constraint if exists products_market_category_check;
-alter table public.products
-  add constraint products_market_category_check
-  check (market_category in ('wholesale','retail'));
-
-create index if not exists products_market_category_status_created_idx
-  on public.products (market_category, listing_status, created_at desc);
+-- Product category is taxonomy only; public visibility is governed by approval and RLS.
 
 drop policy if exists products_owner_approved_or_admin_read on public.products;
 drop policy if exists products_public_approved_read on public.products;
 -- Public visitors may read only the approved listing projection columns.
 -- Sensitive ownership/review columns (seller_id, reviewed_by, admin_note) remain unavailable.
 grant select (
-  id,product_code,slug,product_name,category,market_category,
+  id,product_code,slug,product_name,category,
   image_urls,description,origin,specifications_quality,price,currency,
   listing_status,business_id,created_at
 ) on public.products to anon;
@@ -154,10 +138,7 @@ with check (
 );
 
 revoke update on public.products from authenticated;
-grant update (product_name,category,market_category,image_urls,description,origin,specifications_quality,price,currency) on public.products to authenticated;
+grant update (product_name,category,image_urls,description,origin,specifications_quality,price,currency) on public.products to authenticated;
 grant update (listing_status,admin_note,reviewed_by,reviewed_at,updated_at) on public.products to authenticated;
-
-comment on column public.products.market_category is
-  'Sale channel selected per listing: wholesale or retail. Separate from product taxonomy category.';
 
 commit;
