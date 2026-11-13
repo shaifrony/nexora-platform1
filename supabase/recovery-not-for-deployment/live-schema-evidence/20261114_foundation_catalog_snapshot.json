@@ -10223,7 +10223,8 @@
       "20261114130000_listing_edit_history.sql": "c59326a1ab87029b635422e1e8d4ba4d5fb0e321",
       "20261114150000_product_inventory_moq_quantity_pricing.sql": "8e490581efbd7435ae63a034f7cf6a44fc7a8086",
       "20261114160000_demand_inbox_quotations_subcategories.sql": "993682b0b0e14891fa1c0a13ea5492836713ee89",
-      "20261114210000_porter_public_registration_and_review.sql": "20d3fdae2c46b71531690e990791082d8f2e4a9c"
+      "20261114210000_porter_public_registration_and_review.sql": "20d3fdae2c46b71531690e990791082d8f2e4a9c",
+      "supabase/migrations/20261114120000_listing_edit_review_workflow.sql": "6d819581363b209c85fe0326226433f6729a2886"
     },
     "schema_alignment": [
       "Buyer/Seller profile sale-category columns are not created; obsolete columns/constraint are dropped if present.",
@@ -10231,7 +10232,8 @@
       "Listing edit/review/history no longer validate, update or snapshot product sale category.",
       "Retail-specific MOQ=1 restriction removed; seller-defined MOQ and price tiers remain.",
       "Buyer Demand matching, routing trigger and index use product category/subcategory and approved Seller/business state only.",
-      "Porter registration profile insert no longer expects buyer_category or seller_categories."
+      "Porter registration profile insert no longer expects buyer_category or seller_categories.",
+      "Listing review migration consolidated to one complete transaction; orphaned duplicate function fragments removed and currency/price regex validation repaired."
     ],
     "retained": "Retail/Wholesale terms in transport delivery modes are distinct logistics service concepts, not product Marketplace segmentation.",
     "verification": {
@@ -10244,7 +10246,16 @@
       "browser_runtime_tested": false,
       "disposable_database_rehearsal": false,
       "live_database_changed": false,
-      "profile_category_references_are_explicit_cleanup_only": true
+      "profile_category_references_are_explicit_cleanup_only": true,
+      "listing_review_migration_static_structure": {
+        "begin_count": 1,
+        "commit_count": 1,
+        "function_definition_count": 4,
+        "dollar_quote_pairs": 2,
+        "rpc_quote_pairs": 2,
+        "malformed_currency_regex": false,
+        "sql_runtime_tested": false
+      }
     },
     "safety": "Source-only edits on nexora-development. No Live SQL/migrations, user rows, main, Production or deployment changes."
   }
