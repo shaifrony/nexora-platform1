@@ -55,10 +55,14 @@ Status: **Implementation review in progress — not complete**
 ## 4. এখনো সমাধান/পরীক্ষা বাকি
 
 ### B-01 — Auth trigger ও migration chain
-- [ ] Final `public.handle_new_user()` definition-এ Buyer-এর legacy category NULL এবং Seller-এর legacy categories empty থাকে নিশ্চিত করা।
-- [ ] Google/Facebook OAuth Buyer-only এবং user-editable metadata দিয়ে privileged role নেওয়া অসম্ভব—final trigger-এ যাচাই।
-- [ ] Porter ও Seller registration migration-এর সঙ্গে trigger conflict নেই—পূর্ণ migration order-এ যাচাই।
-- [ ] Buyer account Admin approval ছাড়াই ব্যবহারযোগ্য, কিন্তু inactive/suspended account blocked—পরীক্ষা।
+- [x] Final staged `public.handle_new_user()` definition Buyer-এর legacy category NULL এবং Seller-এর legacy categories empty রাখে; legacy Buyer/Seller category metadata profile-এ সংরক্ষণ করে না।
+- [x] Social OAuth provider-কে Buyer-only করা হয়েছে—শুধু Google/Facebook নয়, email/phone ছাড়া যেকোনো provider Buyer হবে। Backend role allowlist শুধু Buyer/Seller/Porter; user-editable metadata দিয়ে Admin/Director role তৈরি করা যায় না।
+- [x] Porter registration profile-কে pending করে এবং আলাদা pending `porter_account_reviews` row তৈরি করে; Admin approval workflow আলাদা।
+- [x] Buyer ও Seller signup profile active হয়; Seller public listing/business visibility আলাদা Admin approval gate-এ থাকে।
+- [x] Trigger function SECURITY DEFINER, empty search_path এবং PUBLIC/anon/authenticated EXECUTE revoke যোগ করা হয়েছে।
+- [x] Frontend source review: signup role allowlist Buyer/Seller/Porter; Google/Facebook UI Buyer-only; non-active account sign-out, pending Porter exception সহ।
+- [ ] Local B-01 alignment/regression script চালিয়ে SQL trigger behavior, OAuth provider normalization, metadata ignore, role allowlist ও function ACL পরীক্ষা: `supabase/recovery-not-for-deployment/local-setup/23_local_buyer_auth_trigger_alignment_tests.sql`.
+- [ ] Real Supabase Auth signup/confirmation, JWT, hosted trigger attachment, RLS and browser E2E পরীক্ষা; migration history reconcile না হওয়া পর্যন্ত deploy নয়।
 
 ### B-02 — Product visibility ও sale-type integrity
 - [x] Buyer signup ও Dashboard থেকে account-level Wholesale/Retail selector সরানো হয়েছে।
