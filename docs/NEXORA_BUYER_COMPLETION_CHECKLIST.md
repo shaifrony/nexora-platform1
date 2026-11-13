@@ -256,3 +256,11 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Run on a suitable Linux/macOS host after model access, exact revisions and dependency environment are prepared; do not run on Android phone.
 - [ ] Two bilingual reviewers validate references and score outputs; record latency, peak memory, critical-token errors and package versions.
 - **Status:** source preparation complete; runner not executed/runtime-tested. No model winner or quality score claimed; automatic translation remains disabled.
+
+
+## 15. Colab inference execution option
+- [x] Add phone-friendly Colab notebook `notebooks/NEXORA_BN_EN_Model_Pilot.ipynb`.
+- [x] Notebook uses synthetic corpus only, secure hidden Hugging Face token prompt, per-session immutable checkpoint SHA pinning and CSV download.
+- [ ] User/operator must accept gated model access conditions and run the notebook on available free Colab resources.
+- [ ] Review CSV with two bilingual reviewers and record critical errors, quality and runtime.
+- **Status:** notebook prepared, not executed. Free Colab resources are not guaranteed; no paid compute or production translation enabled.
