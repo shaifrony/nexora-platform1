@@ -48,3 +48,9 @@ Buyer sees received quotations in the Buyer Dashboard, including price, model, c
 - No push notification, SMS or email alert is sent yet; new inbox items appear when Seller Dashboard refreshes/loads.
 - Matching depends on Sellers maintaining accurate Product Category and Subcategory fields.
 - No browser end-to-end test or hosted migration execution has been performed.
+
+
+## Local Demand fixture validation path (not hosted)
+- For a focused local test only, use fixtures 06 + 21 followed by local Demand fixture 25, read-only audit 24 and transactional behavior tests 26 via runner 27.
+- This is a reconstructed minimum test schema. It is not the complete app schema or a recovered migration. Do not deploy or move it into `supabase/migrations/`.
+- Local tests cannot establish actual hosted Supabase Auth/JWT/PostgREST/RLS behavior. Buyer quotation acceptance/counter-offer/order conversion remain future work.
