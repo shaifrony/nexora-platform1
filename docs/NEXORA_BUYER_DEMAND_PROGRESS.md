@@ -2,6 +2,15 @@
 
 Updated: 2026-11-13
 
+## Current status (2026-11-14)
+
+- Buyer Demand → Seller quotation → Buyer/Seller counter-offer → acceptance/rejection → source-linked Commerce Order → order status transitions is implemented in staged frontend and migration source.
+- Server-side source checks include active Buyer/Seller role, Demand ownership / assigned Seller, latest-proposal turn-taking, positive quantity and price, offer expiry, open Demand status, and role/state-guarded order transitions.
+- Buyer acceptance creates a pending order for Seller confirmation. Seller acceptance of the Buyer’s latest counter-offer creates an accepted order and records an accepted event.
+- Buyer and Seller order cards display delivery-inclusive `grand_total`, with a delivery-charge breakdown when non-zero.
+- Syntax-only JavaScript checks and isolated required-date/order-total logic checks are documented as passed. No SQL runtime, full-schema isolated migration rehearsal, hosted JWT/PostgREST/RLS, concurrency, or browser E2E test has passed for this workflow. The local installed-contract audit is staged but cannot yet run against the current limited reconstructed fixture.
+- Therefore this is **source implementation complete for the core Demand negotiation path, integration verification pending**; it is not a completed/released Buyer module.
+
 ## Scope
 
 This document records the current Buyer Demand implementation inspected on the `nexora-development` branch. It is a code review snapshot, not a hosted deployment or runtime test report.
@@ -140,3 +149,9 @@ No database schema, migration, hosted Supabase project, production deployment or
 
 - After the order-card markup update, parsed the complete `marketplace.js` source with a JavaScript V8 compiler check (syntax-only; code not executed): PASS. Separately compiled both Buyer and Seller order-card render expressions: PASS. This does not replace browser/runtime or Supabase integration testing. Final order-card markup repair commit: `d839546f4a8cf602ab2da350f3989e5e8a8848ca`.
 - Ran small synthetic logic checks for the required-date rule (today/future accepted; past/empty rejected) and delivery-inclusive totals (including zero delivery and fractional quantities): all cases passed. These are isolated logic checks, not browser or database integration tests.
+
+
+## 2026-11-14 — Current negotiation and order implementation status
+
+- This section supersedes earlier statements in this document that described quotation acceptance/counter-offer/order conversion as unimplemented. The staged UI and migration now include these actions and guarded RPC paths.
+- Reconciled Buyer Completion Checklist and Work Tracker to match the current source. No database changes were made.
