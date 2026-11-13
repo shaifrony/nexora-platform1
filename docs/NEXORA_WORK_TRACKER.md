@@ -493,3 +493,13 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Reviewed Buyer/Seller quotation UI and `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql`: source includes active-role and participant checks, open-demand and expiry checks, negotiation turn-taking, quantity/price validation, unique source-offer order index, participant-scoped negotiation-history RLS, generated delivery-inclusive order total, and guarded Buyer/Seller order transitions.
 - Corrected Buyer acceptance toast to state the newly created order awaits Seller confirmation; code commit `db377422c117cab4bf9acf851da9e1407e21cb08`.
 - Verification is static source review only. No SQL runtime, disposable DB, hosted JWT/PostgREST/RLS, concurrency or browser E2E tests ran. Existing GitHub Pages workflow success is not a Buyer test suite. Migration collision and absent trusted complete local DB baseline remain blockers. No Live/Production/main changes.
+
+
+## 2026-11-14 — Migration version collision source audit
+- Re-fetched and inspected both complete SQL files sharing version `20261114180000`; confirmed distinct Git blob SHAs and distinct feature scopes (product-linked private conversations vs unified delivery assignment).
+- Product inquiry migration depends on existing conversation/participant/message and product/business/profile foundations; Live catalog audit shows its new product-context fields/indexes and RPC behavior are pending.
+- Unified delivery assignment depends on delivery job/event base, provider/vehicle and network partner/staff foundations, Admin AAL2 permission helpers and Commerce Orders. The required delivery/commerce relations are absent from the inspected Live catalog; this file cannot be treated as independently runnable.
+- The dependency audit does not prove which migration should retain the shared version or justify a replacement timestamp. No timestamp invented; no migration renamed, deleted, rewritten or executed.
+- Reviewed current Supabase CLI v3 migration guidance: migration files should be generated with `supabase migration new`; v3 database commands target local by default and hosted changes require explicit `--remote` plus confirmation. CLI/runtime remains unavailable here, so no migration repair command is possible or safe.
+- Reconfirmed the two exact duplicate-content pairs remain unchanged pending full ledger reconciliation and a documented archive disposition.
+- Recovery Plan section 22.4 records the detailed source/dependency audit. Verification remains static source + previously inspected catalog metadata only; no SQL runtime, disposable DB, JWT/RLS, PostgREST or E2E tests. No Live writes, private data reads, paid services, `main`, Production or DNS changes.
