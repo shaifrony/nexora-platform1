@@ -208,7 +208,7 @@ BEGIN
     RAISE EXCEPTION 'FAIL: public RPC wrapper must be SECURITY INVOKER';
   END IF;
   IF NOT (SELECT prosecdef FROM pg_proc WHERE oid='private._rpc_review_role_request_core(uuid,text,text)'::regprocedure)
-     OR NOT (SELECT prosecdef FROM pg_proc WHERE oid='private._rpc_review_profile_change_request(uuid,text,text)'::regprocedure) THEN
+     OR NOT (SELECT prosecdef FROM pg_proc WHERE oid='private._rpc_review_profile_change_request_core(uuid,text,text)'::regprocedure) THEN
     RAISE EXCEPTION 'FAIL: private RPC core must be SECURITY DEFINER';
   END IF;
   IF has_table_privilege('authenticated','public.role_requests','UPDATE')
