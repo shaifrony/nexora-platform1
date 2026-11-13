@@ -2,6 +2,9 @@
 -- Staged on nexora-development only. Do not apply to hosted DB without explicit approval.
 begin;
 
+grant select (minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers)
+  on public.products to anon;
+
 alter table public.products
   add column if not exists minimum_order_quantity numeric(18,3) not null default 1,
   add column if not exists stock_tracking boolean not null default false,
