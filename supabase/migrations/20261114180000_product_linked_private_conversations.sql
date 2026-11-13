@@ -126,6 +126,13 @@ begin
     values
       (v_conversation_id, v_user_id, v_user_id, 'accepted', now()),
       (v_conversation_id, v_product.seller_id, v_user_id, 'pending', null);
+
+    -- Store the optional first inquiry message only when a new thread is created.
+    -- The Buyer is already accepted; the invited Seller cannot read/send until accepting.
+    if v_message <> '' then
+      insert into public.messages (conversation_id, sender_id, body, message_type)
+      values (v_conversation_id, v_user_id, v_message, 'text');
+    end if;
   end if;
 
   if v_conversation_id is null then
@@ -153,5 +160,37 @@ $$;
 
 revoke all on function public.create_product_inquiry(uuid, text) from public, anon;
 grant execute on function public.create_product_inquiry(uuid, text) to authenticated;
+
+
+-- Keep product identity and the original public-price snapshot immutable after creation.
+-- Ordinary participants may update conversation status/title, but cannot rewrite its context.
+create or replace function private.guard_product_conversation_context()
+returns trigger
+language plpgsql
+set search_path = ''
+as $
+begin
+  if old.context_type = 'product' and (
+    new.context_type is distinct from old.context_type
+    or new.context_product_id is distinct from old.context_product_id
+    or new.context_seller_id is distinct from old.context_seller_id
+    or new.context_product_slug is distinct from old.context_product_slug
+    or new.context_product_name is distinct from old.context_product_name
+    or new.context_product_image_url is distinct from old.context_product_image_url
+    or new.context_product_price is distinct from old.context_product_price
+    or new.context_product_currency is distinct from old.context_product_currency
+  ) then
+    raise exception 'Product conversation context is immutable' using errcode = '42501';
+  end if;
+  return new;
+end;
+$;
+
+revoke all on function private.guard_product_conversation_context() from public, anon, authenticated;
+
+drop trigger if exists conversations_guard_product_context on public.conversations;
+create trigger conversations_guard_product_context
+before update on public.conversations
+for each row execute function private.guard_product_conversation_context();
 
 commit;
