@@ -1,4 +1,5 @@
 -- NEXORA LOCAL B-03 BUYER DEMAND PRIVACY / ROUTING CATALOG AUDIT
+-- Current fixture companion: 25_local_buyer_demand_fixture.sql
 -- READ-ONLY: no schema, data, grants, or policies are changed.
 -- Run only on local nexora_test after the complete Marketplace migrations are rehearsed.
 -- This script is NOT a migration and must never be run against Live Supabase.
