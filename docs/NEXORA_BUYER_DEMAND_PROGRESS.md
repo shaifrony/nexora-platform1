@@ -75,3 +75,12 @@ No database schema, migration, hosted Supabase project, production deployment or
 - The local database currently has only the limited product/business visibility fixture, not the full Demand/offer/inbox schema. No full local Demand workflow test has run.
 - Added and ran read-only catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. User output: `SKIP: full Marketplace Demand schema is not installed in this local database`; script completed with ROLLBACK and made no changes. This is neither PASS nor FAIL; the existing local fixture intentionally contains only business/product visibility objects.
 - No migration was applied; Live Supabase, Production and `main` remain untouched.
+
+
+## 2026-11-13 — Local B-03 Demand fixture authored
+
+- Added `supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql`: a guarded, reconstructed local-only schema for Buyer Demands, Seller Offers, Seller Inbox, safe public Demand projection, RLS and category/subcategory routing triggers. Requires local fixtures 06 and 21. It refuses any database except `nexora_test` and refuses existing Demand objects.
+- Added `26_local_buyer_demand_behavior_tests.sql`: transactional test data is rolled back. Covers anonymous safe projection and denial of Buyer ID/private tables; Buyer ownership; Seller Inbox scoping; Wholesale + Retail matching; late product-match routing; offer submission and buyer read; unmatched Seller denial; direct inbox write denial; duplicate quotation; spoofed Buyer ID; past required date.
+- Added `27_run_local_buyer_demand_tests_termux.sh`: one-command runner with local DB/schema/session preflight. Runs fixture 25, read-only audit 24, then behavior tests 26. It performs no cleanup and no migration replay.
+- Fixture is a deliberately limited reconstruction, not the original complete production schema. It tests local PostgreSQL policy/trigger logic only; not actual Supabase Auth, JWT validation, PostgREST, Storage, Realtime, Edge Functions, MFA/AAL2 or browser E2E.
+- User has not run the new runner yet; no B-03 local test PASS claimed. No active migration executed, no Hosted Supabase/Production/main changed.
