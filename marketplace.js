@@ -363,6 +363,12 @@
         id = "accountSection";
       }
     }
+    if (id === "transportProviderCenter" &&
+        !(signedIn() && ["buyer","seller","porter"].includes(role) && profile()?.account_status === "active")) {
+      const hint = $("nxCurrent");
+      if (hint) hint.textContent = "Transport Provider Center ব্যবহার করতে সক্রিয় Buyer, Seller অথবা Admin-অনুমোদিত Porter অ্যাকাউন্ট প্রয়োজন।";
+      id = "accountSection";
+    }
     if (requiredRole && !access[requiredRole]) {
       const hint = $("nxCurrent");
       const roleLabel = requiredRole === "buyer" ? "Buyer" : requiredRole === "seller" ? "Seller" : "Porter";
@@ -1438,7 +1444,7 @@
       return;
     }
     host.innerHTML = '<p><strong>আপনার Porter Account সক্রিয় ও অনুমোদিত।</strong></p>' +
-      '<p class="muted">Transport &amp; Logistics বিভাগের Provider ও Vehicle যাচাই সম্পন্ন হলে Delivery Job বরাদ্দের ব্যবস্থা চালু হবে। বর্তমানে পুরোনো Porter job-table ব্যবহার করা হচ্ছে না, তাই কোনো অসমর্থিত কাজ বা তথ্য দেখানো হচ্ছে না।</p>';
+      '<p class="muted">Transport Provider Center থেকে ব্যক্তি-ভিত্তিক Provider Profile এবং Vehicle নিবন্ধন করুন। Provider ও প্রতিটি Vehicle Admin অনুমোদনের পরই Delivery Assignment-এর যোগ্য হবে। পুরোনো Porter job-table ব্যবহার করা হচ্ছে না।</p>';
   }
 
 
