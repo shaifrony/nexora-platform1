@@ -70,7 +70,6 @@ declare
   v_price numeric(18,2);
   v_currency text;
   v_order_id uuid;
-  v_market_category text;
 begin
   if v_buyer is null then raise exception 'Login required' using errcode='42501'; end if;
   if not exists(select 1 from public.profiles p where p.id=v_buyer and p.role='buyer' and p.account_status='active') then
@@ -82,14 +81,11 @@ begin
   end if;
   if p_listing_type='product' then
     if p_quantity is null or p_quantity<=0 or p_quantity>100000000 then raise exception 'Invalid product quantity' using errcode='22023'; end if;
-    select pr.seller_id,pr.price,pr.currency,pr.market_category
-      into v_seller,v_price,v_currency,v_market_category
+    select pr.seller_id,pr.price,pr.currency
+      into v_seller,v_price,v_currency
     from public.products pr join public.public_businesses b on b.business_id=pr.business_id
     where pr.id=p_listing_id and pr.listing_status='approved';
     if not found then raise exception 'Approved product not found'; end if;
-    if not exists(select 1 from public.profiles p where p.id=v_buyer and p.buyer_category=v_market_category) then
-      raise exception 'Switch to the matching Buyer category before ordering' using errcode='42501';
-    end if;
   elsif p_listing_type='service' then
     if p_quantity is distinct from 1 then raise exception 'Service booking quantity must be one'; end if;
     select s.seller_id,s.price_amount,s.currency into v_seller,v_price,v_currency
