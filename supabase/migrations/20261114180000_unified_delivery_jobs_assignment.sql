@@ -83,8 +83,20 @@ begin
     or p_package_count not between 1 and 10000
     or p_delivery_mode not in ('retail','wholesale')
     or length(btrim(coalesce(p_pickup_address,''))) not between 5 and 1000
-    or length(btrim(coalesce(p_delivery_address,''))) not between 5 and 1000 then
-   raise exception 'Invalid delivery request details' using errcode='22023';
+    or length(btrim(coalesce(p_pickup_city,''))) not between 2 and 120
+    or length(btrim(coalesce(p_pickup_country,''))) not between 2 and 120
+    or length(btrim(coalesce(p_delivery_address,''))) not between 5 and 1000
+    or length(btrim(coalesce(p_delivery_city,''))) not between 2 and 120
+    or length(btrim(coalesce(p_delivery_country,''))) not between 2 and 120
+    or length(coalesce(p_external_reference,''))>120
+    or length(coalesce(p_pickup_contact_name,''))>150
+    or length(coalesce(p_pickup_contact_phone,''))>40
+    or length(coalesce(p_recipient_contact_name,''))>150
+    or length(coalesce(p_recipient_contact_phone,''))>40
+    or length(coalesce(p_special_instructions,''))>2000
+    or (p_delivery_deadline is not null and p_requested_pickup_at is not null
+        and p_delivery_deadline<p_requested_pickup_at) then
+   raise exception 'Invalid delivery request details or pickup/delivery schedule' using errcode='22023';
  end if;
  if p_commerce_order_id is not null and not exists(
    select 1 from public.commerce_orders o where o.id=p_commerce_order_id
