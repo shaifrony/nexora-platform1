@@ -555,3 +555,26 @@ A further source-to-catalog comparison inspected the current SQL bodies for the 
 4. Maintain all source changes on `nexora-development`; no Live writes, no paid branch, no Production or `main` changes.
 
 **No SQL migration was applied. No user data was read.**
+
+
+## 18. Product-linked private conversation migration — branch/live comparison
+
+Read-only inspection was repeated on the current branch and Live catalog.
+
+- Current verified branch HEAD before this documentation change: `3dc6b5be89254b978e864d23fbf16dedd11beef5`.
+- Branch source `20261114180000_product_linked_private_conversations.sql` (blob `10816b40e1ca6a7352fe8cccab8be7ccabe8013c`) contains the newer product-context columns, constraints, unique active-thread index, inquiry function and immutable-context trigger.
+- Live `public.conversations` currently has **zero** columns matching `context_%`, zero matching context constraints and zero product-context indexes.
+- Live private `create_product_inquiry(uuid,text)` remains the earlier implementation: it creates a generic direct conversation, adds Buyer and pending Seller participants, but does not store product context or an optional first message.
+- Live public wrapper is SECURITY INVOKER; execute privilege observed for authenticated and not anon. Private implementation is SECURITY DEFINER with empty search_path; execute privilege observed for authenticated and not anon.
+- The branch source additionally validates an active Seller profile, snapshots product context, prevents duplicate active product threads and writes an optional first message only for a newly created thread. These behaviors are **not yet present in Live**.
+- Live conversation RLS metadata currently allows authenticated conversation reads for creator/member/invited users and updates for member/creator; private membership helpers use `auth.uid()`. This is metadata inspection only, not JWT/RLS behavioral testing.
+
+### Assessment
+
+This migration is genuinely pending on Live at the product-context object level; it must not be classified as already applied merely because a similarly named function exists. The shared version `20261114180000` remains a hard blocker because the delivery-assignment migration also uses that version. Do not run either file, rename either file manually, or repair migration history in Live.
+
+### Static review notes
+
+The branch SQL includes explicit function revokes/grants, `SECURITY DEFINER SET search_path = ''`, an authenticated-only public invoker wrapper, active Buyer and Seller checks, approved product/business checks, and immutable product-context fields. Static review cannot prove PostgreSQL parser acceptance, concurrent uniqueness behavior, message RLS acceptance, or runtime transaction behavior. These require an isolated PostgreSQL/Supabase test environment.
+
+No Live writes, schema changes, migration-history repairs, private message reads, user-row reads, or storage-content reads were performed.
