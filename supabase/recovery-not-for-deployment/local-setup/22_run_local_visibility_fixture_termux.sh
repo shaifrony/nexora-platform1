@@ -17,7 +17,7 @@ for file in \
   20_dual_market_visibility_read_only_verification.sql
 do
   echo "Downloading $file ..."
-  curl -fL --retry 3 "$BASE_URL/$file?cachebust=7b8a1bdbc4638895fc7dd4019215c657e2751d4b" -o "$file"
+  curl -fL --retry 3 "$BASE_URL/$file?cachebust=426c9f1a34412d7898b1887d07db380cc12cd4f3" -o "$file"
   if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
     GRANT_LINE="$(grep -n "^DELETE FROM public.admin_permission_grants$" "$file" | cut -d: -f1 || true)"
     STAFF_LINE="$(grep -n "^DELETE FROM public.admin_staff$" "$file" | cut -d: -f1 || true)"
@@ -29,8 +29,14 @@ do
       echo "No SQL has been executed."
       exit 1
     fi
-    echo "Verified cleanup DELETE order:"
-    grep -n "^DELETE FROM" "$file"
+    if ! grep -Fqx '\set ON_ERROR_STOP on' "$file" ||
+       ! grep -Fqx '\pset pager off' "$file"; then
+      echo "STOP: cleanup SQL has invalid psql meta-command escaping."
+      echo "No SQL has been executed."
+      exit 1
+    fi
+    echo "Verified cleanup DELETE order and psql commands:"
+    grep -nE '^(\\set|\\pset|DELETE FROM)' "$file"
   fi
 done
 
