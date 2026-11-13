@@ -152,3 +152,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Runner final output: `LOCAL B-03 DEMAND BEHAVIOR TESTS PASSED; ALL TEST DATA ROLLED BACK`; all runner steps completed. Test data rolled back.
 - B-03 local reconstructed fixture logic is complete for these covered cases. Hosted Supabase JWT/RLS/PostgREST, Data API, Storage/Realtime/Edge Functions and browser E2E remain pending; no production readiness claim.
 - No migrations deployed/applied; Live Supabase, Production and `main` untouched.
+
+
+## 2026-11-13 — Product-linked private Buyer/Seller Conversations staged
+- Added staged migration source `supabase/migrations/20261114180000_product_linked_private_conversations.sql`: conversation context fields store Product ID, Seller ID, Product slug/name, first image, and price/currency snapshot. Product context remains on the private conversation row protected by existing conversation participant RLS.
+- Updated `private.create_product_inquiry` so an active Buyer can create or reopen the same active Product thread for that Buyer + Seller + Product without duplicate conversations; the invited Seller receives the same conversation and must accept the invitation before messaging/calling, consistent with existing consent rules.
+- Updated `chat.js`, `index.html`, and `style.css`: both Buyer and Seller see the same product-linked thread in Chat List with product image, product name, counterpart name, original price snapshot, latest message preview, invitation state, and direct Product Page link. Opening the thread shows a persistent Product Context header and Product Page link.
+- The conversation stores a price snapshot for context; it does not overwrite the public Product price. A changed public listing price remains controlled by the Product listing, while past negotiation/order records retain their own agreed terms.
+- General non-product conversations remain supported. Existing historical conversations are not guessed or retroactively attached to a Product where no reliable Product ID exists.
+- Source-level review only. No local SQL/browser test has been run for this change. New migration is staged only; do not apply until migration history reconciliation and isolated rehearsal. Live Supabase, Production, and `main` remain untouched.
