@@ -10,7 +10,7 @@
     "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
   })[c]);
   const activeAccount = () => Boolean(user()?.id &&
-    ["buyer","seller"].includes(profile()?.role) &&
+    ["buyer","seller","porter"].includes(profile()?.role) &&
     profile()?.account_status === "active");
   const say = (message, ok=false) => {
     const node=$("nxTransportMessage");
@@ -113,7 +113,7 @@
   async function loadProviders() {
     const host=$("nxTransportProviderList");
     if(!host) return;
-    if(!activeAccount()){host.textContent="সক্রিয় Buyer বা Seller অ্যাকাউন্টে লগইন করুন।";return;}
+    if(!activeAccount()){host.textContent="সক্রিয় Buyer, Seller অথবা অনুমোদিত Porter অ্যাকাউন্টে লগইন করুন।";return;}
     if(!db()){host.textContent="Database connection পাওয়া যায়নি।";return;}
     host.textContent="আপনার Provider আবেদন লোড হচ্ছে…";
     const uid=user().id;
@@ -135,7 +135,7 @@
 
   $("nxTransportProviderForm")?.addEventListener("submit",async event=>{
     event.preventDefault();
-    if(!activeAccount()) return say("সক্রিয় Buyer বা Seller অ্যাকাউন্ট প্রয়োজন।");
+    if(!activeAccount()) return say("সক্রিয় Buyer, Seller অথবা অনুমোদিত Porter অ্যাকাউন্ট প্রয়োজন।");
     const form=event.currentTarget, f=new FormData(form);
     const payload={
       owner_user_id:user().id,
