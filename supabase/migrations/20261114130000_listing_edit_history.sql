@@ -121,7 +121,8 @@ create trigger listing_edit_request_event_log
 after insert or update of status on public.listing_edit_requests
 for each row execute function private.log_listing_edit_request_event();
 
-revoke all on function private.snapshot_listing_before_edit_request() from public,anon,authenticated;\nrevoke all on function private.log_listing_edit_request_event() from public,anon,authenticated;
+revoke all on function private.snapshot_listing_before_edit_request() from public,anon,authenticated;
+revoke all on function private.log_listing_edit_request_event() from public,anon,authenticated;
 
 comment on table public.listing_edit_request_events is
   'Append-only audit timeline of Seller listing change submissions and Admin decisions, including before/after JSON snapshots.';
