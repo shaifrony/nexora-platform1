@@ -222,3 +222,18 @@ Only after Gates A–D pass should a separate change request be presented. It mu
 **Not approved / not safe yet:** applying migrations to live Supabase, modifying live migration history, deploying to production, changing `main`, or creating a paid development branch.
 
 The recovery objective is to establish one auditable, repeatable migration path without guessing at missing historical SQL or risking the live NEXORA database.
+
+
+## 14. Recovery package created (2026-11-13)
+
+A recovery package has now been added to `supabase/recovery-not-for-deployment/` on `nexora-development`. It contains 11 SQL files, but these are **not** represented as 11 original historical files:
+
+- Ten files are clearly labelled catalog-based reconstruction drafts.
+- One SQL body for open-demand publication was recovered from GitHub commit `e468347c43e9a88d17504fca7c5ed8304aaa8374`; however, the repository source is timestamped `20261112153000` while live history records `20261112153453`. The body is source-recovered, but the exact original 153453 file is not.
+- The package README records source classification and the read-only catalog evidence used.
+
+All 12 package files (README plus 11 SQL drafts) were fetched back from GitHub and verified to exist on `nexora-development`.
+
+**Critical:** The recovery directory is outside `supabase/migrations/` and must stay there until a separate review. No draft was executed. No live migration history, schema, data, grants, policies, production branch or deployment was changed.
+
+Package index: `supabase/recovery-not-for-deployment/README.md`.
