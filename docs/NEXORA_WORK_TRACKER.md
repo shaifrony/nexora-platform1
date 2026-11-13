@@ -251,3 +251,11 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Re-fetched the changed migration and audit file from GitHub to confirm the source changes are present.
 - Full isolated migration rehearsal is not safe yet: no trusted original foundation schema export/baseline is present in the branch, and current local fixtures are reconstructed rather than production-equivalent. The new audit will SKIP if its prerequisite workflow is not installed; it does not create schema or data.
 - No SQL was executed and no Live Supabase, Production, `main`, DNS or deployment was changed. Workflow remains pending actual local PostgreSQL behavior tests, hosted JWT/PostgREST/RLS tests and browser E2E.
+
+## 2026-11-14 — Live schema recovery evidence
+
+- Read-only inspection of the connected NEXORA Supabase project confirmed PostgreSQL 17.11, 22 public relations (20 tables + 2 views), RLS enabled on all 20 tables, five non-internal public triggers, 37 public/private functions and 24 live migration-history entries.
+- Captured exact catalog metadata for eight foundational tables and ten related functions in supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json. This includes columns/defaults, constraints, indexes, policies, triggers and selected function definitions; no user rows were exported.
+- This narrows the baseline recovery blocker but does not equal a full schema-only dump or original historical SQL. All ACL/default privileges, complete Auth/Storage customizations, and remaining functions still need a complete export and review.
+- Next: obtain a schema-only export locally, preserve credentials only on the user's device, compare live objects against branch migrations, then rehearse selected migrations only on a disposable local database.
+- No Live Supabase schema/data/history changed; no migration executed; no main, Production, DNS or deployment changed.
