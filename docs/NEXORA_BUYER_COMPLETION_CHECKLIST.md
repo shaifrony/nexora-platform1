@@ -218,3 +218,13 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Implement structured translation for negotiation, Demand, Order and Delivery/Porter notifications.
 - [ ] Run provider quality tests, local SQL/RLS tests, real JWT/PostgREST, Realtime and browser/mobile E2E across all four roles after migration history reconciliation.
 - Automatic translation remains disabled. No provider, key, consent toggle or Edge Function was configured; no SQL or browser test was run. No Live Supabase, Production, DNS or `main` changed.
+
+## 11. Multilingual Chat — provider evaluation
+- [x] Shared language preference and private translation-cache foundation staged (not deployed).
+- [x] Provider research recorded: Argos has Bengali/Arabic ↔ English packages; direct Bangla ↔ Arabic availability is not established; pivot route requires quality testing.
+- [x] NLLB-200 distilled 600M excluded from production selection pending compatible commercial licensing (current model card is CC-BY-NC and research-only).
+- [ ] Confirm a self-hosting target and operating cost before running Argos; no always-free hosting assumed.
+- [ ] Build consented bilingual pilot set and human-review Bangla ↔ Arabic/English quality, especially commercial facts and negation.
+- [ ] Only after provider + privacy approval: implement disabled-by-default server-side adapter, JWT/accepted-participant checks, cache writes, rate limits, fallback and original/translation toggle.
+- [ ] Verify structured negotiation, Demand, Order and Porter events without translating numeric/identifier fields; run local, hosted JWT/RLS and browser/mobile E2E tests.
+- **Current status:** automatic translation remains disabled; no provider has been configured and no external private chat text has been transmitted.
