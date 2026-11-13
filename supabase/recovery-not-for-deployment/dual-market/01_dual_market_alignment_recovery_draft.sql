@@ -17,6 +17,11 @@
 --   products.market_category. A later migration must be verified before this draft
 --   can be adapted. This script deliberately aborts if the column is absent.
 -- - Existing profile CHECK constraint names are discovered dynamically.
+-- - BLOCKER: current Seller product INSERT and listing-edit RPC paths still consult
+--   profiles.seller_categories. This draft empties that field for Sellers, so the
+--   Seller phase must revise those policies/RPCs before this draft can ever be used.
+-- - BLOCKER: verify the exact hosted auth.users provider metadata column and trigger
+--   attachment; do not assume the local fixture matches Supabase Auth.
 -- - Run only against a disposable local reconstruction after reviewing every section.
 
 BEGIN;
