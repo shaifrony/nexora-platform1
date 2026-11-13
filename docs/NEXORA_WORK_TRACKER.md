@@ -467,3 +467,13 @@ Recovery Plan section 21 commit: `3e66c30d4653d7ab2c963449adc713f97dc36f2a`.
 - Current environment still lacks Supabase CLI, Docker Engine and local PostgreSQL; therefore no SQL runtime/parser or disposable database test is claimed.
 
 Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
+
+
+## 2026-11-14 — Buyer Demand focused source audit and date guard
+
+- Rechecked the Buyer Demand frontend path and staged SQL contract: required-by date form → Buyer Demand creation/dashboard/public projection → Seller Inbox/quotation → Buyer/Seller counter-offers → source-linked Commerce Order → Buyer/Seller order transitions.
+- Confirmed Buyer/Seller action wiring uses `respond_to_demand_offer`; server-side checks cover active Buyer/Seller role, ownership/assignment, latest proposal turn, positive terms, offer expiry and open Demand. Order status RPC applies role/ownership and state-transition checks.
+- Confirmed Buyer Demand public projection does not request Buyer identity/contact fields, and the required date is mapped to `required_date` and displayed in Buyer/Seller views.
+- Added client-side local-date minimum and past-date rejection to the Demand form; DB constraint remains authoritative. Code commit: `90b923e63877f30952296f768e805ed7c93132ff`.
+- Buyer Demand progress note commit: `42f27d2d6ed61693235c54d2645204027573597a`.
+- Limits: source inspection only. No browser/JS runtime, SQL runtime, disposable DB, hosted JWT/PostgREST/RLS or E2E verification. No SQL migration executed; Live Supabase, Production, `main`, DNS and paid services unchanged.
