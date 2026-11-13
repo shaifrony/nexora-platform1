@@ -1395,6 +1395,10 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <label>অথবা বাইরের Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label>
         <textarea name="images" placeholder="https://example.com/image.jpg"></textarea>
 
+        <div class="grid"><label>Minimum Order Quantity (MOQ) *<input name="minimum_order_quantity" type="number" min="1" step="0.001" value="1" required></label><label>Stock Management *<select name="stock_tracking"><option value="false">স্টক সীমাহীন / ট্র্যাক করব না</option><option value="true">স্টক ট্র্যাক করব</option></select></label></div>
+        <label>বর্তমান স্টক (Stock Tracking চালু করলে আবশ্যক)<input name="stock_quantity" type="number" min="0" step="0.001" placeholder="যেমন: 500"></label>
+        <label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক; প্রতি লাইনে পরিমাণ=একক মূল্য)<textarea name="price_tiers" placeholder="100=95&#10;500=90"></textarea></label>
+        <p class="muted">উদাহরণ: ১০০ বা তার বেশি নিলে প্রতি ইউনিট ৯৫; ৫০০ বা তার বেশি নিলে প্রতি ইউনিট ৯০। Retail পণ্যের MOQ ১।</p>
         <label>Product Description *</label>
         <textarea name="description" required></textarea>
 
