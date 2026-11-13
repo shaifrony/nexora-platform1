@@ -688,3 +688,16 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - The separate Admin-managed NEXORA Team path was also validated in an earlier disposable run: approved team partner, staff roster, job assignment and five Admin-authored tracking transitions through delivered.
 - Disposable stack and all synthetic records were stopped and destroyed. No Live database mutation, `main`, Production, DNS or paid resource was used.
 - Remaining release work: approved-vehicle assignment/availability, courier-partner operational tracking, delivery receipt OTP/digital proof, delivery charge/payment/settlement, disputes/returns, external courier APIs/webhooks, PostgREST/HTTP and browser/device E2E, and concurrency/load testing.
+
+
+## 2026-11-14 — Frontend role-routing and form smoke checks
+
+- Ran `node --check` on all seven project JavaScript files: all passed.
+- Parsed the current `index.html` with JSDOM: 13 forms, no duplicate element IDs, 68 buttons, and no empty/unlabelled buttons.
+- Public signup role selector contains exactly Buyer, Seller and Porter.
+- Product Listing form remains limited to the agreed initial information: product name, category, images, description, origin, specifications/quality, and price/currency. No MOQ, stock, supply-capacity or delivery fields were added to that initial form.
+- Buyer Demand required-date control is required; the Marketplace runtime sets its minimum to the local current date.
+- Executed auth/Marketplace/Porter/Delivery/Chat scripts in JSDOM with a synthetic Supabase client stub. Synthetic Buyer and Seller loaded their own dashboards; Seller Business Profile card was created. Pending Porter stayed out of the Porter workspace; active Porter reached it. Admin at AAL1 remained blocked from Administration; synthetic active super-admin at AAL2 reached it.
+- Attempted cross-role dashboard navigation (Buyer→Seller, Seller→Buyer, Porter→Buyer, AAL1 Admin→Administration); each unauthorized route was redirected to Account. No application JS exceptions occurred in the guarded run.
+- **Test boundary:** this was DOM/runtime smoke testing with a mocked Supabase client, not a real browser engine or authenticated Supabase API. It does not verify hosted JWT/PostgREST/RLS, Storage, Realtime, WebRTC, device behavior, or concurrency. Prior disposable SQL workflow results remain separately documented above.
+- No source code, hosted database, user data, `main`, Production, DNS or paid resource was changed in this check.
