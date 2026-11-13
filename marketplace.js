@@ -918,7 +918,7 @@
     if (!host || !publicDb) return;
     host.textContent = "প্রকাশ্য চাহিদা লোড হচ্ছে…";
     const { data, error } = await publicDb.from("public_buyer_demands")
-      .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
+      .select("id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
       .eq("demand_status", "open").order("created_at", { ascending: false }).limit(100);
     if (error) { host.textContent = "প্রকাশ্য চাহিদা লোড হয়নি: " + error.message; return; }
     state.demands = data || [];
