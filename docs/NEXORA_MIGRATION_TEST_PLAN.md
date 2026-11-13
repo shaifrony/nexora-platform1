@@ -91,3 +91,22 @@ A guarded, read-only local check was added:
 No foundational CREATE TABLE script has been invented. Exact types, defaults, constraints, RLS policies, grants, Auth trigger behavior and helper-function bodies are security-critical and cannot be recovered from column references alone. Obtain a trusted schema-only export or pre-change SQL backup before claiming exact recovery. If none exists, a separately reviewed local-only fixture may be designed, explicitly labelled as a new reconstruction rather than original schema.
 
 No Live Supabase SQL was executed and no active migration or recovery draft was applied.
+
+
+## Local-only Foundation reconstruction status (2026-11-13)
+
+The original Foundation Schema export/backup is unavailable. A new design has been resolved from the user's latest product decisions and the approved organization governance charter. This is a reconstruction, not historical recovery.
+
+Files staged under `supabase/recovery-not-for-deployment/local-setup/`:
+- `05_foundation_design_proposal.md` — resolved target contract, including public Buyer/Seller/Porter roles, wholesale-only categories, Porter account/provider/vehicle approval gates, public identity privacy, and Director → MD → Department Head → Officer governance.
+- `06_local_foundation_baseline_fixture.sql` — guarded `nexora_test`-only foundation fixture with identity, request, Admin authorization/audit and Porter account-review tables, limited local Auth trigger stub, permission helpers and RLS policies.
+- `07_foundation_smoke_tests.sql` — rollback-only tests for signup roles, approval defaults, OAuth Buyer-only behavior, rejection of public Admin/Retail signup and profile-role immutability.
+
+The fixture and tests have been authored and reviewed in the repository but have **not** been executed or syntax-tested on the user's Android PostgreSQL instance. They must be run only against `nexora_test`. Do not run active migrations or recovery drafts on top of the fixture. The hosted migration-history divergence remains unresolved.
+
+Known conflicting source files remain unchanged in this design-only stage:
+- Porter architecture and transport provider migration still contain the legacy Buyer/Seller provider-owner model.
+- Category migration still allows `retail`.
+- Public identity projection still exposes `full_name` to authenticated users.
+
+A separate remediation plan must update every dependent migration, RPC, UI flow and test before any feature replay. This fixture does not prove Supabase Auth, PostgREST, Storage, Realtime, JWT/AAL2 or Edge Function behavior.
