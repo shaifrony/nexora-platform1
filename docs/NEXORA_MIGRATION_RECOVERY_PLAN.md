@@ -504,3 +504,54 @@ The following findings compare the recorded Live migration names with the *curre
 Continue by auditing the 27 branch-only migration files against the inspected Live catalog, classifying each as pending, already represented, partial, superseded/duplicate, or blocked. Keep the two duplicate-content pairs and the `20261114180000` version collision unchanged until a supported CLI-generated repair and archive plan is available. No migration runner may be used while the collision remains.
 
 **This refresh was read-only against Live Supabase. No schema, migration history, application data, Production, or `main` was changed.**
+
+
+## 18. Branch-only migration result-object comparison — 2026-11-14
+
+A further source-to-catalog comparison inspected the current SQL bodies for the branch-only feature migrations and compared their declared tables/functions/policies with the Live public relation inventory. This remains a metadata/source audit, not a PostgreSQL rehearsal.
+
+### 18.1 Branch-only files that are not executable candidates yet
+
+| Migration / group | Source and Live evidence | Classification |
+|---|---|---|
+| `20261113100000_create_porter_delivery_workflow.sql` | File explicitly declares itself SUPERSEDED and a no-op; it describes the retired Porter-as-user/job model. | Superseded; never execute. |
+| `20261112051801` and `20261112052010` | Exact byte-identical copies of Live-applied migrations `20261112051711` and `20261112051906`, respectively. | Duplicate branch-only copies; retain evidence, do not replay. |
+| `20261112153000_publish_open_demands_without_buyer_identity.sql` | Current public demand projection and safe anon column grants are already present; Live history records the corresponding name at version `20261112153453`. | Timestamp mismatch / effect already represented at object level; do not replay or rename. |
+| `20261113235900_product_market_category.sql` | Despite its filename, current source no longer adds a sale-category column. It creates/replaces `private.create_product_inquiry`, changes product/public-business policies and grants, and changes product update privileges. Live already has a prior `private.create_product_inquiry` implementation and similar but differently named product policies. | Overlapping and potentially additive policy/grant/function change; blocked pending line-by-line reconciliation. Do not run simply because its version is absent. |
+| `20261113230000_buyer_seller_market_categories.sql` | Current source removes legacy profile category fields and changes `handle_new_user`; the current Live profile column inventory no longer contains those category fields. | Partly represented; function/trigger replacement still requires exact comparison. |
+| `20261113180000_transport_provider_vehicle_model.sql` | Declares `transport_providers` and `transport_vehicles`; neither table exists in the current Live public relation inventory. | New feature schema absent; pending candidate after dependency/security review. |
+| `20261113200000_transport_provider_admin_review.sql` | Adds/replaces provider and vehicle review functions; their target provider/vehicle tables are absent in Live. | Depends on the preceding transport schema; blocked until that migration is reviewed. |
+| `20261113220000_delivery_assignment_system.sql` | Declares `delivery_jobs` and `delivery_job_events`; neither exists in Live. | New feature schema absent; dependency prerequisite for later delivery migrations. |
+| `20261114090000_services_marketplace.sql` | Declares `service_listings`; absent in Live. | New feature schema absent; pending candidate. |
+| `20261114100000_listing_image_storage.sql` and `20261114110000_seller_listing_edit.sql` | Both alter `service_listings`; the listing image bucket `nexora-listing-images` was not found in Storage bucket metadata. | Depend on Services Marketplace; storage policy/bucket effects absent from inspected metadata. |
+| `20261114120000_listing_edit_review_workflow.sql` and `20261114130000_listing_edit_history.sql` | Declare `listing_edit_requests` and `listing_edit_request_events`; neither exists in Live. | New workflow schema absent; source has static repairs but no SQL runtime validation. |
+| `20261114130100_verified_purchase_reviews.sql` | Declares `review_purchase_eligibility` and `listing_reviews`; neither exists in Live. | New feature schema absent; depends on commerce/order model. |
+| `20261114140000_commerce_orders_and_review_completion.sql` | Declares `commerce_orders` and `commerce_order_events`; neither exists in Live. | New feature schema absent; review/commerce dependency chain required. |
+| `20261114150000_product_inventory_moq_quantity_pricing.sql` | Alters existing `products` and creates validation/inventory functions. Current Live products already have `minimum_order_quantity`, `price_unit`, and `price_negotiable`; current Live schema does not yet prove all inventory/quantity-tier objects are represented. | Partly overlapping; inspect every altered column, function and trigger before classifying or applying. Retail-specific MOQ=1 rule has already been removed from staged source. |
+| `20261114160000_demand_inbox_quotations_subcategories.sql` | Existing Live `buyer_demands` and `seller_offers` tables exist, but `buyer_demand_inbox` is absent. Source adds routing functions/triggers and taxonomy changes. | Partly overlapping; inbox/routing objects absent, existing table alterations require column-by-column reconciliation. |
+| `20261114170000_delivery_network_management.sql` | Declares `delivery_network_partners` and `delivery_network_staff`; absent in Live. | New feature schema absent; depends on transport/provider foundation. |
+| `20261114180000_product_linked_private_conversations.sql` | Existing `conversations` table is present, but the product-context columns and context guard trigger are not present in the inspected Live catalog. It also replaces `private.create_product_inquiry`. | Partial schema extension; version collision makes the entire migration sequence blocked. |
+| `20261114180000_unified_delivery_jobs_assignment.sql` | Alters `delivery_jobs` and declares `delivery_job_assignment_history`; delivery job base table is absent in Live. | Depends on delivery assignment and delivery network migrations; same version collision; blocked. |
+| `20261114190000_delivery_tracking_status_history.sql` | Declares `delivery_tracking_events`; absent in Live. | Depends on unified delivery assignment; pending after prerequisites. |
+| `20261114200000_centralized_officer_account_management.sql` | `admin_staff` exists in Live, but the branch migration's management RPC is not yet proven present/equivalent. | Partial overlap; inspect function grants, permission checks and audit effects before any future reconciliation. |
+| `20261114210000_porter_public_registration_and_review.sql` | Declares `porter_account_reviews`; absent in Live; also changes signup/profile trigger behavior. | New review schema plus sensitive signup-trigger replacement; blocked pending trigger/function and RLS audit. |
+| `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` | Declares `seller_offer_negotiations` and alters `commerce_orders`; both are absent in Live. | New negotiation/order-conversion workflow; depends on commerce orders and Demand inbox/offer schema. |
+| `20261115110000_product_price_negotiation.sql` | Declares `product_price_negotiations` and `product_price_negotiation_events`; absent in Live. | New feature schema; pending source/security review. |
+| `20261115120000_multilingual_chat_foundation.sql` | Declares `user_language_preferences` and `message_translations`; absent in Live. | New feature schema; translation remains disabled in production and must not modify original messages. |
+
+### 18.2 Key findings
+
+- Live currently has 20 public tables and 2 views. The relation inventory confirms that core Marketplace, Buyer Demand, Seller Offers, conversations and admin foundation tables exist.
+- Several later feature tables declared by branch-only migrations are absent in Live. Absence is evidence that those table effects are not currently represented; it is not, by itself, approval to run the migrations.
+- Some migrations mix new objects with changes to existing Live tables/functions/policies. Those are the highest-risk replay candidates and must be reconciled object by object.
+- The `20261113235900` source filename is now misleading: its current body no longer creates product `market_category`; it changes public visibility grants/policies and Product Inquiry RPC behavior. The current Live schema already has overlapping visibility controls and an older Inquiry RPC. Do not treat it as a simple new migration.
+- The `20261114180000` collision remains a hard stop for any migration runner. No timestamps were invented.
+
+### 18.3 Next source-only audit
+
+1. Compare the full definitions of the branch-only functions and triggers that replace existing Live objects, especially `handle_new_user`, `create_product_inquiry`, listing edit/review RPCs, demand routing, admin management and Porter review.
+2. For each partly overlapping migration, list exact pre-existing columns, constraints, policies, grants and functions, then mark each statement as already represented, additive, conflicting or absent.
+3. Keep new feature migrations in dependency order but do not apply them.
+4. Maintain all source changes on `nexora-development`; no Live writes, no paid branch, no Production or `main` changes.
+
+**No SQL migration was applied. No user data was read.**
