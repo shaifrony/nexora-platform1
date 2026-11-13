@@ -68,7 +68,7 @@ Status: **Implementation review in progress — not complete**
 - [x] Anonymous visitor-এর জন্য approved listing-এর safe column projection এবং সীমিত public Business Display Name/Location access যোগ করা হয়েছে; seller_id ও admin review fields anon-এর জন্য grant করা হয়নি।
 - [x] Product Inquiry RPC থেকে Buyer category matching gate সরানো হয়েছে।
 - [x] পরবর্তী Inventory/MOQ migration-এর Product Order RPC-তেও থাকা legacy `buyer_category = market_category` gate সরানো হয়েছে; active Buyer, approved listing/business, MOQ ও stock validation বজায় আছে।
-- [x] Local-only read-only visibility verification script তৈরি হয়েছে: `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`; এখনো চালানো হয়নি।
+- [x] Local-only read-only visibility verification script তৈরি হয়েছে: `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`; সীমিত fixture-এ চালানো হয়েছে: ৭টি catalog/policy/safe-column check PASS। Active Buyer/Seller profile ও sample listing না থাকায় account-level listing count comparison SKIP; full Marketplace schema, RPC, JWT/PostgREST ও hosted RLS এতে পরীক্ষা হয়নি।
 - [x] Buyer Demand matching থেকে Buyer/Seller account category condition সরানো হয়েছে; product category/subcategory ও approved Business Profile matching বজায় আছে।
 - [x] সর্বশেষ কার্যকর Seller listing edit/review RPC-তে account-level `seller_categories` gate নেই; per-product sale type ও commercial validation থাকে।
 - [x] Auth trigger-এ legacy Buyer/Seller account market category NULL/empty রাখা হয়েছে।
