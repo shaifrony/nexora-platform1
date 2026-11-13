@@ -728,6 +728,15 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-order-card .section-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .nx-order-card button{margin-top:9px}
 
+
+/* Unified role-based single-domain dashboard */
+.nx-admin-workspace{background:#f5f8fb;border:1px solid #e5ebf1;border-radius:18px;padding:clamp(14px,2.5vw,24px)}
+.nx-admin-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:8px 0 18px}
+.nx-admin-workspace-head h1{margin:6px 0;font-size:clamp(24px,4vw,34px);color:#17324a}
+.nx-admin-workspace-mark{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;background:#12314a;color:#fff;font-weight:900;font-size:28px}
+#administrationDashboard #nxAdmin{margin:0;border:0;box-shadow:none;padding:0;background:transparent}
+#administrationDashboard #nxAdmin>h3{display:none}
+@media(max-width:600px){.nx-admin-workspace-head{align-items:flex-start}.nx-admin-workspace-mark{width:44px;height:44px}}
 </style>
 </head>
 
@@ -740,7 +749,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
     <button type="button" onclick="showSection('servicesMarketplace')">সেবা</button>
     <button type="button" onclick="showSection('transportLogistics')">পরিবহন</button>
     <button type="button" id="nxHeaderLogin" onclick="showSection('accountSection')">Login / Register</button>
-    <button type="button" id="nxHeaderBuyerDashboard" class="hidden" onclick="showSection('buyerDashboard')">Buyer Dashboard</button>
+    <button type="button" id="nxHeaderDashboard" class="hidden" onclick="openMyDashboard()">Dashboard</button>
     <button type="button" id="nxHeaderAccount" class="hidden" onclick="showSection('accountSection')">Account</button>
     <button type="button" id="nxHeaderLogout" class="hidden" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
   </nav>
@@ -940,6 +949,12 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         </form>
       </div>
     </div>
+    
+  </section>
+
+  <!-- Protected Administration Dashboard on the same NEXORA domain -->
+  <section id="administrationDashboard" class="section hidden nx-admin-workspace">
+    <div class="nx-admin-workspace-head"><div><span class="nx-market-eyebrow">NEXORA INTERNAL WORKSPACE</span><h1 id="nxAdminWorkspaceTitle">Administration Dashboard</h1><p id="nxAdminWorkspaceSubtitle" class="muted">আপনার দায়িত্ব ও অনুমতি অনুযায়ী প্রশাসনিক কাজ।</p></div><span class="nx-admin-workspace-mark">N</span></div>
     <div id="nxAdmin" class="card hidden">
       <h3>Admin Dashboard</h3>
       <p id="nxAdminIdentity" class="muted"></p>
