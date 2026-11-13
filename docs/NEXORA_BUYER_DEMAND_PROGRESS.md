@@ -170,3 +170,14 @@ No database schema, migration, hosted Supabase project, production deployment or
 - No SQL execution, migration replay, Disposable Database, live JWT/PostgREST/RLS, concurrency, or browser E2E test was run. These remain BLOCKED by the known migration version collision and lack of a complete trusted local schema/runtime; no hosted writes permitted.
 - Latest GitHub Actions run available at review time was GitHub Pages build/deployment for earlier commit `77a31085e01746ec6fcd4030dd3b07c9e8c64bd2` (success); it is not a Buyer test suite and does not cover the later Buyer message fix.
 - Do not label the Buyer module fully tested or complete. Static source review only.
+
+
+### 2026-11-14 — Preserve exact total-price quotations during Order conversion
+
+- Static financial-flow review found a rounding defect: a Seller's total-price quotation (for example, BDT 100 for 3 units) was divided into a two-decimal unit price (BDT 33.33), so converting the full quote could create an Order subtotal of BDT 99.99.
+- Updated the staged Buyer Demand quotation/order migration to store the exact agreed goods subtotal in `commerce_orders.source_offer_total`; generated `grand_total` now uses that exact subtotal plus delivery charge. Product/service orders continue to fall back to quantity × unit price.
+- For an original total-price quotation, the accepted subtotal is prorated from the original total against the quoted available quantity and rounded once to currency precision. Counter-offers continue to use quantity × negotiated unit price.
+- Updated Buyer and Seller order queries and delivery-charge breakdowns to display `source_offer_total` when present, falling back to the legacy generated `total_price` for other orders.
+- Development-branch commits: migration `84d97644765dbcc08b63f3309a0d193f6d2f3826`; frontend `db24dec3314dee3b5b26f9b25e8bd229009ba1ec`. Both files were fetched back; source-column, generated-total, proportional-calculation, INSERT and both UI query/display references were verified.
+- Arithmetic spot-check by formula: BDT 100 / 3 units → 3 units = BDT 100.00; 2 units = BDT 66.67; adding BDT 5 delivery charge to the full quote gives BDT 105.00.
+- This is static source and arithmetic verification only. No SQL parser/runtime, migration replay, disposable DB, browser, or order E2E test was run. Keep the Buyer module marked NOT PASS until those tests are available.
