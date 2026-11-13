@@ -582,3 +582,5 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Static verification only. No SQL execution, disposable DB, browser or order E2E test. This does not clear the outstanding migration version collision or release gate.
 
 - Follow-up UI correction: untouched `price_basis='total'` quotations now display the exact total on Buyer and Seller quotation cards; order cards use the exact agreed subtotal rather than implying the rounded derived unit price multiplied by quantity is authoritative. Frontend commit: `db7368a9b05ffcedcebdaef69c0360271ca37f5b`; Buyer progress addendum: `9cef760d1b864beead8c2a6d069249d0f8ceb92b`.
+
+- Migration clarity follow-up: documented `source_offer_total` as the authoritative goods subtotal for Buyer Demand quotation orders; the legacy `total_price` remains the quantity × rounded-unit-price projection. Migration comment commit: `34a650cc702304f3d7f35b80d6e89dfc1d8a5a33`.
