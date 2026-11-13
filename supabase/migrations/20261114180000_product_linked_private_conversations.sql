@@ -172,7 +172,9 @@ as $$
 begin
   if old.context_type = 'product' and (
     new.context_type is distinct from old.context_type
-    or new.context_product_id is distinct from old.context_product_id
+    -- The FK uses ON DELETE SET NULL; allow that one-way cleanup while keeping the snapshot immutable.
+    or (new.context_product_id is distinct from old.context_product_id
+        and not (old.context_product_id is not null and new.context_product_id is null))
     or new.context_seller_id is distinct from old.context_seller_id
     or new.context_product_slug is distinct from old.context_product_slug
     or new.context_product_name is distinct from old.context_product_name
