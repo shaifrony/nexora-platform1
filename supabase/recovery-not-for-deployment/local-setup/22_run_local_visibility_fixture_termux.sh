@@ -18,6 +18,13 @@ for file in \
 do
   echo "Downloading $file ..."
   curl -fL "$BASE_URL/$file" -o "$file"
+  if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
+    if ! grep -q "DELETE FROM public.admin_permission_grants" "$file" ||
+       ! grep -q "DELETE FROM public.admin_staff" "$file"; then
+      echo "STOP: downloaded cleanup SQL is missing the corrected FK dependency order."
+      exit 1
+    fi
+  fi
 done
 
 echo
