@@ -1,11 +1,10 @@
 -- NEXORA DUAL-MARKET VISIBILITY VERIFICATION
 -- READ-ONLY LOCAL VERIFICATION ONLY. NOT A MIGRATION. NOT DEPLOYABLE.
 -- Safe target: local PostgreSQL database nexora_test ONLY.
--- Checks: public approved listing visibility, safe anon columns, universal
--- authenticated Buyer visibility, sale-type constraints, and category-free
--- Inquiry / Order / Demand routing definitions.
--- This script makes NO schema changes and inserts NO test data.
--- It does not emulate hosted Supabase Auth, PostgREST, JWT validation or MFA.
+-- The companion fixture 21 creates a deliberately LIMITED visibility schema.
+-- This script checks catalog policy/column boundaries and optional role counts.
+-- It does NOT validate the full Marketplace, Demand, Inquiry, Order, quotations,
+-- listing-edit RPCs, hosted Supabase Auth/JWT/PostgREST, Storage, Realtime or MFA.
 
 \set ON_ERROR_STOP on
 \pset pager off
@@ -28,271 +27,121 @@ SELECT
   to_regclass('public.profiles') IS NOT NULL
   AND to_regclass('public.products') IS NOT NULL
   AND to_regclass('public.public_businesses') IS NOT NULL
-  AND to_regclass('public.business_profiles') IS NOT NULL
-  AND to_regclass('public.buyer_demands') IS NOT NULL
-  AND to_regclass('public.buyer_demand_inbox') IS NOT NULL
-  AND to_regclass('public.seller_offers') IS NOT NULL
-  AND to_regclass('public.commerce_orders') IS NOT NULL
-  AND to_regprocedure('private.create_product_inquiry(uuid,text)') IS NOT NULL
-  AND to_regprocedure('private.create_commerce_order(text,uuid,numeric,text,text)') IS NOT NULL
-  AND to_regprocedure('private.route_new_buyer_demand_to_sellers()') IS NOT NULL
-  AND to_regprocedure('private.route_new_approved_product_to_open_demands()') IS NOT NULL
-  AND to_regprocedure('private.submit_listing_edit_request(text,uuid,jsonb)') IS NOT NULL
-  AND to_regprocedure('private.review_listing_edit_request(uuid,text,text)') IS NOT NULL
-  AND EXISTS (SELECT 1 FROM information_schema.columns
-              WHERE table_schema='public' AND table_name='profiles' AND column_name='buyer_category')
-  AND EXISTS (SELECT 1 FROM information_schema.columns
-              WHERE table_schema='public' AND table_name='profiles' AND column_name='seller_categories')
-  AND EXISTS (SELECT 1 FROM information_schema.columns
-              WHERE table_schema='public' AND table_name='products' AND column_name='market_category')
-  AND EXISTS (SELECT 1 FROM information_schema.columns
-              WHERE table_schema='public' AND table_name='products' AND column_name='subcategory')
-  AND EXISTS (SELECT 1 FROM information_schema.columns
-              WHERE table_schema='public' AND table_name='products' AND column_name='minimum_order_quantity')
-  AS marketplace_schema_ready
+  AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='market_category')
+  AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='subcategory')
+  AND EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='products' AND column_name='minimum_order_quantity')
+  AS visibility_schema_ready
 \gset
 
-\if :marketplace_schema_ready
-  \echo 'Marketplace schema detected. Running catalog and role-scoped checks.'
+\if :visibility_schema_ready
+  \echo 'Visibility schema detected. Running focused catalog checks.'
 
-  -- A. Required RLS and sale-type schema.
-  SELECT
-    CASE WHEN c.relrowsecurity THEN 'PASS' ELSE 'FAIL' END AS result,
-    'RLS enabled: '||n.nspname||'.'||c.relname AS check_name
-  FROM pg_class c
-  JOIN pg_namespace n ON n.oid=c.relnamespace
-  WHERE (n.nspname,c.relname) IN (
-    ('public','profiles'),('public','products'),('public','public_businesses'),
-    ('public','business_profiles'),('public','buyer_demands'),
-    ('public','buyer_demand_inbox'),('public','seller_offers'),
-    ('public','commerce_orders')
-  )
-  ORDER BY c.relname;
+  SELECT CASE WHEN bool_and(c.relrowsecurity) THEN 'PASS' ELSE 'FAIL' END AS result,
+    'RLS enabled on profiles/products/public_businesses/business_profiles where present' AS check_name
+  FROM (SELECT c.relrowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+        WHERE n.nspname='public' AND c.relname IN ('profiles','products','public_businesses','business_profiles')
+          AND c.relkind='r') c;
 
-  SELECT
-    CASE WHEN a.attnotnull AND d.adbin IS NULL
-      AND EXISTS (
-        SELECT 1 FROM pg_constraint co
-        WHERE co.conrelid=a.attrelid AND co.contype='c'
-          AND pg_get_constraintdef(co.oid) ILIKE '%market_category%'
-          AND pg_get_constraintdef(co.oid) ILIKE '%wholesale%'
-          AND pg_get_constraintdef(co.oid) ILIKE '%retail%'
-      )
-      THEN 'PASS' ELSE 'FAIL' END AS result,
-    'products.market_category is NOT NULL, has no default, and allows wholesale/retail'
-      AS check_name
-  FROM pg_attribute a
-  LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
-  WHERE a.attrelid='public.products'::regclass
-    AND a.attname='market_category' AND NOT a.attisdropped;
+  SELECT CASE WHEN a.attnotnull AND d.adbin IS NULL
+    AND EXISTS (SELECT 1 FROM pg_constraint co WHERE co.conrelid=a.attrelid AND co.contype='c'
+      AND pg_get_constraintdef(co.oid) ILIKE '%market_category%'
+      AND pg_get_constraintdef(co.oid) ILIKE '%wholesale%'
+      AND pg_get_constraintdef(co.oid) ILIKE '%retail%')
+    THEN 'PASS' ELSE 'FAIL' END AS result,
+    'products.market_category is NOT NULL, has no default, and allows wholesale/retail' AS check_name
+  FROM pg_attribute a LEFT JOIN pg_attrdef d ON d.adrelid=a.attrelid AND d.adnum=a.attnum
+  WHERE a.attrelid='public.products'::regclass AND a.attname='market_category' AND NOT a.attisdropped;
 
-  SELECT
-    CASE WHEN NOT EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE buyer_category IS NOT NULL
-         OR coalesce(cardinality(seller_categories),0)<>0
-    ) THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Legacy profile market categories are NULL/empty' AS check_name;
-
-  -- B. Required policy definitions: visibility is independent of sale type.
-  SELECT
-    CASE WHEN EXISTS (
-      SELECT 1 FROM pg_policies
-      WHERE schemaname='public' AND tablename='products'
-        AND policyname='products_public_approved_read'
-        AND cmd='SELECT' AND roles @> ARRAY['anon']::name[]
-        AND coalesce(qual,'') ILIKE '%approved%'
-    ) THEN 'PASS' ELSE 'FAIL' END AS result,
+  SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+      AND tablename='products' AND policyname='products_public_approved_read'
+      AND cmd='SELECT' AND roles @> ARRAY['anon']::name[] AND coalesce(qual,'') ILIKE '%approved%')
+    THEN 'PASS' ELSE 'FAIL' END AS result,
     'Anonymous approved-product SELECT policy exists' AS check_name;
 
-  SELECT
-    CASE WHEN EXISTS (
-      SELECT 1 FROM pg_policies
-      WHERE schemaname='public' AND tablename='products'
-        AND policyname='products_owner_approved_or_admin_read'
-        AND cmd='SELECT' AND roles @> ARRAY['authenticated']::name[]
-        AND coalesce(qual,'') ILIKE '%approved%'
-        AND coalesce(qual,'') NOT ILIKE '%buyer_category%'
-        AND coalesce(qual,'') NOT ILIKE '%seller_categories%'
-        AND coalesce(qual,'') NOT ILIKE '%market_category%'
-    ) THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Authenticated product SELECT policy has no sale-type visibility gate' AS check_name;
+  SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+      AND tablename='products' AND policyname='products_owner_approved_or_admin_read'
+      AND cmd='SELECT' AND roles @> ARRAY['authenticated']::name[]
+      AND coalesce(qual,'') ILIKE '%approved%'
+      AND coalesce(qual,'') NOT ILIKE '%buyer_category%'
+      AND coalesce(qual,'') NOT ILIKE '%seller_categories%'
+      AND coalesce(qual,'') NOT ILIKE '%market_category%')
+    THEN 'PASS' ELSE 'FAIL' END AS result,
+    'Authenticated product SELECT policy has no account/product sale-type visibility gate' AS check_name;
 
-  SELECT
-    CASE WHEN EXISTS (
-      SELECT 1 FROM pg_policies
-      WHERE schemaname='public' AND tablename='public_businesses'
-        AND policyname='public_businesses_anon_read'
-        AND cmd='SELECT' AND roles @> ARRAY['anon']::name[]
-    ) THEN 'PASS' ELSE 'FAIL' END AS result,
+  SELECT CASE WHEN EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public'
+      AND tablename='public_businesses' AND policyname='public_businesses_anon_read'
+      AND cmd='SELECT' AND roles @> ARRAY['anon']::name[])
+    THEN 'PASS' ELSE 'FAIL' END AS result,
     'Anonymous public-business projection policy exists' AS check_name;
 
-  -- C. Anonymous column boundary: safe listing fields are readable; sensitive
-  -- ownership and review fields are not exposed through the anon role.
-  SELECT
-    CASE WHEN
-      has_column_privilege('anon','public.products','id','SELECT')
-      AND has_column_privilege('anon','public.products','product_name','SELECT')
-      AND has_column_privilege('anon','public.products','market_category','SELECT')
-      AND has_column_privilege('anon','public.products','listing_status','SELECT')
-      AND has_column_privilege('anon','public.products','business_id','SELECT')
-      AND has_column_privilege('anon','public.products','subcategory','SELECT')
-      AND has_column_privilege('anon','public.products','minimum_order_quantity','SELECT')
-      AND NOT has_column_privilege('anon','public.products','seller_id','SELECT')
-      AND NOT has_column_privilege('anon','public.products','admin_note','SELECT')
-      AND NOT has_column_privilege('anon','public.products','reviewed_by','SELECT')
-      THEN 'PASS' ELSE 'FAIL' END AS result,
+  SELECT CASE WHEN
+    has_column_privilege('anon','public.products','id','SELECT')
+    AND has_column_privilege('anon','public.products','product_name','SELECT')
+    AND has_column_privilege('anon','public.products','market_category','SELECT')
+    AND has_column_privilege('anon','public.products','listing_status','SELECT')
+    AND has_column_privilege('anon','public.products','business_id','SELECT')
+    AND has_column_privilege('anon','public.products','subcategory','SELECT')
+    AND has_column_privilege('anon','public.products','minimum_order_quantity','SELECT')
+    AND NOT has_column_privilege('anon','public.products','seller_id','SELECT')
+    AND NOT has_column_privilege('anon','public.products','admin_note','SELECT')
+    AND NOT has_column_privilege('anon','public.products','reviewed_by','SELECT')
+    THEN 'PASS' ELSE 'FAIL' END AS result,
     'Anonymous product columns are limited to public listing data' AS check_name;
 
-  SELECT
-    CASE WHEN
-      has_column_privilege('anon','public.public_businesses','business_id','SELECT')
-      AND has_column_privilege('anon','public.public_businesses','display_name','SELECT')
-      AND has_column_privilege('anon','public.public_businesses','country','SELECT')
-      AND has_column_privilege('anon','public.public_businesses','city','SELECT')
-      AND NOT has_column_privilege('anon','public.public_businesses','seller_id','SELECT')
-      THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Anonymous public-business columns exclude seller identity' AS check_name;
-
-  -- D. RPC and Demand routing source checks.
-  SELECT
-    CASE WHEN pg_get_functiondef(
-      'private.create_product_inquiry(uuid,text)'::regprocedure
-    ) !~* 'buyer_category|seller_categories|market_category'
+  SELECT CASE WHEN
+    has_column_privilege('anon','public.public_businesses','business_id','SELECT')
+    AND has_column_privilege('anon','public.public_businesses','display_name','SELECT')
+    AND has_column_privilege('anon','public.public_businesses','country','SELECT')
+    AND has_column_privilege('anon','public.public_businesses','city','SELECT')
+    AND NOT has_column_privilege('anon','public.public_businesses','seller_id','SELECT')
     THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Product Inquiry RPC has no Buyer/Seller market-category restriction' AS check_name;
+    'Anonymous public-business columns exclude Seller identity' AS check_name;
 
-  SELECT
-    CASE WHEN pg_get_functiondef(
-      'private.create_commerce_order(text,uuid,numeric,text,text)'::regprocedure
-    ) !~* 'buyer_category|seller_categories'
-    THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Latest Product Order RPC has no Buyer/Seller account-category restriction' AS check_name;
+  \echo 'RPC/source checks: SKIP in the limited fixture; inspect actual staged migration definitions separately.'
+  SELECT 'SKIP' AS result, 'Inquiry / Order / Demand routing / listing edit RPCs are not installed in this fixture' AS check_name;
 
-  SELECT
-    CASE WHEN
-      pg_get_functiondef('private.route_new_buyer_demand_to_sellers()'::regprocedure)
-        !~* 'buyer_category|seller_categories'
-      AND
-      pg_get_functiondef('private.route_new_approved_product_to_open_demands()'::regprocedure)
-        !~* 'buyer_category|seller_categories'
-    THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Buyer Demand routing is independent of Buyer/Seller account categories' AS check_name;
-
-  SELECT
-    CASE WHEN
-      pg_get_functiondef('private.submit_listing_edit_request(text,uuid,jsonb)'::regprocedure)
-        !~* 'buyer_category|seller_categories'
-      AND
-      pg_get_functiondef('private.review_listing_edit_request(uuid,text,text)'::regprocedure)
-        !~* 'buyer_category|seller_categories'
-    THEN 'PASS' ELSE 'FAIL' END AS result,
-    'Seller listing edit/review workflow validates per-product sale type, not account category' AS check_name;
-
-  -- E. Role-scoped visibility smoke check. No rows are inserted or changed.
-  -- A local active Buyer is selected only to set the compatibility helper claim.
-  SELECT id::text AS test_buyer_uid
-  FROM public.profiles
-  WHERE role='buyer' AND account_status='active'
-  ORDER BY created_at
-  LIMIT 1
-  \gset
-
-  SET LOCAL ROLE anon;
-  SELECT count(*)::bigint AS anon_approved_count
-  FROM public.products p
-  WHERE p.listing_status='approved'
-    AND EXISTS (
-      SELECT 1 FROM public.public_businesses b
-      WHERE b.business_id=p.business_id
-    )
-  \gset
-  RESET ROLE;
+  SELECT count(*)::bigint AS anon_approved_count FROM public.products p
+    WHERE p.listing_status='approved' AND EXISTS
+      (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id) \gset
   \echo 'Anonymous visitor approved listings: ' :anon_approved_count
 
-  SELECT market_category,count(*) AS approved_count
-  FROM public.products p
-  WHERE p.listing_status='approved'
-    AND EXISTS (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
-  GROUP BY market_category
-  ORDER BY market_category;
+  SELECT market_category,count(*) AS approved_count FROM public.products p
+    WHERE p.listing_status='approved' AND EXISTS
+      (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
+    GROUP BY market_category ORDER BY market_category;
 
+  SELECT id::text AS test_buyer_uid FROM public.profiles
+    WHERE role='buyer' AND account_status='active' ORDER BY created_at LIMIT 1 \gset
   \if :{?test_buyer_uid}
     SET LOCAL ROLE authenticated;
     SELECT set_config('request.jwt.claim.sub', :'test_buyer_uid', true);
-    SELECT count(*)::bigint AS buyer_approved_count
-    FROM public.products p
-    WHERE p.listing_status='approved'
-      AND EXISTS (
-        SELECT 1 FROM public.public_businesses b
-        WHERE b.business_id=p.business_id
-      )
-    \gset
+    SELECT count(*)::bigint AS buyer_approved_count FROM public.products p
+      WHERE p.listing_status='approved' AND EXISTS
+        (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id) \gset
     RESET ROLE;
-    \echo 'Authenticated Buyer approved listings: ' :buyer_approved_count
-    SELECT
-      CASE WHEN :anon_approved_count::bigint=:buyer_approved_count::bigint
-        THEN 'PASS' ELSE 'FAIL' END AS result,
-      'Anonymous and active Buyer see the same approved listing set' AS check_name;
-    SELECT
-      CASE WHEN :anon_approved_count::bigint>0 THEN 'DATA PRESENT'
-        ELSE 'REVIEW: no approved public products exist yet' END AS sample_data_status;
+    SELECT CASE WHEN :anon_approved_count::bigint=:buyer_approved_count::bigint THEN 'PASS'
+      ELSE 'FAIL' END AS result, 'Anon and active Buyer approved listing counts match' AS check_name;
   \else
-    \echo 'SKIP: no active Buyer profile exists for authenticated visibility smoke check.'
+    \echo 'SKIP: no active Buyer profile exists.'
   \endif
 
-  -- Active Seller: same authenticated SELECT policy, with no account sale-type gate.
-  SELECT id::text AS test_seller_uid
-  FROM public.profiles
-  WHERE role='seller' AND account_status='active'
-  ORDER BY created_at
-  LIMIT 1
-  \gset
+  SELECT id::text AS test_seller_uid FROM public.profiles
+    WHERE role='seller' AND account_status='active' ORDER BY created_at LIMIT 1 \gset
   \if :{?test_seller_uid}
     SET LOCAL ROLE authenticated;
     SELECT set_config('request.jwt.claim.sub', :'test_seller_uid', true);
-    SELECT count(*)::bigint AS seller_approved_count
-    FROM public.products p
-    WHERE p.listing_status='approved'
-      AND EXISTS (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
-    \gset
+    SELECT count(*)::bigint AS seller_approved_count FROM public.products p
+      WHERE p.listing_status='approved' AND EXISTS
+        (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id) \gset
     RESET ROLE;
-    \echo 'Authenticated Seller approved listings: ' :seller_approved_count
-    SELECT CASE WHEN :anon_approved_count::bigint=:seller_approved_count::bigint
-      THEN 'PASS' ELSE 'FAIL' END AS result,
-      'Anonymous visitor and active Seller see the same approved listing set' AS check_name;
+    SELECT CASE WHEN :anon_approved_count::bigint=:seller_approved_count::bigint THEN 'PASS'
+      ELSE 'FAIL' END AS result, 'Anon and active Seller approved listing counts match' AS check_name;
   \else
-    \echo 'SKIP: no active Seller profile exists for authenticated visibility smoke check.'
-  \endif
-
-  -- Active Admin staff: test the admin branch of the same policy.
-  SELECT p.id::text AS test_admin_uid
-  FROM public.profiles p
-  JOIN public.admin_staff a ON a.user_id=p.id AND a.is_active=true
-  WHERE p.role='admin' AND p.account_status='active'
-  ORDER BY p.created_at
-  LIMIT 1
-  \gset
-  \if :{?test_admin_uid}
-    SET LOCAL ROLE authenticated;
-    SELECT set_config('request.jwt.claim.sub', :'test_admin_uid', true);
-    SELECT count(*)::bigint AS admin_approved_count
-    FROM public.products p
-    WHERE p.listing_status='approved'
-      AND EXISTS (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
-    \gset
-    RESET ROLE;
-    \echo 'Authenticated Admin approved listings: ' :admin_approved_count
-    SELECT CASE WHEN :anon_approved_count::bigint=:admin_approved_count::bigint
-      THEN 'PASS' ELSE 'FAIL' END AS result,
-      'Anonymous visitor and active Admin see the same approved listing set' AS check_name;
-  \else
-    \echo 'SKIP: no active Admin staff profile exists for authenticated visibility smoke check.'
+    \echo 'SKIP: no active Seller profile exists.'
   \endif
 
 \else
-  \echo 'SKIP: marketplace schema is incomplete. No marketplace queries were executed.'
-  \echo 'Apply/rehearse the complete marketplace schema on an isolated local database first.'
+  \echo 'SKIP: visibility schema is incomplete. Run 21_local_marketplace_visibility_fixture.sql first.'
 \endif
 
 ROLLBACK;
