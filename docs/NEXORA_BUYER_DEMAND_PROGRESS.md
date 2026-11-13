@@ -117,3 +117,11 @@ No database schema, migration, hosted Supabase project, production deployment or
 - The audit script has not been executed because the local reconstructed fixtures do not include the complete commerce-order/negotiation schema and functions. No PostgreSQL client/runtime is available in this execution environment.
 - Full-chain rehearsal is blocked safely: the branch lacks a trusted original foundation DDL/schema-only export for prerequisite profiles, Admin/Auth and related objects, and existing local fixtures are explicitly reconstructed, not production-equivalent. Replaying active migrations on those fixtures would create misleading results. Do not run the active migration chain until a trusted baseline and migration-history reconciliation are available.
 - No migration SQL was executed; no Live Supabase, Production, `main`, DNS or deployment changed.
+
+
+## 2026-11-14 — Unified product matching alignment
+
+- Removed product Wholesale/Retail sale-type dependency from the Buyer Demand inbox workflow. New approved-product routing, open-demand backfill, matching index and trigger now use product category/subcategory plus active Seller and approved public-business status.
+- Listing change request payload validation, Admin approval updates and before/after snapshots no longer require or store product `market_category`.
+- This preserves universal product visibility and Seller-specific pricing/quantity terms; demand matching is based on product taxonomy, not a retail/wholesale channel.
+- Static source review only. No SQL was run, and no local/hosted E2E tests are claimed.
