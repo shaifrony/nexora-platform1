@@ -1,6 +1,8 @@
 -- NEXORA LOCAL REVIEW RPC TESTS
 -- Run only after 06_local_foundation_baseline_fixture.sql and 12_local_review_rpc_prototype.sql.
 -- SAFE TARGET: nexora_test ONLY. ALL TEST DATA IS ROLLED BACK.
+-- The public RPC wrappers must be invoker; private implementation cores are definer.
+-- Running this script as local superuser does NOT simulate authenticated RLS/ACL enforcement.
 -- Does not validate real Supabase Auth/JWT/PostgREST/MFA or hosted ownership semantics.
 \set ON_ERROR_STOP on
 \pset pager off
@@ -188,14 +190,26 @@ BEGIN
     RAISE EXCEPTION 'FAIL: expected 4 audit records, found %',v_audit_count;
   END IF;
 
-  -- Function ACL and no direct UPDATE grants.
+  -- Public wrapper ACL/security mode and private core ACL/security mode.
   IF has_function_privilege('anon','public.rpc_review_role_request(uuid,text,text)','EXECUTE')
-     OR has_function_privilege('anon','public.rpc_review_profile_change_request(uuid,text,text)','EXECUTE') THEN
-    RAISE EXCEPTION 'FAIL: anon can execute review RPC';
+     OR has_function_privilege('anon','public.rpc_review_profile_change_request(uuid,text,text)','EXECUTE')
+     OR has_function_privilege('anon','private._rpc_review_role_request_core(uuid,text,text)','EXECUTE')
+     OR has_function_privilege('anon','private._rpc_review_profile_change_request_core(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: anon can execute a review RPC or private core';
   END IF;
   IF NOT has_function_privilege('authenticated','public.rpc_review_role_request(uuid,text,text)','EXECUTE')
-     OR NOT has_function_privilege('authenticated','public.rpc_review_profile_change_request(uuid,text,text)','EXECUTE') THEN
-    RAISE EXCEPTION 'FAIL: authenticated cannot execute review RPC';
+     OR NOT has_function_privilege('authenticated','public.rpc_review_profile_change_request(uuid,text,text)','EXECUTE')
+     OR NOT has_function_privilege('authenticated','private._rpc_review_role_request_core(uuid,text,text)','EXECUTE')
+     OR NOT has_function_privilege('authenticated','private._rpc_review_profile_change_request_core(uuid,text,text)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: authenticated lacks intended review RPC/core EXECUTE';
+  END IF;
+  IF (SELECT prosecdef FROM pg_proc WHERE oid='public.rpc_review_role_request(uuid,text,text)'::regprocedure)
+     OR (SELECT prosecdef FROM pg_proc WHERE oid='public.rpc_review_profile_change_request(uuid,text,text)'::regprocedure) THEN
+    RAISE EXCEPTION 'FAIL: public RPC wrapper must be SECURITY INVOKER';
+  END IF;
+  IF NOT (SELECT prosecdef FROM pg_proc WHERE oid='private._rpc_review_role_request_core(uuid,text,text)'::regprocedure)
+     OR NOT (SELECT prosecdef FROM pg_proc WHERE oid='private._rpc_review_profile_change_request(uuid,text,text)'::regprocedure) THEN
+    RAISE EXCEPTION 'FAIL: private RPC core must be SECURITY DEFINER';
   END IF;
   IF has_table_privilege('authenticated','public.role_requests','UPDATE')
      OR has_table_privilege('authenticated','public.profile_change_requests','UPDATE')
@@ -210,4 +224,5 @@ $tests$;
 ROLLBACK;
 
 \echo '=== LOCAL REVIEW RPC TESTS PASSED; ALL TEST DATA ROLLED BACK ==='
-\echo 'These tests validate only local PostgreSQL fixture behavior, not Supabase Auth/JWT/PostgREST/RLS integration or MFA/AAL2.';
+\echo 'These tests validate local function logic and catalog ACL metadata only; local superuser execution bypasses real authenticated RLS/ACL behavior.'
+\echo 'They do not validate Supabase Auth/JWT/PostgREST, private-schema exposure settings, or MFA/AAL2.';
