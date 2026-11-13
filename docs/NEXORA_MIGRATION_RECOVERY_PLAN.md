@@ -331,7 +331,7 @@ Anon SELECT is granted only on `public_buyer_demands`; products and `public_busi
 
 Correction: the previous anon access summary considered only table-level grants. Catalog inspection shows explicit column-level SELECT grants for anon on selected product fields and public-business fields. Product RLS allows only approved listings belonging to a public business; public_businesses is a safe projection with business_id, display_name, country, city. Sensitive product columns such as seller_id, reviewed_by, reviewed_at and admin_note are not granted to anon. Public Buyer Demand projection omits buyer_id. This is structural evidence that guest Marketplace read is enabled for selected columns; still requires HTTP/API behavior testing.
 
-Migration inventory: branch contains 40 SQL files and 39 unique migration versions; Live history has 24 entries. Thirteen version/name pairs match; 27 branch-only files (26 unique versions); 11 Live-only entries. Two pairs are exact duplicate SQL contents: versions 20261112051711 and 20261112051801; versions 20261112051906 and 20261112052010. Two unrelated migrations share version 20261114180000, which must be resolved to unique timestamps before running the migration chain. Do not run or repair history remotely.
+Migration inventory at the time of this snapshot: branch contained 40 SQL files and 39 unique migration versions; Live history had 24 entries. After the audited archive cleanup documented in section 22.5, the active migration directory contains 38 SQL files and 37 unique versions; 13 version/name pairs match; 25 branch-only files (24 unique versions); 11 Live-only entries. The two exact duplicate-content copies with versions 20261112051801 and 20261112052010 have been moved byte-for-byte outside the active migration directory. Two unrelated migrations still share version 20261114180000; do not run the migration chain until this collision is repaired through a supported CLI workflow. Do not repair history remotely.
 
 Current Live catalog contains evidence for several effects from Live-only migrations: product pricing columns; anon approved-product RLS; safe column-level anon grants; public-business anon projection; private SECURITY DEFINER/public SECURITY INVOKER public-business helper; cancelled account status constraint; AAL2-enforcing admin helper functions; and a security-invoker Buyer Demand projection without buyer_id. Object-level presence does not establish exact SQL equivalence or migration reproducibility.
 
@@ -464,14 +464,15 @@ A new read-only metadata inspection was performed after verifying the current br
 
 - Branch: `nexora-development`
 - Latest HEAD: `bc008ceb4e8f1906c3359f70bc1fccd2322bda45`
-- Branch migration files: 40
-- Unique migration versions: 39
+- Branch migration files at snapshot time: 40
+- Unique migration versions at snapshot time: 39
+- Current active migration directory after section 22.5: 38 SQL files / 37 unique versions
 - Live migration-history entries: 24
 - Matching version/name pairs: 13
-- Branch-only files: 27 (26 unique versions)
+- Branch-only files at snapshot time: 27 (26 unique versions); current after section 22.5: 25 (24 unique versions)
 - Live-only entries: 11
 - Duplicate version collision: `20261114180000` (two different migrations)
-- Exact duplicate-content pairs: two pairs, each confirmed by identical Git blob SHA.
+- Exact duplicate-content pairs at snapshot time: two pairs, each confirmed by identical Git blob SHA. The redundant branch-only copies were subsequently archived outside the active migration directory; see section 22.5.
 
 ### 17.2 Live-only migration effect comparison
 
@@ -738,3 +739,26 @@ Both files were re-fetched from `nexora-development` and their complete SQL bodi
 **Duplicate-content pairs:** the two pairs in section 22.3 remain byte-identical according to their previously recorded matching Git blob SHAs. They are redundant branch sources, but deleting one now could remove an auditable historical source or affect branch migration ordering. Keep them unchanged until the full local/Live ledger reconciliation determines a safe archive disposition.
 
 **Verification scope:** complete source inspection and existing catalog/dependency evidence only. No SQL parser/runtime, local DB, disposable DB, migration runner, PostgREST/RLS/JWT or browser E2E test was run. No Live writes, user data access, paid service, `main`, Production or DNS change.
+
+### 22.5 Audited archive of exact duplicate migration copies (2026-11-14)
+
+A fresh fetch of the four relevant migration paths confirmed two pairs of byte-identical SQL blobs. In each pair, the earlier canonical migration version is present in the Live migration history, while the later duplicate version is branch-only:
+
+| Active canonical migration | Archived redundant copy | Shared Git blob SHA | Live ledger evidence |
+|---|---|---|---|
+| `20261112051711_update_conversation_timestamp_on_message.sql` | `20261112051801_update_conversation_timestamp_on_message.sql` | `2e053e7bf7b47c089e70218c2b2397686cf153dc` | 51711 is recorded; 51801 is not recorded |
+| `20261112051906_fix_conversation_insert_returning_visibility.sql` | `20261112052010_fix_conversation_insert_returning_visibility.sql` | `bd3d3d323c81d9d265f927ffa8affca4eeb1d974` | 51906 is recorded; 52010 is not recorded |
+
+**Disposition performed on `nexora-development`:**
+- Copied the later duplicate files byte-for-byte into `supabase/recovery-not-for-deployment/archived-duplicate-migrations/`.
+- Re-fetched each archive and verified its Git blob SHA exactly matches its original source SHA.
+- Only after that verification, removed the two redundant copies from `supabase/migrations/`, leaving the canonical earlier migration active.
+- No SQL content was rewritten. The active canonical migrations remain unchanged.
+
+**Why this is a safe source-tree cleanup:** the later files contain exactly the same SQL as the earlier files, not a second independent feature. The earlier versions are the ones recorded in the Live ledger. The active migration sequence therefore retains the same SQL effect once, while the archived copies preserve the exact historical source for audit. The first migration replaces the message timestamp trigger; the second replaces the conversation participant-read policy. Both SQL bodies are rerunnable in the narrow sense that they drop/recreate the named trigger/policy and replace the same function/policy definition, but the cleanup relies on exact byte identity and the Live ledger pairing—not on a claim that arbitrary migrations are idempotent.
+
+**Updated inventory:** active migration directory now has 38 files and 37 unique versions; 13 matching version/name pairs; 25 branch-only files representing 24 unique versions; 11 Live-only entries. The unrelated version collision `20261114180000` remains, so migration execution is still blocked. No migration runner, SQL execution, migration-history repair or Live write was performed.
+
+**Remaining hard blocker:** the two distinct migrations `20261114180000_product_linked_private_conversations.sql` and `20261114180000_unified_delivery_jobs_assignment.sql` still share a version. Do not guess a replacement timestamp or rename either file by hand. The environment has no Supabase CLI or local database runtime; wait until a supported CLI environment can generate the new unique version and an isolated rehearsal can validate the complete chain.
+
+**Verification limits:** GitHub source-tree fetch and blob-SHA comparison only. No PostgreSQL parser/runtime, disposable database, PostgREST/JWT/RLS, Storage or browser E2E tests were run. No Live schema/data/history, `main`, Production, DNS or paid service was changed.
