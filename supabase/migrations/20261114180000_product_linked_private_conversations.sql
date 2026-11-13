@@ -168,7 +168,7 @@ create or replace function private.guard_product_conversation_context()
 returns trigger
 language plpgsql
 set search_path = ''
-as $
+as $$
 begin
   if old.context_type = 'product' and (
     new.context_type is distinct from old.context_type
@@ -184,7 +184,7 @@ begin
   end if;
   return new;
 end;
-$;
+$$;
 
 revoke all on function private.guard_product_conversation_context() from public, anon, authenticated;
 
