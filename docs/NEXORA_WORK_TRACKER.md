@@ -62,7 +62,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
 - [x] Update Product Listing form and insert/edit paths so Seller selects Wholesale or Retail for each product; MOQ and price-tier semantics remain subject to a separate business decision.
 - [x] Product/Service listing, image upload and editing foundation exists; dual-market edit and visibility alignment pending.
-- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 added but not run; full Demand schema absent from local fixture; JWT/PostgREST/E2E and quotation acceptance remain pending.
+- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 executed on nexora_test and SKIP confirmed full Demand schema absent; no changes made; JWT/PostgREST/E2E and quotation acceptance remain pending.
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
 - [ ] E2E, mobile and accessibility.
@@ -126,3 +126,11 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Source review confirms public Demand view omits Buyer identity/contact, Buyer owner-scoped policies, Seller inbox-only open Demand access, direct inbox writes revoked, quotation insert restricted to own open inbox Demand, and required_date NOT NULL/non-past.
 - Buyer quotation acceptance/counter-offer/order conversion remain unimplemented. Real JWT/PostgREST/RLS and browser E2E remain pending.
 - No migration applied; no Hosted Supabase, Production or `main` changed.
+
+
+## 2026-11-13 — B-03 local audit result
+- User executed `24_local_buyer_demand_privacy_audit.sql` on `nexora_test`.
+- Output: `SKIP: full Marketplace Demand schema is not installed in this local database`; DO completed, transaction rolled back, no database changes.
+- This is an expected scope limitation: local fixture 21 creates only business/product visibility tables. It does not create `buyer_demands`, `seller_offers`, `buyer_demand_inbox` or Demand routing functions. Do not mark Demand runtime/security checks as passed.
+- Marked the catalog audit execution complete but retained full Demand schema/JWT/PostgREST/browser tests as pending.
+- Marked the old Buyer-category-gated dual-market recovery draft SUPERSEDED / DO NOT EXECUTE and corrected stale README descriptions of Wholesale-Only and Buyer category gates.
