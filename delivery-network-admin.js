@@ -53,10 +53,38 @@
           <button class="primary" type="submit">কর্মী সংরক্ষণ করুন</button>
         </form>
         <div id="nxDeliveryStaffList" class="muted">কর্মীর তালিকা লোড হচ্ছে…</div>
+        <hr>
+        <h5>নতুন Delivery Request তৈরি</h5>
+        <form id="nxNetworkJobForm" class="card">
+          <div class="grid">
+            <label>Delivery Type *<select name="delivery_mode"><option value="retail">Retail</option><option value="wholesale">Wholesale</option></select></label>
+            <label>Package Description *<input name="package_description" minlength="3" maxlength="1000" required></label>
+            <label>Package Count *<input name="package_count" type="number" min="1" max="10000" value="1" required></label>
+            <label>Order / Shipment Reference<input name="external_reference" maxlength="120"></label>
+          </div>
+          <h5>Pickup</h5><div class="grid">
+            <label>Contact Name<input name="pickup_contact_name" maxlength="150"></label>
+            <label>Phone<input name="pickup_contact_phone" maxlength="40"></label>
+            <label>Address *<input name="pickup_address" minlength="5" maxlength="1000" required></label>
+            <label>City *<input name="pickup_city" maxlength="120" required></label>
+            <label>Country *<input name="pickup_country" value="Bangladesh" maxlength="120" required></label>
+          </div>
+          <h5>Buyer Delivery</h5><div class="grid">
+            <label>Receiver Name<input name="recipient_contact_name" maxlength="150"></label>
+            <label>Receiver Phone<input name="recipient_contact_phone" maxlength="40"></label>
+            <label>Address *<input name="delivery_address" minlength="5" maxlength="1000" required></label>
+            <label>City *<input name="delivery_city" maxlength="120" required></label>
+            <label>Country *<input name="delivery_country" value="Bangladesh" maxlength="120" required></label>
+          </div>
+          <button class="primary" type="submit">Unassigned Delivery Request তৈরি করুন</button>
+        </form>
+        <h5>Delivery Request & Assignment Queue</h5>
+        <div id="nxNetworkJobsList" class="muted">Delivery Job লোড হচ্ছে…</div>
       </section>`);
     $("nxDeliveryNetworkRefresh")?.addEventListener("click", load);
     $("nxDeliveryPartnerForm")?.addEventListener("submit", savePartner);
     $("nxDeliveryStaffForm")?.addEventListener("submit", saveStaff);
+    $("nxNetworkJobForm")?.addEventListener("submit", createJob);
     ready = true;
   }
 
@@ -89,6 +117,7 @@
       <div class="form-actions">${p.partner_status!=="approved"?'<button type="button" class="primary" data-partner-status="approved" data-id="'+esc(p.id)+'">Approve</button>':''}
       ${p.partner_status!=="suspended"?'<button type="button" class="danger" data-partner-status="suspended" data-id="'+esc(p.id)+'">Suspend</button>':''}</div></article>`).join(""):'<p class="muted">এখনো কোনো Team বা Partner যোগ করা হয়নি।</p>';
     sHost.innerHTML=staff.length?staff.map(s=>`<article class="offer"><strong>${esc(s.full_name)}</strong><p class="muted">${esc(s.staff_code)} · ${esc(s.contact_phone)} · ${esc(s.employment_type)} · ${esc(s.staff_status)}</p><p class="muted">${esc((s.service_cities||[]).join(", "))} · ${esc(s.vehicle_type||"")}</p></article>`).join(""):'<p class="muted">এখনো কোনো নিজস্ব কর্মী নিবন্ধিত নেই।</p>';
+    await loadJobs();
     pHost.querySelectorAll("[data-partner-status]").forEach(btn=>btn.addEventListener("click",()=>changePartnerStatus(btn)));
   }
   async function savePartner(event) {
@@ -127,6 +156,70 @@
     catch(err){message("কর্মীর তথ্য সংরক্ষণ হয়নি: "+err.message);}
     finally{btn.disabled=false;}
   }
+
+  async function createJob(event) {
+    event.preventDefault(); if(!isAdmin()) return message("Admin account প্রয়োজন।");
+    const form=event.currentTarget,f=new FormData(form);
+    const p={
+      p_external_reference:String(f.get("external_reference")||"").trim()||null,
+      p_package_description:String(f.get("package_description")||"").trim(),p_package_count:Number(f.get("package_count")),
+      p_pickup_contact_name:String(f.get("pickup_contact_name")||"").trim()||null,
+      p_pickup_contact_phone:String(f.get("pickup_contact_phone")||"").trim()||null,
+      p_pickup_address:String(f.get("pickup_address")||"").trim(),p_pickup_city:String(f.get("pickup_city")||"").trim(),
+      p_pickup_country:String(f.get("pickup_country")||"").trim(),
+      p_recipient_contact_name:String(f.get("recipient_contact_name")||"").trim()||null,
+      p_recipient_contact_phone:String(f.get("recipient_contact_phone")||"").trim()||null,
+      p_delivery_address:String(f.get("delivery_address")||"").trim(),p_delivery_city:String(f.get("delivery_city")||"").trim(),
+      p_delivery_country:String(f.get("delivery_country")||"").trim(),
+      p_requested_pickup_at:null,p_delivery_deadline:null,p_special_instructions:null,
+      p_delivery_mode:f.get("delivery_mode"),p_commerce_order_id:null
+    };
+    const btn=form.querySelector("button[type=submit]");btn.disabled=true;
+    try{const {error}=await db().rpc("create_delivery_network_job",p);if(error)throw error;form.reset();message("Unassigned Delivery Request তৈরি হয়েছে। এখন Provider assign করুন।",true);await loadJobs();}
+    catch(err){message("Delivery Request তৈরি হয়নি: "+err.message);}
+    finally{btn.disabled=false;}
+  }
+  async function loadJobs() {
+    const host=$("nxNetworkJobsList");if(!host||!db()||!isAdmin())return;
+    const [jobs,providers,vehicles,partners,staff]=await Promise.all([
+      db().from("delivery_jobs").select("id,job_reference,external_reference,package_description,package_count,pickup_address,pickup_city,pickup_country,delivery_address,delivery_city,delivery_country,job_status,delivery_mode,assignment_source,created_at").order("created_at",{ascending:false}).limit(100),
+      db().from("transport_providers").select("id,display_name,city,application_status").eq("application_status","approved").limit(200),
+      db().from("transport_vehicles").select("id,provider_id,vehicle_type,registration_number,approval_status,is_available").eq("approval_status","approved").eq("is_available",true).limit(300),
+      db().from("delivery_network_partners").select("id,partner_code,display_name,partner_kind,partner_status").eq("partner_status","approved").limit(200),
+      db().from("delivery_network_staff").select("id,partner_id,full_name,staff_status").eq("staff_status","active").limit(300)
+    ]);
+    const err=[jobs,providers,vehicles,partners,staff].find(r=>r.error);
+    if(err){host.textContent="Assignment Queue লোড হয়নি: "+err.error.message;return;}
+    const approvedProviders=providers.data||[],availableVehicles=vehicles.data||[],approvedPartners=partners.data||[],activeStaff=staff.data||[];
+    const options=(rows,label)=>rows.map(x=>'<option value="'+esc(x.id)+'">'+esc(label(x))+'</option>').join("");
+    host.innerHTML=(jobs.data||[]).length?(jobs.data||[]).map(j=>{
+      const pOpts=options(approvedProviders,p=>p.display_name+" · "+p.city);
+      const cOpts=options(approvedPartners.filter(p=>p.partner_kind==="courier_company"),p=>p.display_name);
+      const tOpts=options(approvedPartners.filter(p=>p.partner_kind==="nexora_team"),p=>p.display_name);
+      const sOpts=options(activeStaff,s=>s.full_name);
+      const vOpts=options(availableVehicles,v=>v.vehicle_type+" · "+v.registration_number);
+      return '<article class="offer" data-network-job="'+esc(j.id)+'"><div class="section-head"><strong>'+esc(j.job_reference)+'</strong><span class="tag">'+esc(j.job_status)+'</span></div><p>'+esc(j.package_description)+' · '+esc(j.package_count)+' package(s) · '+esc(j.delivery_mode)+'</p><p class="muted">Pickup: '+esc(j.pickup_city)+', '+esc(j.pickup_country)+' → Delivery: '+esc(j.delivery_city)+', '+esc(j.delivery_country)+'</p><p class="muted">'+esc(j.pickup_address)+' → '+esc(j.delivery_address)+'</p>'+
+      (["requested","assigned"].includes(j.job_status)?'<div class="grid"><label>Assignment Source<select data-field="source"><option value="independent_provider">Independent Provider</option><option value="nexora_team">NEXORA Own Team</option><option value="courier_partner">Courier Partner</option></select></label><label>Independent Provider<select data-field="provider"><option value="">Select Provider</option>'+pOpts+'</select></label><label>Vehicle (optional)<select data-field="vehicle"><option value="">No vehicle / not required</option>'+vOpts+'</select></label><label>NEXORA Team<select data-field="team"><option value="">Select Team</option>'+tOpts+'</select></label><label>Team Staff (optional)<select data-field="staff"><option value="">Select Staff</option>'+sOpts+'</select></label><label>Courier Partner<select data-field="courier"><option value="">Select Courier</option>'+cOpts+'</select></label></div><label>Assignment reason<input data-field="reason" maxlength="1000" placeholder="নতুন assignment / পরিবর্তনের কারণ"></label><button type="button" class="primary" data-assign-job="'+esc(j.id)+'">Assign / Reassign</button>':'<p class="muted">বর্তমান Assignment: '+esc(j.assignment_source||"—")+'</p>')+'</article>';
+    }).join(""):'<p class="muted">কোনো Delivery Request নেই।</p>';
+    host.querySelectorAll("[data-assign-job]").forEach(btn=>btn.addEventListener("click",()=>assignJob(btn,approvedProviders,availableVehicles,approvedPartners,activeStaff)));
+  }
+  async function assignJob(btn,providers,vehicles,partners,staff) {
+    const card=btn.closest("[data-network-job]"),get=n=>card.querySelector('[data-field="'+n+'"]')?.value||null;
+    const source=get("source"),p={p_job_id:btn.dataset.assignJob,p_assignment_source:source,
+      p_provider_id:source==="independent_provider"?get("provider"):null,
+      p_partner_id:source==="independent_provider"?null:(source==="nexora_team"?get("team"):get("courier")),
+      p_staff_id:source==="nexora_team"?get("staff"):null,
+      p_vehicle_id:source==="independent_provider"?get("vehicle"):null,
+      p_reason:get("reason")};
+    if(source==="independent_provider"&&!p.p_provider_id)return message("Independent Provider নির্বাচন করুন।");
+    if(source==="nexora_team"&&!p.p_partner_id)return message("NEXORA Own Team নির্বাচন করুন।");
+    if(source==="courier_partner"&&!p.p_partner_id)return message("Courier Partner নির্বাচন করুন।");
+    if(p.p_staff_id==="")p.p_staff_id=null;if(p.p_vehicle_id==="")p.p_vehicle_id=null;
+    btn.disabled=true;
+    try{const {error}=await db().rpc("assign_delivery_job_network",p);if(error)throw error;message("Delivery Provider assign হয়েছে।",true);await loadJobs();}
+    catch(err){message("Assignment হয়নি: "+err.message);btn.disabled=false;}
+  }
+
   window.addEventListener("nexora:auth-change",()=>{if(!isAdmin())return;mount();load();});
   const observer=new MutationObserver(()=>{if(isAdmin()){mount();load();}});
   const admin=$("nxAdmin");if(admin)observer.observe(admin,{attributes:true,attributeFilter:["class"]});
