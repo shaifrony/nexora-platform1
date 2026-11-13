@@ -242,3 +242,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Updated `docs/NEXORA_BUYER_DEMAND_PROGRESS.md` with source-review findings and outstanding verification gates.
 - Changes are staged only on `nexora-development`. No SQL migration was executed; no hosted Supabase, Live data, Production, `main`, DNS or deployment was changed.
 - Next: prepare isolated full-schema migration rehearsal and focused tests for Buyer acceptance, Seller acceptance, counter-offer turn-taking, rejection, expired offers, inactive participants, order transitions, RLS and browser flows. Do not mark this workflow Done until those tests pass.
+
+
+## 2026-11-14 — Negotiation rejection guard and isolated audit preparation
+
+- Added server-side turn-taking validation for rejection: only the participant receiving the other party's latest proposal can reject. The UI is not the security boundary.
+- Added a read-only, `nexora_test`-guarded installed-contract audit at `supabase/recovery-not-for-deployment/local-setup/29_local_buyer_demand_order_contract_audit.sql`; documented when it can safely run.
+- Re-fetched the changed migration and audit file from GitHub to confirm the source changes are present.
+- Full isolated migration rehearsal is not safe yet: no trusted original foundation schema export/baseline is present in the branch, and current local fixtures are reconstructed rather than production-equivalent. The new audit will SKIP if its prerequisite workflow is not installed; it does not create schema or data.
+- No SQL was executed and no Live Supabase, Production, `main`, DNS or deployment was changed. Workflow remains pending actual local PostgreSQL behavior tests, hosted JWT/PostgREST/RLS tests and browser E2E.
