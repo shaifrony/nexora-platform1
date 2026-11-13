@@ -62,7 +62,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
 - [x] Update Product Listing form and insert/edit paths so Seller selects Wholesale or Retail for each product; MOQ and price-tier semantics remain subject to a separate business decision.
 - [x] Product/Service listing, image upload and editing foundation exists; dual-market edit and visibility alignment pending.
-- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 executed on nexora_test and SKIP confirmed full Demand schema absent; no changes made; JWT/PostgREST/E2E and quotation acceptance remain pending.
+- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 initially SKIPped because the limited fixture lacked Demand tables. Added local-only Demand fixture 25, behavior tests 26 and one-command Termux runner 27; user execution pending. JWT/PostgREST/E2E and quotation acceptance remain pending.
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
 - [ ] E2E, mobile and accessibility.
@@ -134,3 +134,10 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - This is an expected scope limitation: local fixture 21 creates only business/product visibility tables. It does not create `buyer_demands`, `seller_offers`, `buyer_demand_inbox` or Demand routing functions. Do not mark Demand runtime/security checks as passed.
 - Marked the catalog audit execution complete but retained full Demand schema/JWT/PostgREST/browser tests as pending.
 - Marked the old Buyer-category-gated dual-market recovery draft SUPERSEDED / DO NOT EXECUTE and corrected stale README descriptions of Wholesale-Only and Buyer category gates.
+
+
+## 2026-11-13 — B-03 local Demand fixture staged
+- Added guarded local-only `25_local_buyer_demand_fixture.sql` for Buyer Demand, Seller Offers, Seller Inbox, public privacy projection, RLS and routing triggers. It requires existing local fixtures 06 + 21 and refuses existing Demand objects.
+- Added `26_local_buyer_demand_behavior_tests.sql` with transactional/rollback test data for anonymous privacy, Buyer ownership, Seller Inbox routing, per-product Wholesale/Retail independence, late product routing, quotation permissions, duplicate offers, spoofed Buyer ID and required date.
+- Added `27_run_local_buyer_demand_tests_termux.sh` to download immutable SQL versions, preflight the local database, then run fixture 25, audit 24 and behavior tests 26.
+- All three are local reconstruction/test assets under `recovery-not-for-deployment`; not migrations and not production schema recovery. No hosted DB touched. User run pending.
