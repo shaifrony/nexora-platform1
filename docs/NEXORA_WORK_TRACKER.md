@@ -512,3 +512,11 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Fresh GitHub directory listing confirms 38 active SQL migration files. With one remaining shared-version collision, there are 37 unique versions. Reconciled counts: 13 matching version/name pairs; 25 branch-only files (24 unique versions); 11 Live-only entries.
 - Remaining hard blocker: two different migrations still share `20261114180000`. No filename/timestamp guessed; no migration runner used. Supabase CLI and local DB runtime remain unavailable, so this collision still blocks all migration execution.
 - Updated Recovery Plan section 22.5 and earlier inventory notes. No Live schema/data/history, private user data, `main`, Production, DNS or paid service changed. No PostgreSQL runtime, disposable DB, RLS/JWT or E2E test claimed.
+
+## 2026-11-14 — Remaining migration collision: safe resolution decision
+
+- Re-read the connected Live migration history (metadata only): 24 entries; neither migration versioned `20261114180000` is applied.
+- Dependency-based preferred order: retain `20261114180000_unified_delivery_jobs_assignment.sql` because delivery tracking version `20261114190000` follows it; move only the product-linked conversation migration to a fresh CLI-generated version.
+- The replacement must be created with `supabase migration new product_linked_private_conversations`, then checked to ensure its generated version is unique and sorts after `20261114190000`. If not, stop; do not hand-author a timestamp or use undocumented flags.
+- No file was renamed or changed: local Supabase CLI and PostgreSQL/Supabase runtime remain unavailable in the Android/Termux workflow. No SQL, Live history, or schema write was performed.
+- Next gate: obtain a supported CLI environment, create and verify the replacement filename, then run the complete sequence only in a no-cost disposable local database. Production remains blocked.
