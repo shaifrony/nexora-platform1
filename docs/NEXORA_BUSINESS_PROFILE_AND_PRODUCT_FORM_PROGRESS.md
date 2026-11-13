@@ -63,3 +63,8 @@ The Seller product workspace's Retail filter was removed and replaced with a dis
 2. Align Buyer Demand form and public demand preview with the required-by date and identity privacy.
 3. Review the seller profile form's exact fields and ensure one sales-center address only.
 4. Add stable public product detail links and ensure only Admin-approved products of Admin-approved businesses are discoverable.
+
+
+## Decision update — 2026-11-14 (supersedes earlier Wholesale-only note)
+
+The latest NEXORA Marketplace decision is no Wholesale/Retail product split: every user can view all approved products; Sellers choose their own price and quantity. The earlier Wholesale-only indicator and product market-category assumptions in this document are historical and no longer current. Current `index.html` and `marketplace.js` still contain Wholesale/Retail labels, filters, insert/edit payloads and demo examples; the corresponding staged SQL adds `products.market_category` and a Retail-specific MOQ rule. A coordinated frontend + migration cleanup is required before local rehearsal. This audit did not make a partial UI/schema change.
