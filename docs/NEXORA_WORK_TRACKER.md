@@ -94,3 +94,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 2. No isolated development DB for integration testing; hosted JWT/PostgREST/RLS verification remains unavailable.
 3. Previous Vercel deploy hit a rolling 24-hour cap; no deploy retry without approval.
 4. Separate Admin prototype is reference only and must not be deployed.
+
+
+## 2026-11-13 — Universal Buyer Marketplace visibility
+- Decision updated: Buyer no longer selects Wholesale/Retail account category; all active Buyers can see both kinds of approved listing.
+- Seller still chooses Wholesale or Retail per Product Listing. The chosen type is descriptive/business data, not a visibility entitlement.
+- Frontend signup/dashboard/category filters and product detail/query restrictions removed.
+- Auth/profile migration sources changed to clear legacy account-level category fields; product read/inquiry/order policies no longer category-gate Buyers; product insert no longer requires Seller account category.
+- Buyer Demand routing now matches approved product taxonomy (category/subcategory) and approved Seller business, not account sale-type categories.
+- All work is on nexora-development. No migration applied, no hosted DB changed, and no tests run yet. Review SQL syntax and rerun local fixture/logic tests before considering the migration chain usable.
