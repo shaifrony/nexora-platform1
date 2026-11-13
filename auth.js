@@ -427,10 +427,14 @@
     const buyerFields = document.getElementById("nxBuyerCategoryFields");
     const sellerFields = document.getElementById("nxSellerCategoryFields");
     const porterNote = document.getElementById("nxPorterRegistrationNote");
+    const socialDivider = document.getElementById("nxSocialDivider");
+    const socialButtons = document.getElementById("nxSocialButtons");
     const buyerSelect = document.querySelector('#nxSignup select[name="buyer_category"]');
     buyerFields?.classList.toggle("hidden", role !== "buyer");
     sellerFields?.classList.toggle("hidden", role !== "seller");
     porterNote?.classList.toggle("hidden", role !== "porter");
+    socialDivider?.classList.toggle("hidden", role !== "buyer");
+    socialButtons?.classList.toggle("hidden", role !== "buyer");
     if (buyerSelect) {
       buyerSelect.required = role === "buyer";
       buyerSelect.disabled = role !== "buyer";
@@ -520,6 +524,11 @@
   document.querySelectorAll("[data-oauth-provider]").forEach(button => {
     button.addEventListener("click", async () => {
       const provider = button.dataset.oauthProvider;
+      const selectedRole = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
+      if (selectedRole !== "buyer") {
+        say("Google/Facebook signup বর্তমানে Buyer-এর জন্য। Seller ও Porter নিবন্ধনের জন্য Email ও Password ব্যবহার করুন।");
+        return;
+      }
       button.disabled = true;
       say("");
       try {
