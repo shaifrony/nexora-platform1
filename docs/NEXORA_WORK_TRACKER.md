@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-13
+Updated: 2026-11-14
 
 Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md). Buyer phase checklist: [NEXORA Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md).
 
@@ -230,3 +230,15 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Notebook clones only the development branch, prompts for Hugging Face token securely, resolves immutable checkpoint SHAs per session, runs the same synthetic corpus, and downloads raw CSV outputs.
 - Google Colab free compute is not guaranteed and limits vary; no paid runtime was started. Notebook has not been executed; no model outputs/quality score are claimed.
 - Private NEXORA chat data must never be uploaded. Automatic translation remains disabled.
+
+
+## 2026-11-14 — Delivery strategy and Buyer Demand quotation workflow hardening
+
+- Product strategy confirmed: build and validate the Bangladesh-market version first; defer international expansion until the local product is functional and gaining usage. Prepare to seek investment only after the software is standing and there is evidence of market demand. Keep the architecture extensible, but do not delay the Bangladesh launch for international-only features.
+- Current product-direction clarification: do not make wholesale-vs-retail account separation a visibility gate. All users should be able to see marketplace items; Sellers decide their own product price and quantity terms. Older per-product market-category behavior must be reconciled against this latest decision before further UI/schema work; do not silently reintroduce account-level separation.
+- Reviewed Buyer Demand quotation negotiation SQL and the matching Buyer/Seller UI handlers.
+- Fixed NULL negotiation-action validation and added active Buyer/assigned Seller checks to Buyer Demand order transitions.
+- When a Seller accepts a Buyer counter-offer, the generated order now starts in accepted state, records accepted_at and emits an accepted order event. Buyer acceptance of a Seller proposal still creates a pending order for Seller confirmation.
+- Updated `docs/NEXORA_BUYER_DEMAND_PROGRESS.md` with source-review findings and outstanding verification gates.
+- Changes are staged only on `nexora-development`. No SQL migration was executed; no hosted Supabase, Live data, Production, `main`, DNS or deployment was changed.
+- Next: prepare isolated full-schema migration rehearsal and focused tests for Buyer acceptance, Seller acceptance, counter-offer turn-taking, rejection, expired offers, inactive participants, order transitions, RLS and browser flows. Do not mark this workflow Done until those tests pass.
