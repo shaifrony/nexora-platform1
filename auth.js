@@ -74,8 +74,8 @@
       say("শুধু সক্রিয় Buyer নিজের Marketplace ক্যাটাগরি পরিবর্তন করতে পারবেন।");
       return false;
     }
-    if (category !== "wholesale") {
-      say("NEXORA শুধুমাত্র পাইকারি (Wholesale) Marketplace।");
+    if (!["wholesale","retail"].includes(category)) {
+      say("সঠিক Buyer Marketplace ক্যাটাগরি নির্বাচন করুন।");
       return false;
     }
     try {
@@ -263,8 +263,7 @@
     if (buyerCategorySelect && profile?.role === "buyer") buyerCategorySelect.value = profile.buyer_category || "wholesale";
     const sellerCategorySummary = document.getElementById("nxSellerCategorySummary");
     if (sellerCategorySummary && profile?.role === "seller") {
-      const categories = Array.isArray(profile.seller_categories) ? profile.seller_categories : ["wholesale"];
-      sellerCategorySummary.textContent = categories.map(v => v === "retail" ? "খুচরা" : "পাইকারি").join(" + ");
+      sellerCategorySummary.textContent = "প্রতিটি পণ্য যোগ করার সময় বিক্রয়ের ধরন নির্বাচন করুন।";
     }
     if (!current) return;
     if (recoveryMode) {
@@ -386,10 +385,11 @@
     setBusy(form, true); say("");
     const f = new FormData(form);
     const requestedSignupRole = String(f.get("role") || "buyer");
-    const buyerCategory = "wholesale";
+    const buyerCategory = String(f.get("buyer_category") || "wholesale");
+    // Seller market mode is selected independently on each Product Listing.
     const sellerCategories = requestedSignupRole === "seller" ? ["wholesale"] : [];
-    if (requestedSignupRole === "buyer" && String(f.get("buyer_category") || "wholesale") !== "wholesale") {
-      setBusy(form, false); return say("NEXORA শুধুমাত্র পাইকারি (Wholesale) Marketplace।");
+    if (requestedSignupRole === "buyer" && !["wholesale","retail"].includes(buyerCategory)) {
+      setBusy(form, false); return say("পাইকারি অথবা খুচরা Buyer ক্যাটাগরি নির্বাচন করুন।");
     }
     if (!["buyer","seller","porter"].includes(requestedSignupRole)) {
       setBusy(form, false); return say("শুধু Buyer, Seller অথবা Porter অ্যাকাউন্ট তৈরি করা যাবে।");
@@ -421,7 +421,6 @@
 
   function updateSignupCategoryFields() {
     const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
-    document.querySelectorAll('#nxSignup option[value="retail"], #nxSignup input[name="seller_categories"][value="retail"]').forEach(node => { node.disabled = true; node.hidden = true; });
     const buyerFields = document.getElementById("nxBuyerCategoryFields");
     const sellerFields = document.getElementById("nxSellerCategoryFields");
     const porterNote = document.getElementById("nxPorterRegistrationNote");
