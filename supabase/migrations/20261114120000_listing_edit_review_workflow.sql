@@ -68,7 +68,6 @@ declare
   v_seller_id uuid;
   v_business_id uuid;
   v_listing_status text;
-  v_seller_categories text[];
   v_request_id uuid;
 begin
   if v_actor is null then
@@ -82,10 +81,7 @@ begin
     raise exception 'Proposed listing changes are required' using errcode='22023';
   end if;
 
-  select seller_categories into v_seller_categories
-  from public.profiles
-  where id=v_actor and role='seller' and account_status='active';
-  if not found then
+  if not exists(select 1 from public.profiles where id=v_actor and role='seller' and account_status='active') then
     raise exception 'An active Seller account is required' using errcode='42501';
   end if;
 
@@ -93,11 +89,11 @@ begin
     if exists(
       select 1 from jsonb_object_keys(p_proposed_changes) as keys(key)
       where key <> all(array[
-        'product_name','category','market_category','image_urls','description',
+        'product_name','category','image_urls','description',
         'origin','specifications_quality','price','currency'
       ]::text[])
     ) or not (p_proposed_changes ?& array[
-      'product_name','category','market_category','image_urls','description',
+      'product_name','category','image_urls','description',
       'origin','specifications_quality','price','currency'
     ]) then
       raise exception 'Product change fields are invalid or incomplete' using errcode='22023';
@@ -108,14 +104,10 @@ begin
     if not found or v_seller_id<>v_actor or v_listing_status<>'approved' then
       raise exception 'Only your approved Product listing can be submitted for re-review' using errcode='42501';
     end if;
-    if not (coalesce(p_proposed_changes->>'market_category','')=any(coalesce(v_seller_categories,'{}'::text[]))) then
-      raise exception 'Seller is not registered for this sales category' using errcode='23514';
-    end if;
     if length(btrim(coalesce(p_proposed_changes->>'product_name',''))) not between 2 and 180
        or length(btrim(coalesce(p_proposed_changes->>'category',''))) not between 2 and 120
        or length(btrim(coalesce(p_proposed_changes->>'description',''))) not between 1 and 10000
        or length(btrim(coalesce(p_proposed_changes->>'origin',''))) not between 2 and 160
-       or coalesce(p_proposed_changes->>'market_category','') not in ('wholesale','retail')
        or coalesce(p_proposed_changes->>'currency','') !~ '^[A-Z]{3}
        or coalesce(p_proposed_changes->>'price','') !~ '^[0-9]+([.][0-9]{1,2})?$'
        or (p_proposed_changes->>'price')::numeric<=0
@@ -213,7 +205,6 @@ declare
   v_permission text;
   v_listing_id uuid;
   v_business_id uuid;
-  v_seller_categories text[];
 begin
   if v_actor is null or p_action is null or p_action not in ('approve','reject') then
     raise exception 'Invalid review request' using errcode='22023';
@@ -252,11 +243,10 @@ begin
     where id=v_request.product_id and seller_id=v_request.seller_id and listing_status='approved'
     for update;
     if not found then raise exception 'Product is no longer approved or available' using errcode='23514'; end if;
-    select p.seller_categories into v_seller_categories
-    from public.profiles p join public.business_profiles b on b.seller_id=p.id
+    perform 1 from public.profiles p join public.business_profiles b on b.seller_id=p.id
     where p.id=v_request.seller_id and p.role='seller' and p.account_status='active'
       and b.id=v_business_id and b.approval_status='approved';
-    if not found or not (coalesce(v_request.proposed_changes->>'market_category','')=any(coalesce(v_seller_categories,'{}'::text[]))) then
+    if not found then
       raise exception 'Seller or Business eligibility changed; re-verify before approval' using errcode='23514';
     end if;
     select array(select jsonb_array_elements_text(v_request.proposed_changes->'image_urls')) into v_new_urls;
@@ -264,7 +254,6 @@ begin
       update public.products set
         product_name=v_request.proposed_changes->>'product_name',
         category=v_request.proposed_changes->>'category',
-        market_category=v_request.proposed_changes->>'market_category',
         image_urls=v_new_urls,
         description=v_request.proposed_changes->>'description',
         origin=v_request.proposed_changes->>'origin',
@@ -526,7 +515,6 @@ begin
       update public.products set
         product_name=v_request.proposed_changes->>'product_name',
         category=v_request.proposed_changes->>'category',
-        market_category=v_request.proposed_changes->>'market_category',
         image_urls=v_new_urls,
         description=v_request.proposed_changes->>'description',
         origin=v_request.proposed_changes->>'origin',
