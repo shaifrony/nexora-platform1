@@ -53,3 +53,31 @@
 - Status transitions are validated in the database; every transition records previous/new status, time, actor, optional location, note, and external tracking code.
 - Courier Partner and NEXORA staff updates remain Admin-entered until partner API and staff field access are built.
 - `delivered` is a logistics status only. It does not mark a Commerce Order completed; Buyer handover verification and completion report are a separate next phase.
+
+
+## Implementation status (Development Branch, 2026-11-13)
+### Staged in code
+- Phase 1: partner/team roster tables, Admin UI, partner approval/status, own-team staff roster.
+- Phase 2: unassigned Delivery Request creation, Admin assignment to independent Provider / NEXORA team / courier partner, append-only assignment history.
+- Phase 3: tracking status history and guarded status transitions. Independent Provider owner may update only their own assigned job; Admin requires AAL2 and logistics.assign.
+- Static JavaScript syntax checks passed for delivery-network-admin.js, transport-provider.js, auth.js and marketplace.js.
+- HTML duplicate-ID check passed.
+- Static SQL structure checks passed for transaction boundaries, dollar-quote balance, function wrappers, RLS enablement and guarded SECURITY DEFINER routines.
+
+### Not yet implemented / tested
+- Phase 4: Buyer receipt OTP / digital confirmation, Delivery Person completion report, order completion and verified-review integration.
+- Phase 5: Buyer delivery-charge quote/checkout, provider cost, NEXORA fee, payment collection and settlement.
+- Phase 6: courier API adapters, webhooks, automated tracking and automatic provider suggestions.
+- Provider/staff/courier real-browser E2E tests and negative authorization tests have not been run.
+- No local/disposable Supabase database is connected for migration execution tests.
+- The hosted Supabase database currently does not contain the staged Transport/Delivery Network tables; its migration history is behind the Development Branch files. Do not apply only the latest migrations to the hosted database. First reconcile and test the complete ordered migration chain on a safe development database.
+- No hosted migration has been applied, no production deployment has been made, and the main branch remains unchanged.
+
+## Required release gate
+Before any real buyer delivery is enabled:
+1. Reconcile all staged migrations with the hosted database's migration history.
+2. Apply the complete migration chain to an isolated development database and run SQL/RLS negative tests.
+3. Complete receipt confirmation and report flow.
+4. Complete delivery charge/payment and settlement model.
+5. Run end-to-end tests for Retail, Wholesale partial shipments, Courier Partner manual tracking, NEXORA team, Independent Provider, disputes, failed delivery and returns.
+6. Obtain explicit approval before any hosted migration or production deployment.
