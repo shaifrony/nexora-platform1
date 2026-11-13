@@ -10237,13 +10237,14 @@
     "verification": {
       "migration_directory_files_scanned": 40,
       "migration_directory_market_category_references": 0,
-      "migration_directory_buyer_category_references": 0,
-      "migration_directory_seller_categories_references": 0,
+      "migration_directory_buyer_category_references": 2,
+      "migration_directory_seller_categories_references": 1,
       "frontend_market_category_references": 0,
       "sql_runtime_tested": false,
       "browser_runtime_tested": false,
       "disposable_database_rehearsal": false,
-      "live_database_changed": false
+      "live_database_changed": false,
+      "profile_category_references_are_explicit_cleanup_only": true
     },
     "safety": "Source-only edits on nexora-development. No Live SQL/migrations, user rows, main, Production or deployment changes."
   }
