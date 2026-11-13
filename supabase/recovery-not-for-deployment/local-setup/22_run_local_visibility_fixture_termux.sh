@@ -17,7 +17,7 @@ for file in \
   20_dual_market_visibility_read_only_verification.sql
 do
   echo "Downloading $file ..."
-  curl -fL --retry 3 "$BASE_URL/$file?cachebust=04746bf0b824b67dc7434277bc26deeb2644599d" -o "$file"
+  curl -fL --retry 3 -H "Cache-Control: no-cache" "$BASE_URL/$file?fresh=20261113-plain-sql-04746bf0" -o "$file"
   if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
     GRANT_LINE="$(grep -n "^DELETE FROM public.admin_permission_grants$" "$file" | cut -d: -f1 || true)"
     STAFF_LINE="$(grep -n "^DELETE FROM public.admin_staff$" "$file" | cut -d: -f1 || true)"
