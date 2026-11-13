@@ -2,8 +2,6 @@
 -- Repairs the local-only fixture 25 permission boundary without exposing seller_id.
 -- Guarded to nexora_test. This is NOT a migration and NOT deployable.
 
-\\set ON_ERROR_STOP on
-\\pset pager off
 
 DO $guard$
 BEGIN
@@ -104,4 +102,3 @@ BEGIN
 END
 $verify$;
 
-\\echo 'LOCAL B-03 POLICY DEPENDENCY PATCH APPLIED; hosted Supabase untouched.'
