@@ -80,7 +80,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path=''
-as $
+as $$
 begin
   if new.demand_status<>'open' then return new; end if;
   insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
@@ -96,7 +96,7 @@ begin
   on conflict(demand_id,seller_id) do nothing;
   return new;
 end;
-$;
+$$;
 revoke all on function private.route_new_buyer_demand_to_sellers() from public,anon,authenticated;
 drop trigger if exists buyer_demand_route_to_sellers on public.buyer_demands;
 create trigger buyer_demand_route_to_sellers
@@ -108,7 +108,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path=''
-as $
+as $$
 begin
   if new.listing_status='approved' then
     insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
@@ -138,7 +138,7 @@ begin
     );
   return new;
 end;
-$;
+$$;
 revoke all on function private.route_new_approved_product_to_open_demands() from public,anon,authenticated;
 drop trigger if exists approved_product_route_open_demands on public.products;
 create trigger approved_product_route_open_demands
