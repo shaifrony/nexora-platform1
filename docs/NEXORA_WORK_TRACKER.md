@@ -554,3 +554,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Development-branch commits: `eeb31c514cc6061bc965456c7299b1c95a0c7a4c` and `493302e7f4cf79b6ffc4ae5be0f6a16d5c94d9c6`. Both changed files were re-fetched and exact blob SHAs verified.
 - Static/source review only. No SQL runtime, disposable DB, hosted write, or browser test was run.
 - Supabase CLI v3 changelog checked: database commands default to local; hosted changes require explicit `--remote` and confirmation/`--yes` for unattended execution. No hosted migration command was run.
+
+
+- Additional guard hardening: Provider and Vehicle owner UPDATEs now also cannot alter primary IDs or original `created_at` timestamps. Re-fetched the migration and verified both immutable identity checks. Commit: `dedcd9b818e129635897a2c27a1b748dbc3bef2c`.
