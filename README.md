@@ -1,14 +1,16 @@
 # NEXORA
 
-NEXORA is being organized as two web applications in one repository.
+NEXORA is a **single-domain, role-based platform**: one homepage, one login and one shared backend.
 
-- Marketplace app: repository root (`index.html`, `auth.js`, `marketplace.js`).
-- Administration app: `admin/` (`admin/index.html`, `admin/admin.js`, `admin/admin.css`).
-- Shared backend: Supabase Auth, Database and Storage with role/permission-based access control.
+- Planned public domain: `nexora.com`.
+- Buyers, Sellers, Director, Managing Director and department officers enter through the same login.
+- After authentication, each active account is routed to its permitted workspace.
+- Administration is a protected area inside the same application; no separate Admin URL is required.
+- Shared backend: Supabase Auth, Database and Storage. Server-side RLS/RPC/Edge Function authorization is the security boundary.
 
 See:
-- [Project structure and phased delivery plan](docs/NEXORA_PROJECT_STRUCTURE.md)
-- [Live development tracker](docs/NEXORA_WORK_TRACKER.md)
+- [Single-domain architecture and phased delivery plan](docs/NEXORA_PROJECT_STRUCTURE.md)
+- [Development work tracker](docs/NEXORA_WORK_TRACKER.md)
 - [Organization governance](docs/NEXORA_ORGANIZATION_GOVERNANCE.md)
 
-All changes on `nexora-development` are staging work only. Do not assume the two apps are live at separate domains until Vercel project configuration, domain attachment, security review and E2E tests are complete.
+All changes are staged on `nexora-development`; the domain and role-based dashboard routing are not live until tested and deployed with approval.
