@@ -54,8 +54,8 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
 ## M2 — Marketplace
-- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; existing features reviewed, final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
-- [ ] Verify the final Auth trigger/profile constraints across the complete migration chain for Buyer wholesale/retail signup, Buyer-only OAuth and Porter compatibility. Earlier wholesale-only fixture is not authoritative. Do not deploy until migration history is reconciled.
+- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; corrected category-switch trigger/grant mismatch and Inquiry category guard in migration source. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
+- [ ] Verify the final Auth trigger/profile constraints across the complete migration chain for Buyer wholesale/retail signup, Buyer-only OAuth and Porter compatibility. Provider lookup corrected to raw_app_meta_data; Buyer category-update trigger/grant conflict corrected in migration source. Auth trigger attachment and real signup remain untested. Earlier wholesale-only fixture is not authoritative. Do not deploy until migration history is reconciled.
 - [ ] Enforce Buyer-category product visibility in database/RLS/RPC and order logic; client-side filtering is not a security boundary.
 - [ ] Reconcile Seller edit-request workflow with the dual-market model and mode-specific product fields.
 - [x] Remove wholesale-only Product Listing UI/insert assumptions: Seller chooses Wholesale or Retail per product; Buyer signup sends selected category and Dashboard category switching accepts both (database trigger still needs alignment).
