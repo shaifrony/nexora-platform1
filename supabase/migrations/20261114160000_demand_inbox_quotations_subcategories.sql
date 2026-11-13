@@ -118,13 +118,29 @@ begin
   where d.demand_status='open'
     and d.category=new.category
     and d.category is not null
-    and d.subcategory is not distinct from nullif(btrim(new.subcategory),'')
+    and (nullif(btrim(d.subcategory),'') is null
+      or lower(btrim(coalesce(new.subcategory,'')))=lower(btrim(d.subcategory)))
     and bp.buyer_category=new.market_category
     and new.market_category=any(sp.seller_categories)
   on conflict(demand_id,seller_id) do nothing;
+  delete from public.buyer_demand_inbox i
+  using public.buyer_demands d
+  where i.demand_id=d.id and i.seller_id=new.seller_id and d.demand_status='open'
+    and not exists(select 1 from public.seller_offers o where o.demand_id=d.id and o.seller_id=new.seller_id)
+    and not exists(
+      select 1 from public.products pr
+      join public.profiles sp on sp.id=pr.seller_id and sp.role='seller' and sp.account_status='active'
+      join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
+      join public.public_businesses pb on pb.business_id=pr.business_id and pb.seller_id=pr.seller_id
+      where pr.seller_id=new.seller_id and pr.listing_status='approved'
+        and pr.category=d.category and pr.market_category=bp.buyer_category
+        and pr.market_category=any(sp.seller_categories)
+        and (nullif(btrim(d.subcategory),'') is null
+          or lower(btrim(coalesce(pr.subcategory,'')))=lower(btrim(d.subcategory)))
+    );
   return new;
 end;
-$$;
+$;
 revoke all on function private.route_new_approved_product_to_open_demands() from public,anon,authenticated;
 drop trigger if exists approved_product_route_open_demands on public.products;
 create trigger approved_product_route_open_demands
