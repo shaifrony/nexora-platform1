@@ -108,7 +108,8 @@ begin
        or length(btrim(coalesce(p_proposed_changes->>'category',''))) not between 2 and 120
        or length(btrim(coalesce(p_proposed_changes->>'description',''))) not between 1 and 10000
        or length(btrim(coalesce(p_proposed_changes->>'origin',''))) not between 2 and 160
-       or coalesce(p_proposed_changes->>'currency','') !~ '^[A-Z]{3} '^[0-9]+([.][0-9]{1,2})?$'
+       or coalesce(p_proposed_changes->>'currency','') !~ '^[A-Z]{3}$'
+       or coalesce(p_proposed_changes->>'price','') !~ '^[0-9]+([.][0-9]{1,2})?$'
        or (p_proposed_changes->>'price')::numeric<=0
        or jsonb_typeof(p_proposed_changes->'image_urls')<>'array'
        or jsonb_array_length(p_proposed_changes->'image_urls')>5
