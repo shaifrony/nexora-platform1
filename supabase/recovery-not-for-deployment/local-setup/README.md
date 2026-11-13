@@ -87,3 +87,14 @@ curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-de
 The expected current result is that the foundation tables/functions are missing, because no application baseline has been restored. This is an inventory result, not a migration failure.
 
 **Do not create a guessed baseline yet.** The exact original profile, role-request, Admin permission, audit, Auth trigger and helper-function definitions were not found in the current branch tree. A trusted schema-only export or pre-change SQL backup is required to recover them exactly. If no exact source exists, any later local test fixture must be labelled as a new reconstruction, never as recovered original schema.
+
+
+## New foundation design proposal (not SQL)
+
+No trusted schema-only export or pre-change SQL backup is available. A new design proposal has therefore been written for review:
+
+- `05_foundation_design_proposal.md`
+
+It is explicitly **not original, not recovered, and not deployable**. It documents the proposed identity/account lifecycle, Admin organization and permission model, Auth provisioning, Porter approval gates, privacy requirements, migration conflicts and open decisions. It is a design document only; it creates no database objects.
+
+In particular, review the wholesale-only vs current `retail` category conflict, the Porter vs Buyer/Seller transport-provider ownership conflict, and the public identity projection privacy risk before any local-only SQL fixture is authored. Do not execute active migrations or recovery drafts.
