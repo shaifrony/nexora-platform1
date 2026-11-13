@@ -46,18 +46,34 @@
     if(!host || !isSignedIn()) return;
     host.textContent="চ্যাট লোড হচ্ছে…";
     const {data,error}=await db().from("conversations")
-      .select("id,title,conversation_type,status,created_by,created_at")
+      .select("id,title,conversation_type,status,created_by,created_at,context_type,context_product_id,context_seller_id,context_product_slug,context_product_name,context_product_image_url,context_product_price,context_product_currency")
       .order("updated_at",{ascending:false}).limit(100);
     if(error){host.textContent="চ্যাট লোড হয়নি: "+error.message;return;}
     state.conversations=data||[];
-    if(!data?.length){host.textContent="এখনো কোনো চ্যাট নেই। নতুন ব্যবহারকারী নির্বাচন করে যোগাযোগের অনুরোধ পাঠান।";return;}
-    const parts=await db().from("conversation_participants").select("conversation_id,user_id,invitation_status").in("conversation_id",data.map(x=>x.id));
-    const partMap=new Map();
+    if(!data?.length){host.textContent="এখনো কোনো চ্যাট নেই। পণ্য থেকে Chat শুরু করুন অথবা নতুন ব্যবহারকারী নির্বাচন করুন।";return;}
+    const ids=data.map(x=>x.id);
+    const [parts,profiles,messages]=await Promise.all([
+      db().from("conversation_participants").select("conversation_id,user_id,invitation_status").in("conversation_id",ids),
+      db().from("public_profiles").select("id,full_name").neq("id",user().id),
+      db().from("messages").select("conversation_id,sender_id,body,message_type,created_at").in("conversation_id",ids).order("created_at",{ascending:false}).limit(300)
+    ]);
+    const partMap=new Map(),nameMap=new Map((profiles.data||[]).map(p=>[p.id,p.full_name||"NEXORA User"])),lastMap=new Map();
     (parts.data||[]).forEach(p=>{if(!partMap.has(p.conversation_id))partMap.set(p.conversation_id,[]);partMap.get(p.conversation_id).push(p);});
+    (messages.data||[]).forEach(m=>{if(!lastMap.has(m.conversation_id))lastMap.set(m.conversation_id,m);});
     host.innerHTML=data.map(c=>{
-      const mine=(partMap.get(c.id)||[]).find(p=>p.user_id===user().id);
-      const label=mine?.invitation_status==="pending"?" • "+(c.title||"যোগাযোগের অনুরোধ"):(c.title||"Private Conversation");
-      return `<button class="light chat-thread" type="button" data-conversation="${esc(c.id)}">${esc(label)}</button>`;
+      const members=partMap.get(c.id)||[];
+      const mine=members.find(p=>p.user_id===user().id);
+      const other=members.find(p=>p.user_id!==user().id);
+      const person=other?nameMap.get(other.user_id)||"NEXORA User":"যোগাযোগের অনুরোধ";
+      const product=c.context_type==="product";
+      const title=product?(c.context_product_name||c.title||"পণ্য Conversation"):(c.title||"Private Conversation");
+      const last=lastMap.get(c.id);
+      const preview=last?(last.message_type==="image"?"ছবি":last.message_type==="file"?"ফাইল":(last.sender_id===user().id?"আপনি: ":"")+last.body):(mine?.invitation_status==="pending"?"যোগাযোগের অনুরোধ গ্রহণের অপেক্ষায়":"এখনো কোনো মেসেজ নেই");
+      const price=product&&c.context_product_price!==null?Number(c.context_product_price).toLocaleString()+" "+(c.context_product_currency||""):"";
+      const image=product&&c.context_product_image_url?'<img class="nx-chat-product-thumb" src="'+esc(c.context_product_image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<span class="nx-chat-product-placeholder" aria-hidden="true">▣</span>';
+      const link=product&&c.context_product_slug?'<a class="nx-chat-product-link" href="'+esc(window.location.pathname+'?product='+encodeURIComponent(c.context_product_slug))+'" target="_blank" rel="noopener noreferrer">পণ্য দেখুন ↗</a>':'';
+      const status=mine?.invitation_status==="pending"?"অনুরোধ অপেক্ষমাণ":(mine?.invitation_status==="declined"?"অনুরোধ প্রত্যাখ্যাত":(last?"সর্বশেষ বার্তা":"চ্যাট"));
+      return '<article class="nx-chat-thread-card"><button class="nx-chat-thread-open" type="button" data-conversation="'+esc(c.id)+'">'+image+'<span class="nx-chat-thread-copy"><strong>'+esc(title)+'</strong><small>'+esc(person)+'</small>'+(price?'<small>মূল মূল্য: '+esc(price)+'</small>':'')+'<span class="nx-chat-thread-preview">'+esc(preview)+'</span><small class="nx-chat-thread-status">'+esc(status)+'</small></span></button>'+link+'</article>';
     }).join("");
     host.querySelectorAll("[data-conversation]").forEach(b=>b.addEventListener("click",()=>openConversation(b.dataset.conversation)));
   }
@@ -98,6 +114,22 @@
     const mine=state.participants.find(p=>p.user_id===user().id);
     const head=$("chatCurrentTitle");
     const host=$("chatMessages");
+    const current=state.conversations.find(c=>c.id===id);
+    const others=state.participants.filter(p=>p.user_id!==user().id);
+    let otherName="NEXORA User";
+    if(others.length){const person=await db().from("public_profiles").select("id,full_name").in("id",others.map(p=>p.user_id));otherName=(person.data||[]).map(p=>p.full_name).filter(Boolean).join(", ")||otherName;}
+    head.textContent=otherName;
+    const context=$("chatProductContext");
+    if(context){
+      if(current?.context_type==="product"){
+        const name=current.context_product_name||"পণ্য";
+        const price=current.context_product_price===null?"":Number(current.context_product_price).toLocaleString()+" "+(current.context_product_currency||"");
+        const image=current.context_product_image_url?'<img src="'+esc(current.context_product_image_url)+'" alt="'+esc(name)+'">':'<span class="nx-chat-product-placeholder">▣</span>';
+        const link=current.context_product_slug?window.location.pathname+"?product="+encodeURIComponent(current.context_product_slug):"";
+        context.innerHTML='<div class="nx-chat-context-card">'+image+'<div><strong>'+esc(name)+'</strong><small>মূল প্রকাশ্য মূল্য: '+esc(price)+'</small>'+(link?'<a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">পণ্যের বিস্তারিত দেখুন ↗</a>':'')+'</div></div>';
+        context.classList.remove("hidden");
+      }else{context.innerHTML="";context.classList.add("hidden");}
+    }
     if(mine?.invitation_status==="pending"){
       head.textContent="যোগাযোগের অনুরোধ";
       host.innerHTML='<div class="offer">এই ব্যবহারকারী আপনার সঙ্গে যোগাযোগ করতে চান। গ্রহণ করলে চ্যাট শুরু হবে।<div class="form-actions"><button class="primary" id="acceptChatInvite">Accept</button><button class="danger" id="declineChatInvite">Decline</button></div></div>';
@@ -109,8 +141,7 @@
       return;
     }
     if(mine?.invitation_status!=="accepted"){note("এই চ্যাটে আপনার প্রবেশাধিকার নেই।");return;}
-    const others=state.participants.filter(p=>p.user_id!==user().id);
-    head.textContent="Private Chat • "+others.length+" participant(s)";
+    head.textContent=otherName;
     $("chatComposer").classList.remove("hidden");
     $("chatCallPanel")?.classList.remove("hidden");
     $("nxChatCallActions")?.classList.remove("hidden");
