@@ -443,3 +443,17 @@ Recovery Plan section 19 commit: `cab90a9f2d52a910632ce0cfc16be1d772bc58c7`.
 - No private data reads, Live writes, migration execution, or history repair. No runtime SQL, JWT/RLS or E2E tests.
 
 Recovery Plan section 20 commit: `4b1d65a197f0415489672401aee2ad66ddf84f89`.
+
+
+## 2026-11-14 — Remaining staged feature catalog audit
+
+- Services Marketplace relation `service_listings` is absent from Live; service image bucket, `image_urls`, Storage policies and dependent seller image grant are also absent.
+- Listing edit request table/functions and listing edit history events/triggers are absent.
+- Verified purchase review table, private eligibility table and review RPCs are absent.
+- Product commercial pricing fields `price_unit`, `minimum_order_quantity`, `price_negotiable` already exist in Live; staged stock tracking fields, trigger, inventory RPC and stock index were not found. Inventory migration classified partially represented.
+- Admin base relations exist in Live, but staged officer structure columns (`position_key`, `reports_to_user_id`, `staff_email`) and officer management RPC are absent. Centralized Officer Management classified partially represented; must be additive and preserve existing Admin data.
+- Multilingual Chat preference and translation tables are absent. Feature remains suspended by product decision; do not enable production translation or use private messages as test corpus.
+- Full findings, dependencies and evidence limits recorded in Recovery Plan section 21.
+- No Live writes, migration execution, private data or Storage object reads; no runtime SQL/RLS/Storage/E2E tests.
+
+Recovery Plan section 21 commit: `3e66c30d4653d7ab2c963449adc713f97dc36f2a`.
