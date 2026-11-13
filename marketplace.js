@@ -908,7 +908,7 @@
       return;
     }
     host.innerHTML = state.demands.map(d => `<article class="demand-card">
-      <span class="tag">${esc(d.category)}</span><span class="tag">চলমান</span>
+      <span class="tag">${esc(d.category)}</span><span class="tag">${esc(d.subcategory||"")}</span><span class="tag">চলমান</span>
       <h3>${esc(d.product_name)}</h3>
       <p class="demand-description">${esc(d.description)}</p>
       <div class="demand-meta">
@@ -1177,17 +1177,16 @@
       window.NEXORA_SELLER_PRODUCTS=products;
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
-        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
+        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.subcategory,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
           <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           ${p.image_urls?.[0]?'<img class="product-image" src="'+esc(p.image_urls[0])+'" alt="'+esc(p.product_name)+'" loading="lazy">':''}
-          <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
+          <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} · ${esc(p.subcategory||"")} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)} / ইউনিট · MOQ ${esc(p.minimum_order_quantity||1)}</p>
           <p class="muted">${p.stock_tracking?'স্টক: '+esc(p.stock_quantity)+' · সংরক্ষিত: '+esc(p.reserved_quantity)+' · উপলব্ধ: '+esc(Math.max(0,Number(p.stock_quantity)-Number(p.reserved_quantity))):'স্টক ট্র্যাকিং বন্ধ'}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
           ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : ""}
         </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
-      productHost.querySelectorAll("button[data-inventory-product]").forEach(b=>b.addEventListener("click",()=>updateSellerProductInventory(b.dataset.inventoryProduct)));
       productHost.querySelectorAll("button[data-inventory-product]").forEach(b=>b.addEventListener("click",()=>updateSellerProductInventory(b.dataset.inventoryProduct)));
 
       const applyProductFilters = () => {
