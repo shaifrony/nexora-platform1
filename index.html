@@ -562,12 +562,11 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-discovery-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
 .nx-discovery-heading h2{margin:0;color:#172b3d;font-size:clamp(22px,3vw,28px);letter-spacing:-.5px}
 .nx-discovery-heading p{margin:6px 0 0;color:#718096;font-size:13px}
-.nx-discovery-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}
+.nx-discovery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
 .nx-discovery-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-width:0;min-height:220px;overflow:hidden;padding:17px;text-align:left;border:1px solid transparent;border-radius:16px;color:#17364a;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
 .nx-discovery-card:after{content:"";position:absolute;z-index:-1;width:150px;height:150px;right:-48px;top:-48px;border:1px solid #ffffff9c;border-radius:50%;box-shadow:0 0 0 18px #ffffff24,0 0 0 38px #ffffff18}
 .nx-discovery-card:hover{transform:translateY(-4px);box-shadow:0 14px 26px rgba(18,47,64,.12);border-color:#b9d8d2}
-.nx-discovery-wholesale{background:linear-gradient(145deg,#e9f4f1,#d7eae4)}
-.nx-discovery-retail{background:linear-gradient(145deg,#fff1e8,#fbe2d3)}
+.nx-discovery-marketplace{background:linear-gradient(145deg,#e9f4f1,#d7eae4)}
 .nx-discovery-services{background:linear-gradient(145deg,#edf0ff,#dfe5ff)}
 .nx-discovery-logistics{background:linear-gradient(145deg,#e8f2fb,#d7e8f7)}
 .nx-discovery-art{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#ffffffb8;font-size:31px;box-shadow:0 7px 17px #17364a12}
@@ -600,7 +599,6 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-product-card-media .product-image{height:100%;width:100%;object-fit:cover;border-radius:0;background:transparent;transition:transform .35s}
 .nx-product-card:hover .nx-product-card-media .product-image{transform:scale(1.035)}
 .nx-product-image-fallback{font-size:60px}
-.nx-product-market-badge{position:absolute;left:12px;top:12px;padding:6px 9px;border-radius:20px;background:#ffffffed;color:#176a63;font-size:9px;font-weight:900;letter-spacing:.7px;box-shadow:0 3px 10px #10243a12}
 .nx-product-card-body{padding:15px 16px 14px}
 .nx-product-card-body h3{margin:8px 0;font-size:17px;line-height:1.4}
 .nx-product-card-body h3 a,.nx-service-card h3 a{color:#17364a;text-decoration:none}
@@ -762,17 +760,17 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div class="nx-market-hero-copy">
         <span class="nx-market-eyebrow">NEXORA • ONE PLATFORM, MANY POSSIBILITIES</span>
         <h1>পণ্য, সেবা ও ব্যবসার সমাধান<br><em>এক জায়গায়, সহজে</em></h1>
-        <p>পাইকারি ও খুচরা পণ্য খুঁজুন, প্রয়োজনীয় সেবা নিন এবং ব্যবসার পরিবহন ও লজিস্টিকস সমাধানের সঙ্গে যুক্ত হোন।</p>
+        <p>সব ধরনের পণ্য খুঁজুন, প্রয়োজনীয় সেবা নিন এবং ব্যবসার পরিবহন ও লজিস্টিকস সমাধানের সঙ্গে যুক্ত হোন।</p>
         <div class="nx-market-hero-actions">
           <button type="button" class="nx-hero-primary" onclick="document.getElementById('productSearch')?.focus();document.getElementById('productSearch')?.scrollIntoView({behavior:'smooth',block:'center'})">পণ্য খুঁজুন <span aria-hidden="true">→</span></button>
           <button type="button" class="nx-hero-secondary" onclick="document.getElementById('publicDemandBoard')?.scrollIntoView({behavior:'smooth',block:'center'})">ক্রেতার চাহিদা দেখুন</button>
         </div>
-        <div class="nx-market-benefits"><span>● Wholesale & Retail</span><span>● Services</span><span>● Transport & Logistics</span></div>
+        <div class="nx-market-benefits"><span>● Marketplace</span><span>● Services</span><span>● Transport & Logistics</span></div>
       </div>
       <div class="nx-market-hero-art" aria-hidden="true">
         <div class="nx-orbit nx-orbit-one"></div><div class="nx-orbit nx-orbit-two"></div>
         <div class="nx-hero-box nx-box-back">N</div><div class="nx-hero-box nx-box-front">NEXORA<span>GLOBAL TRADE</span></div>
-        <div class="nx-float-chip nx-chip-top">WHOLESALE • RETAIL</div><div class="nx-float-chip nx-chip-bottom">SERVICES • LOGISTICS</div>
+        <div class="nx-float-chip nx-chip-top">ALL PRODUCTS</div><div class="nx-float-chip nx-chip-bottom">SERVICES • LOGISTICS</div>
       </div>
     </section>
     <section class="nx-discovery-section" aria-label="Explore NEXORA">
@@ -780,11 +778,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <div><span class="nx-market-eyebrow">EXPLORE NEXORA</span><h2>আপনি কী খুঁজছেন?</h2><p>আপনার প্রয়োজন অনুযায়ী একটি বিভাগ বেছে নিন।</p></div>
       </div>
       <div class="nx-discovery-grid">
-        <button type="button" class="nx-discovery-card nx-discovery-wholesale" onclick="showSection('market')">
-          <span class="nx-discovery-art" aria-hidden="true">📦</span><span class="nx-discovery-copy"><small>BUSINESS BUYING</small><strong>Wholesale</strong><em>পাইকারি পণ্য</em><span>বাল্কে পণ্য সংগ্রহ করুন →</span></span>
-        </button>
-        <button type="button" class="nx-discovery-card nx-discovery-retail" onclick="showSection('market')">
-          <span class="nx-discovery-art" aria-hidden="true">🛍️</span><span class="nx-discovery-copy"><small>EVERYDAY SHOPPING</small><strong>Retail</strong><em>খুচরা পণ্য</em><span>প্রয়োজনীয় পণ্য খুঁজুন →</span></span>
+        <button type="button" class="nx-discovery-card nx-discovery-marketplace" onclick="showSection('market')">
+          <span class="nx-discovery-art" aria-hidden="true">📦</span><span class="nx-discovery-copy"><small>PRODUCT MARKETPLACE</small><strong>Marketplace</strong><em>সব ধরনের অনুমোদিত পণ্য</em><span>পণ্য খুঁজুন →</span></span>
         </button>
         <button type="button" class="nx-discovery-card nx-discovery-services" onclick="showSection('servicesMarketplace')">
           <span class="nx-discovery-art" aria-hidden="true">🧰</span><span class="nx-discovery-copy"><small>FIND PROFESSIONALS</small><strong>Services</strong><em>বিভিন্ন সেবা</em><span>দক্ষ সেবাদাতা খুঁজুন →</span></span>
@@ -793,7 +788,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <span class="nx-discovery-art" aria-hidden="true">🚚</span><span class="nx-discovery-copy"><small>MOVE WITH CONFIDENCE</small><strong>Transport & Logistics</strong><em>পরিবহন ও ডেলিভারি</em><span>লজিস্টিকস সমাধান দেখুন →</span></span>
         </button>
       </div>
-      <p class="nx-discovery-note">সব Buyer ও public visitor সব অনুমোদিত Wholesale এবং Retail পণ্য দেখতে পারবেন।</p>
+      <p class="nx-discovery-note">সব Buyer ও public visitor সব অনুমোদিত পণ্য দেখতে পারবেন।</p>
     </section>
     <section class="nx-category-section" aria-label="পণ্যের বিভাগ">
       <div class="nx-category-heading"><div><span class="nx-market-eyebrow">DISCOVER BY CATEGORY</span><h3>জনপ্রিয় পণ্য বিভাগ</h3></div><span class="muted">আপনার প্রয়োজনীয় পণ্য খুঁজুন</span></div>
@@ -924,11 +919,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
             <option value="porter">Porter</option>
           </select>
           <p id="nxPorterRegistrationNote" class="muted hidden">Porter আবেদন জমা দেওয়ার পর Admin/Transport বিভাগ যাচাই করবে। অনুমোদনের আগে অ্যাকাউন্ট Pending থাকবে এবং Dashboard/Delivery কাজ ব্যবহার করা যাবে না।</p>
-          <p class="muted">সব ব্যবহারকারী অনুমোদিত Wholesale ও Retail পণ্য এবং বিজ্ঞাপন দেখতে পারবেন।</p>
-          <div id="nxSellerCategoryFields" class="hidden">
-            <p class="muted">Seller প্রতিটি Product Listing তৈরি করার সময় Wholesale অথবা Retail নির্বাচন করবেন।</p>
-          </div>
-          <div class="form-actions"><button class="primary" type="submit">Create Account</button></div>
+          <p class="muted">সব ব্যবহারকারী অনুমোদিত পণ্য এবং বিজ্ঞাপন দেখতে পারবেন।</p>
+                    <div class="form-actions"><button class="primary" type="submit">Create Account</button></div>
           <div id="nxSocialDivider" class="nx-social-divider">অথবা</div>
           <div id="nxSocialButtons" class="nx-social-buttons">
             <button type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
@@ -1143,7 +1135,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 
       <div class="nx-buyer-main">
         <div id="nxBuyerWelcome" class="nx-buyer-welcome">
-          <div><span class="nx-buyer-eyebrow">BUYER WORKSPACE</span><h1>আপনার ব্যবসার জন্য সঠিক পণ্য খুঁজুন</h1><p>পাইকারি অথবা খুচরা পণ্য আবিষ্কার করুন, চাহিদা প্রকাশ করুন এবং Seller-এর কাছে যোগাযোগের অনুরোধ পাঠান।</p></div>
+          <div><span class="nx-buyer-eyebrow">BUYER WORKSPACE</span><h1>আপনার ব্যবসার জন্য সঠিক পণ্য খুঁজুন</h1><p>সব ধরনের পণ্য আবিষ্কার করুন, চাহিদা প্রকাশ করুন এবং Seller-এর কাছে যোগাযোগের অনুরোধ পাঠান।</p></div>
           <div class="nx-buyer-welcome-art" aria-hidden="true"><span>BUYER</span><b>↗</b><i>SMART MARKETPLACE</i></div>
         </div>
 
@@ -1160,7 +1152,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         </div>
 
         <section id="nxBuyerDiscover" class="nx-buyer-discover">
-          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">DISCOVER PRODUCTS</span><h2>আপনার জন্য পণ্য</h2><p>সব অনুমোদিত Wholesale ও Retail পণ্য দেখুন</p></div><span id="buyerProductCount" class="nx-buyer-count">Products</span></div>
+          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">DISCOVER PRODUCTS</span><h2>আপনার জন্য পণ্য</h2><p>সব অনুমোদিত পণ্য দেখুন</p></div><span id="buyerProductCount" class="nx-buyer-count">Products</span></div>
           <div class="nx-buyer-search"><input id="buyerProductSearch" type="search" placeholder="পণ্যের নাম বা বিবরণ লিখুন…" aria-label="পণ্য অনুসন্ধান"><button class="primary" type="button" id="buyerProductSearchButton">Search</button></div>
           <div id="buyerProductList" aria-live="polite"><p class="muted">পণ্য লোড হচ্ছে…</p></div>
         </section>
@@ -1300,7 +1292,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
   <!-- SELLER DASHBOARD -->
   <section id="sellerDashboard" class="section hidden nx-role-workspace">
     <div class="nx-role-hero">
-      <div><span class="nx-role-eyebrow">NEXORA SELLER CENTER</span><h1>আপনার ব্যবসা পরিচালনা করুন</h1><p>Wholesale ও Retail ক্যাটাগরিতে আপনার ব্যবসা, পণ্য তালিকা এবং Buyer Demand একটি কেন্দ্র থেকে পরিচালনা করুন। Marketplace-এ প্রকাশের আগে Business Profile ও প্রতিটি Product-এর প্রয়োজনীয় Admin approval প্রযোজ্য।</p></div>
+      <div><span class="nx-role-eyebrow">NEXORA SELLER CENTER</span><h1>আপনার ব্যবসা পরিচালনা করুন</h1><p>আপনার ব্যবসা, পণ্য তালিকা এবং Buyer Demand একটি কেন্দ্র থেকে পরিচালনা করুন। Marketplace-এ প্রকাশের আগে Business Profile ও প্রতিটি Product-এর প্রয়োজনীয় Admin approval প্রযোজ্য।</p></div>
       <div class="nx-role-hero-mark" aria-hidden="true">▣</div>
     </div>
     <nav class="nx-role-shortcuts" aria-label="Seller workspace sections">
@@ -1363,13 +1355,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div class="nx-seller-product-tools">
         <label class="nx-seller-search-label" for="nxSellerProductSearch">পণ্য খুঁজুন</label>
         <input id="nxSellerProductSearch" type="search" placeholder="পণ্যের নাম, Category বা Product ID লিখুন">
-        <label class="nx-seller-search-label" for="nxSellerProductMarketFilter">বাজারের ধরন</label>
-        <select id="nxSellerProductMarketFilter">
-          <option value="all">সব বাজার</option>
-          <option value="wholesale">Wholesale (পাইকারি)</option>
-          <option value="retail">Retail (খুচরা)</option>
-        </select>
-        <label class="nx-seller-search-label" for="nxSellerProductStatus">অনুমোদন অবস্থা</label>
+                <label class="nx-seller-search-label" for="nxSellerProductStatus">অনুমোদন অবস্থা</label>
         <select id="nxSellerProductStatus">
           <option value="all">সব পণ্য</option>
           <option value="approved">অনুমোদিত</option>
@@ -1382,14 +1368,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <label>Product Name *</label>
         <input name="name" required>
 
-        <label>বিক্রয়ের ধরন *</label>
-        <select name="market_category" required>
-          <option value="">বিক্রয়ের ধরন নির্বাচন করুন</option>
-          <option value="wholesale">Wholesale (পাইকারি)</option>
-          <option value="retail">Retail (খুচরা)</option>
-        </select>
-        <p class="muted">এক পিস বা কম পরিমাণের বিক্রয়ের জন্য Retail; বড় পরিমাণে ব্যবসায়িক বিক্রয়ের জন্য Wholesale নির্বাচন করুন।</p>
-
+        
         <label>Product Category *</label>
         <select name="category" required>
           <option value="">Select Category</option>
