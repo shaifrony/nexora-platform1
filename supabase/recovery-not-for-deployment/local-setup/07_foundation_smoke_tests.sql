@@ -73,7 +73,7 @@ BEGIN
     SELECT 1 FROM public.profiles
     WHERE id='10000000-0000-4000-8000-000000000001'
       AND role='buyer' AND account_status='active'
-      AND buyer_category='wholesale' AND seller_categories='{}'::text[]
+      AND buyer_category IS NULL AND seller_categories='{}'::text[]
   ) THEN RAISE EXCEPTION 'Buyer signup assertion failed'; END IF;
 
   IF NOT EXISTS (
@@ -81,7 +81,7 @@ BEGIN
     WHERE id='10000000-0000-4000-8000-000000000002'
       AND role='seller' AND account_status='active'
       AND buyer_category IS NULL
-      AND seller_categories=ARRAY['wholesale']::text[]
+      AND seller_categories='{}'::text[]
   ) THEN RAISE EXCEPTION 'Seller signup assertion failed'; END IF;
 
   SELECT account_status INTO v_status
@@ -119,27 +119,25 @@ BEGIN
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'Public Admin signup was not rejected'; END IF;
 
-  v_rejected:=false;
-  BEGIN
-    INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
-    VALUES(
-      '10000000-0000-4000-8000-000000000006',
-      'local-retail-forbidden@nexora.invalid',
-      '{"role":"buyer","full_name":"Forbidden Retail","buyer_category":"retail"}'::jsonb,
-      '{}'::jsonb
-    );
-  EXCEPTION WHEN others THEN
-    v_rejected:=true;
-  END;
-  IF NOT v_rejected THEN RAISE EXCEPTION 'Retail Buyer signup was not rejected'; END IF;
+  -- Retail metadata is ignored; the Buyer profile remains universal.
+  INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
+  VALUES(
+    '10000000-0000-4000-8000-000000000006',
+    'local-retail-metadata@nexora.invalid',
+    '{"role":"buyer","full_name":"Universal Buyer","buyer_category":"retail"}'::jsonb,
+    '{}'::jsonb
+  );
 
   IF EXISTS (
     SELECT 1 FROM auth.users
-    WHERE id IN (
-      '10000000-0000-4000-8000-000000000005',
-      '10000000-0000-4000-8000-000000000006'
-    )
-  ) THEN RAISE EXCEPTION 'Rejected signup left an Auth fixture row'; END IF;
+    WHERE id='10000000-0000-4000-8000-000000000005'
+  ) THEN RAISE EXCEPTION 'Rejected Admin signup left an Auth fixture row'; END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id='10000000-0000-4000-8000-000000000006'
+      AND role='buyer' AND account_status='active'
+      AND buyer_category IS NULL AND seller_categories='{}'::text[]
+  ) THEN RAISE EXCEPTION 'Legacy Retail metadata was not safely ignored'; END IF;
 END
 $negative_tests$;
 
@@ -166,7 +164,7 @@ $protected_field_test$;
 
 SELECT
   'PASS' AS result,
-  'Buyer/Seller/Porter signup, Porter pending gate, OAuth Buyer-only, Admin/Retail rejection, and role immutability' AS checks;
+  'Buyer/Seller/Porter signup, universal category metadata handling, OAuth Buyer-only, Admin rejection, Porter pending gate, and role immutability' AS checks;
 
 ROLLBACK;
 
