@@ -80,3 +80,23 @@ Decision gate before enabling any provider:
 - No provider URL, API key, secret, consent toggle or translation Edge Function has been configured.
 - No SQL, hosted test, browser E2E or translation quality test was run for this architecture update.
 - No Live Supabase, Production, DNS or `main` branch was changed.
+
+## 8. Verified provider research (2026-11-13)
+
+### LibreTranslate / Argos Translate
+- The published Argos package index lists Bengali (bn) → English (en), Arabic (ar) → English (en), English → Bengali and English → Arabic packages. The published list does not establish a direct Bengali ↔ Arabic package.
+- LibreTranslate documentation says it can pivot through an intermediate language (usually English) when a direct pair is unavailable. Therefore Bangla ↔ Arabic may require two translation hops; this is a candidate path, not a quality guarantee.
+- Argos is the only candidate retained for a self-hosted proof of concept at this stage. A self-hosted server still needs compute, memory, bandwidth, monitoring and maintenance; no free always-on capacity is assumed.
+
+### NLLB-200: not approved for NEXORA production
+- Meta's facebook/nllb-200-distilled-600M model card lists CC-BY-NC 4.0 and explicitly describes the model as research-oriented, not released for production deployment; it also warns against domain-specific/legal/medical reliance and long inputs.
+- NEXORA is a commercial marketplace, so the non-commercial license is a blocker unless a separate compatible commercial license is obtained. Do not download, deploy or integrate this checkpoint for production on the assumption that open weights mean commercial permission.
+- NLLB may be used only in a clearly non-production research comparison if license terms and attribution are reviewed; it is not the selected engine.
+
+### Pilot quality gate before provider approval
+Create a human-reviewed, consented test set with at least 100 short messages in each direction for Bangla ↔ Arabic and Bangla ↔ English, including colloquial Bangla, spelling variation, trade terms, polite requests, negation, dates, units and mixed Bangla/English. Include separate structured-event tests. Two bilingual reviewers should score meaning preservation, omitted/added meaning, tone and protected-token preservation. Reject any provider that changes numeric values, currency, quantities, dates, product/order IDs or negation. Compare direct and English-pivot routes; do not describe a pair as supported until the exact installed model packages are verified.
+
+### Current implementation decision
+- **No translation engine is selected or enabled.** The best zero-provider-cost candidate for a later isolated test is self-hosted LibreTranslate/Argos, conditional on available hosting and a successful Bangla/Arabic pilot.
+- Do not use public demo endpoints or send private conversation content to them. Do not put provider credentials in browser code.
+- The next implementation milestone is a provider-neutral, disabled-by-default server adapter plus an isolated provider test harness only after a hosting target and consent policy are approved. No Edge Function was added in this research-only change.
