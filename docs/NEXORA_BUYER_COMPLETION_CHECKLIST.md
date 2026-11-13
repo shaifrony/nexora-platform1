@@ -203,3 +203,18 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Browser/mobile and real authenticated RLS tests after migration history reconciliation.
 - Voice message transcription/translation and live audio/video translation are future phases, not part of this foundation.
 - Current UI explicitly says automatic translation is not active yet. No database test, hosted test or browser E2E was run; no deployment approval.
+
+
+## 12. Multilingual Chat — translation engine architecture update (2026-11-13)
+- [x] Defined recipient-specific translation flow for Buyer, Seller, Porter and Admin using each recipient's saved language preference.
+- [x] Original message remains the source of truth; translation is a separate cache and failures fall back to original.
+- [x] Translation cache remains client read-only; future writes require a trusted server-side endpoint with JWT and accepted-participant checks.
+- [x] Defined privacy boundary: no message-body logging, no provider/API secret in browser, no provider calls before provider and consent approval.
+- [x] Defined first-release scope as text-only; attachments and voice/video are excluded.
+- [x] Defined structured templates for negotiation/system events so prices, currency, quantities, IDs and dates are not translated or altered.
+- [ ] Select and approve a provider/hosting model; verify license, language-pair quality (especially Bangla↔Arabic), retention, cross-border processing, consent and operating cost. LibreTranslate/Argos is only an evaluation candidate; self-hosting still needs compute/hosting.
+- [ ] Implement authenticated server-side translation endpoint, provider adapter, idempotent cache writes, rate limits, timeouts and privacy-safe errors.
+- [ ] Implement translated Chat List previews, per-message Original/Translation toggle and non-blocking fallback/error states.
+- [ ] Implement structured translation for negotiation, Demand, Order and Delivery/Porter notifications.
+- [ ] Run provider quality tests, local SQL/RLS tests, real JWT/PostgREST, Realtime and browser/mobile E2E across all four roles after migration history reconciliation.
+- Automatic translation remains disabled. No provider, key, consent toggle or Edge Function was configured; no SQL or browser test was run. No Live Supabase, Production, DNS or `main` changed.
