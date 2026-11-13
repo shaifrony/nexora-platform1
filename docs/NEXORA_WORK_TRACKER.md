@@ -2,6 +2,8 @@
 
 Updated: 2026-11-13
 
+Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md).
+
 Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Repeated local logic testing is closed; two-session concurrency remains unverified and is not a blocker for continuing product implementation. Hosted deployment remains blocked.
 
 Status definitions: **Done (staged)** = committed to Development, not necessarily deployed; **Partial** = foundation exists; **Pending** = not implemented; **Blocked** = prerequisite or release approval missing.
@@ -15,7 +17,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Porter registration approval | Done (staged) | Signup, pending profile, review table, MFA + logistics.assign RPC, audit log and admin queue staged; migration/E2E pending |
 | Admin sign-in + MFA | Partial | Existing Auth MFA AAL2 flow; browser E2E pending |
 | Officer account management | Partial | Form/Edge Function/SQL migration staged; DB not migrated or integration-tested |
-| Marketplace wholesale-only alignment | Partial | Public signup metadata aligned to wholesale-only; existing UI/schema still contain legacy retail paths; see NEXORA_WHOLESALE_ONLY_ALIGNMENT.md |
+| Marketplace wholesale-only alignment | Partial | Signup client and initial Product Listing form now wholesale-only; legacy database/edit/order paths remain; see NEXORA_WHOLESALE_ONLY_ALIGNMENT.md and NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md |
 | Services Marketplace | Partial | Listing flow staged; security/E2E remain |
 | Buyer Demands & quotations | Partial | Matching and quotations staged; acceptance/conversion/notifications pending |
 | Commerce orders | Partial | Order lifecycle staged; payments/disputes/refunds absent |
@@ -53,8 +55,11 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## M2 — Marketplace
 - [ ] Remove legacy Retail flows and enforce wholesale-only consistently in UI, Auth trigger, database constraints, RLS/RPC and order logic.
+- [ ] Reconcile the Seller edit-request workflow with the seven approved initial Product Listing fields and wholesale-only rules.
 - [x] Public Buyer/Seller signup client aligned to wholesale-only metadata (frontend only; not a security boundary).
-- [x] Product/Service listing, image upload and editing.
+- [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
+- [x] Initial Product Listing form reduced to the approved seven fields; new inserts force wholesale and use database defaults for MOQ/stock/tier fields.
+- [x] Product/Service listing, image upload and editing (legacy edit flow still needs wholesale-only alignment).
 - [x] Buyer Demand matching and Seller quotations.
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
