@@ -68,7 +68,9 @@ begin
  if auth.uid() is null or auth.uid()<>old.owner_user_id then
    raise exception 'Not allowed to modify provider';
  end if;
- if new.owner_user_id is distinct from old.owner_user_id
+ if new.id is distinct from old.id
+ or new.created_at is distinct from old.created_at
+ or new.owner_user_id is distinct from old.owner_user_id
  or new.application_status is distinct from old.application_status
  or new.admin_note is distinct from old.admin_note
  or new.reviewed_by is distinct from old.reviewed_by
@@ -90,7 +92,9 @@ begin
  end if;
  select owner_user_id into v_owner from public.transport_providers where id=old.provider_id;
  if auth.uid() is null or auth.uid()<>v_owner then raise exception 'Not allowed to modify vehicle'; end if;
- if new.provider_id is distinct from old.provider_id
+ if new.id is distinct from old.id
+ or new.created_at is distinct from old.created_at
+ or new.provider_id is distinct from old.provider_id
  or new.approval_status is distinct from old.approval_status
  or new.admin_note is distinct from old.admin_note
  or new.reviewed_by is distinct from old.reviewed_by
