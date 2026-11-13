@@ -54,7 +54,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
 ## M2 — Marketplace
-- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; universal product visibility, safe public columns, category-independent Inquiry/Order and Demand routing have been staged. Buyer quotation acceptance workflow remains unimplemented. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
+- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; universal product visibility, safe public columns, category-independent Inquiry/Order and Demand routing have been staged. The final inventory Order RPC's legacy Buyer-category gate has now been removed. Local read-only verification script is staged but not yet run. Buyer quotation acceptance workflow remains unimplemented. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
 - [ ] Verify the final Auth trigger/profile constraints across the complete migration chain: Buyer has no market category, Seller has no account-level sale category, Buyer-only OAuth and Porter pending approval remain intact. Provider lookup uses raw_app_meta_data; hosted Auth trigger attachment and real signup remain untested. Do not deploy until migration history is reconciled.
 - [x] Remove Buyer-category product visibility restrictions from database/RLS/RPC and order logic; verify that sale type remains per product.
 - [ ] Reconcile Seller edit-request workflow with the dual-market model and mode-specific product fields.
@@ -102,4 +102,6 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Frontend signup/dashboard/category filters and product detail/query restrictions removed.
 - Auth/profile migration sources changed to clear legacy account-level category fields; product read/inquiry/order policies no longer category-gate Buyers; product insert no longer requires Seller account category.
 - Buyer Demand routing now matches approved product taxonomy (category/subcategory) and approved Seller business, not account sale-type categories.
-- All work is on nexora-development. No migration applied, no hosted DB changed, and no tests run yet. Review SQL syntax and rerun local fixture/logic tests before considering the migration chain usable.
+- Removed the remaining legacy Buyer-category comparison from the final `private.create_commerce_order` definition in `20261114150000_product_inventory_moq_quantity_pricing.sql`; the per-product sale type still controls Seller-side MOQ/retail rules only.
+- Added `supabase/recovery-not-for-deployment/local-setup/20_dual_market_visibility_read_only_verification.sql`. It is read-only, guards for `nexora_test`, checks RLS/policies/column grants/RPC definitions, and compares anon vs active Buyer approved-listing visibility if the full local marketplace schema exists.
+- All work is on nexora-development. No migration applied, no hosted DB changed, and no local/browser tests run yet. The current local foundation fixture does not include the marketplace tables, so the script will report SKIP until a complete isolated marketplace schema is available.
