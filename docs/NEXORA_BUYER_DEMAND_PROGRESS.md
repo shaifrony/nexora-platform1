@@ -53,3 +53,25 @@ No database schema, migration, hosted Supabase project, production deployment or
 4. Confirm Seller quotations cannot reveal Buyer contact data before an accepted communication/consent flow.
 5. Align Demand matching with the universal visibility model: route a Buyer Demand to every eligible Seller with an approved product matching category/subcategory, regardless of Wholesale/Retail sale type; keep Buyer identity/contact private.
 6. Add focused tests for privacy, ownership, unauthorized Seller access, closed/cancelled demands, required-date validation and quotation eligibility.
+
+
+## 2026-11-13 — B-03 Demand privacy and routing source review
+
+### Findings from staged migration and frontend source
+- `public.public_buyer_demands` is defined as a SECURITY INVOKER view. Its intended projection includes only public Demand fields and omits `buyer_id`, Buyer name, email, phone and profile/contact fields.
+- The anonymous open-Demand policy grants a limited column set on `buyer_demands`; the Buyer foreign key is not part of that grant. The later subcategory migration adds only the public subcategory column to the anon grant.
+- Authenticated Buyer Demand reads are owner-scoped. The final Seller read policy allows open Demands only when the logged-in active Seller has a matching row in their own `buyer_demand_inbox`; Admin access remains separate.
+- Demand INSERT policy requires an active Buyer and `buyer_id = auth.uid()`. The owner UPDATE policy only applies while the Demand is open and preserves the owner ID; the UI offers only close/cancel actions.
+- `buyer_demand_inbox` has RLS, Seller-owned SELECT, and no authenticated direct INSERT/UPDATE/DELETE grant. Routing is done by private SECURITY DEFINER trigger functions.
+- Seller quotation INSERT requires the active Seller's own inbox row for an open Demand. A unique constraint permits one quotation per Seller per Demand.
+- Demand matching uses exact Product category and case-insensitive exact subcategory (category-only fallback for legacy Demands), approved Product listing, active Seller and the approved public-business projection. No Buyer/Seller account category or Wholesale/Retail `market_category` gate is used.
+- Required date is NOT NULL and constrained to current_date or later in the core schema. Frontend demand form sends it and the public board/Seller inbox display it.
+- Buyer can close or cancel only their own open Demand in the frontend. New quotation insertion is blocked when Demand is not open.
+- Frontend Buyer Dashboard reads only the current Buyer's own Demands and associated Seller offers; Seller Inbox query selects only Demand fields needed to prepare a quotation and does not request Buyer identity/contact data.
+
+### Remaining gaps / cautions
+- Buyer quotation acceptance, counter-offer, negotiation chat linking and quotation-to-order conversion are not implemented.
+- Seller Inbox routing and Demand SELECT policies have been source-reviewed, not exercised under real JWT/PostgREST sessions.
+- The local database currently has only the limited product/business visibility fixture, not the full Demand/offer/inbox schema. No full local Demand workflow test has run.
+- Added read-only catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. It is guarded for `nexora_test`, makes no database changes and will SKIP if full Marketplace Demand schema is absent. It has not yet been run.
+- No migration was applied; Live Supabase, Production and `main` remain untouched.
