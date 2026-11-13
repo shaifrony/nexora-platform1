@@ -62,19 +62,17 @@ Status: **Implementation review in progress — not complete**
 - [ ] Porter ও Seller registration migration-এর সঙ্গে trigger conflict নেই—পূর্ণ migration order-এ যাচাই।
 - [ ] Buyer account Admin approval ছাড়াই ব্যবহারযোগ্য, কিন্তু inactive/suspended account blocked—পরীক্ষা।
 
-### B-02 — Product visibility ও category integrity
-- [ ] Buyer category পরিবর্তনের পর Marketplace ও Buyer Dashboard reload/refresh-এ নতুন category কার্যকর হয়।
-- [x] Frontend category update payload থেকে অতিরিক্ত `updated_at` বাদ: migration শুধু `buyer_category` column UPDATE grant করে; DB trigger updated_at সেট করে।
-- [x] Buyer category পরিবর্তনের জন্য owner-only UPDATE RLS policy যোগ; আগের baseline fixture-এ profiles-এর UPDATE policy ছিল না, তাই শুধু column grant যথেষ্ট ছিল না।
-- [x] Frontend update response-এ updated row ফেরত চাওয়া ও যাচাই; RLS-এ row update না হলে আর সফলতার বার্তা দেখাবে না।
-- [x] Signup থেকে Buyer Wholesale/Retail selector সরানো হয়েছে।
-- [x] Market-category migration-এ baseline `protect_profile_updates` trigger-এর Buyer category পরিবর্তন নিষিদ্ধ করার conflict সংশোধন; Buyer কেবল নিজের category বদলাতে পারবে, role/status/Seller entitlements/name protected থাকে।
-- [x] Auth trigger-এর provider lookup `new.raw_app_meta_data`-এ সংশোধন।
-- [ ] Product Inquiry-এর SECURITY DEFINER RPC-তেও Buyer category যাচাই হয়; recovery-only draft-এ guard যোগ করা হয়েছে, কিন্তু এখনো প্রয়োগ/পরীক্ষা হয়নি।
-- [x] Product Inquiry SECURITY DEFINER RPC-তে Buyer category match server-side enforce করার migration guard যোগ করা হয়েছে।
-- [ ] Buyer, Seller ও Admin authenticated account থেকে Wholesale এবং Retail—উভয় ধরনের approved product দেখতে পারে যাচাই।
-- [ ] Anonymous visitor ও authenticated non-Buyer access rules স্পষ্ট করা।
-- [ ] Service listing Buyer access-এর জন্য পৃথক policy/ব্যবসায়িক নিয়ম নির্ধারণ; product market_category-র সঙ্গে অযথা মিশবে না।
+### B-02 — Product visibility ও sale-type integrity
+- [x] Buyer signup ও Dashboard থেকে account-level Wholesale/Retail selector সরানো হয়েছে।
+- [x] Marketplace, Product Detail এবং Buyer Dashboard থেকে Buyer-category filter সরানো হয়েছে।
+- [x] Seller Product Listing-এ Wholesale/Retail দুটো sale type-ই বেছে নিতে পারে; account-level Seller category gate সরানো হয়েছে।
+- [x] Product SELECT RLS-এ সব authenticated user-কে approved Wholesale ও Retail listing দেখার অনুমতি দেওয়া হয়েছে।
+- [x] Anonymous visitor-এর জন্য approved listing-এর safe column projection এবং সীমিত public Business Display Name/Location access যোগ করা হয়েছে; seller_id ও admin review fields anon-এর জন্য grant করা হয়নি।
+- [x] Product Inquiry ও Order RPC থেকে Buyer category matching gate সরানো হয়েছে; active Buyer, approved listing ও Business validation বজায় আছে।
+- [x] Buyer Demand matching থেকে Buyer/Seller account category condition সরানো হয়েছে; product category/subcategory ও approved Business Profile matching বজায় আছে।
+- [x] Auth trigger-এ legacy Buyer/Seller account market category NULL/empty রাখা হয়েছে।
+- [ ] Anonymous visitor, Buyer, Seller ও Admin session-এ দুই sale type visibility এবং safe-column boundary পরীক্ষা।
+- [ ] Product Inquiry, order creation, listing edit/review ও Buyer Demand routing local DB এবং real authenticated session-এ পরীক্ষা.
 
 ### B-03 — Buyer Demand privacy ও lifecycle
 - [ ] Public view-তে Buyer ID, name, email, phone, profile বা contact information নেই—catalog ও API-level যাচাই।
@@ -105,18 +103,17 @@ Status: **Implementation review in progress — not complete**
 - [ ] Wallet balance placeholder-কে বাস্তব wallet না বলা; wallet/payment feature বাস্তবায়ন না হওয়া পর্যন্ত স্পষ্টভাবে unavailable/coming later রাখা।
 - [ ] Buyer delivery tracking ও Porter handoff UI সংযুক্ত।
 - [ ] Mobile responsive, keyboard accessibility, loading/error/empty states পরীক্ষা।
-- [ ] Browser E2E: signup, category switch, browse, direct URL denial, demand, offers, inquiry consent, order, completion, review।
+- [ ] Browser E2E: signup, browse both sale types, direct URL, demand, offers, inquiry consent, order, completion, review।
 
 ## 5. বর্তমান কোডে পাওয়া নির্দিষ্ট নোট
 
-1. `index.html`-এ Buyer signup Wholesale/Retail option আছে।
-2. `auth.js`-এ `setBuyerCategory()` উভয় category গ্রহণ করে এবং Buyer-only profile update করে।
-3. `marketplace.js`-এ product query ও detail page-এ Buyer category filter আছে।
-4. `20261113235900_product_market_category.sql` migration-এর product SELECT policy Buyer profile category ও listing market_category মিলিয়ে দেখে; একই migration-এ Product Inquiry SECURITY DEFINER RPC-তেও category guard যোগ হয়েছে।
-5. `20261114140000_commerce_orders_and_review_completion.sql`-এর order RPC product order-এর সময় Buyer category server-side মিলিয়ে দেখে।
-6. `20261112153000_publish_open_demands_without_buyer_identity.sql` public Demand-এর column-limited anonymous access তৈরি করে; পরের `20261114160000...` migration security-invoker public view ও subcategory যুক্ত করে।
-7. Buyer Dashboard-এর কিছু লেখা এখনো Wholesale-only ছিল; বর্তমান কাজের অংশ হিসেবে সেগুলো generic dual-market ভাষায় সংশোধন করা হচ্ছে।
-8. Signup frontend Seller-এর জন্য এখনও `seller_categories: ["wholesale"]` পাঠায়; এটি Seller বিভাগের blocker, Buyer বিভাগের scope-এ পরিবর্তন করা হয়নি। Seller-এর per-product mode rule কার্যকর করতে Seller phase-এ এটি সংশোধন করতে হবে।
+1. Buyer signup-এ Wholesale/Retail account category নেই; OAuth registrations Buyer-only থাকে।
+2. Buyer Dashboard-এ category switcher নেই।
+3. `marketplace.js`-এর product query, detail page এবং Buyer Dashboard উভয় sale type দেখায়।
+4. Product SELECT policy-তে approved public listings-এর safe columns anon visitor-কে এবং approved listings authenticated users-কে দেয়; Buyer category gate নেই।
+5. Product Inquiry ও Order RPC active Buyer এবং approved listing/business যাচাই করে, কিন্তু sale type অনুযায়ী Buyer restriction নেই।
+6. Buyer Demand routing approved product category/subcategory ও Seller Business Profile অনুযায়ী হয়; Wholesale/Retail category দিয়ে Demand visibility ভাগ করা হয় না।
+7. Seller signup-এ account-level sale category নেই; Seller প্রতিটি Product Listing-এ Wholesale অথবা Retail নির্বাচন করে.
 
 ## 6. সমাপ্তির শর্ত
 
