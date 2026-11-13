@@ -188,3 +188,15 @@ curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-de
 If the workflow is not installed, the script prints `SKIP`; it does not create tables, install functions or change data. A `PASS` is a catalog/source-contract check only, not proof of all business behavior.
 
 **Important migration-history blocker:** the current branch does not contain a trusted original foundation DDL/export for all prerequisite identity, Admin and Auth objects. The existing Android local database fixtures are explicitly reconstructed test fixtures, not the production schema. Do not replay the active migration directory on top of them or claim a full-chain rehearsal. A complete disposable rehearsal requires a trusted schema-only export (or the exact original baseline migration set) and a reconciled migration history. The audit above is safe to prepare now, but it will correctly SKIP until its prerequisites exist.
+
+## Read-only live Foundation catalog snapshot (2026-11-14)
+
+A metadata-only snapshot was captured from the connected live NEXORA project and stored at:
+
+- supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json
+
+It covers eight Foundation tables and ten selected functions, including exact columns/defaults, constraints, indexes, RLS policies, triggers and function definitions. It contains no table rows. It is evidence for reconstruction, not a full schema dump and not executable SQL.
+
+The live project inventory at capture time showed PostgreSQL 17.11, 20 public tables plus two views, all 20 tables with RLS enabled, five non-internal public triggers, and 24 migration-history entries. Do not infer that this snapshot is a complete backup.
+
+Full schema export is still required. Use the current Supabase CLI supabase db dump documentation or a locally installed pg_dump --schema-only against the connection string shown in the Supabase Dashboard. Keep the database password and complete connection string on the user's device; never send them in chat or commit them. Do not run a restore against the live project. A disposable local target must be confirmed before any restore or migration rehearsal.
