@@ -65,7 +65,11 @@ Status: **Implementation review in progress — not complete**
 
 ### B-02 — Product visibility ও category integrity
 - [ ] Buyer category পরিবর্তনের পর Marketplace ও Buyer Dashboard reload/refresh-এ নতুন category কার্যকর হয়।
+- [x] Frontend category update payload থেকে অতিরিক্ত `updated_at` বাদ: migration শুধু `buyer_category` column UPDATE grant করে; DB trigger updated_at সেট করে।
+- [x] Market-category migration-এ baseline `protect_profile_updates` trigger-এর Buyer category পরিবর্তন নিষিদ্ধ করার conflict সংশোধন; Buyer কেবল নিজের category বদলাতে পারবে, role/status/Seller entitlements/name protected থাকে।
+- [x] Auth trigger-এর provider lookup `new.raw_app_meta_data`-এ সংশোধন।
 - [ ] Product Inquiry-এর SECURITY DEFINER RPC-তেও Buyer category যাচাই হয়; recovery-only draft-এ guard যোগ করা হয়েছে, কিন্তু এখনো প্রয়োগ/পরীক্ষা হয়নি।
+- [x] Product Inquiry SECURITY DEFINER RPC-তে Buyer category match server-side enforce করার migration guard যোগ করা হয়েছে।
 - [ ] Wholesale Buyer Retail product ID/slug সরাসরি খুললেও RLS-এ product data পাওয়া যায় না।
 - [ ] Retail Buyer Wholesale product সরাসরি খুললেও একইভাবে block হয়।
 - [ ] Anonymous visitor ও authenticated non-Buyer access rules স্পষ্ট করা।
@@ -105,7 +109,7 @@ Status: **Implementation review in progress — not complete**
 1. `index.html`-এ Buyer signup Wholesale/Retail option আছে।
 2. `auth.js`-এ `setBuyerCategory()` উভয় category গ্রহণ করে এবং Buyer-only profile update করে।
 3. `marketplace.js`-এ product query ও detail page-এ Buyer category filter আছে।
-4. `20261113235900_product_market_category.sql` migration-এর product SELECT policy Buyer profile category ও listing market_category মিলিয়ে দেখে।
+4. `20261113235900_product_market_category.sql` migration-এর product SELECT policy Buyer profile category ও listing market_category মিলিয়ে দেখে; একই migration-এ Product Inquiry SECURITY DEFINER RPC-তেও category guard যোগ হয়েছে।
 5. `20261114140000_commerce_orders_and_review_completion.sql`-এর order RPC product order-এর সময় Buyer category server-side মিলিয়ে দেখে।
 6. `20261112153000_publish_open_demands_without_buyer_identity.sql` public Demand-এর column-limited anonymous access তৈরি করে; পরের `20261114160000...` migration security-invoker public view ও subcategory যুক্ত করে।
 7. Buyer Dashboard-এর কিছু লেখা এখনো Wholesale-only ছিল; বর্তমান কাজের অংশ হিসেবে সেগুলো generic dual-market ভাষায় সংশোধন করা হচ্ছে।
