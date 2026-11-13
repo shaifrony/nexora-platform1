@@ -318,3 +318,10 @@ Read-only review confirms the only relation with anon SELECT grant in public is 
 The exact PostgREST Exposed Schemas list remains unverified: `current_setting('pgrst.db_schemas', true)` returned NULL and no role/database-level override was found. Verify in Dashboard > Project Settings > Data API before any conclusion about schema exposure.
 
 Advisors report: leaked-password protection disabled (WARN); 6 unindexed foreign keys (INFO); 20 unused-index candidates (INFO); 8 multiple-permissive-policy warnings (WARN). No changes were made. Do not blindly drop unused indexes or merge permissive policies: first validate workload and logical equivalence. Evidence JSON includes this audit snapshot.
+
+
+### Addendum — Profile protection and marketplace guest visibility
+
+Captured four profile/business trigger function definitions. The profile guards structurally restrict buyer self-edits to full_name, prevent self-changing role/account_status, and require admin approval for seller/porter profile changes. Business public projection is synchronized only for approved businesses. The public profile update guard uses deprecated `auth.role()`; consider replacing with current role-check pattern in a reviewed development migration, but do not alter Live until behavior is verified.
+
+Anon SELECT is granted only on `public_buyer_demands`; products and `public_businesses` are currently SELECT-accessible to authenticated but not anon. This could affect logged-out Marketplace browsing, but is not classified as a defect until guest browsing is confirmed as a product requirement. No grants or policies were changed.
