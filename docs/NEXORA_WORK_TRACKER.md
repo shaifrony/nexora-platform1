@@ -318,3 +318,6 @@ Evidence JSON updated at `supabase/recovery-not-for-deployment/live-schema-evide
 **Migration version resolution remains blocked:** local Supabase CLI and Docker Engine are unavailable on the Android-only workflow. Supabase guidance requires creating new migration files with `supabase migration new`; do not hand-invent a replacement timestamp or rename the colliding files through GitHub as a workaround. The two 141800 files remain unchanged in name. Also two exact duplicate-content pairs remain for explicit cleanup after a CLI-backed migration plan is available.
 
 No Live database writes, migration execution, or user-row queries. The two source fixes are static edits only; SQL runtime tests and isolated disposable-database rehearsal remain pending.
+
+
+- Additional UI/schema mismatch confirmed by branch source inspection: `marketplace.js` and `index.html` still expose Wholesale/Retail badges, discovery cards, filters, product insert/edit `market_category` payloads, and Retail-specific price/MOQ copy. This is inconsistent with the user's latest unified Marketplace decision. The previous Business Profile/Product Form progress note describing “Wholesale-only” is historical and superseded. Frontend and staged migration alignment remains a separate pending change; no UI/schema removal was made in this audit.
