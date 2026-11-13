@@ -201,9 +201,9 @@ grant update (subcategory) on public.buyer_demands to authenticated;
 create or replace view public.public_buyer_demands
 with (security_invoker=true)
 as
-select id,demand_code,product_name,category,subcategory,description,specifications_quality,
+select id,demand_code,product_name,category,description,specifications_quality,
        required_quantity,budget,currency,destination_country,destination_city,
-       required_date,demand_status,created_at
+       required_date,demand_status,created_at,subcategory
 from public.buyer_demands
 where demand_status='open';
 revoke all on public.public_buyer_demands from public;
