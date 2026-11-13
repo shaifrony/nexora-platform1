@@ -3,6 +3,7 @@
 This feature is staged on `nexora-development` only.
 
 ## Seller listing fields
+- The hosted schema already had a `minimum_order_quantity` column from an earlier schema change; this feature reuses it and strengthens its validation in the staged migration.
 - Wholesale listings can set a minimum order quantity (MOQ).
 - Retail listings are constrained to MOQ 1.
 - Sellers may optionally track stock. When disabled, stock is treated as untracked/unlimited; when enabled, a numeric stock quantity is required.
