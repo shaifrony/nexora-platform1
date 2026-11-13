@@ -137,3 +137,20 @@ No classification in this ledger authorizes SQL execution.
 - GitHub migration directory was read only for this comparison.
 - This ledger is a new documentation file; it does not modify any SQL migration.
 - No live SQL, migration history, RLS, grants, schema, data, production deployment, `main` branch, or paid resource was changed.
+
+
+## 9. Recovery package status (2026-11-13)
+
+A recovery package now exists at `supabase/recovery-not-for-deployment/` on `nexora-development`. It includes one SQL file for each of the 11 live-only history entries.
+
+| Classification | Count | Meaning |
+|---|---:|---|
+| SQL body source-recovered from a GitHub commit, but version differs | 1 | Open-demand publication body; GitHub source is 153000, Live history is 153453 |
+| Catalog-based reconstruction drafts | 10 | Recreated from current Live catalog definitions/ACLs; not original SQL text |
+| Original historical SQL files recovered byte-for-byte | 0 | No original file was found in checked branches/commit history |
+
+The recovery package README documents the exact source status and evidence for each file. All 12 package files (README plus 11 SQL drafts) were fetched back from GitHub to verify they exist.
+
+**Do not treat the package as a runnable migration sequence.** It is outside `supabase/migrations/`, has not been statically certified or tested against an isolated database, and has not been executed. In particular, the default-privilege draft requires extra scope review.
+
+The prior statement “original SQL not recovered” remains true for all 11 exact historical files. One migration body has a related GitHub source with a timestamp mismatch; the other ten are new reconstructions.
