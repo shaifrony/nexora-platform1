@@ -943,7 +943,7 @@
     try{
       const {data,error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note});
       if(error)throw error;
-      say(action==="accept"?"Quotation গ্রহণ হয়েছে এবং Order তৈরি হয়েছে।":action==="counter"?"আপনার Counter-offer Seller-এর কাছে পাঠানো হয়েছে।":"Quotation প্রত্যাখ্যান করা হয়েছে।",true);
+      say(action==="accept"?"Quotation গৃহীত হয়েছে। Order তৈরি হয়েছে; Seller-এর নিশ্চিতকরণের অপেক্ষায় আছে।":action==="counter"?"আপনার Counter-offer Seller-এর কাছে পাঠানো হয়েছে।":"Quotation প্রত্যাখ্যান করা হয়েছে।",true);
       await Promise.all([loadBuyerDashboard(),loadBuyerOrders()]);
     }catch(err){say("Quotation আপডেট হয়নি: "+err.message);}
   }
