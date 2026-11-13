@@ -14,7 +14,7 @@ echo "Downloading immutable local-only SQL files ..."
 curl -fL --retry 3 "$BASE/cf3dc4991cad964d664ecb47f031c72e19914114/supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql" -o 25_local_buyer_demand_fixture.sql
 curl -fL --retry 3 "$BASE/7c8bb362e082cbc76de22c6e9defac2198d6952b/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
 curl -fL --retry 3 "$BASE/844304bbb79e8984fefdb9d3085997c78f69eab1/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
-curl -fL --retry 3 "$BASE/0e6d1ccdc9277b6210ab3887d103f3497a836fab/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
+curl -fL --retry 3 "$BASE/88f4c0c31c2dee7936a9ef218e86e56b52d51df4/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
 
 echo
 echo "Preflight: verifying local target and prerequisites ..."
