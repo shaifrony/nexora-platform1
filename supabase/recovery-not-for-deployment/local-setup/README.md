@@ -203,44 +203,36 @@ Full schema export is still required. Use the current Supabase CLI supabase db d
 
 ## Full schema-only export — safe local recovery procedure
 
-The live catalog snapshot has now also recorded:
-- all 22 public relations (20 tables and 2 views);
-- an inventory of 37 public/private functions (the complete definitions of ten selected foundation functions are included in the snapshot);
-- 12 non-internal triggers in auth/storage and their trigger-function definitions;
-- four auth/storage RLS policies.
+The live catalog evidence is metadata-only. A complete SQL schema export is still required.
 
-This still does not replace a full SQL export, especially for exact grants/default privileges and all public/private function definitions.
+### Preferred method: Supabase CLI dump
 
-### Do not use db pull on the live project for this recovery step
+Supabase's current backup guide recommends `supabase db dump --remote=...` for a schema-only logical dump. It runs pg_dump with Supabase-specific filtering and requires Docker. It does not export table rows or custom roles by default.
 
-The current Supabase CLI workflow documents that db pull writes a baseline entry into the remote migration history. That would alter the live project's migration history, which is outside the current authorization. Do not run db pull, db push, db reset --linked, migration repair, or any migration command that writes to the remote project.
-
-### Export public/private schema without table data
-
-First check the locally installed PostgreSQL client:
+First check whether both tools are available on the user's device:
 
 ```sh
-pg_dump --version
+supabase --version
+docker --version
 ```
 
-Use pg_dump 17 or newer for the live PostgreSQL 17.11 project. If it is missing or older, stop and report the exact version/error; do not install random packages or improvise.
-
-If pg_dump is compatible, copy the connection string from the Supabase Dashboard's Connect panel on your own device. Prefer the Session Pooler if the direct connection is unavailable on your network. Then run this from the Termux shell:
+If both are installed, use the Session Pooler connection string from the Dashboard Connect panel when the network is IPv4-only (use Direct connection when IPv6 is available). Keep the connection string and password private. In Termux, read it without echoing it:
 
 ```sh
-read -r -s -p "Paste the database connection string (hidden; do not send it in chat): " NEXORA_DB_URL
+read -r -s -p "Paste the database connection string (hidden): " NEXORA_DB_URL
 printf '\\n'
-pg_dump --dbname="$NEXORA_DB_URL" --schema-only --no-owner --schema=public --schema=private --file="$HOME/nexora-live-public-private-schema.sql"
+supabase db dump --remote="$NEXORA_DB_URL" -f "$HOME/nexora-live-schema.sql"
+status=$?
 unset NEXORA_DB_URL
-if [ -s "$HOME/nexora-live-public-private-schema.sql" ]; then
-  echo "SCHEMA-ONLY EXPORT CREATED: $HOME/nexora-live-public-private-schema.sql"
+if [ "$status" -eq 0 ] && [ -s "$HOME/nexora-live-schema.sql" ]; then
+  echo "SCHEMA-ONLY EXPORT CREATED: $HOME/nexora-live-schema.sql"
 else
-  echo "EXPORT NOT VERIFIED — stop and share the exact error"
+  echo "EXPORT NOT VERIFIED — stop and share the exact error, with secrets removed"
 fi
 ```
 
-This command exports schema definitions only for public/private, including table definitions, policies, functions, triggers, indexes and ACL statements emitted by pg_dump. It does not export table rows. The auth.users trigger and Storage customizations are separately preserved as catalog evidence in the JSON snapshot; do not attempt to restore Supabase-managed auth/storage schemas over a local Supabase stack.
+Do not run `supabase link`, `db pull`, `db push`, `db reset --linked`, migration repair, or any command that writes to the remote project. The explicit `db dump --remote` operation is the read-only export step. Confirm the CLI's displayed Target refers to the intended NEXORA project before proceeding.
 
-**Do not upload the connection string, database password, data dump, auth.users rows, or production user data to GitHub or ChatGPT.** The schema-only SQL file should remain on the device until we inspect it. Do not restore it to the live project. A restore/rehearsal must target a disposable local database only, after confirming the database name and PostgreSQL major version.
+If Supabase CLI or Docker is unavailable, do not substitute a broad raw pg_dump command yet. The raw client can include Supabase-managed objects and cause restore problems. We will choose a scoped fallback after checking the exact Termux tool availability and connection mode.
 
-The JSON evidence file also includes the complete 22-relation public inventory, the 37-function public/private inventory, 12 non-internal auth/storage trigger definitions with their function bodies, and four auth/storage RLS policies. Ten selected Foundation functions have full definitions. This remains catalog evidence rather than a complete SQL schema dump.
+**Never send the database password or connection string in chat or commit them to GitHub.** Keep the schema file on the device for inspection; do not restore it to the live project. Any rehearsal must use a disposable local database only. Supabase documents the CLI dump workflow and its Docker requirement in its official backup guide: https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
