@@ -79,30 +79,23 @@ returns trigger
 language plpgsql
 security definer
 set search_path=''
-as $$
-declare v_buyer_category text;
+as $
 begin
   if new.demand_status<>'open' then return new; end if;
-  select p.buyer_category into v_buyer_category
-  from public.profiles p
-  where p.id=new.buyer_id and p.role='buyer' and p.account_status='active';
-  if v_buyer_category is null then return new; end if;
   insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
   select distinct new.id,pr.seller_id,'approved_product_category'
   from public.products pr
   join public.profiles sp on sp.id=pr.seller_id
   join public.public_businesses pb on pb.business_id=pr.business_id and pb.seller_id=pr.seller_id
   where pr.listing_status='approved'
-    and pr.market_category=v_buyer_category
     and new.category=pr.category
     and (nullif(btrim(new.subcategory),'') is null
       or lower(btrim(coalesce(pr.subcategory,'')))=lower(btrim(new.subcategory)))
     and sp.role='seller' and sp.account_status='active'
-    and v_buyer_category=any(sp.seller_categories)
   on conflict(demand_id,seller_id) do nothing;
   return new;
 end;
-$$;
+$;
 revoke all on function private.route_new_buyer_demand_to_sellers() from public,anon,authenticated;
 drop trigger if exists buyer_demand_route_to_sellers on public.buyer_demands;
 create trigger buyer_demand_route_to_sellers
@@ -114,25 +107,21 @@ returns trigger
 language plpgsql
 security definer
 set search_path=''
-as $$
+as $
 begin
   if new.listing_status='approved' then
     insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
     select distinct d.id,new.seller_id,'approved_product_category'
     from public.buyer_demands d
-    join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
     join public.profiles sp on sp.id=new.seller_id and sp.role='seller' and sp.account_status='active'
     join public.public_businesses pb on pb.business_id=new.business_id and pb.seller_id=new.seller_id
     where d.demand_status='open'
       and d.category=new.category
       and (nullif(btrim(d.subcategory),'') is null
         or lower(btrim(coalesce(new.subcategory,'')))=lower(btrim(d.subcategory)))
-      and bp.buyer_category=new.market_category
-      and new.market_category=any(sp.seller_categories)
     on conflict(demand_id,seller_id) do nothing;
   end if;
 
-  -- Remove stale inbox access if this Seller no longer has any matching approved product.
   delete from public.buyer_demand_inbox i
   using public.buyer_demands d
   where i.demand_id=d.id and i.seller_id=new.seller_id and d.demand_status='open'
@@ -140,17 +129,15 @@ begin
     and not exists(
       select 1 from public.products pr
       join public.profiles sp on sp.id=pr.seller_id and sp.role='seller' and sp.account_status='active'
-      join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
       join public.public_businesses pb on pb.business_id=pr.business_id and pb.seller_id=pr.seller_id
       where pr.seller_id=new.seller_id and pr.listing_status='approved'
-        and pr.category=d.category and pr.market_category=bp.buyer_category
-        and pr.market_category=any(sp.seller_categories)
+        and pr.category=d.category
         and (nullif(btrim(d.subcategory),'') is null
           or lower(btrim(coalesce(pr.subcategory,'')))=lower(btrim(d.subcategory)))
     );
   return new;
 end;
-$$;
+$;
 revoke all on function private.route_new_approved_product_to_open_demands() from public,anon,authenticated;
 drop trigger if exists approved_product_route_open_demands on public.products;
 create trigger approved_product_route_open_demands
@@ -238,7 +225,6 @@ declare
   v_seller_id uuid;
   v_business_id uuid;
   v_listing_status text;
-  v_seller_categories text[];
   v_request_id uuid;
 begin
   if v_actor is null then
