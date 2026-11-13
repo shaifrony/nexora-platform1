@@ -806,7 +806,7 @@
       let offers = [];
       if (ids.length) {
         const result = await client().from("seller_offers")
-          .select("id,demand_id,offer_price,currency,available_quantity,message,offer_status,created_at")
+          .select("id,demand_id,offer_price,currency,available_quantity,message,offer_status,created_at,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge")
           .in("demand_id", ids).order("created_at", { ascending: false });
         if (result.error) throw result.error;
         offers = result.data || [];
@@ -837,9 +837,14 @@
     host.innerHTML = demands.map(d => {
       const list = offerMap.get(d.id) || [];
       const offerHTML = list.length ? list.map(o =>
-        '<div class="offer"><strong>বিক্রেতার Price Offer</strong>' +
-        '<p class="price">' + esc(o.offer_price) + ' ' + esc(o.currency) + '</p>' +
-        '<p class="muted">সরবরাহযোগ্য পরিমাণ: ' + esc(o.available_quantity) + '</p>' +
+        '<div class="offer"><strong>Seller Quotation</strong>' +
+        '<p class="price">' + esc(o.offer_price) + ' ' + esc(o.currency) + (o.price_basis==="total"?" মোট":" / ইউনিট") + '</p>' +
+        '<p class="muted">ব্র্যান্ড/মডেল: ' + esc([o.product_brand,o.product_model].filter(Boolean).join(" · ")||"উল্লেখ নেই") + '</p>' +
+        '<p class="muted">অবস্থা: ' + esc(({new:"নতুন",refurbished:"রিফারবিশড",used:"ব্যবহৃত",any:"যেকোনো"})[o.product_condition]||"উল্লেখ নেই") + ' · সরবরাহযোগ্য: ' + esc(o.available_quantity) + '</p>' +
+        (o.estimated_delivery_date ? '<p class="muted">সম্ভাব্য সরবরাহ: '+esc(o.estimated_delivery_date)+'</p>' : '') +
+        (o.warranty ? '<p class="muted">ওয়ারেন্টি: '+esc(o.warranty)+'</p>' : '') +
+        (o.delivery_charge!==null ? '<p class="muted">ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>' : '') +
+        (o.offer_valid_until ? '<p class="muted">Quotation বৈধ: '+esc(o.offer_valid_until)+'</p>' : '') +
         (o.message ? '<p class="muted">' + esc(o.message) + '</p>' : '') +
         '<p class="muted">Offer Status: ' + esc(o.offer_status) + '</p></div>'
       ).join("") : '<p class="muted">এখনো কোনো Price Offer আসেনি।</p>';
@@ -916,23 +921,58 @@
     host.querySelectorAll("button[data-offer]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offer)));
   }
 
-  async function submitOffer(demandId) {
-    if (!activeSeller()) return say("Offer দিতে সক্রিয় Seller অ্যাকাউন্ট প্রয়োজন।");
-    if (!state.business || state.business.approval_status !== "approved") return say("Offer পাঠাতে Admin অনুমোদিত Business Profile প্রয়োজন।");
-    const price = prompt("প্রস্তাবিত দাম লিখুন:");
-    if (price === null || price.trim() === "" || !Number.isFinite(Number(price)) || Number(price) < 0) return;
-    const currency = (prompt("Currency (USD / BDT / EUR):", "USD") || "").toUpperCase();
-    if (!currencyOK(currency)) return say("Currency অবশ্যই ৩ অক্ষরের ISO কোড হতে হবে।");
-    const quantity = prompt("আপনি কত পরিমাণ সরবরাহ করতে পারবেন?");
-    if (!quantity?.trim()) return;
-    const message = prompt("অতিরিক্ত বার্তা (ঐচ্ছিক):", "") || null;
-    const { error } = await client().from("seller_offers").insert({
-      demand_id: demandId, seller_id: user().id, offer_price: Number(price),
-      currency, available_quantity: quantity.trim(), message
-    });
-    if (error) return say("Offer জমা হয়নি: " + error.message);
-    say("Price Offer জমা হয়েছে।", true);
-    await loadDemands();
+  async function submitDemandQuotation(form,demandId){
+    if(!activeSeller()||!signedIn())return say("Quotation পাঠাতে Active Seller লগইন প্রয়োজন।");
+    if(!state.business||state.business.approval_status!=="approved")return say("Quotation পাঠাতে Admin অনুমোদিত Business Profile প্রয়োজন।");
+    const v=Object.fromEntries(new FormData(form));
+    const price=Number(v.offer_price),deliveryCharge=v.delivery_charge===""?null:Number(v.delivery_charge);
+    if(!Number.isFinite(price)||price<=0)return say("প্রতি ইউনিট বা মোট মূল্য শূন্যের বেশি দিন।");
+    if(!currencyOK(String(v.currency||"").toUpperCase()))return say("সঠিক Currency নির্বাচন করুন।");
+    if(!Number.isFinite(Number(v.available_quantity))||Number(v.available_quantity)<=0)return say("সরবরাহযোগ্য পরিমাণ সঠিকভাবে লিখুন।");
+    if(deliveryCharge!==null&&(!Number.isFinite(deliveryCharge)||deliveryCharge<0))return say("ডেলিভারি চার্জ সঠিকভাবে লিখুন।");
+    const button=form.querySelector('button[type="submit"]');if(button)button.disabled=true;
+    try{
+      const {error}=await client().from("seller_offers").insert({
+        demand_id:demandId,seller_id:user().id,offer_price:price,currency:String(v.currency).toUpperCase(),
+        available_quantity:String(v.available_quantity),message:String(v.message||"").trim()||null,
+        product_brand:String(v.product_brand||"").trim()||null,product_model:String(v.product_model||"").trim()||null,
+        product_condition:v.product_condition||null,price_basis:v.price_basis||"per_unit",
+        estimated_delivery_date:v.estimated_delivery_date||null,warranty:String(v.warranty||"").trim()||null,
+        offer_valid_until:v.offer_valid_until||null,delivery_charge:deliveryCharge
+      });
+      if(error)throw error;
+      say("আপনার Quotation Buyer-এর কাছে পাঠানো হয়েছে।",true);
+      await loadSellerDemandInbox();
+    }catch(err){say("Quotation পাঠানো যায়নি: "+err.message);if(button)button.disabled=false;}
+  }
+
+  async function loadSellerDemandInbox(){
+    const host=$("matchedDemands");if(!host)return;
+    if(!activeSeller()||!signedIn()){host.textContent="Active Seller হিসেবে লগইন করুন।";return;}
+    if(!state.business||state.business.approval_status!=="approved"){host.textContent="Buyer Demand Inbox দেখতে Admin অনুমোদিত Business Profile প্রয়োজন।";return;}
+    host.innerHTML='<p class="muted">আপনার জন্য প্রাসঙ্গিক Buyer Demand খোঁজা হচ্ছে…</p>';
+    try{
+      const {data,error}=await client().from("buyer_demand_inbox")
+        .select("id,created_at,buyer_demands!inner(id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status)")
+        .eq("seller_id",user().id).eq("buyer_demands.demand_status","open")
+        .order("created_at",{ascending:false}).limit(100);
+      if(error)throw error;
+      const rows=(data||[]).map(r=>({...r.demand,...{inbox_created_at:r.created_at}})).filter(d=>d.id);
+      if(!rows.length){host.innerHTML='<p class="muted">আপনার অনুমোদিত পণ্যের Category ও Subcategory-এর সঙ্গে মেলে এমন কোনো খোলা Buyer Demand নেই। নতুন মিল পাওয়া গেলে এখানে আসবে।</p>';return;}
+      const ids=rows.map(d=>d.id);
+      const {data:offers,error:offerError}=await client().from("seller_offers")
+        .select("demand_id,offer_price,currency,available_quantity,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge,message")
+        .eq("seller_id",user().id).in("demand_id",ids);
+      if(offerError)throw offerError;
+      const sent=new Map((offers||[]).map(o=>[o.demand_id,o]));
+      host.innerHTML=rows.map(d=>{
+        const offer=sent.get(d.id);
+        return '<article class="card nx-demand-inbox-card"><div class="section-head"><div><span class="tag">'+esc(d.category)+'</span><span class="tag">'+esc(d.subcategory||"সব Subcategory")+'</span></div><strong>'+esc(d.demand_code)+'</strong></div><h3>'+esc(d.product_name)+'</h3><p>'+esc(d.description)+'</p><p class="muted"><b>স্পেসিফিকেশন:</b> '+esc(d.specifications_quality||"উল্লেখ করা হয়নি")+'</p><div class="grid"><div><small>পরিমাণ</small><strong>'+esc(d.required_quantity)+'</strong></div><div><small>Buyer বাজেট</small><strong>'+(d.budget===null?"উল্লেখ নেই":esc(d.budget+" "+d.currency))+'</strong></div><div><small>গন্তব্য</small><strong>'+esc([d.destination_city,d.destination_country].filter(Boolean).join(", "))+'</strong></div></div><p class="muted">প্রয়োজনের তারিখ: <b>'+esc(d.required_date)+'</b></p>'+
+        (offer?'<div class="offer"><strong>আপনার পাঠানো Quotation</strong><p class="price">'+esc(offer.offer_price)+' '+esc(offer.currency)+(offer.price_basis==="total"?" মোট":" / ইউনিট")+'</p><p class="muted">'+esc([offer.product_brand,offer.product_model].filter(Boolean).join(" · ")||"পণ্যের মডেল উল্লেখ নেই")+' · '+esc(offer.available_quantity)+' সরবরাহযোগ্য</p><span class="tag">পাঠানো হয়েছে</span></div>':
+        '<form class="nx-demand-quote-form card" data-quote-demand="'+esc(d.id)+'"><h4>এই Demand-এর জন্য Quotation দিন</h4><div class="grid"><label>ব্র্যান্ড<input name="product_brand" maxlength="100" placeholder="যেমন: Samsung"></label><label>মডেল<input name="product_model" maxlength="120" placeholder="যেমন: Galaxy A55"></label></div><div class="grid"><label>পণ্যের অবস্থা<select name="product_condition"><option value="new">নতুন</option><option value="refurbished">রিফারবিশড</option><option value="used">ব্যবহৃত</option><option value="any">যেকোনো</option></select></label><label>মূল্যের ধরন<select name="price_basis"><option value="per_unit">প্রতি ইউনিট</option><option value="total">মোট মূল্য</option></select></label></div><div class="grid"><label>প্রস্তাবিত মূল্য *<input name="offer_price" type="number" min="0.01" step="0.01" required></label><label>মুদ্রা *<select name="currency"><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CNY">CNY</option></select></label><label>সরবরাহ করতে পারবেন *<input name="available_quantity" type="number" min="0.001" step="0.001" required></label><label>ডেলিভারি চার্জ (ঐচ্ছিক)<input name="delivery_charge" type="number" min="0" step="0.01"></label></div><div class="grid"><label>সম্ভাব্য সরবরাহের তারিখ<input name="estimated_delivery_date" type="date"></label><label>Quotation-এর মেয়াদ<input name="offer_valid_until" type="date"></label></div><label>ওয়ারেন্টি / গ্যারান্টি<input name="warranty" maxlength="300" placeholder="যেমন: ১ বছর অফিসিয়াল ওয়ারেন্টি"></label><label>অতিরিক্ত শর্ত ও বিবরণ<textarea name="message" maxlength="2000" placeholder="পণ্যের বৈশিষ্ট্য, accessories, delivery terms, payment terms ইত্যাদি"></textarea></label><button class="primary" type="submit">Quotation পাঠান</button></form>')+'</article>';
+      }).join("");
+      host.querySelectorAll("form[data-quote-demand]").forEach(form=>form.addEventListener("submit",e=>{e.preventDefault();submitDemandQuotation(form,form.dataset.quoteDemand);}));
+    }catch(err){host.textContent="Buyer Demand Inbox লোড হয়নি: "+err.message;}
   }
 
   const serviceCategoryLabels = {
@@ -1116,7 +1156,7 @@
       await loadSellerServices();
       await loadSellerOrders();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+        .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -1169,36 +1209,7 @@
       if (productMarketFilter) productMarketFilter.onchange = applyProductFilters;
       applyProductFilters();
 
-      const matchedHost = $("matchedDemands");
-      if (!state.business || state.business.approval_status !== "approved") {
-        matchedHost.innerHTML = '<p class="muted">Business Profile Admin অনুমোদনের পর প্রাসঙ্গিক Buyer Demand ও Offer পাঠানোর সুবিধা চালু হবে।</p>';
-        return;
-      }
-      const approvedCategories = [...new Set(products.filter(p => p.listing_status === "approved").map(p => p.category).filter(Boolean))];
-      if (!approvedCategories.length) {
-        matchedHost.innerHTML = '<p class="muted">আপনার কোনো Admin অনুমোদিত পণ্য নেই। পণ্য অনুমোদিত হলে সংশ্লিষ্ট Category-এর Buyer Demand এখানে দেখানো হবে।</p>';
-        return;
-      }
-      const { data: demands, error: demandError } = await client().from("buyer_demands")
-        .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,destination_country,destination_city,required_date")
-        .eq("demand_status", "open").in("category", approvedCategories)
-        .order("created_at", { ascending: false });
-      if (demandError) throw demandError;
-      const { data: offers, error: offerError } = await client().from("seller_offers")
-        .select("demand_id").eq("seller_id", user().id);
-      if (offerError) throw offerError;
-      const offeredDemandIds = new Set((offers || []).map(o => o.demand_id));
-      matchedHost.innerHTML = (demands || []).map(d => `
-        <div class="offer">
-          <strong>${esc(d.product_name)}</strong>
-          <p class="muted">${esc(d.category)} · Demand ID: ${esc(d.demand_code)}</p>
-          <p>${esc(d.description)}</p>
-          ${d.specifications_quality ? `<p class="muted">মান/বৈশিষ্ট্য: ${esc(d.specifications_quality)}</p>` : ""}
-          <p class="muted">পরিমাণ: ${esc(d.required_quantity)} · গন্তব্য: ${esc([d.destination_city,d.destination_country].filter(Boolean).join(", "))}</p>
-          <p><span class="demand-date">প্রয়োজন: ${esc(d.required_date)}</span></p>
-          ${offeredDemandIds.has(d.id) ? '<span class="tag">Offer পাঠানো হয়েছে</span>' : `<button class="primary" type="button" data-offer-demand="${esc(d.id)}">প্রস্তাব পাঠান</button>`}
-        </div>`).join("") || '<p class="muted">আপনার অনুমোদিত পণ্যের Category-এর সঙ্গে মেলে এমন কোনো খোলা Buyer Demand নেই।</p>';
-      matchedHost.querySelectorAll("button[data-offer-demand]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offerDemand)));
+      await loadSellerDemandInbox();
     } catch (err) { say("Seller Dashboard লোড হয়নি: " + err.message); }
   }
 
