@@ -257,6 +257,25 @@ $buyer_spoof$;
 
 RESET ROLE;
 
+DO $required_date_test$
+DECLARE v_rejected boolean:=false;
+BEGIN
+  BEGIN
+    INSERT INTO public.buyer_demands(
+      buyer_id,product_name,category,subcategory,description,required_quantity,
+      currency,destination_country,destination_city,required_date
+    ) VALUES (
+      '25000000-0000-4000-8000-000000000001',
+      'Past-date Demand','Electronics','Mobile Phones','Invalid past date',
+      '1 unit','BDT','Bangladesh','Dhaka',current_date-1
+    );
+  EXCEPTION WHEN check_violation THEN v_rejected:=true;
+  END;
+  IF NOT v_rejected THEN RAISE EXCEPTION 'FAIL: past required_date was accepted'; END IF;
+  RAISE NOTICE 'PASS: required_date cannot be in the past';
+END
+$required_date_test$;
+
 DO $catalog_assertions$
 BEGIN
   IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.buyer_demands'::regclass)
