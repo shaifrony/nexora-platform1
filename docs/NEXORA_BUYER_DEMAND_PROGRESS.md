@@ -107,3 +107,13 @@ No database schema, migration, hosted Supabase project, production deployment or
 - Corrected order conversion when the Seller accepts a Buyer counter-offer: the new order is created as accepted with `accepted_at`, and an accepted order event is recorded. When the Buyer accepts a Seller proposal, the order remains pending for Seller confirmation.
 - Re-fetched the migration after each change. Latest source checks confirm the new guards and balanced SQL function delimiters.
 - Remaining verification: isolated full-schema migration rehearsal, SQL behavior tests for both acceptance paths and inactive-account denial, Supabase JWT/PostgREST/RLS checks, and browser E2E. No SQL was executed; no Live Supabase, Production, `main`, DNS or deployment was changed.
+
+
+## 2026-11-14 — Negotiation turn-taking and local installed-contract audit
+
+- Added a server-side rejection turn check: Buyer can reject only after the Seller's latest proposal; Seller can reject only after the Buyer's latest counter. A participant can no longer reject their own latest proposal by bypassing the UI.
+- Added `supabase/recovery-not-for-deployment/local-setup/29_local_buyer_demand_order_contract_audit.sql`. It is guarded to `nexora_test`, runs in a read-only transaction, and checks the installed RPC source contract, active-account checks, acceptance state, negotiation-history RLS, unique source-offer order index, source consistency constraint and anon EXECUTE denial.
+- Re-fetched the active migration and local audit script from GitHub. Source inspection confirms the new rejection guard, NULL-action validation, active-account checks and Seller-accepted Order state. The audit script's safety guard and key assertions are present.
+- The audit script has not been executed because the local reconstructed fixtures do not include the complete commerce-order/negotiation schema and functions. No PostgreSQL client/runtime is available in this execution environment.
+- Full-chain rehearsal is blocked safely: the branch lacks a trusted original foundation DDL/schema-only export for prerequisite profiles, Admin/Auth and related objects, and existing local fixtures are explicitly reconstructed, not production-equivalent. Replaying active migrations on those fixtures would create misleading results. Do not run the active migration chain until a trusted baseline and migration-history reconciliation are available.
+- No migration SQL was executed; no Live Supabase, Production, `main`, DNS or deployment changed.
