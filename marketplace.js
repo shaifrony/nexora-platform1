@@ -541,7 +541,7 @@
         .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":"সেবা বুকিং")+' · '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong>'+(o.seller_note?'<p class="muted">'+esc(o.seller_note)+'</p>':'')+(o.order_status==="ready_for_confirmation"?'<button class="primary" type="button" data-order-action="complete" data-order-id="'+esc(o.id)+'">আমি পণ্য/সেবা পেয়েছি — সম্পন্ন করুন</button>':'')+(o.order_status==="pending"?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'">অর্ডার বাতিল</button>':'')+'</article>').join("")||'<p class="muted">আপনার কোনো অর্ডার নেই।</p>';
+      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"Buyer Demand অর্ডার":"সেবা বুকিং")+' · '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong>'+(o.seller_note?'<p class="muted">'+esc(o.seller_note)+'</p>':'')+(o.order_status==="ready_for_confirmation"?'<button class="primary" type="button" data-order-action="complete" data-order-id="'+esc(o.id)+'">আমি পণ্য/সেবা পেয়েছি — সম্পন্ন করুন</button>':'')+(o.order_status==="pending"?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'">অর্ডার বাতিল</button>':'')+'</article>').join("")||'<p class="muted">আপনার কোনো অর্ডার নেই।</p>';
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
@@ -963,6 +963,25 @@
     }catch(err){say("Quotation পাঠানো যায়নি: "+err.message);if(button)button.disabled=false;}
   }
 
+  async function respondToDemandQuotationSeller(offerId,action,currentQuantity){
+    if(!activeSeller()||!signedIn())return say("Active Seller লগইন প্রয়োজন।");
+    let quantity=null,unitPrice=null,note=null;
+    if(action==="counter"){
+      const q=prompt("আপনি কত ইউনিট সরবরাহ করতে পারবেন? Buyer-এর প্রস্তাবিত পরিমাণ "+currentQuantity+"।",String(currentQuantity));if(q===null)return;quantity=Number(q);
+      if(!Number.isFinite(quantity)||quantity<=0)return say("পরিমাণ ০-এর বেশি হতে হবে।");
+      const p=prompt("আপনার প্রস্তাবিত প্রতি ইউনিট মূল্য লিখুন:");if(p===null)return;unitPrice=Number(p);
+      if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("প্রতি ইউনিট মূল্য ০-এর বেশি হতে হবে।");
+      note=prompt("Buyer-এর জন্য অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
+    }else if(action==="reject"&&!confirm("Buyer-এর Counter-offer প্রত্যাখ্যান করবেন?"))return;
+    else if(action==="accept"&&!confirm("Buyer-এর Counter-offer গ্রহণ করে Order তৈরি করবেন?"))return;
+    try{
+      const {data,error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note});
+      if(error)throw error;
+      say(action==="accept"?"Counter গ্রহণ হয়েছে এবং Order তৈরি হয়েছে।":action==="counter"?"আপনার নতুন Counter-offer Buyer-এর কাছে পাঠানো হয়েছে।":"Counter-offer প্রত্যাখ্যান করা হয়েছে।",true);
+      await Promise.all([loadSellerDemandInbox(),loadSellerOrders()]);
+    }catch(err){say("Quotation response ব্যর্থ: "+err.message);}
+  }
+
   async function loadSellerDemandInbox(){
     const host=$("matchedDemands");if(!host)return;
     if(!activeSeller()||!signedIn()){host.textContent="Active Seller হিসেবে লগইন করুন।";return;}
@@ -978,17 +997,18 @@
       if(!rows.length){host.innerHTML='<p class="muted">আপনার অনুমোদিত পণ্যের Category ও Subcategory-এর সঙ্গে মেলে এমন কোনো খোলা Buyer Demand নেই। নতুন মিল পাওয়া গেলে এখানে আসবে।</p>';return;}
       const ids=rows.map(d=>d.id);
       const {data:offers,error:offerError}=await client().from("seller_offers")
-        .select("demand_id,offer_price,currency,available_quantity,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge,message")
+        .select("id,demand_id,offer_price,currency,available_quantity,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge,message,offer_status,negotiation_status,current_quantity,current_unit_price,last_negotiator_id,demand_order_id")
         .eq("seller_id",user().id).in("demand_id",ids);
       if(offerError)throw offerError;
       const sent=new Map((offers||[]).map(o=>[o.demand_id,o]));
       host.innerHTML=rows.map(d=>{
         const offer=sent.get(d.id);
         return '<article class="card nx-demand-inbox-card"><div class="section-head"><div><span class="tag">'+esc(d.category)+'</span><span class="tag">'+esc(d.subcategory||"সব Subcategory")+'</span></div><strong>'+esc(d.demand_code)+'</strong></div><h3>'+esc(d.product_name)+'</h3><p>'+esc(d.description)+'</p><p class="muted"><b>স্পেসিফিকেশন:</b> '+esc(d.specifications_quality||"উল্লেখ করা হয়নি")+'</p><div class="grid"><div><small>পরিমাণ</small><strong>'+esc(d.required_quantity)+'</strong></div><div><small>Buyer বাজেট</small><strong>'+(d.budget===null?"উল্লেখ নেই":esc(d.budget+" "+d.currency))+'</strong></div><div><small>গন্তব্য</small><strong>'+esc([d.destination_city,d.destination_country].filter(Boolean).join(", "))+'</strong></div></div><p class="muted">প্রয়োজনের তারিখ: <b>'+esc(d.required_date)+'</b></p>'+
-        (offer?'<div class="offer"><strong>আপনার পাঠানো Quotation</strong><p class="price">'+esc(offer.offer_price)+' '+esc(offer.currency)+(offer.price_basis==="total"?" মোট":" / ইউনিট")+'</p><p class="muted">'+esc([offer.product_brand,offer.product_model].filter(Boolean).join(" · ")||"পণ্যের মডেল উল্লেখ নেই")+' · '+esc(offer.available_quantity)+' সরবরাহযোগ্য</p><span class="tag">পাঠানো হয়েছে</span></div>':
+        (offer?'<div class="offer"><strong>আপনার পাঠানো Quotation</strong><p class="price">'+esc(offer.current_unit_price||offer.offer_price)+' '+esc(offer.currency)+' / ইউনিট</p><p class="muted">'+esc(offer.current_quantity||offer.available_quantity)+' ইউনিটের শর্ত · সর্বোচ্চ '+esc(offer.available_quantity)+' সরবরাহযোগ্য</p><p class="muted">আলোচনার অবস্থা: '+esc(({open:"Buyer-এর জবাবের অপেক্ষায়",buyer_countered:"আপনার জবাবের অপেক্ষায়",seller_countered:"Buyer-এর জবাবের অপেক্ষায়",ordered:"Order তৈরি হয়েছে",declined:"প্রত্যাখ্যাত"})[offer.negotiation_status]||offer.offer_status)+'</p>'+(offer.negotiation_status==="buyer_countered"&&!offer.demand_order_id?'<div class="form-actions"><button class="primary" type="button" data-seller-quote-action="accept" data-offer-id="'+esc(offer.id)+'" data-quantity="'+esc(offer.current_quantity)+'">Buyer-এর Counter গ্রহণ</button><button class="light" type="button" data-seller-quote-action="counter" data-offer-id="'+esc(offer.id)+'" data-quantity="'+esc(offer.current_quantity)+'">নতুন Counter দিন</button><button class="danger" type="button" data-seller-quote-action="reject" data-offer-id="'+esc(offer.id)+'">প্রত্যাখ্যান</button></div>':'')+'</div>':
         '<form class="nx-demand-quote-form card" data-quote-demand="'+esc(d.id)+'"><h4>এই Demand-এর জন্য Quotation দিন</h4><div class="grid"><label>ব্র্যান্ড<input name="product_brand" maxlength="100" placeholder="যেমন: Samsung"></label><label>মডেল<input name="product_model" maxlength="120" placeholder="যেমন: Galaxy A55"></label></div><div class="grid"><label>পণ্যের অবস্থা<select name="product_condition"><option value="new">নতুন</option><option value="refurbished">রিফারবিশড</option><option value="used">ব্যবহৃত</option><option value="any">যেকোনো</option></select></label><label>মূল্যের ধরন<select name="price_basis"><option value="per_unit">প্রতি ইউনিট</option><option value="total">মোট মূল্য</option></select></label></div><div class="grid"><label>প্রস্তাবিত মূল্য *<input name="offer_price" type="number" min="0.01" step="0.01" required></label><label>মুদ্রা *<select name="currency"><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option><option value="CNY">CNY</option></select></label><label>সরবরাহ করতে পারবেন *<input name="available_quantity" type="number" min="0.001" step="0.001" required></label><label>ডেলিভারি চার্জ (ঐচ্ছিক)<input name="delivery_charge" type="number" min="0" step="0.01"></label></div><div class="grid"><label>সম্ভাব্য সরবরাহের তারিখ<input name="estimated_delivery_date" type="date"></label><label>Quotation-এর মেয়াদ<input name="offer_valid_until" type="date"></label></div><label>ওয়ারেন্টি / গ্যারান্টি<input name="warranty" maxlength="300" placeholder="যেমন: ১ বছর অফিসিয়াল ওয়ারেন্টি"></label><label>অতিরিক্ত শর্ত ও বিবরণ<textarea name="message" maxlength="2000" placeholder="পণ্যের বৈশিষ্ট্য, accessories, delivery terms, payment terms ইত্যাদি"></textarea></label><button class="primary" type="submit">Quotation পাঠান</button></form>')+'</article>';
       }).join("");
       host.querySelectorAll("form[data-quote-demand]").forEach(form=>form.addEventListener("submit",e=>{e.preventDefault();submitDemandQuotation(form,form.dataset.quoteDemand);}));
+       host.querySelectorAll("button[data-seller-quote-action]").forEach(b=>b.addEventListener("click",()=>respondToDemandQuotationSeller(b.dataset.offerId,b.dataset.sellerQuoteAction,Number(b.dataset.quantity)||null)));
     }catch(err){host.textContent="Buyer Demand Inbox লোড হয়নি: "+err.message;}
   }
 
