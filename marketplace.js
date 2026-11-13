@@ -532,6 +532,22 @@
       return null;
     }
   }
+  async function loadBuyerPriceNegotiations(){
+    const host=$("nxBuyerPriceNegotiations");if(!host)return;
+    if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার ব্যক্তিগত দরদাম দেখা যাবে।";return;}
+    try{
+      const {data,error}=await client().from("product_price_negotiations")
+        .select("id,product_id,quantity,current_unit_price,currency,fulfilment_location,negotiation_status,last_actor_id,order_id,created_at,updated_at")
+        .eq("buyer_id",user().id).order("updated_at",{ascending:false}).limit(50);
+      if(error)throw error;const rows=data||[];
+      const productIds=[...new Set(rows.map(n=>n.product_id))];let products={};
+      if(productIds.length){const p=await client().from("products").select("id,product_name,price,listing_status").in("id",productIds);if(p.error)throw p.error;(p.data||[]).forEach(x=>products[x.id]=x);}
+      const labels={buyer_countered:"Seller-এর জবাবের অপেক্ষায়",seller_countered:"আপনার জবাবের অপেক্ষায়",ordered:"Order তৈরি হয়েছে",rejected:"প্রত্যাখ্যাত"};
+      host.innerHTML=rows.map(n=>'<article class="card"><div class="section-head"><strong>'+esc(products[n.product_id]?.product_name||"Product")+'</strong><span class="tag">'+esc(labels[n.negotiation_status]||n.negotiation_status)+'</span></div><p>ওয়েবসাইটের প্রকাশ্য মূল্য: '+esc(products[n.product_id]?.price??"—")+' '+esc(n.currency)+' / ইউনিট</p><p><b>আপনার দর:</b> '+esc(n.quantity)+' × '+esc(n.current_unit_price)+' '+esc(n.currency)+'</p><p class="muted">শুধু আপনি ও সংশ্লিষ্ট Seller এই আলোচনা দেখতে পান।</p>'+(n.negotiation_status==="seller_countered"?'<div class="form-actions"><button class="primary" data-buyer-product-neg="accept" data-neg-id="'+esc(n.id)+'">Seller-এর দাম গ্রহণ</button><button class="light" data-buyer-product-neg="counter" data-neg-id="'+esc(n.id)+'" data-qty="'+esc(n.quantity)+'" data-price="'+esc(n.current_unit_price)+'">আরেকটি দাম প্রস্তাব</button><button class="danger" data-buyer-product-neg="reject" data-neg-id="'+esc(n.id)+'">প্রত্যাখ্যান</button></div>':'')+(n.order_id?'<p><b>Order ID:</b> '+esc(n.order_id)+'</p>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো Product দরদাম নেই।</p>';
+      host.querySelectorAll("[data-buyer-product-neg]").forEach(b=>b.addEventListener("click",()=>respondToProductNegotiation(b.dataset.negId,b.dataset.buyerProductNeg,Number(b.dataset.qty)||null,Number(b.dataset.price)||null)));
+    }catch(err){host.textContent="দরদামের তথ্য লোড হয়নি: "+err.message;}
+  }
+
   async function loadBuyerOrders(){
     const host=$("nxBuyerOrders");if(!host)return;
     if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
@@ -550,6 +566,40 @@
     const enabled=confirm("OK চাপলে Stock Tracking চালু হবে; Cancel চাপলে সীমাহীন স্টক থাকবে।");let quantity=null;
     if(enabled){const raw=prompt("মোট হাতে থাকা স্টক লিখুন (সংরক্ষিত অর্ডারসহ):",String(product.stock_quantity??""));if(raw===null)return;quantity=Number(raw);if(!Number.isFinite(quantity)||quantity<Number(product.reserved_quantity||0))return say("স্টক সংরক্ষিত অর্ডারের পরিমাণের কম হতে পারবে না।");}
     try{const {error}=await client().rpc("set_product_inventory",{p_product_id:productId,p_stock_tracking:enabled,p_stock_quantity:quantity});if(error)throw error;say("স্টক তথ্য আপডেট হয়েছে।",true);await loadSellerDashboard();}catch(err){say("স্টক আপডেট হয়নি: "+err.message);}
+  }
+
+  async function loadSellerPriceNegotiations(){
+    const host=$("nxSellerPriceNegotiations");if(!host)return;
+    if(!signedIn()||!activeSeller()){host.textContent="Active Seller লগইন প্রয়োজন।";return;}
+    try{
+      const {data,error}=await client().from("product_price_negotiations")
+        .select("id,product_id,buyer_id,quantity,current_unit_price,currency,fulfilment_location,negotiation_status,last_actor_id,order_id,updated_at")
+        .eq("seller_id",user().id).order("updated_at",{ascending:false}).limit(100);
+      if(error)throw error;const rows=data||[];
+      const ids=[...new Set(rows.map(n=>n.product_id))];let products={};
+      if(ids.length){const p=await client().from("products").select("id,product_name,price").in("id",ids);if(p.error)throw p.error;(p.data||[]).forEach(x=>products[x.id]=x);}
+      const labels={buyer_countered:"Buyer-এর প্রস্তাব—আপনার জবাব প্রয়োজন",seller_countered:"আপনার পাল্টা প্রস্তাব পাঠানো হয়েছে",ordered:"Order তৈরি হয়েছে",rejected:"প্রত্যাখ্যাত"};
+      host.innerHTML=rows.map(n=>'<article class="card"><div class="section-head"><strong>'+esc(products[n.product_id]?.product_name||"Product")+'</strong><span class="tag">'+esc(labels[n.negotiation_status]||n.negotiation_status)+'</span></div><p>আপনার প্রকাশ্য মূল্য: '+esc(products[n.product_id]?.price??"—")+' '+esc(n.currency)+' / ইউনিট</p><p><b>সর্বশেষ প্রস্তাব:</b> '+esc(n.quantity)+' × '+esc(n.current_unit_price)+' '+esc(n.currency)+'</p><p class="muted">Buyer-এর ডেলিভারি ঠিকানা: '+esc(n.fulfilment_location)+'</p><p class="muted">এই দরদাম শুধু আপনি ও সংশ্লিষ্ট Buyer দেখতে পান।</p>'+(n.negotiation_status==="buyer_countered"?'<div class="form-actions"><button class="primary" data-seller-product-neg="accept" data-neg-id="'+esc(n.id)+'">Buyer-এর দাম গ্রহণ</button><button class="light" data-seller-product-neg="counter" data-neg-id="'+esc(n.id)+'" data-qty="'+esc(n.quantity)+'" data-price="'+esc(n.current_unit_price)+'">পাল্টা দাম দিন</button><button class="danger" data-seller-product-neg="reject" data-neg-id="'+esc(n.id)+'">প্রত্যাখ্যান</button></div>':'')+(n.order_id?'<p><b>Order ID:</b> '+esc(n.order_id)+'</p>':'')+'</article>').join("")||'<p class="muted">কোনো Buyer দরদামের প্রস্তাব দেয়নি।</p>';
+      host.querySelectorAll("[data-seller-product-neg]").forEach(b=>b.addEventListener("click",()=>respondToProductNegotiation(b.dataset.negId,b.dataset.sellerProductNeg,Number(b.dataset.qty)||null,Number(b.dataset.price)||null)));
+    }catch(err){host.textContent="দরদামের প্রস্তাব লোড হয়নি: "+err.message;}
+  }
+
+  async function respondToProductNegotiation(id,action,currentQuantity,currentPrice){
+    let quantity=null,unitPrice=null,note=null;
+    if(action==="counter"){
+      const q=prompt("কত ইউনিটের প্রস্তাব দেবেন?",String(currentQuantity||1));if(q===null)return;quantity=Number(q);
+      if(!Number.isFinite(quantity)||quantity<=0)return say("পরিমাণ ০-এর বেশি হতে হবে।");
+      const p=prompt("প্রতি ইউনিটে আপনার প্রস্তাবিত দাম লিখুন:",String(currentPrice||""));if(p===null)return;unitPrice=Number(p);
+      if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("দাম ০-এর বেশি হতে হবে।");
+      note=prompt("অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
+    }else if(action==="reject"&&!confirm("এই দরদাম প্রত্যাখ্যান করবেন?"))return;
+    else if(action==="accept"&&!confirm("সর্বশেষ প্রস্তাব গ্রহণ করে Order তৈরি করবেন?"))return;
+    try{
+      const {data,error}=await client().rpc("respond_to_product_price_negotiation",{p_negotiation_id:id,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note,p_fulfilment_location:null});
+      if(error)throw error;
+      say(action==="accept"?"দরদাম গৃহীত; Order তৈরি হয়েছে।":action==="counter"?"আপনার পাল্টা দাম পাঠানো হয়েছে।":"দরদাম প্রত্যাখ্যান করা হয়েছে।",true);
+      await Promise.all([loadBuyerPriceNegotiations(),loadSellerPriceNegotiations(),loadBuyerOrders(),loadSellerOrders()]);
+    }catch(err){say("দরদাম আপডেট হয়নি: "+err.message);}
   }
 
   async function loadSellerOrders(){
@@ -809,6 +859,7 @@
   async function loadBuyerDashboard() {
     loadBuyerDashboardProducts();
     loadBuyerOrders();
+    loadBuyerPriceNegotiations();
     const host = $("buyerDemandList");
     if (!host) return;
     if (!signedIn() || !activeBuyer()) {
@@ -1203,6 +1254,7 @@
       await loadBusinessProfile();
       await loadSellerServices();
       await loadSellerOrders();
+      await loadSellerPriceNegotiations();
       const { data, error } = await client().from("products")
         .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
