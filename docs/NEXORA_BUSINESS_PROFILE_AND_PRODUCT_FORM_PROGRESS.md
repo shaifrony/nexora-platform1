@@ -68,3 +68,15 @@ The Seller product workspace's Retail filter was removed and replaced with a dis
 ## Decision update — 2026-11-14 (supersedes earlier Wholesale-only note)
 
 The latest NEXORA Marketplace decision is no Wholesale/Retail product split: every user can view all approved products; Sellers choose their own price and quantity. The earlier Wholesale-only indicator and product market-category assumptions in this document are historical and no longer current. Current `index.html` and `marketplace.js` still contain Wholesale/Retail labels, filters, insert/edit payloads and demo examples; the corresponding staged SQL adds `products.market_category` and a Retail-specific MOQ rule. A coordinated frontend + migration cleanup is required before local rehearsal. This audit did not make a partial UI/schema change.
+
+
+## Unified Marketplace implementation — 2026-11-14
+
+The later unified Marketplace decision is now implemented in the development source (superseding the earlier wholesale-only form description and the pending dual-market note above):
+- Product listing has no Wholesale/Retail selector. Product taxonomy category remains separate and is used for search/discovery.
+- All users can browse all Admin-approved products; no product sale-type visibility filter remains.
+- Seller create/edit and listing-review payloads no longer send a sale category. Seller price, minimum order quantity, quantity-based price tiers and optional stock tracking remain governed by the existing commercial-field workflow; Retail-specific MOQ=1 enforcement has been removed.
+- Buyer Demand routing uses product category/subcategory and approved Seller/business status only.
+- Buyer/Seller profile sale-category fields are no longer created; Porter registration is aligned with this profile shape.
+
+Source-only status: updated frontend and staged migrations are on `nexora-development`. No hosted migration has been executed. Browser tests, SQL runtime tests and disposable database rehearsal remain pending.
