@@ -802,3 +802,18 @@ The Supabase CLI v3 guidance was rechecked on 2026-11-14: migration files belong
 **Important limits:** this was a schema replay and focused SQL/RLS/function test against a reconstructed local baseline, not a complete recreation of the 11 Live-only migrations. Browser E2E, PostgREST/HTTP JWT, actual Storage transfer, WebRTC, concurrency/load, and full cross-role API tests remain outstanding. The disposable stack was stopped and destroyed. No Live database migration, repair, schema/data write, `main`, Production, DNS or paid resource was used.
 
 **Next gate:** continue with broader Buyer/Seller/Porter/Admin role tests and API-level integration checks on a fresh disposable environment before any deployment decision.
+
+
+## 2026-11-14 — Buyer Demand privacy hardening and negotiation E2E
+
+- A targeted privacy review found that the Seller's matched-demand RLS policy allowed selecting the entire `buyer_demands` row, including `buyer_id`. The public view omitted the identity, but the underlying authenticated table path still exposed that column.
+- Fixed `20261114160000_demand_inbox_quotations_subcategories.sql`: revoked table-level SELECT on `public.buyer_demands` from `authenticated` and granted SELECT only on safe demand columns. INSERT and UPDATE privileges remain; row ownership/matching is still enforced by RLS.
+- Updated Buyer Dashboard queries in `marketplace.js` to stop filtering on `buyer_id`; they now rely on the existing owner RLS policy and select only safe columns. Demand status updates similarly rely on the owner RLS policy.
+- Replayed all 38 migrations in a fresh disposable Native Runtime database. Local history: 38 applied, latest `20261115120000`. Latest catalog check: 41 public tables, zero without RLS. `db lint --level warning --fail-on error`: no schema errors.
+- Synthetic role tests passed: Buyer insert and Buyer Dashboard read both succeeded; Seller inbox matched one approved-product demand; Seller could read its safe demand fields but direct SELECT of `buyer_id` was denied; `anon` could read the public demand projection, which exposes zero Buyer identity/contact columns. An unmatched demand was invisible to the Seller and Seller quotation INSERT was denied by RLS.
+- Synthetic quotation flow passed: Seller submitted a matched quotation; Buyer countered; Seller countered; Buyer accepted. The resulting Commerce Order was 40 units × BDT 77 (goods subtotal BDT 3,080) + BDT 50 delivery = BDT 3,130. Seller accepted and marked ready; Buyer confirmed completion; all three order timestamps were populated and status became `completed`.
+- Buyer closed the Demand using the revised ID-only update path; the Seller's open-demand query then returned zero rows.
+- Only synthetic records were used in the disposable database. No Live user rows, auth identities, private messages, calls or storage objects were queried. The local stack and test data were stopped and destroyed.
+- This closes the database-level Buyer Demand privacy/quotation/order test gate, but not full product acceptance: Browser E2E, PostgREST/HTTP JWT authorization, real Storage transfer, WebRTC, concurrency/load and broader Porter/Admin role tests remain outstanding.
+
+**Updated next gate:** Buyer Demand identity privacy and matched Seller quotation/order conversion have now passed focused disposable SQL/RLS tests. Continue with broader Porter/Admin/Delivery Network tests and API-level integration checks; deployment remains blocked until those and Browser E2E checks are completed.

@@ -183,3 +183,14 @@ No database schema, migration, hosted Supabase project, production deployment or
 - This is static source and arithmetic verification only. No SQL parser/runtime, migration replay, disposable DB, browser, or order E2E test was run. Keep the Buyer module marked NOT PASS until those tests are available.
 
 - Follow-up UI clarity: Buyer quotation cards and Seller's sent-quotation card now show the exact total quote for an untouched `price_basis='total'` offer instead of presenting the rounded derived unit price as the full quote. Order cards show the exact agreed goods subtotal when `source_offer_total` exists, avoiding a misleading quantity × rounded-unit display. Frontend commit: `db7368a9b05ffcedcebdaef69c0360271ca37f5b`.
+
+
+### 2026-11-14 — Buyer Demand identity privacy and quotation/order runtime test
+
+- Security issue found: the Seller's matched-demand SELECT policy exposed the full `buyer_demands` row, including `buyer_id`, despite the public view omitting identity.
+- Fixed the Demand migration to revoke table-level SELECT from `authenticated` and grant only safe demand columns. Buyer Dashboard read/update paths no longer filter by `buyer_id`; they rely on owner RLS. Buyer INSERT still supplies `buyer_id`, protected by the insert policy.
+- Fresh disposable Supabase CLI v3.1.0 Native Runtime replay: all 38 migrations applied; local migration history reached `20261115120000`. 41 public tables were checked; zero lacked RLS. `supabase db lint --level warning --fail-on error` reported no schema errors.
+- Synthetic RLS checks: Buyer can create/read own Demand without selecting `buyer_id`; matched Seller sees the safe demand fields and inbox row, but direct SELECT of `buyer_id` is denied; anonymous public view returns the Demand without any Buyer identity/contact columns; unmatched Demand is hidden from Seller and Seller quotation creation is denied.
+- Synthetic quotation flow: Seller quotation → Buyer counter → Seller counter → Buyer acceptance created a Commerce Order. The agreed terms were 40 units at BDT 77 plus BDT 50 delivery (BDT 3,130 total). Seller accepted and marked ready; Buyer confirmed completion; order status and timestamps reached `completed`. Buyer then closed the Demand, after which Seller's open-demand query returned no row.
+- All test data was synthetic and local; the disposable database was destroyed after the run. No Live data or schema was changed.
+- Status: focused database/RLS/function tests passed. This is not a full Buyer module sign-off: Browser E2E, PostgREST/HTTP JWT, real file upload, calls and concurrency tests remain pending.
