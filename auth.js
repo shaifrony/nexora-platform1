@@ -615,7 +615,28 @@
       permissionHost.innerHTML = rows.length ? rows.map(c=>'<label class="nx-permission-option"><input type="checkbox" name="assistant_permission" value="'+escapeHtml(c.permission_key)+'"> <span><b>'+escapeHtml(c.permission_name)+'</b><small>'+escapeHtml(c.description||"")+' • '+escapeHtml(c.department_key)+(c.is_sensitive?' • সংবেদনশীল অনুমতি':'')+'</small></span></label>').join("") : '<p class="muted">বিভাগ ও পদ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
     };
     if (!dept.dataset.bound) { dept.addEventListener("change",drawPermissions); dept.dataset.bound="1"; }
-    if (!position.dataset.bound) { position.addEventListener("change",drawPermissions); position.dataset.bound="1"; }
+    if (!position.dataset.bound) {
+      position.addEventListener("change",()=>{
+        if(position.value==="managing_director") dept.value="managing_director";
+        else if(dept.value==="managing_director") dept.value="marketing";
+        drawPermissions();
+      });
+      position.dataset.bound="1";
+    }
+    const actionSelect=document.querySelector('#nxAssistantAdminForm select[name="action"]');
+    if(actionSelect && !actionSelect.dataset.bound){
+      actionSelect.addEventListener("change",()=>{
+        const active=actionSelect.value!=="deactivate";
+        const fullName=document.querySelector('#nxAssistantAdminForm [name="full_name"]');
+        const department=document.querySelector('#nxAssistantAdminForm [name="department"]');
+        const positionField=document.querySelector('#nxAssistantAdminForm [name="position"]');
+        if(fullName) fullName.required=actionSelect.value==="create";
+        if(department) department.required=active;
+        if(positionField) positionField.required=active;
+        if(!active) permissionHost.querySelectorAll('input[name="assistant_permission"]').forEach(x=>x.checked=false);
+      });
+      actionSelect.dataset.bound="1";
+    }
     drawPermissions();
     host.innerHTML = (staff.data||[]).length ? staff.data.map(s=>{
       const count=(grants.data||[]).filter(g=>g.admin_user_id===s.user_id && g.is_allowed).length;
