@@ -540,13 +540,6 @@
     try{const {error}=await client().rpc("set_product_inventory",{p_product_id:productId,p_stock_tracking:enabled,p_stock_quantity:quantity});if(error)throw error;say("স্টক তথ্য আপডেট হয়েছে।",true);await loadSellerDashboard();}catch(err){say("স্টক আপডেট হয়নি: "+err.message);}
   }
 
-  async function updateSellerProductInventory(productId){
-    const product=(window.NEXORA_SELLER_PRODUCTS||[]).find(p=>p.id===productId);if(!product)return say("পণ্যের তথ্য পাওয়া যায়নি।");
-    const enabled=confirm("OK চাপলে Stock Tracking চালু হবে; Cancel চাপলে সীমাহীন স্টক থাকবে।");let quantity=null;
-    if(enabled){const raw=prompt("মোট হাতে থাকা স্টক লিখুন (সংরক্ষিত অর্ডারসহ):",String(product.stock_quantity??""));if(raw===null)return;quantity=Number(raw);if(!Number.isFinite(quantity)||quantity<Number(product.reserved_quantity||0))return say("স্টক সংরক্ষিত অর্ডারের পরিমাণের কম হতে পারবে না।");}
-    try{const {error}=await client().rpc("set_product_inventory",{p_product_id:productId,p_stock_tracking:enabled,p_stock_quantity:quantity});if(error)throw error;say("স্টক তথ্য আপডেট হয়েছে।",true);await loadSellerDashboard();}catch(err){say("স্টক আপডেট হয়নি: "+err.message);}
-  }
-
   async function loadSellerOrders(){
     const host=$("nxSellerOrders");if(!host)return;
     if(!signedIn()||!activeSeller()){host.textContent="Active Seller লগইন প্রয়োজন।";return;}
@@ -556,7 +549,11 @@
         .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":"সেবা বুকিং")+' · পরিমাণ '+esc(o.quantity)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong><p><b>ডেলিভারি/সেবার স্থান:</b> '+esc(o.fulfilment_location)+'</p>'+(o.buyer_note?'<p><b>Buyer-এর নোট:</b> '+esc(o.buyer_note)+'</p>':'')+(o.order_status==="pending"?'<div class="form-actions"><button class="primary" data-order-action="accept" data-order-id="'+esc(o.id)+'">অর্ডার গ্রহণ</button><button class="danger" data-order-action="reject" data-order-id="'+esc(o.id)+'">প্রত্যাখ্যান</button></div>':'')+(o.order_status==="accepted"?'<button class="primary" data-order-action="ready" data-order-id="'+esc(o.id)+'">'+(o.listing_type==="service"?"সেবা সম্পন্ন হয়েছে":"পণ্য পাঠানো হয়েছে")+'</button>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো অর্ডার আসেনি।</p>';
+      const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
+      rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
+      host.innerHTML='<div class="nx-order-summary"><span>মোট '+rows.length+'</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div><label>অর্ডার ফিল্টার <select id="nxSellerOrderStatusFilter"><option value="all">সব অর্ডার</option><option value="pending">নতুন অর্ডার</option><option value="accepted">গ্রহণ করা</option><option value="ready_for_confirmation">Buyer নিশ্চিত করবেন</option><option value="completed">সম্পন্ন</option><option value="cancelled">বাতিল</option><option value="rejected">প্রত্যাখ্যাত</option></select></label><div id="nxSellerOrderRows">'+(rows.map(o=>'<article class="card nx-order-card" data-seller-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":"সেবা বুকিং")+' · পরিমাণ '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency)+'</p><strong>'+esc(o.total_price)+' '+esc(o.currency)+'</strong><p><b>ডেলিভারি/সেবার স্থান:</b> '+esc(o.fulfilment_location)+'</p>'+(o.buyer_note?'<p><b>Buyer-এর নোট:</b> '+esc(o.buyer_note)+'</p>':'')+(o.order_status==="pending"?'<div class="form-actions"><button class="primary" data-order-action="accept" data-order-id="'+esc(o.id)+'">অর্ডার গ্রহণ</button><button class="danger" data-order-action="reject" data-order-id="'+esc(o.id)+'">প্রত্যাখ্যান</button></div>':'')+(o.order_status==="accepted"?'<button class="primary" data-order-action="ready" data-order-id="'+esc(o.id)+'">'+(o.listing_type==="service"?"সেবা সম্পন্ন হয়েছে":"পণ্য পাঠানো হয়েছে")+'</button>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো অর্ডার আসেনি।</p>')+'</div>';
+      const filter=$("nxSellerOrderStatusFilter");
+      if(filter)filter.addEventListener("change",()=>host.querySelectorAll("[data-seller-order-card]").forEach(card=>{card.hidden=filter.value!=="all"&&card.dataset.status!==filter.value;}));
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
