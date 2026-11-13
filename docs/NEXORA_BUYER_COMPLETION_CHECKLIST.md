@@ -43,16 +43,15 @@ Status: **Implementation review in progress — not complete**
 
 ## 3. Buyer-এর কাজের সম্পূর্ণ প্রবাহ
 
-1. Homepage থেকে Buyer নির্বাচন করে signup।
-2. Signup-এ কোনো market category নির্বাচন নেই।
-3. Authentication সম্পন্ন করে Buyer Dashboard-এ প্রবেশ।
-4. সব approved Wholesale ও Retail product খোঁজা, filter করা ও details দেখা।
-6. Seller-এর সঙ্গে inquiry পাঠানো; invitation গ্রহণের পর chat/call/file sharing।
-7. পণ্য অর্ডার request পাঠানো; Seller-এর order response দেখা।
-8. Seller পণ্য পাঠানোর/সেবা সম্পন্নের পর Buyer receipt/completion নিশ্চিত করা।
-9. Verified purchase-এর ভিত্তিতে review দেওয়া।
-10. বিকল্পভাবে Buyer Demand পোস্ট করা, required date ও destination দেওয়া, Seller quotations তুলনা করা, Demand close/cancel করা।
-11. Delivery/transport status ও support flow Buyer Dashboard-এ সংযুক্ত করা।
+1. Homepage থেকে Buyer নির্বাচন করে signup; কোনো Wholesale/Retail account category নির্বাচন নেই।
+2. Authentication সম্পন্ন করে Buyer Dashboard-এ প্রবেশ।
+3. সব approved Wholesale ও Retail product খোঁজা, filter করা ও details দেখা।
+4. Seller-এর সঙ্গে inquiry পাঠানো; invitation গ্রহণের পর chat/call/file sharing।
+5. পণ্য অর্ডার request পাঠানো; Seller-এর order response দেখা।
+6. Seller পণ্য পাঠানোর/সেবা সম্পন্নের পর Buyer receipt/completion নিশ্চিত করা।
+7. Verified purchase-এর ভিত্তিতে review দেওয়া।
+8. বিকল্পভাবে Buyer Demand পোস্ট করা, required date ও destination দেওয়া, Seller quotations তুলনা করা, Demand close/cancel করা।
+9. Delivery/transport status ও support flow Buyer Dashboard-এ সংযুক্ত করা.
 
 ## 4. এখনো সমাধান/পরীক্ষা বাকি
 
