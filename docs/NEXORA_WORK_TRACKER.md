@@ -62,7 +62,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Existing Business Profile/Sales Center foundation inspected: one profile per Seller, one sales-center address, multiple products per business.
 - [x] Update Product Listing form and insert/edit paths so Seller selects Wholesale or Retail for each product; MOQ and price-tier semantics remain subject to a separate business decision.
 - [x] Product/Service listing, image upload and editing foundation exists; dual-market edit and visibility alignment pending.
-- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected; required date is included and public view is designed to omit Buyer identity (database privacy and matching security review pending).
+- [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 added but not run; full Demand schema absent from local fixture; JWT/PostgREST/E2E and quotation acceptance remain pending.
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
 - [ ] E2E, mobile and accessibility.
@@ -117,3 +117,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Added local-only patch + regression test: `supabase/recovery-not-for-deployment/local-setup/23_local_buyer_auth_trigger_alignment_tests.sql`. It patches only `nexora_test` fixture and rolls back test users. User has not run it yet; no local test PASS claimed.
 - Frontend source review confirms Buyer/Seller/Porter signup choices, Google/Facebook Buyer-only controls, and inactive/suspended account sign-out; pending Porter is shown as pending without dashboard access.
 - No migration was applied; no Live Supabase, Production or `main` changed.
+
+
+## 2026-11-13 — B-03 Buyer Demand source review
+- Completed source review of `20261112153000_publish_open_demands_without_buyer_identity.sql`, reconstructed secure-view recovery draft, and final `20261114160000_demand_inbox_quotations_subcategories.sql`.
+- Updated `docs/NEXORA_DEMAND_INBOX_QUOTATIONS.md` to remove obsolete Buyer/Seller account-channel matching language; Demand routing is taxonomy + approved business only, irrespective of Wholesale/Retail sale type.
+- Added `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`: read-only, nexora_test-only catalog audit for view privacy, grants, RLS, inbox ownership, quotation insertion, required date and category/subcategory matching. Not run yet; it will SKIP if full Demand schema is absent.
+- Source review confirms public Demand view omits Buyer identity/contact, Buyer owner-scoped policies, Seller inbox-only open Demand access, direct inbox writes revoked, quotation insert restricted to own open inbox Demand, and required_date NOT NULL/non-past.
+- Buyer quotation acceptance/counter-offer/order conversion remain unimplemented. Real JWT/PostgREST/RLS and browser E2E remain pending.
+- No migration applied; no Hosted Supabase, Production or `main` changed.
