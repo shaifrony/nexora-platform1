@@ -26,7 +26,7 @@ The form includes a date input whose minimum is set client-side to the user's lo
 
 ## Current submission behavior
 
-The `marketplace.js` submit handler:
+The initial marketplace core migration (\`20261112050345_create_marketplace_core_schema.sql\`) defines \`buyer_demands\` without a \`subcategory\` column, while the current client form and submit handler use \`subcategory\`. A later migration may add it, but that follow-on definition has not yet been confirmed. This is a schema-compatibility check to resolve before any demand-form changes or runtime claims. The core migration also does not by itself establish the final public view or its grants; those must be inspected in the later migration chain.\n\nThe `marketplace.js` submit handler:
 - Requires an active Buyer session.
 - Validates optional budget as a non-negative number.
 - Inserts the Buyer ID from the authenticated session, not from a form field.
