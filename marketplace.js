@@ -929,7 +929,7 @@
     const host = $("demandList");
     if (!host) return;
     if (!state.demands.length) {
-      host.innerHTML = '<div class="demand-card muted">এখনো কোনো প্রকাশ্য খোলা পাইকারি চাহিদা নেই।</div>';
+      host.innerHTML = '<div class="demand-card muted">এখনো কোনো প্রকাশ্য খোলা Buyer Demand নেই।</div>';
       return;
     }
     host.innerHTML = state.demands.map(d => `<article class="demand-card">
