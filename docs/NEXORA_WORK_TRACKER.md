@@ -15,7 +15,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Porter registration approval | Done (staged) | Signup, pending profile, review table, MFA + logistics.assign RPC, audit log and admin queue staged; migration/E2E pending |
 | Admin sign-in + MFA | Partial | Existing Auth MFA AAL2 flow; browser E2E pending |
 | Officer account management | Partial | Form/Edge Function/SQL migration staged; DB not migrated or integration-tested |
-| Marketplace Wholesale/Retail | Done (staged) | Product market categories and Seller entitlements staged |
+| Marketplace wholesale-only alignment | Partial | Public signup metadata aligned to wholesale-only; existing UI/schema still contain legacy retail paths; see NEXORA_WHOLESALE_ONLY_ALIGNMENT.md |
 | Services Marketplace | Partial | Listing flow staged; security/E2E remain |
 | Buyer Demands & quotations | Partial | Matching and quotations staged; acceptance/conversion/notifications pending |
 | Commerce orders | Partial | Order lifecycle staged; payments/disputes/refunds absent |
@@ -52,7 +52,8 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
 ## M2 — Marketplace
-- [x] Wholesale/Retail category model.
+- [ ] Remove legacy Retail flows and enforce wholesale-only consistently in UI, Auth trigger, database constraints, RLS/RPC and order logic.
+- [x] Public Buyer/Seller signup client aligned to wholesale-only metadata (frontend only; not a security boundary).
 - [x] Product/Service listing, image upload and editing.
 - [x] Buyer Demand matching and Seller quotations.
 - [x] Commerce order and verified review workflow staged.
