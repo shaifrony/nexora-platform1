@@ -1,12 +1,13 @@
 -- NEXORA RECOVERY DRAFT — NOT AN ORIGINAL HISTORICAL FILE
--- Status: RECONSTRUCTED from pg_default_acl for owner postgres in schema public.
--- This draft is limited to future objects created by postgres; it does not revoke
--- explicit grants on existing tables. Confirm intended scope before execution.
+-- Status: RECONSTRUCTED from current pg_default_acl for owner postgres in schema public.
+-- Revoke only Data API-facing defaults; do not change service_role defaults.
+-- This does not change grants on existing tables/functions/sequences.
+-- Do not execute without isolated privilege tests and approval.
 BEGIN;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON TABLES FROM PUBLIC, anon, authenticated;
+  REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM PUBLIC, anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
-  REVOKE ALL ON SEQUENCES FROM PUBLIC, anon, authenticated;
+  REVOKE USAGE, SELECT ON SEQUENCES FROM PUBLIC, anon, authenticated;
 ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public
   REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC, anon, authenticated;
 COMMIT;
