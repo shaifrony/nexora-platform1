@@ -14,7 +14,7 @@
 
 ## Current environment check
 
-The available execution environment was checked for `psql`, `postgres`, `docker`, `supabase`, and `pg_prove`. None was installed. Therefore no SQL parser, PostgreSQL execution, pgTAP test, or migration replay has been claimed.
+The user has PostgreSQL 18.6 running in Termux on Android 16 and has created `nexora_test`. The `pgcrypto` and `uuid-ossp` extensions are available; `pgtap` did not appear in `pkg search pgtap`. The guarded local compatibility scaffold is committed but has not yet been executed. Therefore no pgTAP test or migration replay has been claimed.
 
 ## Test suite
 
