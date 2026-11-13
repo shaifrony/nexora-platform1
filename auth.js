@@ -79,7 +79,7 @@
       return false;
     }
     try {
-      const { error } = await db.from("profiles").update({ buyer_category: category, updated_at: new Date().toISOString() }).eq("id", currentUser.id);
+      const { error } = await db.from("profiles").update({ buyer_category: category }).eq("id", currentUser.id);
       if (error) throw error;
       profile = { ...profile, buyer_category: category };
       render();
