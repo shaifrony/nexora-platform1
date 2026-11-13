@@ -55,7 +55,7 @@ create or replace function private.append_product_negotiation_chat_event(
   p_conversation_id uuid,p_actor_id uuid,p_event jsonb
 ) returns void
 language plpgsql security definer set search_path=''
-as $ 
+as $
 begin
   if p_conversation_id is null or p_actor_id is null then
     raise exception 'Negotiation conversation context is missing';
