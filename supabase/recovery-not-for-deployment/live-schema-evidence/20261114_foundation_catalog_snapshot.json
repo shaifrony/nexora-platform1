@@ -10254,8 +10254,12 @@
         "dollar_quote_pairs": 2,
         "rpc_quote_pairs": 2,
         "malformed_currency_regex": false,
-        "sql_runtime_tested": false
-      }
+        "sql_runtime_tested": false,
+        "source_sha": "6d819581363b209c85fe0326226433f6729a2886"
+      },
+      "disposable_supabase_branch_available": false,
+      "disposable_branch_quote_usd_per_hour": 0.01344,
+      "disposable_branch_created": false
     },
     "safety": "Source-only edits on nexora-development. No Live SQL/migrations, user rows, main, Production or deployment changes."
   }
