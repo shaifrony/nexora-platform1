@@ -49,7 +49,7 @@ declare
   v_account_status text := 'active';
 begin
   v_provider := lower(coalesce(new.raw_app_meta_data ->> 'provider', ''));
-  if v_provider in ('google','facebook') then
+  if v_provider not in ('','email','phone') then
     v_role := 'buyer';
   else
     v_role := lower(trim(coalesce(new.raw_user_meta_data ->> 'role','buyer')));
@@ -72,6 +72,9 @@ begin
   return new;
 end;
 $function$;
+
+-- Trigger functions are not client RPCs; remove PostgreSQL's default PUBLIC EXECUTE grant.
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
 -- A Porter must also be an active account before applying to become an individual
 -- transport provider. Provider/vehicle approval remains a separate operational check.
