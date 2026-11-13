@@ -221,14 +221,21 @@ begin
 
   insert into public.commerce_orders(
     listing_type,listing_id,buyer_id,seller_id,quantity,unit_price,currency,
-    fulfilment_location,buyer_note,order_status,source_demand_id,source_offer_id,delivery_charge
+    fulfilment_location,buyer_note,order_status,accepted_at,source_demand_id,source_offer_id,delivery_charge
   ) values (
     'buyer_demand',v_demand.id,v_demand.buyer_id,v_offer.seller_id,v_qty,v_price,v_currency,
-    v_location,'Created from accepted Buyer Demand quotation','pending',v_demand.id,v_offer.id,coalesce(v_offer.delivery_charge,0)
+    v_location,'Created from accepted Buyer Demand quotation',
+    case when v_role='seller' then 'accepted' else 'pending' end,
+    case when v_role='seller' then now() else null end,
+    v_demand.id,v_offer.id,coalesce(v_offer.delivery_charge,0)
   ) returning id into v_order_id;
 
   insert into public.commerce_order_events(order_id,actor_user_id,event_type,note)
   values(v_order_id,v_actor,'created','Accepted Buyer Demand quotation');
+  if v_role='seller' then
+    insert into public.commerce_order_events(order_id,actor_user_id,event_type,note)
+    values(v_order_id,v_actor,'accepted','Seller accepted the Buyer counter-offer');
+  end if;
 
   update public.seller_offers set offer_status='accepted',negotiation_status='ordered',
     accepted_quantity=v_qty,accepted_unit_price=v_price,demand_order_id=v_order_id,updated_at=now()
