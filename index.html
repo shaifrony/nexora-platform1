@@ -717,6 +717,17 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
 .nx-review-note{padding:12px 14px;border-radius:10px;background:#f4f7f9;color:#536a79;line-height:1.65}
 @media(max-width:600px){.nx-reviews-heading{align-items:flex-start;flex-direction:column}.nx-review-card-top{align-items:flex-start;flex-direction:column;gap:4px}}
 
+
+/* Commerce order and booking UI */
+.nx-order-form{display:grid;gap:12px;margin:20px 0;padding:18px;border:1px solid #dce8ed;border-radius:14px;background:#f8fbfc}
+.nx-order-form h3{margin:0;color:#17364a}
+.nx-order-form label{display:grid;gap:6px;font-weight:600;color:#365264}
+.nx-order-form input,.nx-order-form textarea{width:100%;padding:11px;border:1px solid #cbd8df;border-radius:9px;background:#fff;font:inherit}
+.nx-order-form textarea{min-height:76px;resize:vertical}
+.nx-order-card{margin:10px 0;padding:15px}
+.nx-order-card .section-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nx-order-card button{margin-top:9px}
+
 </style>
 </head>
 
@@ -1146,6 +1157,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <div id="buyerProductList" aria-live="polite"><p class="muted">পণ্য লোড হচ্ছে…</p></div>
         </section>
 
+        <section class="nx-buyer-demands"><div class="nx-buyer-section-heading"><div><h2>আমার অর্ডার ও বুকিং</h2><p>কেনাকাটা, সেবা বুকিং ও Verified Review-এর অগ্রগতি</p></div></div><div id="nxBuyerOrders" aria-live="polite"><p class="muted">আপনার অর্ডার এখানে দেখা যাবে।</p></div></section>
         <section class="nx-buyer-demands">
           <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">YOUR REQUIREMENTS</span><h2>আমার Buyer Demands</h2><p>আপনার নিজের চাহিদা ও Seller-এর Price Offer</p></div><button class="primary" type="button" onclick="showSection('postDemand')">＋ নতুন চাহিদা পোস্ট</button></div>
           <div id="buyerDemandList" aria-live="polite">আপনার চাহিদা লোড হচ্ছে…</div>
@@ -1330,6 +1342,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       </form>
       <div id="nxSellerServiceList" class="grid"><p class="muted">আপনার সেবার তালিকা এখানে দেখা যাবে।</p></div>
     </div>
+
+    <div class="card" id="nxSellerOrdersCard"><div class="section-head"><div><h3>আমার অর্ডার ও বুকিং</h3><p class="muted">Buyer-এর অর্ডার গ্রহণ, পাঠানো এবং সম্পন্নের অবস্থা আপডেট করুন।</p></div></div><div id="nxSellerOrders" aria-live="polite"><p class="muted">অর্ডার লোড হচ্ছে…</p></div></div>
 
     <div class="card" id="sellerProductsCard">
       <div class="section-head">
