@@ -1501,6 +1501,26 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           </div>
         </div>
         <div id="chatProductContext" class="hidden" aria-label="Conversation product context"></div>
+        <div class="nx-chat-language-settings">
+          <label for="chatPreferredLanguage">আমার Chat-এর পছন্দের ভাষা</label>
+          <select id="chatPreferredLanguage" aria-describedby="chatLanguageHelp">
+            <option value="bn">বাংলা</option>
+            <option value="ar">العربية — আরবি</option>
+            <option value="en">English — ইংরেজি</option>
+            <option value="zh">中文 — চীনা</option>
+            <option value="hi">हिन्दी — হিন্দি</option>
+            <option value="ur">اردو — উর্দু</option>
+            <option value="fr">Français — ফরাসি</option>
+            <option value="es">Español — স্প্যানিশ</option>
+            <option value="de">Deutsch — জার্মান</option>
+            <option value="tr">Türkçe — তুর্কি</option>
+            <option value="ru">Русский — রুশ</option>
+            <option value="pt">Português — পর্তুগিজ</option>
+            <option value="ja">日本語 — জাপানি</option>
+            <option value="ko">한국어 — কোরীয়</option>
+          </select>
+          <p id="chatLanguageHelp" class="muted">আপনার পছন্দ সংরক্ষিত হবে। স্বয়ংক্রিয় অনুবাদ চালু না হওয়া পর্যন্ত মূল বার্তাই দেখানো হবে।</p>
+        </div>
         <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
         <form id="chatComposer" class="hidden">
           <label>Message</label>
