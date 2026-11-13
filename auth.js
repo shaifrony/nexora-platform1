@@ -245,14 +245,14 @@
     const recoveryView = document.getElementById("nxPasswordRecoveryView");
     const isActiveBuyer = !!(currentUser && profile?.role === "buyer" && profile?.account_status === "active");
     const headerLogin = document.getElementById("nxHeaderLogin");
-    const headerBuyerDashboard = document.getElementById("nxHeaderBuyerDashboard");
+    const headerDashboard = document.getElementById("nxHeaderDashboard");
     const headerAccount = document.getElementById("nxHeaderAccount");
     const headerLogout = document.getElementById("nxHeaderLogout");
     const profileMenu = document.getElementById("nxBuyerProfileMenu");
     const buyerName = String(profile?.full_name || currentUser?.email?.split("@")[0] || "Buyer").trim();
     const initials = buyerName.split(/\\s+/).filter(Boolean).slice(0,2).map(part => part[0]).join("").toUpperCase() || "B";
     headerLogin?.classList.toggle("hidden", !!currentUser);
-    headerBuyerDashboard?.classList.toggle("hidden", !isActiveBuyer);
+    headerDashboard?.classList.toggle("hidden", !(currentUser && profile?.account_status === "active" && (profile?.role !== "admin" || (adminStaff?.is_active === true && mfaVerified))));
     headerAccount?.classList.toggle("hidden", !currentUser);
     headerLogout?.classList.toggle("hidden", !currentUser);
     profileMenu?.classList.toggle("hidden", !isActiveBuyer);
@@ -320,14 +320,9 @@
       workspaceNav.className = "form-actions";
       document.getElementById("nxProfile").insertAdjacentElement("afterend", workspaceNav);
     }
-    if (p.role === "buyer" && p.account_status === "active") {
-      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'buyerDashboard\')">Buyer Center</button><button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>';
-      workspaceNav.classList.remove("hidden");
-    } else if (p.role === "seller" && p.account_status === "active") {
-      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'sellerDashboard\')">Seller Center</button>';
-      workspaceNav.classList.remove("hidden");
-    } else if (p.role === "admin" && p.account_status === "active") {
-      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="showSection(\'accountSection\')">Admin Console</button>';
+    if (p.account_status === "active" && ["buyer","seller","admin"].includes(p.role)) {
+      workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="openMyDashboard()">আমার Dashboard</button>' +
+        (p.role === "buyer" ? '<button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>' : '');
       workspaceNav.classList.remove("hidden");
     } else {
       workspaceNav.innerHTML = "";
@@ -340,6 +335,11 @@
     if (adminIdentity) {
       const dept = adminStaff?.admin_level === "super_admin" ? "Director" : (adminStaff?.department_key || "বিভাগীয় কর্মকর্তা");
       adminIdentity.textContent = "Admin ID: " + (adminStaff?.admin_code || "—") + " | দায়িত্ব: " + dept;
+      const title = document.getElementById("nxAdminWorkspaceTitle");
+      const subtitle = document.getElementById("nxAdminWorkspaceSubtitle");
+      const departmentNames = {marketing:"Marketing Department",transport:"Transport & Logistics Department",accounts:"Accounts & Finance Department",managing_director:"Managing Director Office"};
+      if (title) title.textContent = (adminStaff?.admin_level === "super_admin" ? "Director" : (adminStaff?.position_key === "managing_director" ? "Managing Director" : departmentNames[adminStaff?.department_key] || "Officer")) + " Dashboard";
+      if (subtitle) subtitle.textContent = (departmentNames[adminStaff?.department_key] || dept) + " · আপনার অনুমোদিত কাজ ও তথ্য";
     }
     const adminManagePanel = document.getElementById("nxAdminManagement");
     if (adminManagePanel) adminManagePanel.classList.toggle("hidden", adminStaff?.admin_level !== "super_admin");
@@ -366,9 +366,10 @@
         render();
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
       } else render();
-      if (!wasSignedIn && currentUser && profile?.role === "buyer" && profile?.account_status === "active") {
-        window.showSection?.("buyerDashboard");
+      if (!wasSignedIn && currentUser && profile?.account_status === "active" && ["buyer","seller","admin"].includes(profile?.role)) {
+        window.openMyDashboard?.();
       }
+      if (wasSignedIn && !currentUser) window.showSection?.("market");
     }
     catch (e) { render(); say("প্রোফাইল লোড হয়নি: " + e.message); }
     window.dispatchEvent(new Event("nexora:auth-change"));
@@ -1083,5 +1084,5 @@
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
-  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; }, setBuyerCategory };
+  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; }, get mfaVerified() { return mfaVerified; }, setBuyerCategory };
 })();
