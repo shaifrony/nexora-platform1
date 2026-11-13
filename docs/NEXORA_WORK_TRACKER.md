@@ -477,3 +477,4 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Added client-side local-date minimum and past-date rejection to the Demand form; DB constraint remains authoritative. Code commit: `90b923e63877f30952296f768e805ed7c93132ff`.
 - Buyer Demand progress note commit: `42f27d2d6ed61693235c54d2645204027573597a`.
 - Limits: source inspection only. No browser/JS runtime, SQL runtime, disposable DB, hosted JWT/PostgREST/RLS or E2E verification. No SQL migration executed; Live Supabase, Production, `main`, DNS and paid services unchanged.
+- Found and fixed a Buyer/Seller order-summary mismatch: both order cards now display the delivery-inclusive `grand_total` and show the delivery-charge breakdown when non-zero, instead of displaying only `total_price`. Code commit: `5b64818391d022688c85cdd17c5d3c0092191d62`; Buyer progress note: `97b5150a5599ae2402834e50fd11620df165e5b9`.
