@@ -9489,5 +9489,644 @@
       "definition": "CREATE OR REPLACE FUNCTION public.guard_profile_updates()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n    -- Trusted service-role backend\n    IF auth.role() = 'service_role' THEN\n        RETURN NEW;\n    END IF;\n\n    -- Admin can update profiles\n    IF public.is_nexora_admin() THEN\n        RETURN NEW;\n    END IF;\n\n    -- Users can only update their own profile\n    IF auth.uid() IS NULL OR auth.uid() <> OLD.id THEN\n        RAISE EXCEPTION 'You cannot modify another user profile';\n    END IF;\n\n    -- Seller and Porter require Admin approval\n    IF OLD.role IS DISTINCT FROM 'buyer' THEN\n        RAISE EXCEPTION 'Profile changes require admin approval';\n    END IF;\n\n    -- Buyer can change only full_name\n    IF (to_jsonb(NEW) - 'full_name' - 'updated_at')\n       IS DISTINCT FROM\n       (to_jsonb(OLD) - 'full_name' - 'updated_at') THEN\n        RAISE EXCEPTION 'You cannot modify protected profile fields';\n    END IF;\n\n    IF NEW.full_name IS NULL\n       OR length(trim(NEW.full_name)) NOT BETWEEN 1 AND 150 THEN\n        RAISE EXCEPTION 'Invalid full name';\n    END IF;\n\n    NEW.updated_at := now();\n\n    RETURN NEW;\nEND;\n$function$\n",
       "function_schema": "public"
     }
-  ]
+  ],
+  "migration_reconciliation_20261114": {
+    "checked_at": "2026-11-14",
+    "branch": "nexora-development",
+    "live_project_ref": "qsjdeqljpnjumceewsjq",
+    "counts": {
+      "branch_files": 40,
+      "branch_unique_versions": 39,
+      "live_history_entries": 24,
+      "matching_versions_and_names": 13,
+      "branch_only_files": 27,
+      "branch_only_unique_versions": 26,
+      "live_only_entries": 11
+    },
+    "branch_files": [
+      {
+        "version": "20261112045441",
+        "name": "revoke_public_rls_auto_enable_execute",
+        "file": "20261112045441_revoke_public_rls_auto_enable_execute.sql",
+        "blob_sha": "76bfbaddf87b2f563c3fffdc84575d020afdb47f"
+      },
+      {
+        "version": "20261112050241",
+        "name": "secure_public_profile_identity_projection",
+        "file": "20261112050241_secure_public_profile_identity_projection.sql",
+        "blob_sha": "a6fb893e9b25db9140f3738ce2ff4d1645273969"
+      },
+      {
+        "version": "20261112050345",
+        "name": "create_marketplace_core_schema",
+        "file": "20261112050345_create_marketplace_core_schema.sql",
+        "blob_sha": "0fb4b3fee56da8b348ebf4e85b4841f45fc7f704"
+      },
+      {
+        "version": "20261112050553",
+        "name": "optimize_marketplace_rls_and_fk_indexes",
+        "file": "20261112050553_optimize_marketplace_rls_and_fk_indexes.sql",
+        "blob_sha": "07a3e8f63af8f34cb304a0415bde12db01199b14"
+      },
+      {
+        "version": "20261112050854",
+        "name": "create_private_communications",
+        "file": "20261112050854_create_private_communications.sql",
+        "blob_sha": "bf6f8461295619a8c9709bc017ad66613a328cbb"
+      },
+      {
+        "version": "20261112050951",
+        "name": "harden_private_communications_rls",
+        "file": "20261112050951_harden_private_communications_rls.sql",
+        "blob_sha": "3eb67daa0c652df2976b32f0acce15ed9649baa4"
+      },
+      {
+        "version": "20261112051022",
+        "name": "allow_invitees_to_view_chat_invitation",
+        "file": "20261112051022_allow_invitees_to_view_chat_invitation.sql",
+        "blob_sha": "f9bb01cb79345ad1c5776a116fcac1f288c9541f"
+      },
+      {
+        "version": "20261112051711",
+        "name": "update_conversation_timestamp_on_message",
+        "file": "20261112051711_update_conversation_timestamp_on_message.sql",
+        "blob_sha": "2e053e7bf7b47c089e70218c2b2397686cf153dc"
+      },
+      {
+        "version": "20261112051801",
+        "name": "update_conversation_timestamp_on_message",
+        "file": "20261112051801_update_conversation_timestamp_on_message.sql",
+        "blob_sha": "2e053e7bf7b47c089e70218c2b2397686cf153dc"
+      },
+      {
+        "version": "20261112051906",
+        "name": "fix_conversation_insert_returning_visibility",
+        "file": "20261112051906_fix_conversation_insert_returning_visibility.sql",
+        "blob_sha": "bd3d3d323c81d9d265f927ffa8affca4eeb1d974"
+      },
+      {
+        "version": "20261112052010",
+        "name": "fix_conversation_insert_returning_visibility",
+        "file": "20261112052010_fix_conversation_insert_returning_visibility.sql",
+        "blob_sha": "bd3d3d323c81d9d265f927ffa8affca4eeb1d974"
+      },
+      {
+        "version": "20261112151344",
+        "name": "enforce_aal2_on_admin_metadata_reads",
+        "file": "20261112151344_enforce_aal2_on_admin_metadata_reads.sql",
+        "blob_sha": "1bc30968cab7fb80fac11491936622340162705a"
+      },
+      {
+        "version": "20261112151436",
+        "name": "optimize_aal2_policy_initplans",
+        "file": "20261112151436_optimize_aal2_policy_initplans.sql",
+        "blob_sha": "74ba730e4aee9c3b7994f1b8b4895f4fdab7a853"
+      },
+      {
+        "version": "20261112151504",
+        "name": "centralize_admin_mfa_rls_check",
+        "file": "20261112151504_centralize_admin_mfa_rls_check.sql",
+        "blob_sha": "80d5c4754f6e3df5ba036a5101c08d9b223ac0d7"
+      },
+      {
+        "version": "20261112153000",
+        "name": "publish_open_demands_without_buyer_identity",
+        "file": "20261112153000_publish_open_demands_without_buyer_identity.sql",
+        "blob_sha": "214a1ff91e340faee711784f441f889b9cb7626f"
+      },
+      {
+        "version": "20261112162234",
+        "name": "create_product_inquiry_request",
+        "file": "20261112162234_create_product_inquiry_request.sql",
+        "blob_sha": "8dff34929a8f85529b423a9ef2736ea2b51631cc"
+      },
+      {
+        "version": "20261113100000",
+        "name": "create_porter_delivery_workflow",
+        "file": "20261113100000_create_porter_delivery_workflow.sql",
+        "blob_sha": "c429a910cc412622c4c24a15c928d514cb13fad5"
+      },
+      {
+        "version": "20261113180000",
+        "name": "transport_provider_vehicle_model",
+        "file": "20261113180000_transport_provider_vehicle_model.sql",
+        "blob_sha": "734394584ab39edf17feb2212dfe169bc75d4bba"
+      },
+      {
+        "version": "20261113200000",
+        "name": "transport_provider_admin_review",
+        "file": "20261113200000_transport_provider_admin_review.sql",
+        "blob_sha": "30ec7d2f16ae1caab5705532411a786af2a89858"
+      },
+      {
+        "version": "20261113220000",
+        "name": "delivery_assignment_system",
+        "file": "20261113220000_delivery_assignment_system.sql",
+        "blob_sha": "18e4d4268ca3805104a3d1b5c365addce27b8aab"
+      },
+      {
+        "version": "20261113230000",
+        "name": "buyer_seller_market_categories",
+        "file": "20261113230000_buyer_seller_market_categories.sql",
+        "blob_sha": "a7c943955a7cd9affbcee9f326aa284fea050470"
+      },
+      {
+        "version": "20261113235900",
+        "name": "product_market_category",
+        "file": "20261113235900_product_market_category.sql",
+        "blob_sha": "a5894d3b53285050933b93af589b9af35c80f93a"
+      },
+      {
+        "version": "20261114090000",
+        "name": "services_marketplace",
+        "file": "20261114090000_services_marketplace.sql",
+        "blob_sha": "44807e48311a89662763ebb601dbfb12dd3974fa"
+      },
+      {
+        "version": "20261114100000",
+        "name": "listing_image_storage",
+        "file": "20261114100000_listing_image_storage.sql",
+        "blob_sha": "ccaa241b960d7786727e1de81a5e4803e6c4e8e0"
+      },
+      {
+        "version": "20261114110000",
+        "name": "seller_listing_edit",
+        "file": "20261114110000_seller_listing_edit.sql",
+        "blob_sha": "08197e36cc3fe59ff96f32087f0333e78a07cf0e"
+      },
+      {
+        "version": "20261114120000",
+        "name": "listing_edit_review_workflow",
+        "file": "20261114120000_listing_edit_review_workflow.sql",
+        "blob_sha": "b4aa209c3aa894b4563f49e8d9bfb2aa45152dff"
+      },
+      {
+        "version": "20261114130000",
+        "name": "listing_edit_history",
+        "file": "20261114130000_listing_edit_history.sql",
+        "blob_sha": "ba38ae85decf260dd614686620eef120d403b4ba"
+      },
+      {
+        "version": "20261114130100",
+        "name": "verified_purchase_reviews",
+        "file": "20261114130100_verified_purchase_reviews.sql",
+        "blob_sha": "e203f98c3c1b02eacb66ff1454af2f2e1838d3f4"
+      },
+      {
+        "version": "20261114140000",
+        "name": "commerce_orders_and_review_completion",
+        "file": "20261114140000_commerce_orders_and_review_completion.sql",
+        "blob_sha": "2fb0d7b45195c1fc867652bc719c21d19d817447"
+      },
+      {
+        "version": "20261114150000",
+        "name": "product_inventory_moq_quantity_pricing",
+        "file": "20261114150000_product_inventory_moq_quantity_pricing.sql",
+        "blob_sha": "643fbec2068b962acbad82d44a0123463310c7cf"
+      },
+      {
+        "version": "20261114160000",
+        "name": "demand_inbox_quotations_subcategories",
+        "file": "20261114160000_demand_inbox_quotations_subcategories.sql",
+        "blob_sha": "b201f4421625ebd3bc3edccd51b70697212ff00f"
+      },
+      {
+        "version": "20261114170000",
+        "name": "delivery_network_management",
+        "file": "20261114170000_delivery_network_management.sql",
+        "blob_sha": "0864a5e3e764a0f520317199988da655db55fac5"
+      },
+      {
+        "version": "20261114180000",
+        "name": "product_linked_private_conversations",
+        "file": "20261114180000_product_linked_private_conversations.sql",
+        "blob_sha": "10816b40e1ca6a7352fe8cccab8be7ccabe8013c"
+      },
+      {
+        "version": "20261114180000",
+        "name": "unified_delivery_jobs_assignment",
+        "file": "20261114180000_unified_delivery_jobs_assignment.sql",
+        "blob_sha": "b2b6a27c3d90f09a5fdfc7742e129f3f493e9ec0"
+      },
+      {
+        "version": "20261114190000",
+        "name": "delivery_tracking_status_history",
+        "file": "20261114190000_delivery_tracking_status_history.sql",
+        "blob_sha": "6d04eab6e327e09d434d0b316d268c45e60c5ef7"
+      },
+      {
+        "version": "20261114200000",
+        "name": "centralized_officer_account_management",
+        "file": "20261114200000_centralized_officer_account_management.sql",
+        "blob_sha": "b39392b2001c333df3f18a1e0b6bdeea993d2851"
+      },
+      {
+        "version": "20261114210000",
+        "name": "porter_public_registration_and_review",
+        "file": "20261114210000_porter_public_registration_and_review.sql",
+        "blob_sha": "12641510f0b02f6c034f656ab216b6cb9ab6546a"
+      },
+      {
+        "version": "20261115100000",
+        "name": "buyer_demand_quotation_negotiation_and_order_conversion",
+        "file": "20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql",
+        "blob_sha": "f0734954d8ff497dd52c0a6ea2f62d9345b7f6ac"
+      },
+      {
+        "version": "20261115110000",
+        "name": "product_price_negotiation",
+        "file": "20261115110000_product_price_negotiation.sql",
+        "blob_sha": "9cf30148a8b4e245a998ebf29f31f9317735d30d"
+      },
+      {
+        "version": "20261115120000",
+        "name": "multilingual_chat_foundation",
+        "file": "20261115120000_multilingual_chat_foundation.sql",
+        "blob_sha": "128138632a38d312ba2d8614d7a46b8c923fc1bc"
+      }
+    ],
+    "live_history": [
+      {
+        "version": "20261112045441",
+        "name": "revoke_public_rls_auto_enable_execute"
+      },
+      {
+        "version": "20261112050241",
+        "name": "secure_public_profile_identity_projection"
+      },
+      {
+        "version": "20261112050345",
+        "name": "create_marketplace_core_schema"
+      },
+      {
+        "version": "20261112050553",
+        "name": "optimize_marketplace_rls_and_fk_indexes"
+      },
+      {
+        "version": "20261112050854",
+        "name": "create_private_communications"
+      },
+      {
+        "version": "20261112050951",
+        "name": "harden_private_communications_rls"
+      },
+      {
+        "version": "20261112051022",
+        "name": "allow_invitees_to_view_chat_invitation"
+      },
+      {
+        "version": "20261112051711",
+        "name": "update_conversation_timestamp_on_message"
+      },
+      {
+        "version": "20261112051906",
+        "name": "fix_conversation_insert_returning_visibility"
+      },
+      {
+        "version": "20261112063728",
+        "name": "add_wholesale_product_pricing_fields"
+      },
+      {
+        "version": "20261112092911",
+        "name": "restrict_public_products_to_approved_businesses"
+      },
+      {
+        "version": "20261112093024",
+        "name": "limit_anonymous_product_columns"
+      },
+      {
+        "version": "20261112093107",
+        "name": "expose_safe_public_business_check_for_anon_policy"
+      },
+      {
+        "version": "20261112094305",
+        "name": "public_business_safe_anon_read"
+      },
+      {
+        "version": "20261112094341",
+        "name": "make_public_business_check_invoker_safe"
+      },
+      {
+        "version": "20261112094441",
+        "name": "revoke_postgres_default_public_api_grants"
+      },
+      {
+        "version": "20261112115158",
+        "name": "allow_cancelled_account_status"
+      },
+      {
+        "version": "20261112145135",
+        "name": "require_aal2_for_nexora_admin_access"
+      },
+      {
+        "version": "20261112151344",
+        "name": "enforce_aal2_on_admin_metadata_reads"
+      },
+      {
+        "version": "20261112151436",
+        "name": "optimize_aal2_policy_initplans"
+      },
+      {
+        "version": "20261112151504",
+        "name": "centralize_admin_mfa_rls_check"
+      },
+      {
+        "version": "20261112153453",
+        "name": "publish_open_demands_without_buyer_identity"
+      },
+      {
+        "version": "20261112160835",
+        "name": "secure_public_buyer_demand_projection"
+      },
+      {
+        "version": "20261112162234",
+        "name": "create_product_inquiry_request"
+      }
+    ],
+    "branch_only": [
+      {
+        "version": "20261112051801",
+        "name": "update_conversation_timestamp_on_message",
+        "file": "20261112051801_update_conversation_timestamp_on_message.sql",
+        "blob_sha": "2e053e7bf7b47c089e70218c2b2397686cf153dc"
+      },
+      {
+        "version": "20261112052010",
+        "name": "fix_conversation_insert_returning_visibility",
+        "file": "20261112052010_fix_conversation_insert_returning_visibility.sql",
+        "blob_sha": "bd3d3d323c81d9d265f927ffa8affca4eeb1d974"
+      },
+      {
+        "version": "20261112153000",
+        "name": "publish_open_demands_without_buyer_identity",
+        "file": "20261112153000_publish_open_demands_without_buyer_identity.sql",
+        "blob_sha": "214a1ff91e340faee711784f441f889b9cb7626f"
+      },
+      {
+        "version": "20261113100000",
+        "name": "create_porter_delivery_workflow",
+        "file": "20261113100000_create_porter_delivery_workflow.sql",
+        "blob_sha": "c429a910cc412622c4c24a15c928d514cb13fad5"
+      },
+      {
+        "version": "20261113180000",
+        "name": "transport_provider_vehicle_model",
+        "file": "20261113180000_transport_provider_vehicle_model.sql",
+        "blob_sha": "734394584ab39edf17feb2212dfe169bc75d4bba"
+      },
+      {
+        "version": "20261113200000",
+        "name": "transport_provider_admin_review",
+        "file": "20261113200000_transport_provider_admin_review.sql",
+        "blob_sha": "30ec7d2f16ae1caab5705532411a786af2a89858"
+      },
+      {
+        "version": "20261113220000",
+        "name": "delivery_assignment_system",
+        "file": "20261113220000_delivery_assignment_system.sql",
+        "blob_sha": "18e4d4268ca3805104a3d1b5c365addce27b8aab"
+      },
+      {
+        "version": "20261113230000",
+        "name": "buyer_seller_market_categories",
+        "file": "20261113230000_buyer_seller_market_categories.sql",
+        "blob_sha": "a7c943955a7cd9affbcee9f326aa284fea050470"
+      },
+      {
+        "version": "20261113235900",
+        "name": "product_market_category",
+        "file": "20261113235900_product_market_category.sql",
+        "blob_sha": "a5894d3b53285050933b93af589b9af35c80f93a"
+      },
+      {
+        "version": "20261114090000",
+        "name": "services_marketplace",
+        "file": "20261114090000_services_marketplace.sql",
+        "blob_sha": "44807e48311a89662763ebb601dbfb12dd3974fa"
+      },
+      {
+        "version": "20261114100000",
+        "name": "listing_image_storage",
+        "file": "20261114100000_listing_image_storage.sql",
+        "blob_sha": "ccaa241b960d7786727e1de81a5e4803e6c4e8e0"
+      },
+      {
+        "version": "20261114110000",
+        "name": "seller_listing_edit",
+        "file": "20261114110000_seller_listing_edit.sql",
+        "blob_sha": "08197e36cc3fe59ff96f32087f0333e78a07cf0e"
+      },
+      {
+        "version": "20261114120000",
+        "name": "listing_edit_review_workflow",
+        "file": "20261114120000_listing_edit_review_workflow.sql",
+        "blob_sha": "b4aa209c3aa894b4563f49e8d9bfb2aa45152dff"
+      },
+      {
+        "version": "20261114130000",
+        "name": "listing_edit_history",
+        "file": "20261114130000_listing_edit_history.sql",
+        "blob_sha": "ba38ae85decf260dd614686620eef120d403b4ba"
+      },
+      {
+        "version": "20261114130100",
+        "name": "verified_purchase_reviews",
+        "file": "20261114130100_verified_purchase_reviews.sql",
+        "blob_sha": "e203f98c3c1b02eacb66ff1454af2f2e1838d3f4"
+      },
+      {
+        "version": "20261114140000",
+        "name": "commerce_orders_and_review_completion",
+        "file": "20261114140000_commerce_orders_and_review_completion.sql",
+        "blob_sha": "2fb0d7b45195c1fc867652bc719c21d19d817447"
+      },
+      {
+        "version": "20261114150000",
+        "name": "product_inventory_moq_quantity_pricing",
+        "file": "20261114150000_product_inventory_moq_quantity_pricing.sql",
+        "blob_sha": "643fbec2068b962acbad82d44a0123463310c7cf"
+      },
+      {
+        "version": "20261114160000",
+        "name": "demand_inbox_quotations_subcategories",
+        "file": "20261114160000_demand_inbox_quotations_subcategories.sql",
+        "blob_sha": "b201f4421625ebd3bc3edccd51b70697212ff00f"
+      },
+      {
+        "version": "20261114170000",
+        "name": "delivery_network_management",
+        "file": "20261114170000_delivery_network_management.sql",
+        "blob_sha": "0864a5e3e764a0f520317199988da655db55fac5"
+      },
+      {
+        "version": "20261114180000",
+        "name": "product_linked_private_conversations",
+        "file": "20261114180000_product_linked_private_conversations.sql",
+        "blob_sha": "10816b40e1ca6a7352fe8cccab8be7ccabe8013c"
+      },
+      {
+        "version": "20261114180000",
+        "name": "unified_delivery_jobs_assignment",
+        "file": "20261114180000_unified_delivery_jobs_assignment.sql",
+        "blob_sha": "b2b6a27c3d90f09a5fdfc7742e129f3f493e9ec0"
+      },
+      {
+        "version": "20261114190000",
+        "name": "delivery_tracking_status_history",
+        "file": "20261114190000_delivery_tracking_status_history.sql",
+        "blob_sha": "6d04eab6e327e09d434d0b316d268c45e60c5ef7"
+      },
+      {
+        "version": "20261114200000",
+        "name": "centralized_officer_account_management",
+        "file": "20261114200000_centralized_officer_account_management.sql",
+        "blob_sha": "b39392b2001c333df3f18a1e0b6bdeea993d2851"
+      },
+      {
+        "version": "20261114210000",
+        "name": "porter_public_registration_and_review",
+        "file": "20261114210000_porter_public_registration_and_review.sql",
+        "blob_sha": "12641510f0b02f6c034f656ab216b6cb9ab6546a"
+      },
+      {
+        "version": "20261115100000",
+        "name": "buyer_demand_quotation_negotiation_and_order_conversion",
+        "file": "20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql",
+        "blob_sha": "f0734954d8ff497dd52c0a6ea2f62d9345b7f6ac"
+      },
+      {
+        "version": "20261115110000",
+        "name": "product_price_negotiation",
+        "file": "20261115110000_product_price_negotiation.sql",
+        "blob_sha": "9cf30148a8b4e245a998ebf29f31f9317735d30d"
+      },
+      {
+        "version": "20261115120000",
+        "name": "multilingual_chat_foundation",
+        "file": "20261115120000_multilingual_chat_foundation.sql",
+        "blob_sha": "128138632a38d312ba2d8614d7a46b8c923fc1bc"
+      }
+    ],
+    "live_only": [
+      {
+        "version": "20261112063728",
+        "name": "add_wholesale_product_pricing_fields"
+      },
+      {
+        "version": "20261112092911",
+        "name": "restrict_public_products_to_approved_businesses"
+      },
+      {
+        "version": "20261112093024",
+        "name": "limit_anonymous_product_columns"
+      },
+      {
+        "version": "20261112093107",
+        "name": "expose_safe_public_business_check_for_anon_policy"
+      },
+      {
+        "version": "20261112094305",
+        "name": "public_business_safe_anon_read"
+      },
+      {
+        "version": "20261112094341",
+        "name": "make_public_business_check_invoker_safe"
+      },
+      {
+        "version": "20261112094441",
+        "name": "revoke_postgres_default_public_api_grants"
+      },
+      {
+        "version": "20261112115158",
+        "name": "allow_cancelled_account_status"
+      },
+      {
+        "version": "20261112145135",
+        "name": "require_aal2_for_nexora_admin_access"
+      },
+      {
+        "version": "20261112153453",
+        "name": "publish_open_demands_without_buyer_identity"
+      },
+      {
+        "version": "20261112160835",
+        "name": "secure_public_buyer_demand_projection"
+      }
+    ],
+    "duplicate_versions": [
+      [
+        "20261114180000",
+        [
+          "20261114180000_product_linked_private_conversations.sql",
+          "20261114180000_unified_delivery_jobs_assignment.sql"
+        ]
+      ]
+    ],
+    "duplicate_blob_shas": [
+      [
+        "2e053e7bf7b47c089e70218c2b2397686cf153dc",
+        [
+          "20261112051711_update_conversation_timestamp_on_message.sql",
+          "20261112051801_update_conversation_timestamp_on_message.sql"
+        ]
+      ],
+      [
+        "bd3d3d323c81d9d265f927ffa8affca4eeb1d974",
+        [
+          "20261112051906_fix_conversation_insert_returning_visibility.sql",
+          "20261112052010_fix_conversation_insert_returning_visibility.sql"
+        ]
+      ]
+    ],
+    "interpretation": "Filename/version inventory only. It does not prove SQL-effect equivalence. The two duplicate-content pairs are exact byte-identical copies based on Git blob SHA. The two 20261114180000 files collide on one migration version and must be assigned unique timestamps before any migration runner is used. No remote migration was applied."
+  },
+  "anon_column_access_correction_20261114": {
+    "note": "Correction to the earlier table-level-only summary: anon has no table-level SELECT grants on products or public_businesses, but has explicit column-level SELECT grants on selected safe columns. These column grants permit column-scoped queries; RLS policies further restrict rows.",
+    "anon_select_columns": {
+      "products": [
+        "business_id",
+        "category",
+        "created_at",
+        "currency",
+        "description",
+        "id",
+        "image_urls",
+        "listing_status",
+        "minimum_order_quantity",
+        "origin",
+        "price",
+        "price_negotiable",
+        "price_unit",
+        "product_code",
+        "product_name",
+        "slug",
+        "specifications_quality"
+      ],
+      "public_businesses": [
+        "business_id",
+        "city",
+        "country",
+        "display_name"
+      ],
+      "public_buyer_demands": [
+        "budget",
+        "category",
+        "created_at",
+        "currency",
+        "demand_code",
+        "demand_status",
+        "description",
+        "destination_city",
+        "destination_country",
+        "id",
+        "product_name",
+        "required_date",
+        "required_quantity",
+        "specifications_quality"
+      ]
+    },
+    "anon_product_policy": "listing_status='approved' AND is_public_business(business_id)",
+    "anon_business_policy": "USING (true) on public_businesses; data comes from approved-only synchronized projection",
+    "security_helpers": "private.is_nexora_active_admin_staff, private.is_nexora_super_admin, private.has_nexora_permission all enforce auth.jwt()->>'aal' = 'aal2'."
+  }
 }
