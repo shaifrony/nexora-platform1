@@ -1083,5 +1083,5 @@
     setTimeout(() => { sync(session); }, 0);
   });
   db.auth.getSession().then(({ data }) => sync(data.session));
-  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; }, get mfaVerified() { return mfaVerified; }, setBuyerCategory };
+  window.NEXORA_AUTH = { client: db, publicClient: publicDb, get user() { return currentUser; }, get profile() { return profile; }, get adminStaff() { return adminStaff; }, get mfaVerified() { return mfaVerified; } };
 })();
