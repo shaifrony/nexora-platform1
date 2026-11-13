@@ -244,3 +244,41 @@ Package index: `supabase/recovery-not-for-deployment/README.md`.
 A per-file review is recorded in [NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md](NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md). The review rechecked the relevant Live catalog definitions, grants, policies, helper functions, default ACLs and demand view. Eight drafts were catalog-consistent under manual review, one SQL body was source-recovered with a version mismatch, and two require special privilege/security testing before any use.
 
 The default-privilege draft was narrowed to API-facing table CRUD, sequence USAGE/SELECT and function EXECUTE grants; service_role defaults are not revoked. No parser/isolated replay test was available. No recovery draft was executed.
+
+## 2026-11-14 — Read-only live foundation catalog evidence captured
+
+A read-only catalog inspection was completed against the connected NEXORA Supabase project. The project is active and reports PostgreSQL 17.11. No DDL, DML, migration-history write, Auth mutation, or deployment was performed.
+
+### Current live inventory (observed)
+
+- Public schema: 22 relations — 20 tables and 2 views.
+- All 20 public tables have RLS enabled. The two views are not tables; their view security options still require separate inspection before any restore.
+- Five non-internal triggers exist on public tables: three on profiles, one on business_profiles, and one on messages.
+- The public/private schemas contain 37 functions in the inspected inventory; 23 are marked SECURITY DEFINER. Every such function must be reviewed for owner, EXECUTE ACL, search_path and caller checks before reconstruction.
+- Live migration history contains 24 entries. The branch contains 36 migration files; the prior filename/version ledger remains 13 matching, 23 branch-only and 11 live-only. Presence/absence is not proof of SQL effect equivalence.
+
+### Foundation evidence artifact
+
+The following metadata-only snapshot was captured from PostgreSQL catalogs and committed on nexora-development:
+
+- supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json
+
+It records exact observed columns/defaults, constraints, indexes, RLS policies, triggers and selected function definitions for eight live foundation tables: profiles, role_requests, profile_change_requests, admin_staff, admin_departments, admin_permission_catalog, admin_permission_grants, and admin_audit_logs. It also records ten related public/private function definitions. It contains catalog metadata only, not table rows or user data.
+
+This is stronger evidence than the reconstructed fixture, but it is not a complete schema-only dump, does not capture every ACL/default privilege, every Auth/Storage object or all public/private function definitions, and is not deployable SQL. Do not treat it as the original historical migration source.
+
+### Corrected recovery position
+
+The previous blocker is narrowed: the live database is accessible for read-only catalog inspection, and a verified foundation metadata snapshot now exists. The exact original migration files remain unrecovered. A complete disposable rehearsal still requires a full schema-only export (including custom Auth/Storage triggers and policies), extension/role inventory, and migration-history reconciliation.
+
+Use the Supabase CLI documented supabase db dump workflow or a locally installed pg_dump --schema-only against the dashboard-provided connection string to obtain the full SQL dump. Keep credentials on the user's device; never paste the database password or connection string into chat or commit it. Do not restore this dump to the live project. Restore only into a disposable local database, after checking the dump target and PostgreSQL major version.
+
+### Next gates
+
+1. Capture full schema-only SQL and role/extension metadata locally without committing secrets or data.
+2. Compare the captured live definitions against every migration in the branch; update the migration comparison ledger with object-level evidence.
+3. Build a disposable local baseline from the observed dump, not by replaying the reconstructed fixture as if it were original.
+4. Rehearse only selected pending feature migrations on that disposable baseline, beginning with the Buyer Demand quotation/order workflow.
+5. Run SQL behavior tests, then hosted JWT/PostgREST/RLS and browser tests only after an explicit, separately scoped approval.
+
+No Live Supabase object, migration history, production data, main, DNS or deployment was changed.
