@@ -566,3 +566,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Jobs in requested/assigned/accepted/picked_up/in_transit/out_for_delivery/partially_delivered/disputed states block reuse; completed, returned, failed, and cancelled work does not.
 - Commits: `5db82acaa711096c3666b145b004286db9518e1e` and `63f3d467ad4bd6b7e5ef1ce02e0d747f79df86cf`. Both migration files re-fetched; guard presence verified.
 - Source-level review only; no SQL concurrency test or database execution is available in the current environment.
+
+
+- Compatibility fix: the original Admin Provider/Vehicle assignment RPC inserts into `delivery_jobs` after the later unified migration has removed the `assigned_at` default. Its INSERT now explicitly sets `assigned_at=now()`, preserving the assignment timestamp for legacy Admin-created jobs. Verified by re-fetching the migration. Commit: `7f998239a335784e361765bc9c1e0429adb09d0b`.
