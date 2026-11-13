@@ -815,7 +815,7 @@
       let offers = [];
       if (ids.length) {
         const result = await client().from("seller_offers")
-          .select("id,demand_id,offer_price,currency,available_quantity,message,offer_status,created_at,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge")
+          .select("id,demand_id,offer_price,currency,available_quantity,message,offer_status,created_at,product_brand,product_model,product_condition,price_basis,estimated_delivery_date,warranty,offer_valid_until,delivery_charge,negotiation_status,current_quantity,current_unit_price,last_negotiator_id,accepted_quantity,accepted_unit_price,demand_order_id")
           .in("demand_id", ids).order("created_at", { ascending: false });
         if (result.error) throw result.error;
         offers = result.data || [];
@@ -827,54 +827,62 @@
   }
 
   function renderBuyerDashboard(offers) {
-    const host = $("buyerDemandList");
-    const demands = state.buyerDemands || [];
-    const offerMap = new Map();
-    (offers || []).forEach(o => {
-      if (!offerMap.has(o.demand_id)) offerMap.set(o.demand_id, []);
-      offerMap.get(o.demand_id).push(o);
-    });
-    if ($("buyerDemandTotal")) $("buyerDemandTotal").textContent = String(demands.length);
-    if ($("buyerDemandOpen")) $("buyerDemandOpen").textContent = String(demands.filter(d => d.demand_status === "open").length);
-    if ($("buyerOfferTotal")) $("buyerOfferTotal").textContent = String((offers || []).length);
-    if (!host) return;
-    if (!demands.length) {
-      host.innerHTML = '<div class="offer">আপনি এখনো কোনো Buyer Demand পোস্ট করেননি। নতুন চাহিদা পোস্ট করে শুরু করুন।</div>';
-      return;
-    }
-    const labels = { open: "চলমান", closed: "বন্ধ", cancelled: "বাতিল" };
-    host.innerHTML = demands.map(d => {
-      const list = offerMap.get(d.id) || [];
-      const offerHTML = list.length ? list.map(o =>
-        '<div class="offer"><strong>Seller Quotation</strong>' +
-        '<p class="price">' + esc(o.offer_price) + ' ' + esc(o.currency) + (o.price_basis==="total"?" মোট":" / ইউনিট") + '</p>' +
-        '<p class="muted">ব্র্যান্ড/মডেল: ' + esc([o.product_brand,o.product_model].filter(Boolean).join(" · ")||"উল্লেখ নেই") + '</p>' +
-        '<p class="muted">অবস্থা: ' + esc(({new:"নতুন",refurbished:"রিফারবিশড",used:"ব্যবহৃত",any:"যেকোনো"})[o.product_condition]||"উল্লেখ নেই") + ' · সরবরাহযোগ্য: ' + esc(o.available_quantity) + '</p>' +
-        (o.estimated_delivery_date ? '<p class="muted">সম্ভাব্য সরবরাহ: '+esc(o.estimated_delivery_date)+'</p>' : '') +
-        (o.warranty ? '<p class="muted">ওয়ারেন্টি: '+esc(o.warranty)+'</p>' : '') +
-        (o.delivery_charge!==null ? '<p class="muted">ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>' : '') +
-        (o.offer_valid_until ? '<p class="muted">Quotation বৈধ: '+esc(o.offer_valid_until)+'</p>' : '') +
-        (o.message ? '<p class="muted">' + esc(o.message) + '</p>' : '') +
-        '<p class="muted">Offer Status: ' + esc(o.offer_status) + '</p></div>'
-      ).join("") : '<p class="muted">এখনো কোনো Price Offer আসেনি।</p>';
-      const actions = d.demand_status === "open" ?
-        '<div class="form-actions"><button class="light" type="button" data-demand-status="closed" data-demand-id="' + esc(d.id) + '">চাহিদা বন্ধ করুন</button>' +
-        '<button class="danger" type="button" data-demand-status="cancelled" data-demand-id="' + esc(d.id) + '">চাহিদা বাতিল করুন</button></div>' : '';
-      return '<article class="card"><div class="section-head"><div><span class="tag">' + esc(d.category) +
-        '</span><span class="tag">' + esc(labels[d.demand_status] || d.demand_status) + '</span></div><strong>' +
-        esc(d.demand_code) + '</strong></div><h3>' + esc(d.product_name) + '</h3><p class="muted">Subcategory: ' + esc(d.subcategory||"—") + '</p><p>' + esc(d.description) +
-        '</p><p class="muted"><strong>স্পেসিফিকেশন:</strong> ' + esc(d.specifications_quality || "উল্লেখ করা হয়নি") +
-        '</p><div class="grid"><div><p class="muted">পরিমাণ</p><strong>' + esc(d.required_quantity) +
-        '</strong></div><div><p class="muted">বাজেট</p><strong>' +
-        (d.budget === null ? "উল্লেখ করা হয়নি" : esc(d.budget + " " + d.currency)) +
-        '</strong></div><div><p class="muted">গন্তব্য</p><strong>' + esc(d.destination_city) + ', ' +
-        esc(d.destination_country) + '</strong></div></div><p><span class="demand-date">প্রয়োজনের তারিখ: ' +
-        esc(d.required_date) + '</span></p><p><strong>' + list.length + 'টি Price Offer</strong></p>' +
-        offerHTML + actions + '</article>';
+    const host=$("buyerDemandList"),demands=state.buyerDemands||[],offerMap=new Map();
+    (offers||[]).forEach(o=>{if(!offerMap.has(o.demand_id))offerMap.set(o.demand_id,[]);offerMap.get(o.demand_id).push(o);});
+    if($("buyerDemandTotal"))$("buyerDemandTotal").textContent=String(demands.length);
+    if($("buyerDemandOpen"))$("buyerDemandOpen").textContent=String(demands.filter(d=>d.demand_status==="open").length);
+    if($("buyerOfferTotal"))$("buyerOfferTotal").textContent=String((offers||[]).length);
+    if(!host)return;
+    if(!demands.length){host.innerHTML='<div class="offer">আপনি এখনো কোনো Buyer Demand পোস্ট করেননি। নতুন চাহিদা পোস্ট করে শুরু করুন।</div>';return;}
+    const labels={open:"চলমান",closed:"বন্ধ",cancelled:"বাতিল"};
+    host.innerHTML=demands.map(d=>{
+      const list=offerMap.get(d.id)||[];
+      const offerHTML=list.length?list.map(o=>{
+        const qty=Number(o.current_quantity||o.available_quantity),unit=Number(o.current_unit_price||(o.price_basis==="total"?Number(o.offer_price)/Number(o.available_quantity):o.offer_price));
+        const total=qty*unit, canRespond=d.demand_status==="open"&&["open","buyer_countered","seller_countered"].includes(o.negotiation_status||"open")&&!o.demand_order_id&&o.offer_status==="pending";
+        const latestBySeller=o.last_negotiator_id!==user().id;
+        const actions=canRespond&&latestBySeller?
+          '<div class="form-actions"><button class="primary" type="button" data-quote-action="accept" data-offer-id="'+esc(o.id)+'" data-max-quantity="'+esc(qty)+'">এই শর্তে গ্রহণ</button><button class="light" type="button" data-quote-action="counter" data-offer-id="'+esc(o.id)+'" data-max-quantity="'+esc(qty)+'">Counter-offer</button><button class="danger" type="button" data-quote-action="reject" data-offer-id="'+esc(o.id)+'">প্রত্যাখ্যান</button></div>':'';
+        return '<div class="offer"><strong>Seller Quotation</strong><p class="price">'+esc(unit.toFixed(2))+' '+esc(o.currency)+' / ইউনিট</p>'+
+          '<p class="muted">সরবরাহযোগ্য সর্বোচ্চ: '+esc(qty)+' · এই শর্তে মোট: '+esc(total.toFixed(2))+' '+esc(o.currency)+'</p>'+
+          '<p class="muted">ব্র্যান্ড/মডেল: '+esc([o.product_brand,o.product_model].filter(Boolean).join(" · ")||"উল্লেখ নেই")+'</p>'+
+          '<p class="muted">অবস্থা: '+esc(({new:"নতুন",refurbished:"রিফারবিশড",used:"ব্যবহৃত",any:"যেকোনো"})[o.product_condition]||"উল্লেখ নেই")+
+          (o.estimated_delivery_date?' · সম্ভাব্য সরবরাহ: '+esc(o.estimated_delivery_date):'')+'</p>'+
+          (o.warranty?'<p class="muted">ওয়ারেন্টি: '+esc(o.warranty)+'</p>':'')+
+          (o.delivery_charge!==null?'<p class="muted">ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>':'')+
+          (o.offer_valid_until?'<p class="muted">Quotation বৈধ: '+esc(o.offer_valid_until)+'</p>':'')+
+          (o.message?'<p class="muted">'+esc(o.message)+'</p>':'')+
+          '<p class="muted">আলোচনার অবস্থা: '+esc(({open:"আপনার জবাবের অপেক্ষায়",buyer_countered:"Seller-এর জবাবের অপেক্ষায়",seller_countered:"আপনার জবাবের অপেক্ষায়",ordered:"Order তৈরি হয়েছে",declined:"প্রত্যাখ্যাত",agreed:"সম্মত"})[o.negotiation_status]||o.offer_status)+'</p>'+
+          (o.accepted_quantity?'<p><b>গৃহীত Order:</b> '+esc(o.accepted_quantity)+' × '+esc(o.accepted_unit_price)+' '+esc(o.currency)+' · Order ID '+esc(o.demand_order_id)+'</p>':'')+actions+'</div>';
+      }).join(""):'<p class="muted">এখনো কোনো Price Offer আসেনি।</p>';
+      const actions=d.demand_status==="open"?'<div class="form-actions"><button class="light" type="button" data-demand-status="closed" data-demand-id="'+esc(d.id)+'">চাহিদা বন্ধ করুন</button><button class="danger" type="button" data-demand-status="cancelled" data-demand-id="'+esc(d.id)+'">চাহিদা বাতিল করুন</button></div>':'';
+      return '<article class="card"><div class="section-head"><div><span class="tag">'+esc(d.category)+'</span><span class="tag">'+esc(labels[d.demand_status]||d.demand_status)+'</span></div><strong>'+esc(d.demand_code)+'</strong></div><h3>'+esc(d.product_name)+'</h3><p class="muted">Subcategory: '+esc(d.subcategory||"—")+'</p><p>'+esc(d.description)+'</p><p class="muted"><strong>স্পেসিফিকেশন:</strong> '+esc(d.specifications_quality||"উল্লেখ করা হয়নি")+'</p><div class="grid"><div><p class="muted">পরিমাণ</p><strong>'+esc(d.required_quantity)+'</strong></div><div><p class="muted">বাজেট</p><strong>'+(d.budget===null?"উল্লেখ করা হয়নি":esc(d.budget+" "+d.currency))+'</strong></div><div><p class="muted">গন্তব্য</p><strong>'+esc(d.destination_city)+', '+esc(d.destination_country)+'</strong></div></div><p><span class="demand-date">প্রয়োজনের তারিখ: '+esc(d.required_date)+'</span></p><p><strong>'+list.length+'টি Price Offer</strong></p>'+offerHTML+actions+'</article>';
     }).join("");
-    host.querySelectorAll("button[data-demand-status][data-demand-id]").forEach(button => {
-      button.addEventListener("click", () => updateBuyerDemandStatus(button.dataset.demandId, button.dataset.demandStatus));
-    });
+    host.querySelectorAll("button[data-demand-status][data-demand-id]").forEach(b=>b.addEventListener("click",()=>updateBuyerDemandStatus(b.dataset.demandId,b.dataset.demandStatus)));
+    host.querySelectorAll("button[data-quote-action]").forEach(b=>b.addEventListener("click",()=>respondToDemandQuotation(b.dataset.offerId,b.dataset.quoteAction,Number(b.dataset.maxQuantity)||null)));
+  }
+
+  async function respondToDemandQuotation(offerId,action,maxQuantity){
+    if(!activeBuyer()||!signedIn())return say("এই কাজটি করতে Active Buyer লগইন প্রয়োজন।");
+    let quantity=null,unitPrice=null,note=null;
+    if(action==="accept"){
+      const raw=prompt("কত ইউনিট কিনতে চান? Seller-এর সর্বোচ্চ সরবরাহযোগ্য পরিমাণ "+maxQuantity+"।",String(maxQuantity));
+      if(raw===null)return;quantity=Number(raw);
+      if(!Number.isFinite(quantity)||quantity<=0||quantity>maxQuantity)return say("পরিমাণ ০-এর বেশি এবং Seller-এর সরবরাহযোগ্য পরিমাণের মধ্যে হতে হবে।");
+      if(!confirm(quantity+" ইউনিটের জন্য Quotation গ্রহণ করে Order তৈরি করবেন?"))return;
+    }else if(action==="counter"){
+      const q=prompt("আপনি কত ইউনিট চান? সর্বোচ্চ "+maxQuantity+"।",String(maxQuantity));if(q===null)return;quantity=Number(q);
+      if(!Number.isFinite(quantity)||quantity<=0||quantity>maxQuantity)return say("পরিমাণ সঠিক নয় বা Seller-এর সক্ষমতার বেশি।");
+      const p=prompt("আপনার প্রস্তাবিত প্রতি ইউনিট মূল্য লিখুন:");if(p===null)return;unitPrice=Number(p);
+      if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("প্রতি ইউনিট মূল্য ০-এর বেশি হতে হবে।");
+      note=prompt("অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
+    }else if(action==="reject"&&!confirm("এই Quotation প্রত্যাখ্যান করবেন?"))return;
+    try{
+      const {data,error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note});
+      if(error)throw error;
+      say(action==="accept"?"Quotation গ্রহণ হয়েছে এবং Order তৈরি হয়েছে।":action==="counter"?"আপনার Counter-offer Seller-এর কাছে পাঠানো হয়েছে।":"Quotation প্রত্যাখ্যান করা হয়েছে।",true);
+      await Promise.all([loadBuyerDashboard(),loadBuyerOrders()]);
+    }catch(err){say("Quotation আপডেট হয়নি: "+err.message);}
   }
 
   async function updateBuyerDemandStatus(demandId, nextStatus) {
