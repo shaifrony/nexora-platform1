@@ -321,3 +321,21 @@ No Live database writes, migration execution, or user-row queries. The two sourc
 
 
 - Additional UI/schema mismatch confirmed by branch source inspection: `marketplace.js` and `index.html` still expose Wholesale/Retail badges, discovery cards, filters, product insert/edit `market_category` payloads, and Retail-specific price/MOQ copy. This is inconsistent with the user's latest unified Marketplace decision. The previous Business Profile/Product Form progress note describing “Wholesale-only” is historical and superseded. Frontend and staged migration alignment remains a separate pending change; no UI/schema removal was made in this audit.
+
+
+### Unified Marketplace refactor — implementation staged 2026-11-14
+
+**Completed on `nexora-development`:**
+- Removed the per-product Wholesale/Retail sale-type field from Marketplace product queries, product detail, grid cards, Buyer product discovery, Seller product search/filter, product create/edit payloads, and listing history labels.
+- Replaced the separate Wholesale/Retail homepage discovery cards with one Marketplace card; updated hero, Buyer and Seller copy. Seller product filter now uses product text and approval status only.
+- Removed Buyer/Seller profile sale-category columns and their registration payloads; Porter registration now creates a profile without those deprecated fields.
+- Removed sale-category validation and updates from Admin listing-edit/review/history functions.
+- Removed Retail-only MOQ=1 enforcement. MOQ and quantity-tier pricing remain Seller-defined; stock reservation and inventory safeguards remain.
+- Buyer Demand matching now uses product category/subcategory and approved Seller/business state, without sale-type segmentation. The product matching index and approved-product routing trigger no longer depend on `market_category`.
+- Retained Retail/Wholesale terms only where they describe separate transport/logistics delivery modes, not product Marketplace visibility.
+
+**Static source verification:** fetched the updated `marketplace.js`, `index.html`, and all affected migration files from GitHub. The two frontend files contain zero `market_category` references; the complete 40-file migration directory was checked in batches and now contains zero `market_category`, `buyer_category`, or `seller_categories` references. The profile migration retains only explicit `DROP ... IF EXISTS` cleanup statements for obsolete columns/policy/constraint.
+
+**Not yet verified:** JavaScript browser/runtime behavior, SQL parsing/runtime behavior, PostgREST/RLS behavior, Buyer Demand routing E2E, and Seller listing edit/review E2E. No local PostgreSQL/Supabase runtime is available in this Android-only workflow. Do not mark the refactor production-ready until isolated database and browser tests pass.
+
+No Live Supabase SQL was executed. No user rows were read or changed. No `main`, Production, DNS or deployment changes.
