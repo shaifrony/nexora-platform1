@@ -580,3 +580,5 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Commits: migration `84d97644765dbcc08b63f3309a0d193f6d2f3826`; frontend `db24dec3314dee3b5b26f9b25e8bd229009ba1ec`; Buyer progress note `3404a66e7dfa528bdc93d3f77df67a45d0eb2501`.
 - Re-fetched both code files and verified the exact-total column, generated-total formula, proportional calculation, INSERT mapping, both order queries and both UI breakdowns. Arithmetic spot-checks: 100/3 at 3 units = 100.00; 2 units = 66.67; +5 delivery = 105.00.
 - Static verification only. No SQL execution, disposable DB, browser or order E2E test. This does not clear the outstanding migration version collision or release gate.
+
+- Follow-up UI correction: untouched `price_basis='total'` quotations now display the exact total on Buyer and Seller quotation cards; order cards use the exact agreed subtotal rather than implying the rounded derived unit price multiplied by quantity is authoritative. Frontend commit: `db7368a9b05ffcedcebdaef69c0360271ca37f5b`; Buyer progress addendum: `9cef760d1b864beead8c2a6d069249d0f8ceb92b`.
