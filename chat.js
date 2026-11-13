@@ -210,7 +210,6 @@
       .on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"conversation_id=eq."+id},payload=>{
         if(payload.new.sender_id!==user().id) appendMessage(payload.new);
       })
-      .on("postgres_changes",{event:"INSERT",schema:"public",table:"message_attachments",filter:"conversation_id=eq."+id},payload=>appendAttachmentLink(payload.new))
       .subscribe();
   }
 
@@ -260,8 +259,15 @@
     const stamp=document.createElement("span");stamp.className="muted";stamp.textContent=time;item.appendChild(stamp);
     host.appendChild(item);
     if(m.message_type==="image"||m.message_type==="file"){
-      const {data:attachment}=await db().from("message_attachments").select("id,message_id,storage_path,file_name").eq("message_id",m.id).maybeSingle();
-      if(attachment) await appendAttachmentLink(attachment);
+      // The attachment metadata table is not currently in the Realtime publication.
+      // Retry briefly after the message event so the sender's follow-up metadata insert can commit.
+      for(let attempt=0;attempt<5;attempt++){
+        const {data:attachment,error:attachmentError}=await db().from("message_attachments")
+          .select("id,message_id,storage_path,file_name").eq("message_id",m.id).maybeSingle();
+        if(attachment){await appendAttachmentLink(attachment);break;}
+        if(attachmentError){note("ফাইলের তথ্য লোড হয়নি: "+attachmentError.message);break;}
+        if(attempt<4)await new Promise(resolve=>setTimeout(resolve,250));
+      }
     }
     host.scrollTop=host.scrollHeight;
   }
