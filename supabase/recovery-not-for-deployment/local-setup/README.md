@@ -2,7 +2,7 @@
 
 **Target branch:** `nexora-development`  
 **Database:** `nexora_test`  
-**Status:** Scaffold authored; not yet executed on the user's phone.
+**Status:** Bootstrap scaffold executed successfully on the user's Android phone (2026-11-13); read-only catalog audit added, pending execution.
 
 ## Purpose
 
@@ -56,3 +56,14 @@ Do not run the active migration chain or the recovery drafts against this scaffo
 - It does not contain remote credentials or connect to Live Supabase.
 - Never point it at Live Supabase.
 - Do not move it into the active migration directory.
+
+
+## Read-only catalog audit
+
+After the bootstrap scaffold has completed, run the consolidated inventory audit from the Termux shell:
+
+```sh
+curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/01_local_catalog_audit.sql' -o "$HOME/01_local_catalog_audit.sql" && psql -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/01_local_catalog_audit.sql"
+```
+
+This script is read-only (it opens a READ ONLY transaction), checks the local compatibility prerequisites, and inventories application tables, RLS policies, constraints, indexes, triggers, and functions already present. It does not apply migrations or modify application objects. Since the user has only run the compatibility scaffold so far, application tables are expected to report `NOT RESTORED`; that is a status, not a test failure.
