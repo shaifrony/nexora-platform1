@@ -84,6 +84,13 @@ begin
     raise exception 'নিজের পণ্যে Inquiry পাঠানো যাবে না.';
   end if;
 
+  if not exists (
+    select 1 from public.profiles p
+    where p.id = v_product.seller_id and p.role = 'seller' and p.account_status = 'active'
+  ) then
+    raise exception 'বিক্রেতার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়।';
+  end if;
+
   v_title := left('Product • ' || v_product.product_code || ' • ' || v_product.product_name, 900);
 
   insert into public.conversations (
