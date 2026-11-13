@@ -26,7 +26,7 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 
 ### Marketplace workspace
 
-- Dual-market product discovery: each Seller selects Wholesale or Retail per product listing. Buyers see only listings matching their registered Buyer category. A Seller may publish different products in different modes. Buyer category-change policy remains open.
+- Dual-market product discovery: each Seller selects Wholesale or Retail per product listing. Every Buyer and public visitor can see all approved listings regardless of sale type. A Seller may publish different products in different modes; no Buyer account category or sale-type visibility policy exists.
 - Services Marketplace.
 - Buyer Demand and Seller Quotations.
 - Wholesale and Retail product details, mode-appropriate quotations/orders, chat and verified reviews.
@@ -69,7 +69,7 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 - [ ] Test invite rollback, duplicate identities, privilege escalation, department scope, MFA bypass and revocation.
 
 ### M2 — Marketplace
-- [ ] Align existing Wholesale/Retail schema and UI to the confirmed seller-selected per-product market model; enforce Buyer-category visibility and authorization server-side.
+- [ ] Align existing Wholesale/Retail schema and UI to the seller-selected per-product market model; verify universal public/Buyer visibility and safe public product columns.
 - [x] Existing marketplace foundation staged; dual-market schema/UI alignment is in progress.
 - [x] Product/Service listing, image and edit workflow.
 - [x] Buyer Demand matching and Seller quotation.
