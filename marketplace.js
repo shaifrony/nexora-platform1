@@ -655,6 +655,7 @@
         <p>${esc(selected.description)}</p>
         <h3>পণ্যের তথ্য</h3>
         <p><strong>উৎপত্তি:</strong> ${esc(selected.origin)}</p>
+        <p><strong>ক্যাটাগরি:</strong> ${esc(selected.category)} · ${esc(selected.subcategory||"")}</p>
         <p><strong>Specifications & Quality:</strong> ${esc(selected.specifications_quality || "তথ্য দেওয়া হয়নি")}</p>
         <p class="price"><strong>${selected.market_category === "retail" ? "খুচরা মূল্য:" : "পাইকারি মূল্য:"}</strong> ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট</p>
         <p><strong>MOQ:</strong> ${esc(selected.minimum_order_quantity||1)} ইউনিট</p>
@@ -853,7 +854,7 @@
         '<button class="danger" type="button" data-demand-status="cancelled" data-demand-id="' + esc(d.id) + '">চাহিদা বাতিল করুন</button></div>' : '';
       return '<article class="card"><div class="section-head"><div><span class="tag">' + esc(d.category) +
         '</span><span class="tag">' + esc(labels[d.demand_status] || d.demand_status) + '</span></div><strong>' +
-        esc(d.demand_code) + '</strong></div><h3>' + esc(d.product_name) + '</h3><p>' + esc(d.description) +
+        esc(d.demand_code) + '</strong></div><h3>' + esc(d.product_name) + '</h3><p class="muted">Subcategory: ' + esc(d.subcategory||"—") + '</p><p>' + esc(d.description) +
         '</p><p class="muted"><strong>স্পেসিফিকেশন:</strong> ' + esc(d.specifications_quality || "উল্লেখ করা হয়নি") +
         '</p><div class="grid"><div><p class="muted">পরিমাণ</p><strong>' + esc(d.required_quantity) +
         '</strong></div><div><p class="muted">বাজেট</p><strong>' +
@@ -916,9 +917,9 @@
       </div>
       <p><span class="demand-date">প্রয়োজন: ${esc(d.required_date)}</span></p>
       <p class="muted" style="font-size:11px;margin:5px 0 0">Demand ID: ${esc(d.demand_code)}</p>
-      ${activeSeller() ? `<button class="secondary" type="button" data-offer="${esc(d.id)}">Submit Price Offer</button>` : ""}
+      ${activeSeller() ? '<span class="muted">Quotation পাঠাতে Seller Dashboard-এর Buyer Demand Inbox দেখুন।</span>' : ""}
     </article>`).join("");
-    host.querySelectorAll("button[data-offer]").forEach(b => b.addEventListener("click", () => submitOffer(b.dataset.offer)));
+    // Seller quotations are sent only from the targeted Buyer Demand Inbox.
   }
 
   async function submitDemandQuotation(form,demandId){
@@ -1614,7 +1615,7 @@
 
   async function submitProductEditRequest(form) {
     const id=form.dataset.requestProductForm;
-    const current=await client().from("products").select("image_urls,listing_status,minimum_order_quantity,price_tiers").eq("id",id).eq("seller_id",user().id).single();
+    const current=await client().from("products").select("image_urls,listing_status,subcategory,minimum_order_quantity,price_tiers").eq("id",id).eq("seller_id",user().id).single();
     if(current.error)throw current.error;
     if(current.data.listing_status!=="approved")throw new Error("এই পণ্য আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
     const v=Object.fromEntries(new FormData(form));
@@ -1625,7 +1626,7 @@
     const tiers=parseProductPriceTiers(v.price_tiers,minimumOrderQuantity);
     const images=await saveListingImages(form,current.data.image_urls||[],"product",5);
     const changes={
-      product_name:v.name.trim(),market_category:v.market_category,category:v.category,
+      product_name:v.name.trim(),market_category:v.market_category,category:v.category,subcategory:v.subcategory.trim(),
       image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
       specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
     };
