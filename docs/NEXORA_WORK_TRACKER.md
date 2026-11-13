@@ -189,3 +189,9 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - The browser must never hold provider/API secrets. Future endpoint must validate caller JWT + accepted conversation membership before provider access and trusted cache writes; no message body/token/secret logging.
 - First release scope is text-only. Attachments and voice/video are excluded. Negotiation/system messages must use typed templates so prices, quantities, currency, IDs and dates remain unchanged.
 - No Edge Function, provider configuration, consent switch, SQL execution, hosted test or browser E2E was added/run in this architecture package. Migration history divergence remains a deployment blocker; Live Supabase, Production, DNS and `main` untouched.
+
+
+## 2026-11-13 — Adjacent staged negotiation SQL syntax correction
+- During the multilingual architecture source recheck, found that `private.append_product_negotiation_chat_event` in `20261115110000_product_price_negotiation.sql` still had an invalid single-$ PL/pgSQL body delimiter.
+- Corrected it to a matching `$$ ... $$` dollar-quoted body and re-fetched the branch file. Static delimiter check now reports no malformed single-dollar function block and a valid matching double-dollar block.
+- This is source inspection only; the migration was not executed and no SQL behavior is claimed as tested.
