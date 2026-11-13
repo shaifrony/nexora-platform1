@@ -1561,7 +1561,6 @@
     const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
     if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
-    const tiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);
     if(!Number.isFinite(Number(v.minimum_order_quantity))||Number(v.minimum_order_quantity)<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
     const tiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);
     const images=await saveListingImages(form,oldUrls,"product",5);
@@ -1615,7 +1614,7 @@
     const changes={
       product_name:v.name.trim(),market_category:v.market_category,category:v.category,
       image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
-      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),price_tiers:tiers
+      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
     };
     try{
       const {data,error}=await client().rpc("submit_listing_edit_request",{
