@@ -677,3 +677,46 @@ Read-only metadata checks compared the remaining staged feature migrations with 
 ### 21.3 Migration status limits
 
 This comparison is based on relation, column, function, trigger, Storage bucket metadata and policy metadata presence. It does not establish complete behavioral equivalence, the exact state of every seed/configuration row, or API exposure. Storage object contents and user data were not read. No Live writes, schema changes, migration execution or migration-history repair occurred. No PostgreSQL parser, isolated database, JWT/RLS, Storage upload or end-to-end tests were run.
+
+
+## 22. Consolidated Migration Dependency Map and execution gates
+
+This map consolidates the source-level dependencies identified in sections 17–21. It is a planning map, not permission to execute migrations.
+
+### 22.1 Dependency order
+
+1. **Core marketplace and security foundation** — initial public profile/business/product/demand schema, private communications foundation, Admin permission/MFA helpers, safe public identity and demand projections. Preserve the existing Live-only security hardening outcomes; do not replay migrations merely because their original files are absent from the branch.
+2. **Product inquiry context** — existing conversations/participants/messages first, then product-linked inquiry context. The product-context migration remains pending on Live.
+3. **Services Marketplace** — business/profile and Admin permission foundations first; then `service_listings`.
+4. **Listing media** — Services Marketplace before service `image_urls`, listing image bucket and seller-owned Storage policies. Verify Storage policies and grants before any rehearsal.
+5. **Listing change governance** — Admin permission helpers + Product/Service listing tables → listing edit request table and submit/review functions → listing edit event/history table and triggers.
+6. **Verified listing reviews** — review eligibility/review tables and review RPCs; Commerce Order completion must be integrated with the private purchase-eligibility record before the order-completion path is rehearsed. Review migration creates the eligibility foundation; Commerce Order completion writes eligibility.
+7. **Product commercial inventory** — current Product schema and seller listing workflow → price/MOQ/stock columns, validation trigger and inventory RPC. Existing Live price fields must be reconciled rather than blindly recreated.
+8. **Buyer Demand and Seller quotation** — Buyer Demand + Product + Seller Offer foundations → subcategory fields and Demand Inbox routing → demand/quotation negotiation and order conversion. Preserve the Buyer-required-by date throughout the chain.
+9. **Commerce Orders and price negotiation** — verified-review eligibility foundation + Product/Service listing tables → Commerce Orders/events → Product price negotiation. Product negotiation acceptance must create an order through the same canonical Commerce Order workflow.
+10. **Delivery network** — Provider/Vehicle tables → provider/vehicle Admin review → delivery job base → unified network assignment → tracking history/status. Do not revive the superseded per-Porter job assignment model.
+11. **Porter activation gate** — role/profile foundation → public Porter registration and review table/RPC/Admin MFA gate. This is separate from transport-provider/vehicle approval and delivery assignment.
+12. **Centralized officer management** — existing Admin base tables and permissions → additive officer hierarchy columns/configuration → Director-only officer management RPC. Preserve existing Admin records and permissions; no destructive table rebuild.
+13. **Multilingual Chat** — conversation/message foundation first, then user language preferences and translation storage. This group remains suspended and excluded from production rollout.
+
+### 22.2 Hard blockers before any migration execution
+
+- Resolve the duplicate migration version `20261114180000` without guessing or changing either migration's semantics.
+- Resolve/retire the two exact duplicate SQL blob pairs with an auditable disposition; do not delete files or migration history solely to make counts match.
+- Reconcile every branch-only migration against the 24 Live history entries and current catalog. Object presence is not proof that a migration was recorded or semantically applied.
+- Preserve the documented Live-only security outcomes; no replay of branch migrations that would weaken current RLS, grants, safe projections or MFA checks.
+- Obtain a supported Supabase CLI/runtime path for `supabase migration new`, migration list/diff and isolated rehearsal. CLI and Docker runtime are currently unavailable in the user's environment.
+- Rehearse the complete ordered chain on a disposable database, run SQL parsing/runtime checks, inspect RLS/grants/functions/triggers/Storage policies and test the actual user-role workflows before requesting any production deployment approval.
+- No Live schema, migration history, production data, DNS or paid service may be changed as part of this recovery stage.
+
+### 22.3 Version-collision disposition
+
+The two files sharing `20261114180000` remain unchanged:
+- `20261114180000_product_linked_private_conversations.sql`
+- `20261114180000_unified_delivery_jobs_assignment.sql`
+
+The two exact duplicate SQL-content pairs also remain unchanged pending a CLI-supported, auditable archive/disposition:
+- `20261112051711_update_conversation_timestamp_on_message.sql` and `20261112051801_update_conversation_timestamp_on_message.sql`
+- `20261112051906_fix_conversation_insert_returning_visibility.sql` and `20261112052010_fix_conversation_insert_returning_visibility.sql`
+
+Do not run a migration runner while the version collision remains. Do not manufacture a timestamp or directly edit `supabase_migrations.schema_migrations`.
