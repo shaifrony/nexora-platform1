@@ -241,6 +241,55 @@ SELECT
     \echo 'SKIP: no active Buyer profile exists for authenticated visibility smoke check.'
   \endif
 
+  -- Active Seller: same authenticated SELECT policy, with no account sale-type gate.
+  SELECT id::text AS test_seller_uid
+  FROM public.profiles
+  WHERE role='seller' AND account_status='active'
+  ORDER BY created_at
+  LIMIT 1
+  \gset
+  \if :{?test_seller_uid}
+    SET LOCAL ROLE authenticated;
+    SELECT set_config('request.jwt.claim.sub', :'test_seller_uid', true);
+    SELECT count(*)::bigint AS seller_approved_count
+    FROM public.products p
+    WHERE p.listing_status='approved'
+      AND EXISTS (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
+    \gset
+    RESET ROLE;
+    \echo 'Authenticated Seller approved listings: ' :seller_approved_count
+    SELECT CASE WHEN :anon_approved_count::bigint=:seller_approved_count::bigint
+      THEN 'PASS' ELSE 'FAIL' END AS result,
+      'Anonymous visitor and active Seller see the same approved listing set' AS check_name;
+  \else
+    \echo 'SKIP: no active Seller profile exists for authenticated visibility smoke check.'
+  \endif
+
+  -- Active Admin staff: test the admin branch of the same policy.
+  SELECT p.id::text AS test_admin_uid
+  FROM public.profiles p
+  JOIN public.admin_staff a ON a.user_id=p.id AND a.is_active=true
+  WHERE p.role='admin' AND p.account_status='active'
+  ORDER BY p.created_at
+  LIMIT 1
+  \gset
+  \if :{?test_admin_uid}
+    SET LOCAL ROLE authenticated;
+    SELECT set_config('request.jwt.claim.sub', :'test_admin_uid', true);
+    SELECT count(*)::bigint AS admin_approved_count
+    FROM public.products p
+    WHERE p.listing_status='approved'
+      AND EXISTS (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
+    \gset
+    RESET ROLE;
+    \echo 'Authenticated Admin approved listings: ' :admin_approved_count
+    SELECT CASE WHEN :anon_approved_count::bigint=:admin_approved_count::bigint
+      THEN 'PASS' ELSE 'FAIL' END AS result,
+      'Anonymous visitor and active Admin see the same approved listing set' AS check_name;
+  \else
+    \echo 'SKIP: no active Admin staff profile exists for authenticated visibility smoke check.'
+  \endif
+
 \else
   \echo 'SKIP: marketplace schema is incomplete. No marketplace queries were executed.'
   \echo 'Apply/rehearse the complete marketplace schema on an isolated local database first.'
