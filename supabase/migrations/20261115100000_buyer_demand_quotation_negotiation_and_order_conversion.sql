@@ -15,6 +15,8 @@ alter table public.commerce_orders
   add column if not exists source_offer_total numeric(18,2) check (source_offer_total is null or source_offer_total>=0),
   add column if not exists grand_total numeric(18,2) generated always as (round(coalesce(source_offer_total,quantity*unit_price)+delivery_charge,2)) stored;
 
+comment on column public.commerce_orders.source_offer_total is 'Authoritative agreed goods subtotal for Buyer Demand quotation orders; total_price remains the legacy quantity-times-unit-price projection.';
+
 alter table public.commerce_orders
   drop constraint if exists commerce_orders_demand_source_check;
 alter table public.commerce_orders
