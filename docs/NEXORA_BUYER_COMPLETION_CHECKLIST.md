@@ -80,13 +80,16 @@ Status: **Implementation review in progress — not complete**
 - [ ] Product Inquiry, order creation, listing edit/review ও Buyer Demand routing local DB এবং real authenticated session-এ পরীক্ষা.
 
 ### B-03 — Buyer Demand privacy ও lifecycle
-- [ ] Public view-তে Buyer ID, name, email, phone, profile বা contact information নেই—catalog ও API-level যাচাই।
-- [ ] Buyer শুধু নিজের Demand create/read/update করতে পারে।
-- [ ] Seller শুধু তার নিজের `buyer_demand_inbox`-এ routed Demand দেখতে ও quotation দিতে পারে।
-- [ ] Buyer Demand close/cancel করলে নতুন quotation বন্ধ হয় এবং public board থেকে বাদ যায়।
-- [ ] Buyer একাধিক Seller quotation তুলনা করে একটি quotation গ্রহণ করতে পারবে কি না—business rule ও secure acceptance/order conversion workflow নির্ধারণ ও বাস্তবায়ন।
-- [ ] Required date, subcategory এবং field constraints final schema-তে মেলে।
-- [ ] Buyer Demand matching product category/subcategory ও approved Seller business অনুযায়ী হয়; market_category নির্বিশেষে যাচাই।
+- [x] Staged source review: `public_buyer_demands` SECURITY INVOKER view-তে Buyer ID/name/email/phone/profile/contact fields নেই; anonymous base-table grants are column-limited and omit `buyer_id`.
+- [x] Staged RLS review: Buyer Demand INSERT/SELECT/UPDATE owner-scoped; Seller can read open Demand only through own inbox; Admin path remains separate.
+- [x] Staged inbox review: `buyer_demand_inbox` RLS + Seller-owned SELECT; authenticated direct INSERT/UPDATE/DELETE revoked.
+- [x] Staged quotation INSERT requires active Seller, approved public Business Profile, own inbox row and open Demand; one offer per Seller/Demand unique constraint.
+- [x] Buyer UI closes/cancels only own open Demand; quotation INSERT policy blocks closed/cancelled Demand; public board view filters open only.
+- [x] Required date is NOT NULL and constrained to current_date or later; subcategory constraints and public projection field are present in final migration.
+- [x] Demand routing source uses approved Product category/subcategory + active Seller + approved public Business Profile; no Buyer/Seller account-category or Wholesale/Retail market_category gate.
+- [ ] Run read-only local catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. It will SKIP if the complete Marketplace Demand schema is absent.
+- [ ] Verify privacy, ownership, Seller inbox, quotations and status transitions under real JWT/PostgREST sessions and browser E2E.
+- [ ] Buyer quotation acceptance, counter-offer and quotation-to-order conversion workflow remains unimplemented.
 
 ### B-04 — Orders, stock ও pricing
 - [ ] Buyer account category ছাড়া যেকোনো approved Wholesale/Retail product order করতে পারে যাচাই।
