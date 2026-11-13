@@ -237,3 +237,12 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Measure server RAM, CPU/GPU, latency, throughput and hosting cost.
 - [ ] Approve privacy/consent, implement trusted server adapter and test protected values (price, quantity, currency, dates, IDs).
 - **Status:** research/source review only. Neither model was run here; translation remains disabled.
+
+
+## 13. Bengali ↔ English pilot corpus
+- [x] Added 24 synthetic bilingual seed cases for both translation directions, including commercial chat and protected values (`docs/NEXORA_BN_EN_PILOT_CORPUS.md`).
+- [x] Added reviewer instructions, critical-token checks, per-direction scoring protocol and an unfilled results matrix.
+- [ ] Obtain two independent bilingual reviews of seed references before model scoring.
+- [ ] Execute the same frozen corpus on exact IndicTrans2 and Argos checkpoint/package versions; record raw output and hardware/runtime details.
+- [ ] Compute optional chrF++/COMET and compare critical-error rate, human scores, latency and hosting cost.
+- **Status:** test corpus prepared only. Neither model was run; no quality winner or score is claimed. Automatic translation remains disabled.
