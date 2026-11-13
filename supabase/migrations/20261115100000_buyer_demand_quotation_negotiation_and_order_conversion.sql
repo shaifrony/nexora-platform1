@@ -87,7 +87,7 @@ create unique index if not exists commerce_orders_source_offer_unique_idx
 
 create or replace function private.initialise_seller_offer_negotiation()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_qty numeric(18,3); v_unit numeric(18,2);
 begin
   v_qty:=nullif(new.available_quantity,'')::numeric;
@@ -100,7 +100,7 @@ begin
   new.current_unit_price:=coalesce(new.current_unit_price,v_unit);
   return new;
 end;
-$;
+$$;
 revoke all on function private.initialise_seller_offer_negotiation() from public,anon,authenticated;
 drop trigger if exists seller_offer_initialise_negotiation on public.seller_offers;
 create trigger seller_offer_initialise_negotiation
@@ -109,14 +109,14 @@ for each row execute function private.initialise_seller_offer_negotiation();
 
 create or replace function private.log_initial_seller_offer_negotiation()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 begin
   insert into public.seller_offer_negotiations(
     offer_id,actor_id,actor_role,action,proposed_quantity,proposed_unit_price,note
   ) values(new.id,new.seller_id,'seller','initial_quote',new.current_quantity,new.current_unit_price,new.message);
   return new;
 end;
-$;
+$$;
 revoke all on function private.log_initial_seller_offer_negotiation() from public,anon,authenticated;
 drop trigger if exists seller_offer_log_initial_negotiation on public.seller_offers;
 create trigger seller_offer_log_initial_negotiation
