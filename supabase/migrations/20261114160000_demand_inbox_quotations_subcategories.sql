@@ -290,7 +290,27 @@ begin
        or length(btrim(coalesce(p_proposed_changes->>'origin',''))) not between 2 and 160
        or coalesce(p_proposed_changes->>'market_category','') not in ('wholesale','retail')
        or length(btrim(coalesce(p_proposed_changes->>'subcategory',''))) not between 2 and 120
-       or coalesce(p_proposed_changes->>'minimum_order_quantity','') !~ '^[0-9]+([.][0-9]{1,3})?       or coalesce(p_proposed_changes->>'currency','') !~ '^[A-Z]{3}
+       or coalesce(p_proposed_changes->>'minimum_order_quantity','') !~ '^[0-9]+([.][0-9]{1,3})?$'
+       or (p_proposed_changes->>'minimum_order_quantity')::numeric <= 0
+       or (p_proposed_changes->>'market_category'='retail' and (p_proposed_changes->>'minimum_order_quantity')::numeric <> 1)
+       or jsonb_typeof(p_proposed_changes->'price_tiers')<>'array'
+       or jsonb_array_length(p_proposed_changes->'price_tiers')>20
+       or exists(
+         select 1
+         from jsonb_array_elements(
+           case when jsonb_typeof(p_proposed_changes->'price_tiers')='array'
+             then p_proposed_changes->'price_tiers' else '[]'::jsonb end
+         ) as tier(value)
+         where jsonb_typeof(tier.value)<>'object'
+           or coalesce(tier.value->>'min_quantity','') !~ '^[0-9]+$'
+           or coalesce(tier.value->>'unit_price','') !~ '^[0-9]+([.][0-9]{1,2})?$'
+           or case
+             when coalesce(tier.value->>'unit_price','') ~ '^[0-9]+([.][0-9]{1,2})?$'
+             then (tier.value->>'unit_price')::numeric <= 0
+             else false
+           end
+       )
+       or coalesce(p_proposed_changes->>'currency','') !~ '^[A-Z]{3}$'
        or coalesce(p_proposed_changes->>'price','') !~ '^[0-9]+([.][0-9]{1,2})?$'
        or (p_proposed_changes->>'price')::numeric<=0
        or jsonb_typeof(p_proposed_changes->'image_urls')<>'array'
