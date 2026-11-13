@@ -114,3 +114,31 @@ Resolved target decisions:
 - Admin hierarchy: Director → MD → Department Heads → Department Officers, with explicit least-privilege permissions and separation of duties.
 
 The older `NEXORA_PORTER_ARCHITECTURE.md` now carries a superseded-design notice. Conflicting active migrations and frontend code have **not** been edited in this design-only step. Do not replay them unchanged.
+
+
+## New local Foundation baseline fixture
+
+After resolving the design conflicts, a **new, non-historical local fixture** has been authored:
+
+- `06_local_foundation_baseline_fixture.sql`
+
+It creates the proposed identity/account lifecycle, role/profile-change requests, Admin departments/staff/permission catalogue/grants/audit tables, Porter account review, authorization helper functions, a limited local Auth-user trigger stub, and RLS/grants for the foundation layer.
+
+**Safety requirements:**
+- Run only after the compatibility bootstrap, only against the local database `nexora_test`.
+- The script refuses to run if the database is not `nexora_test`, if the compatibility Auth helpers are absent, or if `public.profiles` already exists.
+- It is a new reconstruction for local SQL testing, not the original schema and not deployable.
+- It does not apply any active migration or recovery draft.
+- The fixture's local Auth trigger is only a PostgreSQL test stub; it does not emulate Supabase Auth signup, sessions, OAuth, JWT validation or MFA/AAL2.
+- Do not run the 36 active migrations on top of this fixture. The branch/hosted migration-history divergence remains unresolved, and known legacy migrations conflict with the approved Wholesale-Only and Porter account decisions.
+- SQL syntax and runtime behavior have **not yet been tested on the user's Android PostgreSQL instance**. After review, run the command below and share the complete output.
+
+Run from the Termux shell (not inside the psql prompt):
+
+```sh
+curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/06_local_foundation_baseline_fixture.sql' -o "$HOME/06_local_foundation_baseline_fixture.sql" && psql -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/06_local_foundation_baseline_fixture.sql"
+```
+
+Expected final lines:
+`=== LOCAL FOUNDATION FIXTURE CREATED ===`
+`This is a new local-only reconstruction, not original schema and not deployable.`
