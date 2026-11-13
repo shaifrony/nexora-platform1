@@ -7,9 +7,12 @@ create table if not exists public.product_price_negotiations (
   product_id uuid not null references public.products(id) on delete restrict,
   buyer_id uuid not null references public.profiles(id) on delete restrict,
   seller_id uuid not null references public.profiles(id) on delete restrict,
+  conversation_id uuid not null references public.conversations(id) on delete restrict,
   quantity numeric(18,3) not null check(quantity>0),
   current_unit_price numeric(18,2) not null check(current_unit_price>0),
-  currency text not null check(currency ~ '^[A-Z]{3}
+  currency text not null check(currency ~ '^[A-Z]{3}$'),
+  fulfilment_location text not null check(length(btrim(fulfilment_location))>=5),
+  last_actor_id uuid not null references public.profiles(id) on delete restrict,
   negotiation_status text not null default 'buyer_countered'
     check(negotiation_status in ('buyer_countered','seller_countered','accepted','rejected','ordered')),
   order_id uuid references public.commerce_orders(id) on delete restrict,
@@ -48,6 +51,21 @@ on public.product_price_negotiation_events for select to authenticated
 using(exists(select 1 from public.product_price_negotiations n
  where n.id=negotiation_id and (n.buyer_id=(select auth.uid()) or n.seller_id=(select auth.uid()))));
 
+create or replace function private.append_product_negotiation_chat_event(
+  p_conversation_id uuid,p_actor_id uuid,p_event jsonb
+) returns void
+language plpgsql security definer set search_path=''
+as $ 
+begin
+  if p_conversation_id is null or p_actor_id is null then
+    raise exception 'Negotiation conversation context is missing';
+  end if;
+  insert into public.messages(conversation_id,sender_id,body,message_type)
+  values(p_conversation_id,p_actor_id,p_event::text,'system');
+end;
+$;
+revoke all on function private.append_product_negotiation_chat_event(uuid,uuid,jsonb) from public,anon,authenticated;
+
 create or replace function private.respond_to_product_price_negotiation(
  p_negotiation_id uuid,p_action text,p_quantity numeric default null,
  p_unit_price numeric default null,p_note text default null,p_fulfilment_location text default null
@@ -85,6 +103,8 @@ begin
    update public.product_price_negotiations set negotiation_status='rejected',last_actor_id=v_actor,updated_at=now() where id=p_negotiation_id;
    insert into public.product_price_negotiation_events(negotiation_id,actor_id,action,note)
    values(p_negotiation_id,v_actor,'rejected',nullif(btrim(p_note),''));
+   perform private.append_product_negotiation_chat_event(v_n.conversation_id,v_actor,
+     jsonb_build_object('kind','product_negotiation','action','rejected','negotiation_id',p_negotiation_id,'note',nullif(btrim(p_note),'')));
    return null;
  end if;
 
@@ -106,6 +126,9 @@ begin
    insert into public.product_price_negotiation_events(negotiation_id,actor_id,action,quantity,unit_price,note)
    values(p_negotiation_id,v_actor,case when v_actor=v_n.buyer_id then 'buyer_counter' else 'seller_counter' end,
     p_quantity,p_unit_price,nullif(btrim(p_note),''));
+   perform private.append_product_negotiation_chat_event(v_n.conversation_id,v_actor,
+     jsonb_build_object('kind','product_negotiation','action',v_next_status,'negotiation_id',p_negotiation_id,
+       'quantity',p_quantity,'unit_price',p_unit_price,'currency',v_n.currency,'note',nullif(btrim(p_note),'')));
    return null;
  end if;
 
@@ -135,6 +158,9 @@ begin
  where id=p_negotiation_id;
  insert into public.product_price_negotiation_events(negotiation_id,actor_id,action,quantity,unit_price,note)
  values(p_negotiation_id,v_actor,'accepted',v_n.quantity,v_n.current_unit_price,nullif(btrim(p_note),''));
+ perform private.append_product_negotiation_chat_event(v_n.conversation_id,v_actor,
+   jsonb_build_object('kind','product_negotiation','action','ordered','negotiation_id',p_negotiation_id,
+     'quantity',v_n.quantity,'unit_price',v_n.current_unit_price,'currency',v_n.currency,'order_id',v_order_id));
  return v_order_id;
 end;
 $$;
@@ -144,7 +170,7 @@ create or replace function public.start_product_price_negotiation(
 ) returns uuid language plpgsql security definer set search_path=''
 as $$
 declare
- v_actor uuid:=auth.uid();v_product public.products%rowtype;v_seller uuid;v_id uuid;v_available numeric;
+ v_actor uuid:=auth.uid();v_product public.products%rowtype;v_seller uuid;v_id uuid;v_available numeric;v_conversation_id uuid;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
  if p_quantity is null or p_quantity<=0 or p_unit_price is null or p_unit_price<=0 then raise exception 'Quantity and price must be positive'; end if;
@@ -160,11 +186,15 @@ begin
  if p_quantity<coalesce(v_product.minimum_order_quantity,1) then raise exception 'Quantity is below product MOQ'; end if;
  v_available:=case when v_product.stock_tracking then greatest(0,coalesce(v_product.stock_quantity,0)-coalesce(v_product.reserved_quantity,0)) else null end;
  if v_available is not null and p_quantity>v_available then raise exception 'Quantity exceeds available stock'; end if;
- insert into public.product_price_negotiations(product_id,buyer_id,seller_id,quantity,current_unit_price,currency,fulfilment_location,last_actor_id)
- values(p_product_id,v_actor,v_seller,p_quantity,p_unit_price,upper(v_product.currency),btrim(p_fulfilment_location),v_actor)
+ v_conversation_id:=private.create_product_inquiry(p_product_id,null);
+ insert into public.product_price_negotiations(product_id,buyer_id,seller_id,conversation_id,quantity,current_unit_price,currency,fulfilment_location,last_actor_id)
+ values(p_product_id,v_actor,v_seller,v_conversation_id,p_quantity,p_unit_price,upper(v_product.currency),btrim(p_fulfilment_location),v_actor)
  returning id into v_id;
  insert into public.product_price_negotiation_events(negotiation_id,actor_id,action,quantity,unit_price,note)
  values(v_id,v_actor,'buyer_counter',p_quantity,p_unit_price,nullif(btrim(p_note),''));
+ perform private.append_product_negotiation_chat_event(v_conversation_id,v_actor,
+   jsonb_build_object('kind','product_negotiation','action','buyer_countered','negotiation_id',v_id,
+     'quantity',p_quantity,'unit_price',p_unit_price,'currency',upper(v_product.currency),'note',nullif(btrim(p_note),'')));
  return v_id;
 end;
 $$;
