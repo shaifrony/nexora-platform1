@@ -27,8 +27,11 @@
       if (challengeError) { show("deniedPanel"); message("deniedMessage",challengeError.message); return; }
       currentChallenge = challenge.id; show("mfaPanel"); return;
     }
-    const {data:staff,error:staffError} = await client.from("admin_staff").select("user_id,admin_code,admin_level,department_key,position_key,staff_email,is_active").eq("user_id",session.user.id).maybeSingle();
-    if (staffError || !staff || !staff.is_active) { show("deniedPanel"); message("deniedMessage",staffError?.message || "এই অ্যাকাউন্টে সক্রিয় কর্মকর্তা অনুমতি নেই।"); return; }
+    const {data:baseStaff,error:staffError} = await client.from("admin_staff").select("user_id,admin_code,admin_level,department_key,is_active").eq("user_id",session.user.id).maybeSingle();
+    if (staffError || !baseStaff || !baseStaff.is_active) { show("deniedPanel"); message("deniedMessage",staffError?.message || "এই অ্যাকাউন্টে সক্রিয় কর্মকর্তা অনুমতি নেই।"); return; }
+    let staff = baseStaff;
+    const {data:extendedStaff,error:extendedError} = await client.from("admin_staff").select("position_key,staff_email").eq("user_id",session.user.id).maybeSingle();
+    if (!extendedError && extendedStaff) staff = {...baseStaff,...extendedStaff};
     const {data:grants,error:grantError} = await client.from("admin_permission_grants").select("permission_key,is_allowed").eq("admin_user_id",session.user.id).eq("is_allowed",true);
     if (grantError) { show("deniedPanel"); message("deniedMessage","Permission যাচাই করা যায়নি: "+grantError.message); return; }
     renderDashboard(staff,grants||[]);
