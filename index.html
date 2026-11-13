@@ -926,7 +926,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <select name="role" required>
             <option value="buyer">Buyer</option>
             <option value="seller">Seller</option>
+            <option value="porter">Porter</option>
           </select>
+          <p id="nxPorterRegistrationNote" class="muted hidden">Porter আবেদন জমা দেওয়ার পর Admin/Transport বিভাগ যাচাই করবে। অনুমোদনের আগে অ্যাকাউন্ট Pending থাকবে এবং Dashboard/Delivery কাজ ব্যবহার করা যাবে না।</p>
           <div id="nxBuyerCategoryFields">
             <label>Buyer ক্যাটাগরি *</label>
             <select name="buyer_category" required>
@@ -1473,33 +1475,22 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
     </div>
   </section>
 
-  <!-- LEGACY PORTER WORKSPACE — disabled pending Transport Provider refactor -->
-  <section id="porterDashboard" class="section hidden nx-role-workspace" aria-hidden="true">
+  <!-- Approval-gated Porter workspace on the shared domain -->
+  <section id="porterDashboard" class="section hidden nx-role-workspace">
     <div class="nx-role-hero">
-      <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>পরিবহন ও ডেলিভারি ব্যবস্থাপনা</h1><p>পণ্য সংগ্রহ থেকে গন্তব্যে পৌঁছানো পর্যন্ত পরিবহন কার্যক্রম পরিচালনার জন্য Porter Center। Porter অ্যাকাউন্ট Admin অনুমোদনের পর সক্রিয় হয়।</p></div>
+      <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>Porter Dashboard</h1><p>আপনার অনুমোদিত Porter অ্যাকাউন্টের পরিবহন কার্যক্রমের কেন্দ্র।</p></div>
       <div class="nx-role-hero-mark" aria-hidden="true">↗</div>
     </div>
-    <div class="nx-seller-overview nx-porter-overview" aria-label="Porter job overview">
-      <article class="nx-seller-stat"><span>নতুন কাজ</span><strong id="nxPorterAssigned">—</strong><small>গ্রহণের অপেক্ষায়</small></article>
-      <article class="nx-seller-stat"><span>চলমান কাজ</span><strong id="nxPorterActive">—</strong><small>সংগ্রহ বা পরিবহনে</small></article>
-      <article class="nx-seller-stat"><span>সম্পন্ন কাজ</span><strong id="nxPorterDelivered">—</strong><small>ডেলিভারি সম্পন্ন</small></article>
-      <article class="nx-seller-stat"><span>মোট কাজ</span><strong id="nxPorterTotal">—</strong><small>আপনার বরাদ্দকৃত কাজ</small></article>
+    <div class="card">
+      <h3>Porter Account Status</h3>
+      <div id="nxPorterWorkspaceStatus" aria-live="polite">
+        <p class="muted">আপনার অ্যাকাউন্টের অনুমোদন যাচাই হচ্ছে…</p>
+      </div>
     </div>
     <div class="card">
-      <div class="section-head"><div><h3>আমার ডেলিভারি কাজ</h3><p class="muted">আপনাকে বরাদ্দ করা পরিবহন কাজ, সংগ্রহের ঠিকানা ও গন্তব্য।</p></div><button class="secondary" id="nxPorterRefresh" type="button">রিফ্রেশ</button></div>
-      <div class="nx-seller-product-tools">
-        <label class="nx-seller-search-label" for="nxPorterJobFilter">কাজের অবস্থা</label>
-        <select id="nxPorterJobFilter">
-          <option value="all">সব কাজ</option><option value="assigned">নতুন কাজ</option><option value="active">চলমান</option><option value="delivered">সম্পন্ন</option><option value="declined">প্রত্যাখ্যাত</option><option value="failed">সমস্যা হয়েছে</option>
-        </select>
-      </div>
-      <div id="nxPorterJobs" aria-live="polite"><p class="muted">ডেলিভারি কাজ লোড হচ্ছে…</p></div>
+      <h3>পরবর্তী ধাপ</h3>
+      <p class="muted">Porter অ্যাকাউন্ট অনুমোদিত হওয়ার পর Transport &amp; Logistics বিভাগ আপনার Provider/Vehicle onboarding সম্পন্ন করবে। যাচাইকৃত Provider ও Vehicle কাঠামো প্রস্তুত না হওয়া পর্যন্ত Delivery Job এখানে দেখানো বা বরাদ্দ করা হবে না।</p>
     </div>
-    <div class="card nx-porter-history-card">
-      <div class="section-head"><div><h3>ডেলিভারি কাজের ইতিহাস</h3><p class="muted">আপনার বরাদ্দকৃত কাজের স্ট্যাটাস পরিবর্তনের সর্বশেষ ৫০টি রেকর্ড।</p></div></div>
-      <div id="nxPorterHistory" aria-live="polite"><p class="muted">ইতিহাস লোড হচ্ছে…</p></div>
-    </div>
-    <p class="muted nx-porter-note">নিরাপত্তা: কেবল আপনাকে বরাদ্দ করা কাজের প্রয়োজনীয় সংগ্রহ ও গন্তব্যের তথ্য এখানে দেখানো হবে। লাইভ GPS tracking, ছবি-ভিত্তিক delivery proof এবং earnings settlement এখনো চালু নয়।</p>
   </section>
 
   <!-- PRIVATE COMMUNICATIONS -->
