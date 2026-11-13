@@ -55,7 +55,7 @@ BEGIN
     RAISE EXCEPTION 'Authentication required' USING ERRCODE='28000';
   END IF;
 
-  IF p_decision NOT IN ('approved','rejected') THEN
+  IF p_decision IS NULL OR p_decision NOT IN ('approved','rejected') THEN
     RAISE EXCEPTION 'Decision must be approved or rejected' USING ERRCODE='22023';
   END IF;
 
@@ -172,7 +172,7 @@ BEGIN
     RAISE EXCEPTION 'Authentication required' USING ERRCODE='28000';
   END IF;
 
-  IF p_decision NOT IN ('approved','rejected') THEN
+  IF p_decision IS NULL OR p_decision NOT IN ('approved','rejected') THEN
     RAISE EXCEPTION 'Decision must be approved or rejected' USING ERRCODE='22023';
   END IF;
 
