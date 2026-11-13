@@ -108,21 +108,23 @@ security definer
 set search_path=''
 as $$
 begin
-  if new.listing_status<>'approved' then return new; end if;
-  insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
-  select distinct d.id,new.seller_id,'approved_product_category'
-  from public.buyer_demands d
-  join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
-  join public.profiles sp on sp.id=new.seller_id and sp.role='seller' and sp.account_status='active'
-  join public.public_businesses pb on pb.business_id=new.business_id and pb.seller_id=new.seller_id
-  where d.demand_status='open'
-    and d.category=new.category
-    and d.category is not null
-    and (nullif(btrim(d.subcategory),'') is null
-      or lower(btrim(coalesce(new.subcategory,'')))=lower(btrim(d.subcategory)))
-    and bp.buyer_category=new.market_category
-    and new.market_category=any(sp.seller_categories)
-  on conflict(demand_id,seller_id) do nothing;
+  if new.listing_status='approved' then
+    insert into public.buyer_demand_inbox(demand_id,seller_id,match_reason)
+    select distinct d.id,new.seller_id,'approved_product_category'
+    from public.buyer_demands d
+    join public.profiles bp on bp.id=d.buyer_id and bp.role='buyer' and bp.account_status='active'
+    join public.profiles sp on sp.id=new.seller_id and sp.role='seller' and sp.account_status='active'
+    join public.public_businesses pb on pb.business_id=new.business_id and pb.seller_id=new.seller_id
+    where d.demand_status='open'
+      and d.category=new.category
+      and (nullif(btrim(d.subcategory),'') is null
+        or lower(btrim(coalesce(new.subcategory,'')))=lower(btrim(d.subcategory)))
+      and bp.buyer_category=new.market_category
+      and new.market_category=any(sp.seller_categories)
+    on conflict(demand_id,seller_id) do nothing;
+  end if;
+
+  -- Remove stale inbox access if this Seller no longer has any matching approved product.
   delete from public.buyer_demand_inbox i
   using public.buyer_demands d
   where i.demand_id=d.id and i.seller_id=new.seller_id and d.demand_status='open'
@@ -140,7 +142,7 @@ begin
     );
   return new;
 end;
-$;
+$$;
 revoke all on function private.route_new_approved_product_to_open_demands() from public,anon,authenticated;
 drop trigger if exists approved_product_route_open_demands on public.products;
 create trigger approved_product_route_open_demands
