@@ -17,13 +17,20 @@ for file in \
   20_dual_market_visibility_read_only_verification.sql
 do
   echo "Downloading $file ..."
-  curl -fL "$BASE_URL/$file" -o "$file"
+  curl -fL --retry 3 "$BASE_URL/$file?cachebust=7b8a1bdbc4638895fc7dd4019215c657e2751d4b" -o "$file"
   if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
-    if ! grep -q "DELETE FROM public.admin_permission_grants" "$file" ||
-       ! grep -q "DELETE FROM public.admin_staff" "$file"; then
-      echo "STOP: downloaded cleanup SQL is missing the corrected FK dependency order."
+    GRANT_LINE="$(grep -n "^DELETE FROM public.admin_permission_grants$" "$file" | cut -d: -f1 || true)"
+    STAFF_LINE="$(grep -n "^DELETE FROM public.admin_staff$" "$file" | cut -d: -f1 || true)"
+    USERS_LINE="$(grep -n "^DELETE FROM auth.users$" "$file" | cut -d: -f1 || true)"
+    if [ -z "$GRANT_LINE" ] || [ -z "$STAFF_LINE" ] || [ -z "$USERS_LINE" ] ||
+       [ "$GRANT_LINE" -ge "$STAFF_LINE" ] || [ "$STAFF_LINE" -ge "$USERS_LINE" ]; then
+      echo "STOP: downloaded cleanup SQL is stale or its FK delete order is unsafe."
+      echo "Expected admin_permission_grants -> admin_staff -> auth.users."
+      echo "No SQL has been executed."
       exit 1
     fi
+    echo "Verified cleanup DELETE order:"
+    grep -n "^DELETE FROM" "$file"
   fi
 done
 
