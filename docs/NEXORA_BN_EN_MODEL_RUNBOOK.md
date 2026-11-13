@@ -116,3 +116,10 @@ The first Argos run downloads and installs the exact indexed 1.9 packages. The f
 - IndicTrans2 license is identified as MIT by the upstream model cards, but Hugging Face access is gated and must be accepted by the operator.
 - Argos package versions are confirmed; exact model artifact license/terms remain unverified.
 - The runner has been added to source but has not been executed against downloaded model dependencies. Treat it as an initial runner requiring a first controlled dry run on a suitable computer.
+
+## 9. Google Colab option (phone-friendly interface)
+- Notebook: `notebooks/NEXORA_BN_EN_Model_Pilot.ipynb` (open in Google Colab from the GitHub file page).
+- It clones only `nexora-development`, installs dependencies, asks for a Hugging Face read token through a hidden prompt, resolves and pins both exact model commit SHAs for that session, runs the same synthetic corpus, and offers the CSV for download.
+- Do not paste the token into a notebook cell, GitHub, chat, or result CSV. Use only a Hugging Face read token and accept both official model access conditions first.
+- Colab free hardware is not guaranteed and its usage limits are dynamic. If RAM/GPU is unavailable, or a paid upgrade is requested, stop; do not purchase anything. No guarantee of completion on free tier.
+- The notebook has been committed but not executed by NEXORA. Runtime success and actual model quality remain unverified.
