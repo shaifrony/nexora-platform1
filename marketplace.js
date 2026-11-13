@@ -20,6 +20,7 @@
   const activeBuyer = () => profile()?.role === "buyer" && profile()?.account_status === "active";
   const activeSeller = () => profile()?.role === "seller" && profile()?.account_status === "active";
   const currencyOK = (v) => /^[A-Z]{3}$/.test(String(v || "").toUpperCase());
+  function parseProductPriceTiers(raw,moq){const lines=String(raw||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean);if(lines.length>20)throw new Error("সর্বোচ্চ ২০টি Price Tier দেওয়া যাবে।");const tiers=[];let previous=Number(moq);for(const line of lines){const m=line.match(/^(\d+(?:\.\d+)?)\s*[:=]\s*(\d+(?:\.\d+)?)$/);if(!m)throw new Error("প্রতি লাইনে পরিমাণ=একক মূল্য লিখুন, যেমন 100=95");const min=Number(m[1]),price=Number(m[2]);if(!Number.isInteger(min)||min<=previous||price<=0)throw new Error("Tier-এর পরিমাণ MOQ-এর বেশি ও ক্রমানুসারে হতে হবে; মূল্য শূন্যের বেশি দিন।");tiers.push({min_quantity:min,unit_price:price});previous=min;}return tiers;}
   const setBusy = (form, busy) => form.querySelectorAll("button").forEach(b => b.disabled = busy);
   const listingImageBucket = "nexora-listing-images";
   const listingImageTypes = new Set(["image/jpeg","image/png","image/webp","image/avif"]);
@@ -1101,7 +1102,7 @@
       await loadSellerServices();
       await loadSellerOrders();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality")
+        .select("id,product_code,product_name,category,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -1540,12 +1541,15 @@
     const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
     if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
+    const tiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);
+    if(!Number.isFinite(Number(v.minimum_order_quantity))||Number(v.minimum_order_quantity)<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
+    const tiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);
     const images=await saveListingImages(form,oldUrls,"product",5);
     try{
       const {data,error}=await client().from("products").update({
         product_name:v.name.trim(),market_category:v.market_category,category:v.category,
         image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
-        specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
+        specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),price_tiers:tiers
       }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
       if(error)throw error;
       if(!data)throw new Error("পণ্যটি আর Pending অবস্থায় নেই; পৃষ্ঠা Refresh করে দেখুন।");
@@ -1591,7 +1595,7 @@
     const changes={
       product_name:v.name.trim(),market_category:v.market_category,category:v.category,
       image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
-      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
+      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),price_tiers:tiers
     };
     try{
       const {data,error}=await client().rpc("submit_listing_edit_request",{
@@ -1787,6 +1791,10 @@
       return say("আপনার নিবন্ধিত Seller ক্যাটাগরির মধ্য থেকে Wholesale অথবা Retail নির্বাচন করুন।");
     }
     if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
+    if(!Number.isFinite(Number(v.minimum_order_quantity))||Number(v.minimum_order_quantity)<=0)return say("MOQ শূন্যের বেশি হতে হবে।");
+    if(v.market_category==="retail"&&Number(v.minimum_order_quantity)!==1)return say("Retail পণ্যের MOQ অবশ্যই ১ হবে।");
+    if(v.stock_tracking==="true"&&(v.stock_quantity===""||!Number.isFinite(Number(v.stock_quantity))||Number(v.stock_quantity)<0))return say("Stock Tracking চালু করলে বর্তমান স্টক লিখুন।");
+    let priceTiers;try{priceTiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);}catch(err){return say(err.message);}
     setBusy(form, true);
     let uploadedPaths=[];
     try {
@@ -1798,7 +1806,7 @@
         product_name: v.name.trim(), category: v.category, market_category: v.market_category, image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
-        price: Number(v.price), currency: String(v.currency).toUpperCase(),
+        price: Number(v.price), currency: String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),stock_tracking:v.stock_tracking==="true",stock_quantity:v.stock_tracking==="true"?Number(v.stock_quantity):null,price_tiers:priceTiers,
       });
       if (error) throw error;
       form.reset(); form.classList.add("hidden");
