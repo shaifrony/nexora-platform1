@@ -307,9 +307,9 @@
     currentSection = id;
     if (id === "market") loadProducts();
     if (id === "servicesMarketplace") loadServicesMarketplace();
-    if (id === "accountSection") loadAdminServiceQueue();
-    if (id === "accountSection") loadAdminListingEditRequests();
-    if (id === "accountSection") loadAdminActions();
+    if (id === "administrationDashboard" || id === "accountSection") loadAdminServiceQueue();
+    if (id === "administrationDashboard" || id === "accountSection") loadAdminListingEditRequests();
+    if (id === "administrationDashboard" || id === "accountSection") loadAdminActions();
     if (id === "buyerDashboard") loadBuyerDashboard();
     if (id === "sellerDashboard") loadSellerDashboard();
     if (id === "porterDashboard") loadPorterDashboard();
@@ -330,6 +330,16 @@
     }
   };
 
+  window.openMyDashboard = function() {
+    const identity = window.NEXORA_AUTH;
+    const p = identity?.profile || profile();
+    if (!p || p.account_status !== "active") return window.showSection("accountSection");
+    if (p.role === "buyer") return window.showSection("buyerDashboard");
+    if (p.role === "seller") return window.showSection("sellerDashboard");
+    if (p.role === "admin") return window.showSection("administrationDashboard");
+    return window.showSection("accountSection");
+  };
+
   window.showSection = function(id, options = {}) {
     const role = profile()?.role;
     const access = {
@@ -340,6 +350,16 @@
       postDemand: "buyer", buyerDashboard: "buyer",
       sellerDashboard: "seller"
     }[id];
+    if (id === "administrationDashboard") {
+      const identity = window.NEXORA_AUTH;
+      const allowed = role === "admin" && identity?.profile?.account_status === "active" &&
+        identity?.adminStaff?.is_active === true && identity?.mfaVerified === true;
+      if (!allowed) {
+        const hint = $("nxCurrent");
+        if (hint) hint.textContent = "Administration Dashboard-এর জন্য সক্রিয় Admin Account এবং MFA যাচাই প্রয়োজন।";
+        id = "accountSection";
+      }
+    }
     if (id === "porterDashboard") {
       const hint = $("nxCurrent");
       if (hint) hint.textContent = "পুরোনো Porter Account ব্যবস্থা বন্ধ রাখা হয়েছে। নতুন Transport Provider কাঠামো প্রস্তুত হলে এখানে প্রবেশ করা যাবে।";
