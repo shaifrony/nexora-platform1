@@ -242,3 +242,5 @@ fi
 This command exports schema definitions only for public/private, including table definitions, policies, functions, triggers, indexes and ACL statements emitted by pg_dump. It does not export table rows. The auth.users trigger and Storage customizations are separately preserved as catalog evidence in the JSON snapshot; do not attempt to restore Supabase-managed auth/storage schemas over a local Supabase stack.
 
 **Do not upload the connection string, database password, data dump, auth.users rows, or production user data to GitHub or ChatGPT.** The schema-only SQL file should remain on the device until we inspect it. Do not restore it to the live project. A restore/rehearsal must target a disposable local database only, after confirming the database name and PostgreSQL major version.
+
+The JSON evidence file also includes the complete 22-relation public inventory, the 37-function public/private inventory, 12 non-internal auth/storage trigger definitions with their function bodies, and four auth/storage RLS policies. Ten selected Foundation functions have full definitions. This remains catalog evidence rather than a complete SQL schema dump.
