@@ -1,0 +1,961 @@
+{
+  "tables": [
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "admin_audit_logs",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "actor_admin_code",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "action_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "target_type",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "target_id",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "details",
+          "type": "jsonb",
+          "default": "'{}'::jsonb",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX admin_audit_logs_pkey ON public.admin_audit_logs USING btree (id)"
+      ],
+      "policies": [
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "ALL",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        },
+        {
+          "name": "admin audit logs admin read",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(is_nexora_super_admin() OR has_nexora_permission('security.audit_logs.view'::text))",
+          "command": "SELECT",
+          "with_check": null
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "admin_audit_logs_actor_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (actor_user_id) REFERENCES profiles(id)"
+        },
+        {
+          "name": "admin_audit_logs_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "admin_departments",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "department_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "department_name",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_assignable",
+          "type": "boolean",
+          "default": "true",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX admin_departments_department_name_key ON public.admin_departments USING btree (department_name)",
+        "CREATE UNIQUE INDEX admin_departments_pkey ON public.admin_departments USING btree (department_key)"
+      ],
+      "policies": [
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "private.is_active_nexora_user()",
+          "command": "ALL",
+          "with_check": "private.is_active_nexora_user()"
+        },
+        {
+          "name": "admin departments read",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(is_nexora_super_admin() OR ( SELECT private.is_nexora_active_admin_staff() AS is_nexora_active_admin_staff))",
+          "command": "SELECT",
+          "with_check": null
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "admin_departments_department_name_key",
+          "type": "u",
+          "definition": "UNIQUE (department_name)"
+        },
+        {
+          "name": "admin_departments_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (department_key)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "admin_permission_catalog",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "permission_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "department_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "permission_name",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_sensitive",
+          "type": "boolean",
+          "default": "false",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX admin_permission_catalog_pkey ON public.admin_permission_catalog USING btree (permission_key)"
+      ],
+      "policies": [
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "private.is_active_nexora_user()",
+          "command": "ALL",
+          "with_check": "private.is_active_nexora_user()"
+        },
+        {
+          "name": "admin permission catalog read",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(is_nexora_super_admin() OR ( SELECT private.is_nexora_active_admin_staff() AS is_nexora_active_admin_staff))",
+          "command": "SELECT",
+          "with_check": null
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "admin_permission_catalog_department_key_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (department_key) REFERENCES admin_departments(department_key)"
+        },
+        {
+          "name": "admin_permission_catalog_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (permission_key)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "admin_permission_grants",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "admin_user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "permission_key",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "is_allowed",
+          "type": "boolean",
+          "default": "true",
+          "not_null": true
+        },
+        {
+          "name": "granted_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX admin_permission_grants_admin_user_id_permission_key_key ON public.admin_permission_grants USING btree (admin_user_id, permission_key)",
+        "CREATE UNIQUE INDEX admin_permission_grants_pkey ON public.admin_permission_grants USING btree (id)"
+      ],
+      "policies": [
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "ALL",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        },
+        {
+          "name": "admin grants self or superadmin read",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(is_nexora_super_admin() OR ((admin_user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.is_nexora_active_admin_staff() AS is_nexora_active_admin_staff) AND (EXISTS ( SELECT 1\n   FROM admin_staff s\n  WHERE ((s.user_id = ( SELECT auth.uid() AS uid)) AND (s.admin_level = 'assistant_admin'::text))))))",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "admin grants superadmin manage",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_super_admin()",
+          "command": "ALL",
+          "with_check": "is_nexora_super_admin()"
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "admin_permission_grants_admin_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (admin_user_id) REFERENCES admin_staff(user_id) ON DELETE CASCADE"
+        },
+        {
+          "name": "admin_permission_grants_admin_user_id_permission_key_key",
+          "type": "u",
+          "definition": "UNIQUE (admin_user_id, permission_key)"
+        },
+        {
+          "name": "admin_permission_grants_granted_by_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (granted_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "admin_permission_grants_permission_key_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (permission_key) REFERENCES admin_permission_catalog(permission_key)"
+        },
+        {
+          "name": "admin_permission_grants_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "admin_staff",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "admin_code",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "admin_level",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "department_key",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "is_active",
+          "type": "boolean",
+          "default": "true",
+          "not_null": true
+        },
+        {
+          "name": "created_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX admin_staff_admin_code_key ON public.admin_staff USING btree (admin_code)",
+        "CREATE UNIQUE INDEX admin_staff_one_super_admin ON public.admin_staff USING btree (admin_level) WHERE (admin_level = 'super_admin'::text)",
+        "CREATE UNIQUE INDEX admin_staff_pkey ON public.admin_staff USING btree (id)",
+        "CREATE UNIQUE INDEX admin_staff_user_id_key ON public.admin_staff USING btree (user_id)"
+      ],
+      "policies": [
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "ALL",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        },
+        {
+          "name": "admin staff self or superadmin read",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(is_nexora_super_admin() OR ((user_id = ( SELECT auth.uid() AS uid)) AND ( SELECT private.is_nexora_active_admin_staff() AS is_nexora_active_admin_staff)))",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "admin staff superadmin manage",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_super_admin()",
+          "command": "ALL",
+          "with_check": "is_nexora_super_admin()"
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "admin_staff_admin_code_key",
+          "type": "u",
+          "definition": "UNIQUE (admin_code)"
+        },
+        {
+          "name": "admin_staff_admin_level_check",
+          "type": "c",
+          "definition": "CHECK (admin_level = ANY (ARRAY['super_admin'::text, 'assistant_admin'::text]))"
+        },
+        {
+          "name": "admin_staff_created_by_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (created_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "admin_staff_department_key_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (department_key) REFERENCES admin_departments(department_key)"
+        },
+        {
+          "name": "admin_staff_level_department_check",
+          "type": "c",
+          "definition": "CHECK (admin_level = 'super_admin'::text AND department_key IS NULL OR admin_level = 'assistant_admin'::text AND department_key IS NOT NULL)"
+        },
+        {
+          "name": "admin_staff_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "admin_staff_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "admin_staff_user_id_key",
+          "type": "u",
+          "definition": "UNIQUE (user_id)"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "profile_change_requests",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "requested_full_name",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending'::text",
+          "not_null": true
+        },
+        {
+          "name": "admin_note",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "reviewed_by",
+          "type": "uuid",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "not_null": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX one_pending_profile_request_per_user ON public.profile_change_requests USING btree (user_id) WHERE (status = 'pending'::text)",
+        "CREATE UNIQUE INDEX profile_change_requests_pkey ON public.profile_change_requests USING btree (id)",
+        "CREATE INDEX profile_change_requests_reviewed_by_idx ON public.profile_change_requests USING btree (reviewed_by)"
+      ],
+      "policies": [
+        {
+          "name": "Admins can update profile change requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_admin()",
+          "command": "UPDATE",
+          "with_check": "is_nexora_admin()"
+        },
+        {
+          "name": "Admins can view all profile change requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_admin()",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "Users can submit own profile change requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": null,
+          "command": "INSERT",
+          "with_check": "((( SELECT auth.uid() AS uid) = user_id) AND (status = 'pending'::text) AND ((length(TRIM(BOTH FROM requested_full_name)) >= 1) AND (length(TRIM(BOTH FROM requested_full_name)) <= 150)) AND (admin_note IS NULL) AND (reviewed_by IS NULL) AND (reviewed_at IS NULL))"
+        },
+        {
+          "name": "Users can view own profile change requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT auth.uid() AS uid) = user_id)",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "ALL",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "profile_change_requests_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "profile_change_requests_reviewed_by_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (reviewed_by) REFERENCES profiles(id)"
+        },
+        {
+          "name": "profile_change_requests_status_check",
+          "type": "c",
+          "definition": "CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]))"
+        },
+        {
+          "name": "profile_change_requests_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "profiles",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "full_name",
+          "type": "text",
+          "default": null,
+          "not_null": false
+        },
+        {
+          "name": "role",
+          "type": "text",
+          "default": "'buyer'::text",
+          "not_null": true
+        },
+        {
+          "name": "account_status",
+          "type": "text",
+          "default": "'active'::text",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX profiles_pkey ON public.profiles USING btree (id)"
+      ],
+      "policies": [
+        {
+          "name": "Admins can update all profiles",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_admin()",
+          "command": "UPDATE",
+          "with_check": "is_nexora_admin()"
+        },
+        {
+          "name": "Admins can view all profiles",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_admin()",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "Users can update own profile",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT auth.uid() AS uid) = id)",
+          "command": "UPDATE",
+          "with_check": "(( SELECT auth.uid() AS uid) = id)"
+        },
+        {
+          "name": "Users can view own profile",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT auth.uid() AS uid) = id)",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "assistant_admin_users_manage_view",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT private.has_nexora_permission('users.suspend'::text) AS has_nexora_permission) OR ( SELECT private.has_nexora_permission('users.restore'::text) AS has_nexora_permission) OR ( SELECT private.has_nexora_permission('users.cancel'::text) AS has_nexora_permission))",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "assistant_admin_users_view",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT has_nexora_permission('users.view'::text) AS has_nexora_permission)",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "profiles_active_account_update_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "UPDATE",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        }
+      ],
+      "triggers": [
+        {
+          "name": "profiles_sync_public_identity",
+          "function": "sync_public_identity()",
+          "definition": "CREATE TRIGGER profiles_sync_public_identity AFTER INSERT OR DELETE OR UPDATE OF full_name ON profiles FOR EACH ROW EXECUTE FUNCTION sync_public_identity()"
+        },
+        {
+          "name": "protect_profile_role_and_status",
+          "function": "private.protect_profile_role_and_status()",
+          "definition": "CREATE TRIGGER protect_profile_role_and_status BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION private.protect_profile_role_and_status()"
+        },
+        {
+          "name": "protect_profile_updates",
+          "function": "guard_profile_updates()",
+          "definition": "CREATE TRIGGER protect_profile_updates BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION guard_profile_updates()"
+        }
+      ],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "profiles_account_status_check",
+          "type": "c",
+          "definition": "CHECK (account_status = ANY (ARRAY['active'::text, 'pending'::text, 'suspended'::text, 'cancelled'::text]))"
+        },
+        {
+          "name": "profiles_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        },
+        {
+          "name": "profiles_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "profiles_role_check",
+          "type": "c",
+          "definition": "CHECK (role = ANY (ARRAY['buyer'::text, 'seller'::text, 'porter'::text, 'admin'::text]))"
+        }
+      ]
+    },
+    {
+      "rls": true,
+      "kind": "r",
+      "name": "role_requests",
+      "schema": "public",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": "gen_random_uuid()",
+          "not_null": true
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "requested_role",
+          "type": "text",
+          "default": null,
+          "not_null": true
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": "'pending'::text",
+          "not_null": true
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": "now()",
+          "not_null": true
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX one_pending_role_request_per_user ON public.role_requests USING btree (user_id, requested_role) WHERE (status = 'pending'::text)",
+        "CREATE UNIQUE INDEX role_requests_pkey ON public.role_requests USING btree (id)"
+      ],
+      "policies": [
+        {
+          "name": "Admins can view all role requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "is_nexora_admin()",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "Users can submit own role requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": null,
+          "command": "INSERT",
+          "with_check": "((( SELECT auth.uid() AS uid) = user_id) AND (requested_role = ANY (ARRAY['seller'::text, 'porter'::text])) AND (status = 'pending'::text))"
+        },
+        {
+          "name": "Users can view own role requests",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "(( SELECT auth.uid() AS uid) = user_id)",
+          "command": "SELECT",
+          "with_check": null
+        },
+        {
+          "name": "active_account_gate",
+          "roles": [
+            "authenticated"
+          ],
+          "using": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)",
+          "command": "ALL",
+          "with_check": "( SELECT private.is_active_nexora_user() AS is_active_nexora_user)"
+        }
+      ],
+      "triggers": [],
+      "force_rls": false,
+      "constraints": [
+        {
+          "name": "role_requests_pkey",
+          "type": "p",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "role_requests_requested_role_check",
+          "type": "c",
+          "definition": "CHECK (requested_role = ANY (ARRAY['seller'::text, 'porter'::text]))"
+        },
+        {
+          "name": "role_requests_status_check",
+          "type": "c",
+          "definition": "CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text]))"
+        },
+        {
+          "name": "role_requests_user_id_fkey",
+          "type": "f",
+          "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE"
+        }
+      ]
+    }
+  ],
+  "purpose": "Read-only catalog evidence for local reconstruction; not a pg_dump and not deployable.",
+  "functions": [
+    {
+      "args": "p_permission_key text",
+      "name": "has_nexora_permission",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.has_nexora_permission(p_permission_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and (\n      private.is_nexora_super_admin()\n      or exists (\n        select 1 from public.admin_staff s\n        join public.profiles p on p.id=s.user_id\n        join public.admin_permission_grants g on g.admin_user_id=s.user_id\n        where s.user_id=(select auth.uid())\n          and s.admin_level='assistant_admin' and s.is_active=true\n          and p.role='admin' and p.account_status='active'\n          and g.permission_key=p_permission_key and g.is_allowed=true\n      )\n    );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_active_nexora_user",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_active_nexora_user()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$ select exists(select 1 from public.profiles p where p.id=auth.uid() and p.account_status='active') $function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_active_admin_staff",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_nexora_active_admin_staff()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and exists (\n      select 1\n      from public.admin_staff s\n      join public.profiles p on p.id = s.user_id\n      where s.user_id = (select auth.uid())\n        and s.is_active = true\n        and p.role = 'admin'\n        and p.account_status = 'active'\n    );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_super_admin",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_nexora_super_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and exists (\n      select 1 from public.admin_staff s\n      join public.profiles p on p.id=s.user_id\n      where s.user_id=(select auth.uid())\n        and s.admin_level='super_admin' and s.is_active=true\n        and p.role='admin' and p.account_status='active'\n    );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "protect_profile_role_and_status",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.protect_profile_role_and_status()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$ begin if auth.uid() is not null and auth.uid()=old.id and (new.role is distinct from old.role or new.account_status is distinct from old.account_status) then raise exception 'Role and account status are protected fields'; end if; return new; end; $function$\n"
+    },
+    {
+      "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+      "name": "review_profile_change_request",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.review_profile_change_request(p_request_id uuid, p_approve boolean, p_admin_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_request public.profile_change_requests%rowtype;\nbegin\n  if not private.is_nexora_super_admin() then raise exception 'Only Super Admin can review profile requests' using errcode='42501'; end if;\n  if p_approve is null then raise exception 'Approval decision is required'; end if;\n  select * into v_request from public.profile_change_requests where id=p_request_id for update;\n  if not found then raise exception 'Profile change request not found'; end if;\n  if v_request.status <> 'pending' then raise exception 'This request has already been reviewed'; end if;\n  if v_request.requested_full_name is null or length(trim(v_request.requested_full_name)) not between 1 and 150 then\n    raise exception 'Invalid requested name';\n  end if;\n  if p_approve then\n    update public.profiles set full_name=trim(v_request.requested_full_name),updated_at=now() where id=v_request.user_id;\n    if not found then raise exception 'Profile not found'; end if;\n    update public.profile_change_requests set status='approved',admin_note=nullif(trim(p_admin_note),''),reviewed_by=auth.uid(),reviewed_at=now() where id=p_request_id;\n  else\n    update public.profile_change_requests set status='rejected',admin_note=nullif(trim(p_admin_note),''),reviewed_by=auth.uid(),reviewed_at=now() where id=p_request_id;\n  end if;\nend;\n$function$\n"
+    },
+    {
+      "args": "request_id uuid, decision text",
+      "name": "review_role_request",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.review_role_request(request_id uuid, decision text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare target_request public.role_requests%rowtype;\nbegin\n  if not private.is_nexora_super_admin() then raise exception 'Only Super Admin can review requests' using errcode='42501'; end if;\n  if decision not in ('approved','rejected') then raise exception 'Invalid decision'; end if;\n  select * into target_request from public.role_requests where id=request_id and status='pending' for update;\n  if not found then raise exception 'Pending request not found'; end if;\n  update public.role_requests set status=decision where id=request_id;\n  if decision='approved' then\n    update public.profiles set role=target_request.requested_role,account_status='active',updated_at=now()\n    where id=target_request.user_id;\n  end if;\nend;\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "handle_new_user",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n    v_role text;\n    v_full_name text;\n    v_account_status text;\n    v_provider text;\nBEGIN\n    v_provider := lower(coalesce(NEW.app_metadata ->> 'provider', ''));\n\n    -- Social OAuth accounts always start as Buyer; never trust profile metadata for their role.\n    IF v_provider IN ('google', 'facebook') THEN\n        v_role := 'buyer';\n    ELSE\n        v_role := lower(trim(coalesce(NEW.raw_user_meta_data ->> 'role', 'buyer')));\n        IF v_role = '' THEN\n            v_role := 'buyer';\n        END IF;\n    END IF;\n\n    IF v_role NOT IN ('buyer', 'seller', 'porter') THEN\n        RAISE EXCEPTION 'Invalid registration role';\n    END IF;\n\n    v_full_name := nullif(trim(coalesce(\n        NEW.raw_user_meta_data ->> 'full_name',\n        NEW.raw_user_meta_data ->> 'name'\n    )), '');\n\n    IF v_full_name IS NOT NULL AND length(v_full_name) > 150 THEN\n        RAISE EXCEPTION 'Full name is too long';\n    END IF;\n\n    IF v_role = 'porter' THEN\n        v_account_status := 'pending';\n    ELSE\n        v_account_status := 'active';\n    END IF;\n\n    INSERT INTO public.profiles (id, full_name, role, account_status)\n    VALUES (NEW.id, v_full_name, v_role, v_account_status)\n    ON CONFLICT (id) DO NOTHING;\n\n    RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "args": "p_permission_key text",
+      "name": "has_nexora_permission",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.has_nexora_permission(p_permission_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select private.has_nexora_permission(p_permission_key); $function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_admin",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_nexora_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select private.is_nexora_super_admin(); $function$\n"
+    }
+  ],
+  "captured_at": "2026-11-13T18:19:10.806061+00:00",
+  "project_ref": "qsjdeqljpnjumceewsjq",
+  "server_version": "17.11"
+}
