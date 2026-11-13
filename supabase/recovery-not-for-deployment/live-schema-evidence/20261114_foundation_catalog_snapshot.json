@@ -1438,6 +1438,743 @@
     "security_definer_function_count": 23,
     "auth_storage_custom_trigger_count": 12,
     "auth_storage_custom_policy_count": 4,
-    "migration_history_note": "24 live migration history entries were listed read-only during the same session; no history was changed."
-  }
+    "migration_history_note": "24 live migration history entries were listed read-only during the same session; no history was changed.",
+    "live_migration_history_entries": 24,
+    "note": "Supplemental catalog and complete migration-version/name list captured read-only; no table rows, DDL, or migration history were changed."
+  },
+  "supplemental_catalog": {
+    "schemas": [
+      "auth",
+      "extensions",
+      "graphql",
+      "graphql_public",
+      "private",
+      "public",
+      "realtime",
+      "storage",
+      "supabase_migrations",
+      "vault"
+    ],
+    "relations": [
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_audit_logs",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_departments",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_permission_catalog",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_permission_grants",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "admin_staff",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "business_profiles",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "buyer_demands",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "call_sessions",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "call_signals",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversation_participants",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversations",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "message_attachments",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "messages",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "products",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "profile_change_requests",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "profiles",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "public_businesses",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": false,
+        "kind": "v",
+        "name": "public_buyer_demands",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "public_identities",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": false,
+        "kind": "v",
+        "name": "public_profiles",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "role_requests",
+        "schema": "public",
+        "force_rls": false
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "seller_offers",
+        "schema": "public",
+        "force_rls": false
+      }
+    ],
+    "policy_counts": {
+      "public": 78,
+      "storage": 4
+    },
+    "trigger_counts": {
+      "auth": 1,
+      "public": 5,
+      "storage": 11
+    },
+    "view_definitions": [
+      {
+        "name": "public_buyer_demands",
+        "schema": "public",
+        "definition": " SELECT id,\n    demand_code,\n    product_name,\n    category,\n    description,\n    specifications_quality,\n    required_quantity,\n    budget,\n    currency,\n    destination_country,\n    destination_city,\n    required_date,\n    demand_status,\n    created_at\n   FROM buyer_demands\n  WHERE (demand_status = 'open'::text);"
+      },
+      {
+        "name": "public_profiles",
+        "schema": "public",
+        "definition": " SELECT id,\n    full_name\n   FROM public_identities;"
+      }
+    ],
+    "function_inventory": [
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "admin_manage_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "void",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_business_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_business",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "void",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_product_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_product",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "void",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_product_id uuid, p_message text",
+        "name": "create_product_inquiry",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "uuid",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_permission_key text",
+        "name": "has_nexora_permission",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_active_nexora_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_creator",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_invited",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "p_conversation_id uuid",
+        "name": "is_conversation_member",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_nexora_active_admin_staff",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "is_nexora_super_admin",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "p_business_id uuid",
+        "name": "is_public_business",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": true
+      },
+      {
+        "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+        "name": "manage_marketplace_listing",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "jsonb",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+        "name": "manage_nexora_assistant_admin",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "jsonb",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "manage_nexora_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "jsonb",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "protect_profile_role_and_status",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+        "name": "review_profile_change_request",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "void",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "request_id uuid, decision text",
+        "name": "review_role_request",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "void",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "touch_conversation_on_message",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "private",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "admin_manage_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "void",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_business_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_business",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "void",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_product_id uuid, p_action text, p_note text",
+        "name": "admin_moderate_product",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "void",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_product_id uuid, p_message text",
+        "name": "create_product_inquiry",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "uuid",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "guard_profile_updates",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "handle_new_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "p_permission_key text",
+        "name": "has_nexora_permission",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "is_nexora_admin",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "is_nexora_super_admin",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": false
+      },
+      {
+        "args": "p_business_id uuid",
+        "name": "is_public_business",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "boolean",
+        "language": "sql",
+        "volatility": "s",
+        "security_definer": false
+      },
+      {
+        "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+        "name": "manage_marketplace_listing",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "jsonb",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+        "name": "manage_nexora_assistant_admin",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "jsonb",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_user_id uuid, p_action text, p_reason text",
+        "name": "manage_nexora_user",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "jsonb",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+        "name": "review_profile_change_request",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "void",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "request_id uuid, decision text",
+        "name": "review_role_request",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "void",
+        "language": "sql",
+        "volatility": "v",
+        "security_definer": false
+      },
+      {
+        "args": "",
+        "name": "rls_auto_enable",
+        "config": [
+          "search_path=pg_catalog"
+        ],
+        "schema": "public",
+        "returns": "event_trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "sync_public_business",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      },
+      {
+        "args": "",
+        "name": "sync_public_identity",
+        "config": [
+          "search_path=\"\""
+        ],
+        "schema": "public",
+        "returns": "trigger",
+        "language": "plpgsql",
+        "volatility": "v",
+        "security_definer": true
+      }
+    ]
+  },
+  "live_migration_history": [
+    {
+      "version": "20261112045441",
+      "name": "revoke_public_rls_auto_enable_execute"
+    },
+    {
+      "version": "20261112050241",
+      "name": "secure_public_profile_identity_projection"
+    },
+    {
+      "version": "20261112050345",
+      "name": "create_marketplace_core_schema"
+    },
+    {
+      "version": "20261112050553",
+      "name": "optimize_marketplace_rls_and_fk_indexes"
+    },
+    {
+      "version": "20261112050854",
+      "name": "create_private_communications"
+    },
+    {
+      "version": "20261112050951",
+      "name": "harden_private_communications_rls"
+    },
+    {
+      "version": "20261112051022",
+      "name": "allow_invitees_to_view_chat_invitation"
+    },
+    {
+      "version": "20261112051711",
+      "name": "update_conversation_timestamp_on_message"
+    },
+    {
+      "version": "20261112051906",
+      "name": "fix_conversation_insert_returning_visibility"
+    },
+    {
+      "version": "20261112063728",
+      "name": "add_wholesale_product_pricing_fields"
+    },
+    {
+      "version": "20261112092911",
+      "name": "restrict_public_products_to_approved_businesses"
+    },
+    {
+      "version": "20261112093024",
+      "name": "limit_anonymous_product_columns"
+    },
+    {
+      "version": "20261112093107",
+      "name": "expose_safe_public_business_check_for_anon_policy"
+    },
+    {
+      "version": "20261112094305",
+      "name": "public_business_safe_anon_read"
+    },
+    {
+      "version": "20261112094341",
+      "name": "make_public_business_check_invoker_safe"
+    },
+    {
+      "version": "20261112094441",
+      "name": "revoke_postgres_default_public_api_grants"
+    },
+    {
+      "version": "20261112115158",
+      "name": "allow_cancelled_account_status"
+    },
+    {
+      "version": "20261112145135",
+      "name": "require_aal2_for_nexora_admin_access"
+    },
+    {
+      "version": "20261112151344",
+      "name": "enforce_aal2_on_admin_metadata_reads"
+    },
+    {
+      "version": "20261112151436",
+      "name": "optimize_aal2_policy_initplans"
+    },
+    {
+      "version": "20261112151504",
+      "name": "centralize_admin_mfa_rls_check"
+    },
+    {
+      "version": "20261112153453",
+      "name": "publish_open_demands_without_buyer_identity"
+    },
+    {
+      "version": "20261112160835",
+      "name": "secure_public_buyer_demand_projection"
+    },
+    {
+      "version": "20261112162234",
+      "name": "create_product_inquiry_request"
+    }
+  ]
 }
