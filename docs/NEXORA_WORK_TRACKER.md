@@ -536,3 +536,11 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - That intermediate constraint could reject an existing Porter profile or Porter role request during a full migration replay. Updated the transport foundation migration to preserve `porter` in both checks; Porter activation remains controlled by the later Admin-reviewed Porter workflow.
 - Development-branch commit: `ee408d6685ac9495b65ced871379dd550f35016b`. The migration was fetched back and the exact replacement constraints verified.
 - Source-level correction only; no SQL was executed and no Live data/schema was changed.
+
+
+## 2026-11-14 — Close direct Admin UPDATE bypass in transport review tables
+
+- Continued the transport migration security review and found that broad Admin UPDATE RLS policies on `transport_providers` and `transport_vehicles` would allow direct table updates, bypassing the dedicated review RPCs' AAL2 check and audit-log insertion.
+- Removed those two direct Admin UPDATE policies from `20261113180000_transport_provider_vehicle_model.sql`. Owner updates remain available under owner-scoped policies and trigger-protected review fields; Admin review remains through the audited AAL2-gated SECURITY DEFINER review functions.
+- Development-branch commit: `6a64e18f41299353d2e574674a213fbda4583eeb`. Re-fetched the migration and verified the direct Admin UPDATE policies are absent.
+- Source-level only; no database migration or SQL execution performed.
