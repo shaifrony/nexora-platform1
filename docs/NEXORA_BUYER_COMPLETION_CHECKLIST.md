@@ -66,6 +66,9 @@ Status: **Implementation review in progress — not complete**
 ### B-02 — Product visibility ও category integrity
 - [ ] Buyer category পরিবর্তনের পর Marketplace ও Buyer Dashboard reload/refresh-এ নতুন category কার্যকর হয়।
 - [x] Frontend category update payload থেকে অতিরিক্ত `updated_at` বাদ: migration শুধু `buyer_category` column UPDATE grant করে; DB trigger updated_at সেট করে।
+- [x] Buyer category পরিবর্তনের জন্য owner-only UPDATE RLS policy যোগ; আগের baseline fixture-এ profiles-এর UPDATE policy ছিল না, তাই শুধু column grant যথেষ্ট ছিল না।
+- [x] Frontend update response-এ updated row ফেরত চাওয়া ও যাচাই; RLS-এ row update না হলে আর সফলতার বার্তা দেখাবে না।
+- [x] Signup role বদলানোর সময় Buyer-এর নির্বাচিত Wholesale/Retail অপশন reset না হওয়ার সংশোধন।
 - [x] Market-category migration-এ baseline `protect_profile_updates` trigger-এর Buyer category পরিবর্তন নিষিদ্ধ করার conflict সংশোধন; Buyer কেবল নিজের category বদলাতে পারবে, role/status/Seller entitlements/name protected থাকে।
 - [x] Auth trigger-এর provider lookup `new.raw_app_meta_data`-এ সংশোধন।
 - [ ] Product Inquiry-এর SECURITY DEFINER RPC-তেও Buyer category যাচাই হয়; recovery-only draft-এ guard যোগ করা হয়েছে, কিন্তু এখনো প্রয়োগ/পরীক্ষা হয়নি।
