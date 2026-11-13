@@ -3,7 +3,7 @@
 **Status:** Planning document — no database changes executed  
 **Target branch:** `nexora-development`  
 **Repository:** `shaifrony/nexora-platform1`  
-**Prepared against branch HEAD:** `3b05368cc44e2d21a5895582144a9b65c781f930`
+**Latest verified branch HEAD (2026-11-14):** `bc008ceb4e8f1906c3359f70bc1fccd2322bda45`
 
 ## 1. Purpose and safety boundary
 
@@ -24,10 +24,10 @@ The read-only audit reported:
 
 | Evidence | Observed count |
 |---|---:|
-| SQL migration files in GitHub branch | 36 |
+| SQL migration files in GitHub branch | 40 |
 | Applied entries in live Supabase migration history | 24 |
 | Migration versions present in both places | 13 |
-| GitHub migration files absent from live history | 23 |
+| GitHub migration files absent from live history | 27 (26 unique versions) |
 | Live migration entries with no matching SQL file in branch | 11 |
 
 These counts describe filename/version presence, not proof that the SQL effects are equivalent. A matching timestamp/name does not prove the live database has the exact same definition, and a missing history row does not prove that the migration's effects are absent.
@@ -56,7 +56,7 @@ The following versions were present in live migration history but their original
 
 ## 4. GitHub migrations absent from live history
 
-The earlier audit found 23 SQL files in the GitHub branch that did not have matching versions in live migration history. This is not, by itself, proof that all 23 are safe or pending to run. The list includes later feature work as well as migrations that may overlap with live state.
+The refreshed audit found 27 SQL files in the GitHub branch that did not have matching versions in live migration history (26 unique versions because of one duplicate version collision). This is not, by itself, proof that all 23 are safe or pending to run. The list includes later feature work as well as migrations that may overlap with live state.
 
 Before any execution, each file must be classified as one of:
 1. **Not applied and required** — verified absent from live schema and safe to apply in dependency order.
@@ -121,14 +121,14 @@ The audit observed profile role values including buyer, seller, porter and admin
 
 ## 8. Known staged migration requiring full review
 
-`20261114120000_listing_edit_review_workflow.sql` was previously flagged for a suspected malformed currency regular expression/quote and SQL appearing after `COMMIT;`. The complete file has not yet been certified as valid.
+`20261114120000_listing_edit_review_workflow.sql` was previously flagged for malformed/incomplete appended fragments and a currency regex issue. A source-only repair has since been committed on `nexora-development`: the orphan duplicate tail was removed, the currency/price regex was corrected, and static checks found one BEGIN/COMMIT pair, four function definitions and balanced dollar-quote delimiters. PostgreSQL parser/runtime validation remains unavailable; do not call this SQL-runtime certified.
 
 Before it can be considered executable:
 1. Read the entire file, not selected snippets.
 2. Validate every quote, dollar-quoted block, statement terminator and transaction boundary.
 3. Check whether statements after `COMMIT;` are intentional and valid.
 4. Verify referenced tables, columns, constraints, policies, functions and grants exist in dependency order.
-5. Review any `market_category` validation that permits both `wholesale` and `retail`. NEXORA is wholesale-only; retail must not be enabled accidentally.
+5. Confirm the unified Marketplace decision: no Wholesale/Retail product sale-category split. Transport delivery modes remain separate logistics concepts.
 6. Run static SQL parsing and isolated database tests before any deployment proposal.
 
 Do not repair or execute this migration until the full review is complete.
@@ -202,7 +202,7 @@ Only after Gates A–D pass should a separate change request be presented. It mu
 | Public privacy | Anonymous product and demand access; no buyer contact/identity leakage |
 | Authentication | Buyer/Seller/Porter signup; admin roles unavailable in public signup; OAuth Buyer-only |
 | Porter onboarding | Pending account, approval/rejection/suspension, provider and vehicle approval gates |
-| Marketplace | Wholesale-only categories, product visibility and seller approval |
+| Marketplace | Unified product catalog without Wholesale/Retail sale-category split; product visibility and Seller approval |
 | Business workflows | Demand, quotation, orders, inventory/MOQ, delivery assignment and tracking |
 | Communications | Consent/invitation, chat, files, calls and history access controls |
 | Operations | Audit logging, admin permissions, error handling and recovery |
@@ -454,3 +454,53 @@ The current metadata snapshot contains evidence for several resulting objects/po
 5. Do not run, repair, or insert Live migration history; do not change `main`, Production, DNS or deployment.
 
 **Actions not taken:** no SQL was executed, no Live schema/history/data was changed, no migration file was renamed/deleted, no paid branch was created, and no private user rows/messages/auth identities/storage contents were queried.
+
+
+## 17. Refreshed live-schema evidence comparison — 2026-11-14
+
+A new read-only metadata inspection was performed after verifying the current branch HEAD and re-reading the Live migration ledger. No user rows, chat messages, Auth identity records, or Storage object contents were queried.
+
+### 17.1 Current inventory
+
+- Branch: `nexora-development`
+- Latest HEAD: `bc008ceb4e8f1906c3359f70bc1fccd2322bda45`
+- Branch migration files: 40
+- Unique migration versions: 39
+- Live migration-history entries: 24
+- Matching version/name pairs: 13
+- Branch-only files: 27 (26 unique versions)
+- Live-only entries: 11
+- Duplicate version collision: `20261114180000` (two different migrations)
+- Exact duplicate-content pairs: two pairs, each confirmed by identical Git blob SHA.
+
+### 17.2 Live-only migration effect comparison
+
+The following findings compare the recorded Live migration names with the *current resulting schema metadata*. They are object-level observations, not recovered original SQL and not proof of byte-for-byte or complete semantic equivalence.
+
+| Live-only migration | Current Live evidence | Assessment |
+|---|---|---|
+| `20261112063728_add_wholesale_product_pricing_fields` | `products.price_unit`, `minimum_order_quantity`, and `price_negotiable` columns and constraints exist. | Resulting pricing fields are present and remain compatible with Seller-defined product terms; original SQL unavailable. |
+| `20261112092911_restrict_public_products_to_approved_businesses` | Anonymous product SELECT policy requires `listing_status='approved'` and `is_public_business(business_id)`. | Intended approval gate is visible in current policy. |
+| `20261112093024_limit_anonymous_product_columns` | Anonymous SELECT is granted column-by-column on a defined safe product projection; no anonymous `seller_id` grant was observed. | Column-level public projection is present; no table-level SELECT grant was observed. |
+| `20261112093107_expose_safe_public_business_check_for_anon_policy` | `public.is_public_business(uuid)` exists as SECURITY INVOKER with an empty search path and reads the safe `public_businesses` projection. | Helper is present in invoker mode. |
+| `20261112094305_public_business_safe_anon_read` | `public_businesses` is a table with an anonymous SELECT policy and only `business_id`, `display_name`, `country`, and `city` exposed to anon. | Safe public business projection is present at the inspected column/policy level. |
+| `20261112094341_make_public_business_check_invoker_safe` | Public helper is SECURITY INVOKER; its private counterpart is SECURITY DEFINER. | Public policy helper is invoker-mode; private helper remains separately scoped. |
+| `20261112094441_revoke_postgres_default_public_api_grants` | No table-level anon SELECT grant was observed on the inspected product/business relations; selected column-level grants remain. | Current grants reflect restricted column access on inspected relations. |
+| `20261112115158_allow_cancelled_account_status` | `profiles_account_status_check` includes `cancelled`. | Resulting status constraint is present. |
+| `20261112145135_require_aal2_for_nexora_admin_access` | Private admin helper functions check JWT AAL2 and active admin profile/staff state; public wrappers are SECURITY INVOKER. | AAL2 guard is visible in inspected helper definitions. |
+| `20261112153453_publish_open_demands_without_buyer_identity` | `public_buyer_demands` omits `buyer_id`; anon has column-level SELECT on the safe projection; base `buyer_demands` has no anon SELECT grant. | Privacy projection is present. Branch source timestamp differs (`20261112153000`); keep both identifiers documented. |
+| `20261112160835_secure_public_buyer_demand_projection` | `public_buyer_demands` has `security_invoker=true` and selects only open demands; its projection omits buyer identity. | Invoker-safe public view and open-demand filter are present. |
+
+### 17.3 Important interpretation limits
+
+- This audit verifies current catalog objects, policy expressions, column privileges, constraints and selected function definitions only. It does not recover the original 11 SQL bodies.
+- `public_businesses` is a table, not a view. Its public exposure is controlled through RLS and column-level grants.
+- The public Buyer Demand view is a view with `security_invoker=true`; the underlying table's Buyer identity remains excluded from the public projection.
+- These observations do not prove PostgREST HTTP behavior or end-to-end RLS behavior under real user JWTs.
+- Do not recreate the missing historical SQL as if it were original. Keep any catalog-based reconstruction drafts outside `supabase/migrations/` and treat them as evidence/review material only.
+
+### 17.4 Updated safe next action
+
+Continue by auditing the 27 branch-only migration files against the inspected Live catalog, classifying each as pending, already represented, partial, superseded/duplicate, or blocked. Keep the two duplicate-content pairs and the `20261114180000` version collision unchanged until a supported CLI-generated repair and archive plan is available. No migration runner may be used while the collision remains.
+
+**This refresh was read-only against Live Supabase. No schema, migration history, application data, Production, or `main` was changed.**
