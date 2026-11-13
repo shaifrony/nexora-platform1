@@ -19,19 +19,13 @@ It:
 
 ## Run on Android / Termux
 
-Start PostgreSQL if it is not already running, then enter the local test database:
-
-```sh
-psql -d nexora_test
-```
-
-At the `nexora_test=#` prompt, exit psql to return to the Termux shell:
+If you are currently at the `nexora_test=#` prompt, first exit to the Termux shell:
 
 ```sql
-\\q
+\q
 ```
 
-Download the SQL file from this branch and run it:
+Then download the SQL file from this branch and run it in one step:
 
 ```sh
 curl -L 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/00_bootstrap_supabase_compat.sql' -o "$HOME/00_bootstrap_supabase_compat.sql"
