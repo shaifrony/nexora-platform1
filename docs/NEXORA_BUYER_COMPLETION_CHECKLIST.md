@@ -189,3 +189,17 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Review Seller chat list, Buyer/Seller consent, unread/last-message refresh, and Product deep-link behavior in an isolated DB + browser E2E.
 - [ ] Rehearse migration and real authenticated RLS/JWT/PostgREST checks only after migration history reconciliation.
 - Source updates are staged only; no database tests or deployment performed.
+
+
+## 11. Multilingual Chat foundation — cross-department
+- [x] Staged per-user preferred-language table with own-row RLS.
+- [x] Staged private translation-cache schema tied to the exact message and conversation; accepted conversation participants can read translations.
+- [x] Added a shared preferred-language selector in Private Chat for Buyer, Seller, Porter and Admin; preference is saved per user.
+- [x] No client-side write permission to translation cache; future translation writes must use a trusted server-side path with participant validation.
+- [ ] Implement and test automatic text translation while preserving original message body.
+- [ ] Translate Chat List last-message previews and structured system/negotiation events for each recipient.
+- [ ] Add per-message original/translated toggle and clear translation-provider/error states.
+- [ ] Privacy, consent, retention, rate limits, provider cost and cross-border data handling review.
+- [ ] Browser/mobile and real authenticated RLS tests after migration history reconciliation.
+- Voice message transcription/translation and live audio/video translation are future phases, not part of this foundation.
+- Current UI explicitly says automatic translation is not active yet. No database test, hosted test or browser E2E was run; no deployment approval.
