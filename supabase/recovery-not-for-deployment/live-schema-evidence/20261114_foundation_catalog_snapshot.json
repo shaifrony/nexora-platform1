@@ -10203,5 +10203,48 @@
       "required_alignment": "Coordinated UI, product schema, listing insert/edit/history, marketplace query/display, and any market-category-specific pricing rules. Do not partially remove schema before frontend payloads are aligned.",
       "status": "Pending; not changed in this audit."
     }
+  },
+  "unified_marketplace_alignment_20261114": {
+    "decision": "No Wholesale/Retail product sale-category split. All users can browse all approved products. Sellers set their own price and quantity terms.",
+    "frontend": {
+      "marketplace.js": "8c9d7cd027f87967dd7e348397dfced5741ae728",
+      "index.html": "985c22c8464e0faed9560341051e73d15e028953",
+      "static_checks": [
+        "No market_category references in either frontend file",
+        "Product grid/detail and Buyer product list display unified products",
+        "Seller search/filter uses text and approval status only",
+        "Product insert/edit and listing history payloads omit sale-category field"
+      ]
+    },
+    "migrations": {
+      "20261113230000_buyer_seller_market_categories.sql": "117c6b3c00307ef89ac8f857768cfbd5125d7a30",
+      "20261113235900_product_market_category.sql": "76b772df0c0e6e3393a77eaaaf66095f1f5fc6ce",
+      "20261114120000_listing_edit_review_workflow.sql": "7986a8762644b7d6d859e5a590682a1b0bb11afd",
+      "20261114130000_listing_edit_history.sql": "c59326a1ab87029b635422e1e8d4ba4d5fb0e321",
+      "20261114150000_product_inventory_moq_quantity_pricing.sql": "8e490581efbd7435ae63a034f7cf6a44fc7a8086",
+      "20261114160000_demand_inbox_quotations_subcategories.sql": "993682b0b0e14891fa1c0a13ea5492836713ee89",
+      "20261114210000_porter_public_registration_and_review.sql": "20d3fdae2c46b71531690e990791082d8f2e4a9c"
+    },
+    "schema_alignment": [
+      "Buyer/Seller profile sale-category columns are not created; obsolete columns/constraint are dropped if present.",
+      "Product sale-category column, check constraint and index are not created.",
+      "Listing edit/review/history no longer validate, update or snapshot product sale category.",
+      "Retail-specific MOQ=1 restriction removed; seller-defined MOQ and price tiers remain.",
+      "Buyer Demand matching, routing trigger and index use product category/subcategory and approved Seller/business state only.",
+      "Porter registration profile insert no longer expects buyer_category or seller_categories."
+    ],
+    "retained": "Retail/Wholesale terms in transport delivery modes are distinct logistics service concepts, not product Marketplace segmentation.",
+    "verification": {
+      "migration_directory_files_scanned": 40,
+      "migration_directory_market_category_references": 0,
+      "migration_directory_buyer_category_references": 0,
+      "migration_directory_seller_categories_references": 0,
+      "frontend_market_category_references": 0,
+      "sql_runtime_tested": false,
+      "browser_runtime_tested": false,
+      "disposable_database_rehearsal": false,
+      "live_database_changed": false
+    },
+    "safety": "Source-only edits on nexora-development. No Live SQL/migrations, user rows, main, Production or deployment changes."
   }
 }
