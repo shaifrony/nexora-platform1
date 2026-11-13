@@ -1773,15 +1773,7 @@
     if (externalImages.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
     const imageFiles=Array.from(form.querySelector('[name="image_files"]')?.files||[]);
     if(imageFiles.length>5)return say("সর্বোচ্চ ৫টি Product Image আপলোড করুন।");
-    const allowedMarketCategories = Array.isArray(profile()?.seller_categories) ? profile().seller_categories : [];
-    if (!["wholesale","retail"].includes(v.market_category) || !allowedMarketCategories.includes(v.market_category)) {
-      return say("আপনার নিবন্ধিত Seller ক্যাটাগরির মধ্য থেকে Wholesale অথবা Retail নির্বাচন করুন।");
-    }
     if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
-    if(!Number.isFinite(Number(v.minimum_order_quantity))||Number(v.minimum_order_quantity)<=0)return say("MOQ শূন্যের বেশি হতে হবে।");
-    if(v.market_category==="retail"&&Number(v.minimum_order_quantity)!==1)return say("Retail পণ্যের MOQ অবশ্যই ১ হবে।");
-    if(v.stock_tracking==="true"&&(v.stock_quantity===""||!Number.isFinite(Number(v.stock_quantity))||Number(v.stock_quantity)<0))return say("Stock Tracking চালু করলে বর্তমান স্টক লিখুন।");
-    let priceTiers;try{priceTiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);}catch(err){return say(err.message);}
     setBusy(form, true);
     let uploadedPaths=[];
     try {
@@ -1790,10 +1782,10 @@
       const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
-        product_name: v.name.trim(), category: v.category, subcategory:v.subcategory.trim(), market_category: v.market_category, image_urls: images,
+        product_name: v.name.trim(), category: v.category, subcategory: null, market_category: "wholesale", image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
-        price: Number(v.price), currency: String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),stock_tracking:v.stock_tracking==="true",stock_quantity:v.stock_tracking==="true"?Number(v.stock_quantity):null,price_tiers:priceTiers,
+        price: Number(v.price), currency: String(v.currency).toUpperCase(),
       });
       if (error) throw error;
       form.reset(); form.classList.add("hidden");
