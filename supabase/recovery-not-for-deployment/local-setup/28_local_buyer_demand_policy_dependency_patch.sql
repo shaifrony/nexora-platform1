@@ -36,6 +36,7 @@ AS $function$
   );
 $function$;
 
+GRANT USAGE ON SCHEMA private TO authenticated;
 REVOKE ALL ON FUNCTION private.has_public_business_for_seller(uuid)
   FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION private.has_public_business_for_seller(uuid)
