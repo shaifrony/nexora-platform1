@@ -228,3 +228,12 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Only after provider + privacy approval: implement disabled-by-default server-side adapter, JWT/accepted-participant checks, cache writes, rate limits, fallback and original/translation toggle.
 - [ ] Verify structured negotiation, Demand, Order and Porter events without translating numeric/identifier fields; run local, hosted JWT/RLS and browser/mobile E2E tests.
 - **Current status:** automatic translation remains disabled; no provider has been configured and no external private chat text has been transmitted.
+
+## 12. Bengali ↔ English translation model review
+- [x] Confirm Argos `bn→en` and `en→bn` packages exist; no model-specific quality benchmark found for exact packages.
+- [x] Identify IndicTrans2 as preferred Bengali-English pilot candidate; official project supports Bengali and English both directions and provides FLORES/IN22 evaluation tooling.
+- [ ] Verify license and revision for both IndicTrans2 directional checkpoints before commercial deployment.
+- [ ] Run same 100+ consented examples per direction through IndicTrans2 and Argos; human review plus chrF++/COMET where references exist.
+- [ ] Measure server RAM, CPU/GPU, latency, throughput and hosting cost.
+- [ ] Approve privacy/consent, implement trusted server adapter and test protected values (price, quantity, currency, dates, IDs).
+- **Status:** research/source review only. Neither model was run here; translation remains disabled.
