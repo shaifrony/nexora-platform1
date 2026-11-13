@@ -1,7 +1,9 @@
 -- NEXORA LOCAL-ONLY REVIEW RPC PROTOTYPE
+-- Public PostgREST wrappers are SECURITY INVOKER; privileged cores stay in private schema.
 -- SAFE TARGET: Android/Termux PostgreSQL database nexora_test ONLY.
 -- NOT A MIGRATION. NEVER RUN AGAINST HOSTED SUPABASE OR PRODUCTION.
--- This creates local prototype RPC functions and grants only.
+-- This creates local prototype RPC wrappers/cores and grants only.
+-- Hosted deployment must keep schema 'private' out of PostgREST exposed schemas.
 -- It does not alter existing rows, policies, table grants, owners, or RLS settings.
 \set ON_ERROR_STOP on
 \pset pager off
@@ -18,20 +20,24 @@ BEGIN
      OR to_regclass('public.admin_staff') IS NULL
      OR to_regclass('public.admin_audit_logs') IS NULL
      OR to_regprocedure('auth.uid()') IS NULL
-     OR to_regprocedure('private.has_nexora_permission(text)') IS NULL THEN
+     OR to_regprocedure('private.has_nexora_permission(text)') IS NULL
+     OR to_regnamespace('private') IS NULL THEN
     RAISE EXCEPTION 'SAFETY STOP: required local foundation objects are missing';
   END IF;
 
   IF NOT has_schema_privilege(current_user,'public','CREATE') THEN
-    RAISE EXCEPTION 'SAFETY STOP: current role cannot create prototype functions in public';
+    RAISE EXCEPTION 'SAFETY STOP: current role cannot create public RPC wrappers';
+  END IF;
+  IF NOT has_schema_privilege(current_user,'private','CREATE') THEN
+    RAISE EXCEPTION 'SAFETY STOP: current role cannot create private RPC cores';
   END IF;
 END
 $guard$;
 
 BEGIN;
 
--- Buyer -> Seller review. The reviewer identity is always auth.uid().
-CREATE OR REPLACE FUNCTION public.rpc_review_role_request(
+-- Buyer -> Seller review core. Reviewer identity is always auth.uid().
+CREATE OR REPLACE FUNCTION private._rpc_review_role_request_core(
   p_request_id uuid,
   p_decision text,
   p_admin_note text DEFAULT NULL
@@ -147,8 +153,8 @@ BEGIN
 END;
 $fn$;
 
--- Personal full-name change review.
-CREATE OR REPLACE FUNCTION public.rpc_review_profile_change_request(
+-- Personal full-name change review core.
+CREATE OR REPLACE FUNCTION private._rpc_review_profile_change_request_core(
   p_request_id uuid,
   p_decision text,
   p_admin_note text DEFAULT NULL
@@ -216,7 +222,8 @@ BEGIN
     RAISE EXCEPTION 'Self-review is not allowed' USING ERRCODE='42501';
   END IF;
 
-  IF length(btrim(v_requested_full_name)) NOT BETWEEN 1 AND 150 THEN
+  IF v_requested_full_name IS NULL
+     OR length(btrim(v_requested_full_name)) NOT BETWEEN 1 AND 150 THEN
     RAISE EXCEPTION 'Requested name must contain 1 to 150 characters' USING ERRCODE='22023';
   END IF;
 
@@ -259,12 +266,51 @@ BEGIN
 END;
 $fn$;
 
+-- Public PostgREST entry points are SECURITY INVOKER only.
+-- The privileged implementation stays in the non-exposed private schema.
+CREATE OR REPLACE FUNCTION public.rpc_review_role_request(
+  p_request_id uuid,
+  p_decision text,
+  p_admin_note text DEFAULT NULL
+)
+RETURNS void
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path=''
+AS $wrapper$
+  SELECT private._rpc_review_role_request_core($1,$2,$3);
+$wrapper$;
+
+CREATE OR REPLACE FUNCTION public.rpc_review_profile_change_request(
+  p_request_id uuid,
+  p_decision text,
+  p_admin_note text DEFAULT NULL
+)
+RETURNS void
+LANGUAGE sql
+SECURITY INVOKER
+SET search_path=''
+AS $wrapper$
+  SELECT private._rpc_review_profile_change_request_core($1,$2,$3);
+$wrapper$;
+
+-- Keep the implementation functions private and grant only the intended caller.
+GRANT USAGE ON SCHEMA private TO authenticated;
+
+REVOKE ALL ON FUNCTION private._rpc_review_role_request_core(uuid,text,text)
+  FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private._rpc_review_profile_change_request_core(uuid,text,text)
+  FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION private._rpc_review_role_request_core(uuid,text,text)
+  TO authenticated;
+GRANT EXECUTE ON FUNCTION private._rpc_review_profile_change_request_core(uuid,text,text)
+  TO authenticated;
+
 -- No direct UPDATE grant is added to request/profile tables.
 REVOKE ALL ON FUNCTION public.rpc_review_role_request(uuid,text,text)
   FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.rpc_review_profile_change_request(uuid,text,text)
   FROM PUBLIC, anon, authenticated;
-
 GRANT EXECUTE ON FUNCTION public.rpc_review_role_request(uuid,text,text)
   TO authenticated;
 GRANT EXECUTE ON FUNCTION public.rpc_review_profile_change_request(uuid,text,text)
@@ -275,18 +321,33 @@ DO $verify$
 DECLARE
   v_count integer;
 BEGIN
+  -- Public wrappers must be invoker; privileged cores must remain private.
   SELECT count(*) INTO v_count
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid=p.pronamespace
   WHERE n.nspname='public'
     AND p.proname IN ('rpc_review_role_request','rpc_review_profile_change_request')
+    AND p.prosecdef=false
+    AND p.proconfig @> ARRAY['search_path=""']
+    AND has_function_privilege('anon',p.oid,'EXECUTE')=false
+    AND has_function_privilege('authenticated',p.oid,'EXECUTE')=true;
+
+  IF v_count<>2 THEN
+    RAISE EXCEPTION 'RPC verification failed: expected 2 invoker public wrappers, found %',v_count;
+  END IF;
+
+  SELECT count(*) INTO v_count
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid=p.pronamespace
+  WHERE n.nspname='private'
+    AND p.proname IN ('_rpc_review_role_request_core','_rpc_review_profile_change_request_core')
     AND p.prosecdef=true
     AND p.proconfig @> ARRAY['search_path=""']
     AND has_function_privilege('anon',p.oid,'EXECUTE')=false
     AND has_function_privilege('authenticated',p.oid,'EXECUTE')=true;
 
   IF v_count<>2 THEN
-    RAISE EXCEPTION 'RPC verification failed: expected 2 safely configured functions, found %',v_count;
+    RAISE EXCEPTION 'RPC verification failed: expected 2 private definer cores, found %',v_count;
   END IF;
 
   IF has_table_privilege('authenticated','public.role_requests','UPDATE')
@@ -301,7 +362,9 @@ COMMIT;
 
 \echo
 \echo '=== LOCAL REVIEW RPC PROTOTYPE CREATED ==='
-\echo 'Functions: public.rpc_review_role_request(uuid,text,text)'
-\echo 'Functions: public.rpc_review_profile_change_request(uuid,text,text)'
+\echo 'Public invoker RPC: public.rpc_review_role_request(uuid,text,text)'
+\echo 'Public invoker RPC: public.rpc_review_profile_change_request(uuid,text,text)'
+\echo 'Private definer core: private._rpc_review_role_request_core(uuid,text,text)'
+\echo 'Private definer core: private._rpc_review_profile_change_request_core(uuid,text,text)'
 \echo 'No table UPDATE grants were added. No existing rows were changed.'
 \echo 'This is a local prototype only; validate with tests and real Supabase JWT/Auth before deployment.'
