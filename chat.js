@@ -45,9 +45,15 @@
     const host=$("chatConversationList");
     if(!host || !isSignedIn()) return;
     host.textContent="চ্যাট লোড হচ্ছে…";
-    const {data,error}=await db().from("conversations")
+    let result=await db().from("conversations")
       .select("id,title,conversation_type,status,created_by,created_at,context_type,context_product_id,context_seller_id,context_product_slug,context_product_name,context_product_image_url,context_product_price,context_product_currency")
       .order("updated_at",{ascending:false}).limit(100);
+    if(result.error && /context_(type|product|seller)|schema cache|column .* does not exist/i.test(result.error.message||"")){
+      result=await db().from("conversations")
+        .select("id,title,conversation_type,status,created_by,created_at")
+        .order("updated_at",{ascending:false}).limit(100);
+    }
+    const {data,error}=result;
     if(error){host.textContent="চ্যাট লোড হয়নি: "+error.message;return;}
     state.conversations=data||[];
     if(!data?.length){host.textContent="এখনো কোনো চ্যাট নেই। পণ্য থেকে Chat শুরু করুন অথবা নতুন ব্যবহারকারী নির্বাচন করুন।";return;}
