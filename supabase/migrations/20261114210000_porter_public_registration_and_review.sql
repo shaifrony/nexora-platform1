@@ -151,7 +151,7 @@ begin
       using errcode='42501';
   end if;
 
-  if p_action not in ('approve','reject','suspend') then
+  if p_action is null or p_action not in ('approve','reject','suspend') then
     raise exception 'Unsupported Porter review action' using errcode='22023';
   end if;
   if p_action in ('reject','suspend')
