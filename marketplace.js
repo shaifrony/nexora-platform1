@@ -97,17 +97,7 @@
   bindListingImagePicker("nxProductImageFiles","nxProductImagePreview",5);
   bindListingImagePicker("nxServiceImageFiles","nxServiceImagePreview",3);
 
-  function refreshProductMarketCategoryOptions() {
-    const select = $("nxProductMarketCategory");
-    if (!select) return;
-    const labels = { wholesale: "Wholesale (পাইকারি)", retail: "Retail (খুচরা)" };
-    const current = select.value;
-    select.innerHTML = '<option value="">বিক্রয় ক্যাটাগরি নির্বাচন করুন</option>' +
-      ["wholesale","retail"].map(category => '<option value="' + category + '">' + labels[category] + '</option>').join("");
-    if (["wholesale","retail"].includes(current)) select.value = current;
-  }
   window.toggleProductForm = function() {
-    refreshProductMarketCategoryOptions();
     $("productForm")?.classList.toggle("hidden");
   };
 
