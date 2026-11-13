@@ -457,3 +457,13 @@ Recovery Plan section 20 commit: `4b1d65a197f0415489672401aee2ad66ddf84f89`.
 - No Live writes, migration execution, private data or Storage object reads; no runtime SQL/RLS/Storage/E2E tests.
 
 Recovery Plan section 21 commit: `3e66c30d4653d7ab2c963449adc713f97dc36f2a`.
+
+
+## 2026-11-14 — Consolidated migration dependency map
+
+- Added Recovery Plan section 22, mapping the ordered dependencies for core marketplace/security, product inquiry, services/media, listing governance/history, verified reviews, inventory, Buyer Demand/quotations, commerce/negotiation, delivery network, Porter activation, centralized officer management and suspended multilingual chat.
+- Recorded hard execution gates: version collision, exact duplicate SQL pairs, Live-only security outcomes, CLI/runtime requirement, disposable DB rehearsal and explicit production approval.
+- No migration filenames or migration-history entries changed. No migration runner invoked. No Live schema/data/DNS/paid-service changes.
+- Current environment still lacks Supabase CLI, Docker Engine and local PostgreSQL; therefore no SQL runtime/parser or disposable database test is claimed.
+
+Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
