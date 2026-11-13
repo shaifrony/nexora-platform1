@@ -51,7 +51,11 @@ create unique index if not exists listing_reviews_one_per_buyer_listing_idx
 
 alter table public.listing_reviews enable row level security;
 revoke all on public.listing_reviews from public, anon, authenticated;
-grant select on public.listing_reviews to authenticated;
+grant select on public.listing_reviews to anon,authenticated;
+
+create policy listing_reviews_public_anonymous_read
+on public.listing_reviews for select to anon
+using (review_status = 'published');
 
 create policy listing_reviews_public_or_owner_read
 on public.listing_reviews for select to authenticated
@@ -96,7 +100,7 @@ as $
     and r.review_status='published';
 $;
 revoke all on function public.get_listing_review_summary(text,uuid) from public, anon;
-grant execute on function public.get_listing_review_summary(text,uuid) to authenticated;
+grant execute on function public.get_listing_review_summary(text,uuid) to anon,authenticated;
 
 create or replace function public.get_my_review_eligibility(
   p_listing_type text,
