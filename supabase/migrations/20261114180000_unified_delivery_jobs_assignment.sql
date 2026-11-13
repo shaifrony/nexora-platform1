@@ -91,11 +91,12 @@ begin
    and o.order_status in ('accepted','ready_for_confirmation')
  ) then raise exception 'Linked commerce order must be accepted or ready for fulfilment' using errcode='23514'; end if;
  insert into public.delivery_jobs(
-   external_reference,package_description,package_count,pickup_contact_name,pickup_contact_phone,
+   job_reference,external_reference,package_description,package_count,pickup_contact_name,pickup_contact_phone,
    pickup_address,pickup_city,pickup_country,recipient_contact_name,recipient_contact_phone,
    delivery_address,delivery_city,delivery_country,requested_pickup_at,delivery_deadline,
    special_instructions,job_status,created_by,assigned_by,assigned_at,delivery_mode,commerce_order_id,requested_by
  ) values (
+   'NXD-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,12)),
    nullif(btrim(coalesce(p_external_reference,'')),''),
    btrim(p_package_description),p_package_count,
    nullif(btrim(coalesce(p_pickup_contact_name,'')),''),
@@ -109,7 +110,7 @@ begin
    'requested',v_actor,null,null,p_delivery_mode,p_commerce_order_id,v_actor
  ) returning id into v_id;
  insert into public.delivery_job_events(job_id,event_type,actor_user_id,actor_admin_code,reason,event_data)
- values(v_id,'created',v_actor,v_admin_code,'Delivery request created',
+ values(v_id,'created_assigned',v_actor,v_admin_code,'Delivery request created',
    jsonb_build_object('delivery_mode',p_delivery_mode,'commerce_order_id',p_commerce_order_id));
  insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,details)
  values(v_actor,v_admin_code,'delivery_job.requested','delivery_job',v_id::text,
