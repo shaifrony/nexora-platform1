@@ -15,6 +15,16 @@ create index if not exists products_market_category_status_created_idx
   on public.products (market_category, listing_status, created_at desc);
 
 drop policy if exists products_owner_approved_or_admin_read on public.products;
+drop policy if exists products_public_approved_read on public.products;
+create policy products_public_approved_read
+on public.products for select to anon
+using (
+  listing_status = 'approved'
+  and exists (
+    select 1 from public.public_businesses b
+    where b.business_id = products.business_id
+  )
+);
 create policy products_owner_approved_or_admin_read
 on public.products for select to authenticated
 using (
@@ -25,12 +35,6 @@ using (
     and exists (
       select 1 from public.public_businesses b
       where b.business_id = products.business_id
-    )
-    and exists (
-      select 1 from public.profiles p
-      where p.id = (select auth.uid())
-        and p.role = 'buyer'
-        and p.account_status = 'active'
     )
   )
 );
@@ -71,11 +75,10 @@ begin
   join public.public_businesses pb on pb.business_id=p.business_id
   where p.id=p_product_id
     and p.listing_status='approved'
-    and b.approval_status='approved'
-;
+    and b.approval_status='approved';
 
   if not found then
-    raise exception 'Product unavailable or does not match your Buyer category'
+    raise exception 'Product unavailable or not approved'
       using errcode='42501';
   end if;
 
