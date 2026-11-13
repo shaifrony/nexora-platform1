@@ -388,3 +388,17 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 **Migration safety remains blocked:** the two different files `20261114180000_product_linked_private_conversations.sql` and `20261114180000_unified_delivery_jobs_assignment.sql` still share one version. Two further pairs are byte-identical duplicates. No files were renamed/deleted, no history was repaired, no migration was run, and no paid Development Branch was created.
 
 **Verification limits:** metadata-only catalog inspection and source/document static review. No PostgreSQL parser, local DB, disposable DB, PostgREST/JWT or browser E2E test has run. Continue with branch-only migration effect/dependency audit; do not execute the migration directory until the version collision is repaired through a supported CLI-generated workflow.
+
+
+## 2026-11-14 — Branch-only migration object audit
+
+- Compared the source declarations of the branch-only feature migrations with the Live public relation inventory (metadata only).
+- Confirmed Live has 20 public tables and 2 views. Core Marketplace, Buyer Demand, Seller Offers, conversations and Admin foundation relations exist.
+- Confirmed the following feature tables are absent from Live metadata: `transport_providers`, `transport_vehicles`, `delivery_jobs`, `delivery_job_events`, `service_listings`, `listing_edit_requests`, `listing_edit_request_events`, `review_purchase_eligibility`, `listing_reviews`, `commerce_orders`, `commerce_order_events`, `buyer_demand_inbox`, `delivery_network_partners`, `delivery_network_staff`, `delivery_job_assignment_history`, `delivery_tracking_events`, `porter_account_reviews`, `seller_offer_negotiations`, `product_price_negotiations`, `product_price_negotiation_events`, `user_language_preferences`, and `message_translations`.
+- Confirmed `20261113100000_create_porter_delivery_workflow.sql` is explicitly marked SUPERSEDED/no-op and must never be executed.
+- Confirmed `20261113235900_product_market_category.sql` currently contains no product sale-category column change despite its filename; it changes public product/business policies and grants and replaces Product Inquiry RPC logic. Live already has overlapping visibility policies and an earlier Product Inquiry RPC, so this file is blocked from blind replay.
+- Confirmed the `nexora-listing-images` Storage bucket was not found in Storage bucket metadata; its migration also depends on absent `service_listings`.
+- Confirmed product-linked conversation migration extends an existing Live `conversations` table, while delivery migrations depend on absent delivery base tables. These are partial/new feature groups and remain unexecuted.
+- Detailed per-file classification and limits are recorded in Recovery Plan section 18.
+
+**Current status:** branch-only migration inventory and initial object mapping complete; exact function/trigger/policy/grant replacement audit remains. The `20261114180000` version collision still blocks all migration runners. No file renamed/deleted, no SQL run, no Live writes, no user data queried, no paid Development Branch created.
