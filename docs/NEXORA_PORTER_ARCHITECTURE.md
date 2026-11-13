@@ -1,3 +1,5 @@
+> **SUPERSEDED DESIGN NOTICE — 2026-11-13:** The earlier statements below that Porter is not a person-level account role and that Buyer/Seller may own Transport Provider profiles are superseded by the user's later approved NEXORA decision. Current target model: homepage registration roles are exactly Buyer, Seller and Porter; Porter registration creates a pending `profiles.role='porter'` account; only an approved active Porter may submit a linked Transport Provider profile and vehicles; Provider and each vehicle require separate Admin approval. Dispatch requires approved Porter account + approved Provider + approved/available vehicle. Admin roles are never public signup roles. For the current authoritative design, see [Foundation Design Proposal — Section 7](../supabase/recovery-not-for-deployment/local-setup/05_foundation_design_proposal.md#7-authoritative-design-resolutions-2026-11-13). The remainder of this file is retained as historical design context and must not be implemented where it conflicts with this notice.
+
 # NEXORA Transport Provider & Vehicle Architecture
 
 Status: Design specification for the Development branch only.
