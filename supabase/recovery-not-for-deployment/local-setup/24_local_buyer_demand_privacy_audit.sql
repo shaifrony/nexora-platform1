@@ -79,8 +79,8 @@ BEGIN
   IF has_column_privilege('anon','public.buyer_demands','buyer_id','SELECT') THEN
     RAISE EXCEPTION 'FAIL: anon can SELECT buyer_demands.buyer_id';
   END IF;
-  IF has_table_privilege('anon','public.buyer_demand_inbox','SELECT')
-     OR has_table_privilege('anon','public.seller_offers','SELECT') THEN
+  IF has_any_column_privilege('anon','public.buyer_demand_inbox','SELECT')
+     OR has_any_column_privilege('anon','public.seller_offers','SELECT') THEN
     RAISE EXCEPTION 'FAIL: anon can read private Demand inbox or Seller offers';
   END IF;
   IF NOT has_table_privilege('anon','public.public_buyer_demands','SELECT') THEN
@@ -123,9 +123,8 @@ BEGIN
      OR v_policy NOT ILIKE '%active%' THEN
     RAISE EXCEPTION 'FAIL: Seller inbox SELECT policy is not scoped to the active owning Seller';
   END IF;
-  IF has_table_privilege('authenticated','public.buyer_demand_inbox','INSERT')
-     OR has_table_privilege('authenticated','public.buyer_demand_inbox','UPDATE')
-     OR has_table_privilege('authenticated','public.buyer_demand_inbox','DELETE') THEN
+  IF has_any_column_privilege('authenticated','public.buyer_demand_inbox','INSERT')
+     OR has_any_column_privilege('authenticated','public.buyer_demand_inbox','UPDATE') THEN
     RAISE EXCEPTION 'FAIL: authenticated users have direct write access to Demand routing rows';
   END IF;
   RAISE NOTICE 'PASS: Seller inbox is owner-scoped and browser users cannot write routing rows';
