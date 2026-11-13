@@ -199,7 +199,7 @@ begin
     pickup_contact_name,pickup_contact_phone,pickup_address,pickup_city,pickup_country,
     recipient_contact_name,recipient_contact_phone,delivery_address,delivery_city,delivery_country,
     requested_pickup_at,delivery_deadline,special_instructions,
-    assigned_provider_id,assigned_vehicle_id,job_status,created_by,assigned_by
+    assigned_provider_id,assigned_vehicle_id,job_status,created_by,assigned_by,assigned_at
   ) values (
     v_job_id,v_job_reference,nullif(btrim(coalesce(p_external_reference,'')),''),
     btrim(p_package_description),p_package_count,
@@ -211,7 +211,7 @@ begin
     btrim(p_delivery_address),btrim(p_delivery_city),btrim(p_delivery_country),
     p_requested_pickup_at,p_delivery_deadline,
     nullif(btrim(coalesce(p_special_instructions,'')),''),
-    p_provider_id,p_vehicle_id,'assigned',v_actor,v_actor
+    p_provider_id,p_vehicle_id,'assigned',v_actor,v_actor,now()
   );
 
   insert into public.delivery_job_events(job_id,event_type,actor_user_id,actor_admin_code,event_data)
