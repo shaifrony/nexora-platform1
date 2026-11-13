@@ -178,3 +178,14 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] Browser/mobile E2E: open Product from Marketplace, create thread, Seller accepts, both see same image/name/link, multiple products create separate threads, repeat click reuses same active thread, unrelated accounts cannot read thread.
 - [ ] Verify Realtime, attachments, Audio/Video call and history in hosted-compatible environment.
 - This source work is not a deployment approval. Migration history divergence remains a blocker; no Hosted Supabase/Production/main changes were made.
+
+### 10.1 Cross-department hardening update (2026-11-13)
+- [x] Product inquiry can include an optional first message; it is saved only when a new thread is created, not duplicated when an existing thread is reused.
+- [x] Product conversation identity and original Product snapshot fields are guarded against participant updates by a database trigger.
+- [x] Product Detail offers Buyer an optional first inquiry message field (500-character maximum).
+- [x] Seller invitation remains pending until Seller accepts; existing RLS rules continue to block messaging/calling before acceptance.
+- [x] Admin receives no new private-conversation content access; Porter/Delivery unchanged in this package.
+- [ ] Integrate product price negotiation offers/counter-offers/acceptance into the same Buyer–Seller Product conversation message history; keep offer privacy and order conversion server-enforced.
+- [ ] Review Seller chat list, Buyer/Seller consent, unread/last-message refresh, and Product deep-link behavior in an isolated DB + browser E2E.
+- [ ] Rehearse migration and real authenticated RLS/JWT/PostgREST checks only after migration history reconciliation.
+- Source updates are staged only; no database tests or deployment performed.
