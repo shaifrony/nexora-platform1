@@ -871,7 +871,7 @@
     try {
       const { data, error } = await client().from("buyer_demands")
         .select("id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
-        .eq("buyer_id", user().id).order("created_at", { ascending: false });
+        .order("created_at", { ascending: false });
       if (error) throw error;
       state.buyerDemands = data || [];
       const ids = state.buyerDemands.map(d => d.id);
@@ -955,7 +955,7 @@
     if (!confirm("আপনি কি নিজের এই চাহিদাটি " + label + " করতে চান?")) return;
     try {
       const { data, error } = await client().from("buyer_demands").update({ demand_status: nextStatus })
-        .eq("id", demandId).eq("buyer_id", user().id).eq("demand_status", "open")
+        .eq("id", demandId).eq("demand_status", "open")
         .select("id").maybeSingle();
       if (error) throw error;
       if (!data) throw new Error("চাহিদাটি পরিবর্তন করা যায়নি। এটি হয়তো ইতোমধ্যে পরিবর্তিত হয়েছে।");
