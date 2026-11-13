@@ -12,7 +12,6 @@ Status: **Implementation review in progress — not complete**
 - Buyer account তৈরি ও ব্যবহার করতে Admin approval লাগবে না (email confirmation বা platform-এর সাধারণ authentication শর্ত প্রযোজ্য)।
 - Buyer Dashboard-এ কোনো category switch থাকবে না; Buyer visibility সবসময় universal।
 - Seller প্রতিটি Product Listing-এ Wholesale অথবা Retail নির্বাচন করবে; এই নির্বাচন Buyer-এর দেখার অধিকার সীমিত করবে না।
-- Seller প্রতিটি Product Listing-এর সময় Wholesale/Retail নির্বাচন করবে; Seller account-এর একটি global market category দিয়ে পণ্য সীমাবদ্ধ করা হবে না।
 - Buyer Demand প্রকাশ্য হতে পারে, কিন্তু Buyer-এর নাম, পূর্ণ Profile, email, phone বা ব্যক্তিগত যোগাযোগের তথ্য প্রকাশ করা যাবে না।
 - Buyer Demand-এ প্রয়োজনীয় পণ্যের বিবরণ, পরিমাণ, গন্তব্য এবং **প্রয়োজনের তারিখ** থাকবে।
 - যোগাযোগের অনুরোধ গ্রহণ না করা পর্যন্ত ব্যক্তিগত কথোপকথন শুরু হবে না।
