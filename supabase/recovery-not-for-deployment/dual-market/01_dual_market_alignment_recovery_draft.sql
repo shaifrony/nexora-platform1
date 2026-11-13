@@ -1,3 +1,12 @@
+-- SUPERSEDED / DO NOT EXECUTE — 2026-11-13
+-- The user has replaced the earlier Buyer-category-gated model.
+-- Current decision: every Buyer, Seller, Admin and Public Visitor can see all
+-- approved Wholesale and Retail products. Buyer has no account-level category.
+-- Seller selects Wholesale or Retail per Product. Demand routing ignores
+-- buyer_category, seller_categories and products.market_category.
+-- This historical draft still implements the opposite access model. It is
+-- retained for audit history only and must not be adapted or run.
+
 -- NEXORA Wholesale + Retail alignment
 -- RECOVERY / REVIEW DRAFT ONLY — NOT A DEPLOYABLE MIGRATION.
 -- Do not run against Live Supabase. Do not move into supabase/migrations/.
