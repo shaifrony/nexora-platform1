@@ -100,7 +100,7 @@ BEGIN
 END
 $validations$;
 
--- Public signup must reject Admin role and Retail category.
+-- Public signup must reject Admin role; legacy Retail metadata must be ignored.
 DO $negative_tests$
 DECLARE
   v_rejected boolean;
