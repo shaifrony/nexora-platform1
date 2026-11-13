@@ -2,7 +2,7 @@
 
 Updated: 2026-11-13  
 Branch: `nexora-development`  
-Status: **Implementation review in progress — not complete**
+Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion blocked by integration/security/E2E tests**
 
 এই নথি Buyer বিভাগের একক সমন্বিত checklist। এটি বর্তমান GitHub কোড ও migration chain পর্যালোচনার ভিত্তিতে তৈরি। কোনো Hosted Supabase বা Production পরিবর্তন/পরীক্ষা করা হয়নি।
 
@@ -31,9 +31,9 @@ Status: **Implementation review in progress — not complete**
 | Buyer Demand form | Frontend staged | Product, category, subcategory, description, specifications, quantity, optional budget, currency, destination এবং required date |
 | Public Demand Board | Migration + frontend staged | Open demands প্রকাশ; identity/contact fields view-তে নেই বলে migration-এ নির্ধারিত |
 | Buyer Demand privacy | Partially verified | Public view security_invoker; anon column grants সীমিত; hosted DB-তে grants/RLS পরীক্ষা বাকি |
-| Seller quotations | Frontend + migration staged | Buyer নিজের Demand-এর জন্য Seller offers দেখতে পারে; quotation compare/accept করার পূর্ণ workflow এখনো নেই |
+| Seller quotations | Source implementation staged | Buyer/Seller offer view, counter-offer, accept/reject, turn-taking, expiry and order conversion RPC/UI staged; SQL/JWT/RLS/browser tests pending |
 | Product inquiry/chat | Frontend + migration staged | Inquiry RPC conversation ও invitation তৈরি করে; গ্রহণের পর chat |
-| Orders | Frontend + migration staged | Product/service order request, status, cancel ও completion confirmation |
+| Orders | Source implementation staged | Product/service and Buyer Demand order lifecycle, delivery-inclusive total display, status actions staged; full database/RLS/E2E verification pending |
 | Verified reviews | Frontend + migration staged | Completed verified purchase ছাড়া review নয়; duplicate review block |
 | Profile privacy | Foundation staged | Public identity projection সীমিত; Buyer-এর full profile অন্যদের কাছে প্রকাশ নয় |
 | Wallet/payment | Not implemented / placeholder | Buyer Dashboard-এ wallet balance UI আছে, কিন্তু প্রকৃত wallet ledger/payment integration প্রমাণিত নয় |
@@ -90,17 +90,20 @@ Status: **Implementation review in progress — not complete**
 - [x] Read-only catalog audit 24 initially executed and correctly SKIPped because full Demand schema was absent from visibility fixture 21. A separate local-only Demand fixture 25, behavior tests 26 and Termux runner 27 are now staged to enable focused local validation; user execution pending.
 - [ ] Run local Demand fixture 25 + audit 24 + behavior tests 26 using runner 27; inspect every PASS/FAIL.
 - [ ] Verify privacy, ownership, Seller inbox, quotations and status transitions under real JWT/PostgREST sessions and browser E2E.
-- [ ] Buyer quotation acceptance, counter-offer and quotation-to-order conversion workflow remains unimplemented.
+- [x] Buyer/Seller quotation acceptance, counter-offer, rejection turn-taking, offer expiry and source-linked Buyer Demand order conversion are implemented in staged frontend + migration source. Buyer acceptance creates a pending Seller-confirmation order; Seller acceptance of a Buyer counter-offer creates an accepted order and event.
+- [ ] Run isolated SQL behavior tests for both acceptance paths, counter-offer turn-taking, rejection, expired offers, inactive participants, duplicate order prevention, and order transitions; hosted JWT/PostgREST/RLS and browser E2E remain pending.
 
 ### B-04 — Orders, stock ও pricing
-- [ ] Buyer account category ছাড়া যেকোনো approved Wholesale/Retail product order করতে পারে যাচাই।
+- [x] Buyer Demand quotation conversion and Buyer/Seller order status source paths are staged; Buyer order card shows delivery-inclusive `grand_total` with charge breakdown when non-zero.
+- [ ] Buyer account category ছাড়া যেকোনো approved product order করতে পারে—full-schema/runtime verification pending.
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
 - [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
 
 ### B-05 — Quotations, communications, reviews ও support
-- [ ] Buyer quotation acceptance: বর্তমানে Buyer Dashboard quotation দেখায়, কিন্তু গ্রহণ/প্রত্যাখ্যান বা quotation থেকে order তৈরির end-to-end action নেই। Seller-এর offer acceptance, quantity/price lock, order conversion এবং competing offer handling-এর নিয়ম নির্ধারণ প্রয়োজন।
+- [x] Buyer/Seller quotation accept, counter and reject actions and server-side turn-taking rules are staged; accepted quotation creates a source-linked Commerce Order with negotiated quantity/price.
+- [ ] End-to-end competing-offer, concurrency, expiry, inactive-account, RLS and browser behavior tests remain pending.
 - [ ] Seller invitation accept না করা পর্যন্ত Buyer message পাঠাতে পারে না।
 - [ ] Audio/video/file sharing এবং history শুধু conversation participants দেখতে পারে।
 - [ ] Admin ব্যক্তিগত chat-এর content দেখতে পারে না—পূর্বের privacy decision অনুযায়ী।
@@ -264,3 +267,13 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - [ ] User/operator must accept gated model access conditions and run the notebook on available free Colab resources.
 - [ ] Review CSV with two bilingual reviewers and record critical errors, quality and runtime.
 - **Status:** notebook prepared, not executed. Free Colab resources are not guaranteed; no paid compute or production translation enabled.
+
+
+## 9. 2026-11-14 — Buyer quotation/order source implementation correction
+
+- The earlier B-05 statement that quotation acceptance/counter-offer/order conversion was unimplemented is superseded. Current staged source includes Buyer/Seller offer actions, shared `respond_to_demand_offer` RPC, negotiation history, server-side turn-taking, offer expiry checks, source-linked `buyer_demand` Commerce Order creation, and role/state-guarded order transitions.
+- Buyer acceptance of the Seller's latest proposal creates a pending order for Seller confirmation. Seller acceptance of the Buyer’s latest counter-offer creates an accepted order and records the accepted event.
+- Buyer and Seller order cards now display delivery-inclusive `grand_total` and the delivery-charge breakdown when non-zero.
+- JavaScript syntax-only checks and isolated required-date/order-total logic checks passed as documented in `NEXORA_BUYER_DEMAND_PROGRESS.md`. These are not SQL runtime, full database, JWT/PostgREST/RLS, concurrency or browser E2E tests.
+- The local installed-contract audit `29_local_buyer_demand_order_contract_audit.sql` is staged but has not been run because the reconstructed local fixtures do not include the complete commerce/negotiation schema. No full isolated migration rehearsal is currently safe; migration-history/version reconciliation and a trusted schema baseline remain blockers.
+- No hosted migration, Live Supabase, Production, `main`, DNS or deployment changed.
