@@ -192,6 +192,9 @@ VALUES
  ('organization.view','managing_director','Organization overview','View approved organization structure.',false),
  ('organization.structure.manage','managing_director','Organization structure','Create/retire departments and alter structure.',true),
  ('organization.executives.manage','managing_director','Executive appointments','Appoint/remove MD and department heads.',true),
+ ('users.view_limited','managing_director','Limited user identity','View only minimum user identity data needed for authorized support.',true),
+ ('users.role_requests.review','managing_director','Role request review','Review Buyer-to-Seller role requests.',true),
+ ('users.profile_changes.review','managing_director','Profile change review','Review profile change requests.',true),
  ('operations.view','managing_director','Operations overview','View cross-department operations.',false),
  ('operations.coordinate','managing_director','Operations coordination','Coordinate work within approved policy.',true),
  ('marketing.leads.view','marketing','Marketing leads','View acquisition leads.',false),
@@ -201,6 +204,7 @@ VALUES
  ('transport.partners.manage','transport','Transport partners management','Manage partner onboarding workflow.',true),
  ('transport.providers.review','transport','Provider review','Review provider applications.',true),
  ('transport.vehicles.review','transport','Vehicle review','Review vehicle submissions.',true),
+ ('logistics.porter_accounts.review','transport','Porter account review','Review public Porter account applications.',true),
  ('logistics.view','transport','Delivery view','View authorized delivery operations.',false),
  ('logistics.assign','transport','Delivery assignment','Assign eligible approved delivery resources.',true),
  ('logistics.tracking.update','transport','Tracking update','Update authorized tracking events.',true),
@@ -269,6 +273,10 @@ AS $fn$
         AND g.is_allowed=true
         AND c.is_active=true
         AND (c.department_key=s.department_key OR s.position_key='managing_director')
+        AND NOT (
+          s.position_key='managing_director'
+          AND p_permission IN ('organization.structure.manage','organization.executives.manage')
+        )
     );
 $fn$;
 
@@ -280,7 +288,7 @@ SECURITY INVOKER
 SET search_path=''
 AS $fn$
 BEGIN
-  IF auth.uid()=OLD.id AND NOT public.is_nexora_admin() THEN
+  IF auth.uid()=OLD.id THEN
     IF NEW.id IS DISTINCT FROM OLD.id
        OR NEW.role IS DISTINCT FROM OLD.role
        OR NEW.account_status IS DISTINCT FROM OLD.account_status
@@ -402,8 +410,8 @@ GRANT INSERT ON public.role_requests,public.profile_change_requests TO authentic
 
 CREATE POLICY profiles_owner_read ON public.profiles
 FOR SELECT TO authenticated USING(id=(SELECT auth.uid()));
-CREATE POLICY profiles_admin_read ON public.profiles
-FOR SELECT TO authenticated USING(public.is_nexora_admin());
+CREATE POLICY profiles_limited_admin_read ON public.profiles
+FOR SELECT TO authenticated USING(private.has_nexora_permission('users.view_limited'));
 
 CREATE POLICY role_requests_owner_read ON public.role_requests
 FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
@@ -412,11 +420,12 @@ FOR INSERT TO authenticated WITH CHECK(
   user_id=(SELECT auth.uid()) AND requested_role='seller' AND status='pending'
   AND reviewed_by IS NULL AND reviewed_at IS NULL AND admin_note IS NULL
 );
-CREATE POLICY role_requests_admin_read ON public.role_requests
-FOR SELECT TO authenticated USING(public.is_nexora_admin());
-CREATE POLICY role_requests_admin_update ON public.role_requests
+CREATE POLICY role_requests_reviewer_read ON public.role_requests
+FOR SELECT TO authenticated USING(private.has_nexora_permission('users.role_requests.review'));
+CREATE POLICY role_requests_reviewer_update ON public.role_requests
 FOR UPDATE TO authenticated
-USING(public.is_nexora_admin()) WITH CHECK(public.is_nexora_admin());
+USING(private.has_nexora_permission('users.role_requests.review'))
+WITH CHECK(private.has_nexora_permission('users.role_requests.review'));
 
 CREATE POLICY profile_change_owner_read ON public.profile_change_requests
 FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
@@ -425,11 +434,12 @@ FOR INSERT TO authenticated WITH CHECK(
   user_id=(SELECT auth.uid()) AND status='pending'
   AND reviewed_by IS NULL AND reviewed_at IS NULL AND admin_note IS NULL
 );
-CREATE POLICY profile_change_admin_read ON public.profile_change_requests
-FOR SELECT TO authenticated USING(public.is_nexora_admin());
-CREATE POLICY profile_change_admin_update ON public.profile_change_requests
+CREATE POLICY profile_change_reviewer_read ON public.profile_change_requests
+FOR SELECT TO authenticated USING(private.has_nexora_permission('users.profile_changes.review'));
+CREATE POLICY profile_change_reviewer_update ON public.profile_change_requests
 FOR UPDATE TO authenticated
-USING(public.is_nexora_admin()) WITH CHECK(public.is_nexora_admin());
+USING(private.has_nexora_permission('users.profile_changes.review'))
+WITH CHECK(private.has_nexora_permission('users.profile_changes.review'));
 
 CREATE POLICY admin_staff_self_read ON public.admin_staff
 FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
@@ -449,7 +459,7 @@ FOR SELECT TO authenticated USING(private.has_nexora_permission('audit.view'));
 CREATE POLICY porter_review_owner_read ON public.porter_account_reviews
 FOR SELECT TO authenticated USING(user_id=(SELECT auth.uid()));
 CREATE POLICY porter_review_admin_read ON public.porter_account_reviews
-FOR SELECT TO authenticated USING(private.has_nexora_permission('logistics.assign'));
+FOR SELECT TO authenticated USING(private.has_nexora_permission('logistics.porter_accounts.review'));
 
 -- No client UPDATE/DELETE on profiles, Admin structure, grants or audit history.
 REVOKE INSERT,UPDATE,DELETE ON public.profiles,public.admin_staff,public.admin_departments,
