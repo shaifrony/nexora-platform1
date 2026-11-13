@@ -929,14 +929,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
             <option value="porter">Porter</option>
           </select>
           <p id="nxPorterRegistrationNote" class="muted hidden">Porter আবেদন জমা দেওয়ার পর Admin/Transport বিভাগ যাচাই করবে। অনুমোদনের আগে অ্যাকাউন্ট Pending থাকবে এবং Dashboard/Delivery কাজ ব্যবহার করা যাবে না।</p>
-          <div id="nxBuyerCategoryFields">
-            <label>Buyer ক্যাটাগরি *</label>
-            <select name="buyer_category" required>
-              <option value="wholesale">পাইকারি Buyer</option>
-              <option value="retail">খুচরা Buyer</option>
-            </select>
-            <p class="muted">Buyer পরে Dashboard থেকে নিজেই ক্যাটাগরি পরিবর্তন করতে পারবেন।</p>
-          </div>
+          <p class="muted">Buyer সব অনুমোদিত Wholesale ও Retail পণ্য এবং বিজ্ঞাপন দেখতে পারবেন।</p>
           <div id="nxSellerCategoryFields" class="hidden">
             <p class="muted">Seller প্রতিটি Product Listing তৈরি করার সময় Wholesale অথবা Retail নির্বাচন করবেন।</p>
           </div>
@@ -1159,13 +1152,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <div class="nx-buyer-welcome-art" aria-hidden="true"><span>BUYER</span><b>↗</b><i>SMART MARKETPLACE</i></div>
         </div>
 
-        <section class="card nx-buyer-category-switcher" aria-label="Buyer Marketplace category">
-          <div><strong>আপনার Marketplace ক্যাটাগরি</strong><p class="muted">আপনি নিজের সক্রিয় Buyer ক্যাটাগরি এখানে পরিবর্তন করতে পারবেন।</p></div>
-          <div class="form-actions"><select id="nxBuyerCategorySelect" aria-label="Buyer category"><option value="wholesale">পাইকারি Buyer</option><option value="retail">খুচরা Buyer</option></select><button type="button" class="primary" onclick="changeBuyerCategory()">ক্যাটাগরি পরিবর্তন</button></div>
-        </section>
-
         <div class="nx-buyer-quick-actions">
-          <button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})"><span>⌕</span><strong>পণ্য খুঁজুন</strong><small>আপনার Buyer ক্যাটাগরি অনুযায়ী পণ্য</small></button>
+          <button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})"><span>⌕</span><strong>পণ্য খুঁজুন</strong><small>সব ধরনের পণ্য</small></button>
           <button type="button" onclick="showSection('postDemand')"><span>＋</span><strong>চাহিদা পোস্ট করুন</strong><small>Seller-এর কাছ থেকে Offer নিন</small></button>
           <button type="button" onclick="showSection('privateChat')"><span>✉</span><strong>যোগাযোগ</strong><small>আপনার Inquiry ও Messages</small></button>
         </div>
@@ -1177,7 +1165,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         </div>
 
         <section id="nxBuyerDiscover" class="nx-buyer-discover">
-          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">DISCOVER PRODUCTS</span><h2>আপনার জন্য পণ্য</h2><p>আপনার নির্বাচিত Wholesale অথবা Retail ক্যাটাগরির অনুমোদিত পণ্য দেখুন</p></div><span id="buyerProductCount" class="nx-buyer-count">Products</span></div>
+          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">DISCOVER PRODUCTS</span><h2>আপনার জন্য পণ্য</h2><p>সব অনুমোদিত Wholesale ও Retail পণ্য দেখুন</p></div><span id="buyerProductCount" class="nx-buyer-count">Products</span></div>
           <div class="nx-buyer-search"><input id="buyerProductSearch" type="search" placeholder="পণ্যের নাম বা বিবরণ লিখুন…" aria-label="পণ্য অনুসন্ধান"><button class="primary" type="button" id="buyerProductSearchButton">Search</button></div>
           <div id="buyerProductList" aria-live="polite"><p class="muted">পণ্য লোড হচ্ছে…</p></div>
         </section>
