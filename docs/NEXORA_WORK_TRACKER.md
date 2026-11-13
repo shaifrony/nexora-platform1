@@ -54,7 +54,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Negative tests for privilege escalation, MFA bypass, department scope, revocation and invite rollback.
 
 ## M2 — Marketplace
-- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; corrected category-switch trigger/grant/RLS mismatch, verified-row response, and Inquiry category guard in migration source. Buyer quotation acceptance workflow remains unimplemented. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
+- [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; universal product visibility, safe public columns, category-independent Inquiry/Order and Demand routing have been staged. Buyer quotation acceptance workflow remains unimplemented. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
 - [ ] Verify the final Auth trigger/profile constraints across the complete migration chain: Buyer has no market category, Seller has no account-level sale category, Buyer-only OAuth and Porter pending approval remain intact. Provider lookup uses raw_app_meta_data; hosted Auth trigger attachment and real signup remain untested. Do not deploy until migration history is reconciled.
 - [x] Remove Buyer-category product visibility restrictions from database/RLS/RPC and order logic; verify that sale type remains per product.
 - [ ] Reconcile Seller edit-request workflow with the dual-market model and mode-specific product fields.
