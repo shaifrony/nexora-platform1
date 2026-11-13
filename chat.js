@@ -73,7 +73,7 @@
       const image=product&&c.context_product_image_url?'<img class="nx-chat-product-thumb" src="'+esc(c.context_product_image_url)+'" alt="'+esc(title)+'" loading="lazy">':'<span class="nx-chat-product-placeholder" aria-hidden="true">▣</span>';
       const link=product&&c.context_product_slug?'<a class="nx-chat-product-link" href="'+esc(window.location.pathname+'?product='+encodeURIComponent(c.context_product_slug))+'" target="_blank" rel="noopener noreferrer">পণ্য দেখুন ↗</a>':'';
       const status=mine?.invitation_status==="pending"?"অনুরোধ অপেক্ষমাণ":(mine?.invitation_status==="declined"?"অনুরোধ প্রত্যাখ্যাত":(last?"সর্বশেষ বার্তা":"চ্যাট"));
-      return '<article class="nx-chat-thread-card"><button class="nx-chat-thread-open" type="button" data-conversation="'+esc(c.id)+'">'+image+'<span class="nx-chat-thread-copy"><strong>'+esc(title)+'</strong><small>'+esc(person)+'</small>'+(price?'<small>মূল মূল্য: '+esc(price)+'</small>':'')+'<span class="nx-chat-thread-preview">'+esc(preview)+'</span><small class="nx-chat-thread-status">'+esc(status)+'</small></span></button>'+link+'</article>';
+      return '<article class="nx-chat-thread-card"><button class="nx-chat-thread-open" type="button" data-conversation="'+esc(c.id)+'">'+image+'<span class="nx-chat-thread-copy"><strong>'+esc(title)+'</strong><small>'+esc(person)+'</small>'+(price?'<small>চ্যাট শুরুর সময়কার মূল্য: '+esc(price)+'</small>':'')+'<span class="nx-chat-thread-preview">'+esc(preview)+'</span><small class="nx-chat-thread-status">'+esc(status)+'</small></span></button>'+link+'</article>';
     }).join("");
     host.querySelectorAll("[data-conversation]").forEach(b=>b.addEventListener("click",()=>openConversation(b.dataset.conversation)));
   }
@@ -126,7 +126,7 @@
         const price=current.context_product_price===null?"":Number(current.context_product_price).toLocaleString()+" "+(current.context_product_currency||"");
         const image=current.context_product_image_url?'<img src="'+esc(current.context_product_image_url)+'" alt="'+esc(name)+'">':'<span class="nx-chat-product-placeholder">▣</span>';
         const link=current.context_product_slug?window.location.pathname+"?product="+encodeURIComponent(current.context_product_slug):"";
-        context.innerHTML='<div class="nx-chat-context-card">'+image+'<div><strong>'+esc(name)+'</strong><small>মূল প্রকাশ্য মূল্য: '+esc(price)+'</small>'+(link?'<a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">পণ্যের বিস্তারিত দেখুন ↗</a>':'')+'</div></div>';
+        context.innerHTML='<div class="nx-chat-context-card">'+image+'<div><strong>'+esc(name)+'</strong><small>চ্যাট শুরুর সময়কার প্রকাশ্য মূল্য: '+esc(price)+'</small>'+(link?'<a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">পণ্যের বিস্তারিত দেখুন ↗</a>':'')+'</div></div>';
         context.classList.remove("hidden");
       }else{context.innerHTML="";context.classList.add("hidden");}
     }
