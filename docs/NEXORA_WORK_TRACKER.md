@@ -55,7 +55,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## M2 — Marketplace
 - [ ] Buyer department completion: see `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`; universal product visibility, safe public columns, category-independent Inquiry/Order and Demand routing have been staged. The final inventory Order RPC's legacy Buyer-category gate has now been removed. Limited local visibility fixture/read-only catalog checks ran successfully: 7 PASS; no active Buyer/Seller fixture profiles, so account-level visibility comparisons SKIP. This does not test full Marketplace schema, RPCs, JWT/PostgREST or hosted RLS. Buyer quotation acceptance workflow remains unimplemented. Final privacy/Auth/RLS, wallet/payment, delivery integration and E2E remain pending.
-- [ ] Verify the final Auth trigger/profile constraints across the complete migration chain: Buyer has no market category, Seller has no account-level sale category, Buyer-only OAuth and Porter pending approval remain intact. Provider lookup uses raw_app_meta_data; hosted Auth trigger attachment and real signup remain untested. Do not deploy until migration history is reconciled.
+- [x] Review and harden the final staged Auth trigger source: Buyer/Seller legacy market metadata ignored; every OAuth provider except email/phone forced to Buyer; public role allowlist blocks Admin/Director; Porter remains pending; trigger function has empty search_path and no Data API EXECUTE. Frontend role/OAuth/status gates reviewed. [ ] Local B-01 regression SQL run; hosted Auth/JWT/RLS and browser E2E remain untested. Do not deploy until migration history is reconciled.
 - [x] Remove Buyer-category product visibility restrictions from database/RLS/RPC and order logic; verify that sale type remains per product.
 - [x] Final Seller listing edit/review RPCs use per-product `market_category` and mode-specific MOQ/price-tier validation; no account-level `seller_categories` authorization gate remains in the final effective definitions. The read-only verification script checks both RPC definitions.
 - [x] Remove account-level Buyer/Seller category assumptions: Buyer sees all approved listings; Seller chooses Wholesale or Retail per product.
@@ -107,3 +107,13 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Fixture is guarded against any database other than `nexora_test` and refuses to overwrite existing Marketplace objects. It inserts no sample records. The verification script is read-only and makes no data/schema changes.
 - Added `22_run_local_visibility_fixture_termux.sh`, a single Termux runner that downloads cleanup/fixture/verification SQL, checks that only the runner's own connection is open, verifies the local foundation and confirms Marketplace objects are absent before cleanup, then runs cleanup 19, fixture 21 and read-only verification 20 in order. It stops without cleanup if another DB session remains or preflight fails.
 - All work is on nexora-development. No migration applied, no hosted DB changed, and no local/browser tests run. The user must run the local fixture and verification script and share the outputs before any PASS can be recorded.
+
+
+## 2026-11-13 — B-01 Auth trigger hardening
+- Updated `20261114210000_porter_public_registration_and_review.sql`: all OAuth identity providers other than email/phone are forced to Buyer, regardless of editable user metadata. Email/phone role metadata is allowlisted to Buyer/Seller/Porter only.
+- Trigger always stores `buyer_category = NULL` and `seller_categories = '{}'`; legacy signup metadata is ignored. Buyer/Seller profile is active; Porter profile and review row start pending.
+- Revoked `PUBLIC`, `anon`, and `authenticated` EXECUTE on the SECURITY DEFINER Auth trigger function; empty search_path retained.
+- Aligned the local-only foundation fixture and smoke tests with universal Buyer visibility/per-product Seller sale type.
+- Added local-only patch + regression test: `supabase/recovery-not-for-deployment/local-setup/23_local_buyer_auth_trigger_alignment_tests.sql`. It patches only `nexora_test` fixture and rolls back test users. User has not run it yet; no local test PASS claimed.
+- Frontend source review confirms Buyer/Seller/Porter signup choices, Google/Facebook Buyer-only controls, and inactive/suspended account sign-out; pending Porter is shown as pending without dashboard access.
+- No migration was applied; no Live Supabase, Production or `main` changed.
