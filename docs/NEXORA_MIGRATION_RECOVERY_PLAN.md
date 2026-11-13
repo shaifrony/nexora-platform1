@@ -615,3 +615,33 @@ Do not mark Porter Admin approval as complete until `porter_account_reviews`, th
 ### 19.4 Limits and safety
 
 This is an object/catalog-level comparison, not recovery of historical SQL bodies or runtime proof. No user rows, chat messages, Auth identity records, or Storage object contents were read. No Live write, schema change, migration-history repair, or migration execution occurred. PostgreSQL parser, JWT/RLS behavior, concurrency and end-to-end delivery workflow tests remain unavailable without an isolated DB/runtime.
+
+
+## 20. Commerce Orders, Buyer Demand Inbox and price negotiation — Live comparison
+
+After verifying the current branch and migration ledger, a read-only catalog comparison was performed for the Commerce and Demand migrations.
+
+### 20.1 Live catalog observations
+
+| Branch migration / feature | Live observation | Classification |
+|---|---|---|
+| `20261114140000_commerce_orders_and_review_completion.sql` | `commerce_orders` and `commerce_order_events` relations are absent; their create/transition RPCs are absent. | Pending |
+| `20261114160000_demand_inbox_quotations_subcategories.sql` | `buyer_demand_inbox` is absent; no Live `products.subcategory` or `buyer_demands.subcategory` column was returned; no matching quotation extension columns or routing triggers were found. | Pending |
+| `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` | Commerce order foundation is absent; dependent quotation negotiation/order-conversion objects are not present in the inspected catalog. | Pending; depends on Commerce Orders and Demand Inbox foundation |
+| `20261115110000_product_price_negotiation.sql` | `product_price_negotiations` and `product_price_negotiation_events` relations are absent; start/respond RPCs are absent. | Pending |
+
+The existing Live `buyer_demands` and `seller_offers` base tables exist and have RLS enabled. This does not mean the newer inbox, subcategory, structured quotation or negotiation features are installed.
+
+### 20.2 Required-by date requirement
+
+The user-approved Buyer Demand form must include the date by which the Buyer needs the requested product. The new demand/quotation implementation must preserve this required-by date through demand creation, Seller matching, quotation and order conversion. The inspected catalog query did not establish a Live `required_by_date` column; treat this field as unverified/absent until its exact catalog definition is inspected.
+
+### 20.3 Dependency and safety notes
+
+- Commerce Orders is a prerequisite for negotiation acceptance that converts an agreed price into an order.
+- Demand Inbox and subcategory matching depend on the existing `buyer_demands`, `seller_offers`, `products`, active Seller and approved public-business foundation.
+- Product price negotiation depends on the Commerce Order schema and current stock/MOQ fields.
+- Do not execute these migrations while the shared `20261114180000` version collision remains unresolved.
+- The comparison checks relation/column/function/trigger presence only; it does not prove complete SQL semantic equivalence or runtime behavior.
+
+No user rows, messages, Auth identities or Storage contents were queried. No Live writes, migrations or migration-history repairs occurred. No PostgreSQL parser, disposable database, JWT/RLS or E2E tests were run.
