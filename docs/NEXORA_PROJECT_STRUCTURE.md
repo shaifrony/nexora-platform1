@@ -53,7 +53,7 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 - [x] Record single-domain architecture.
 - [x] Move the existing Admin console UI into a protected Administration Dashboard section.
 - [x] Add role-aware Dashboard navigation and post-login routing for Buyer/Seller/Admin.
-- [ ] Add approved Porter role routing; pending/rejected/suspended Porter accounts must never enter delivery workspace.
+- [x] Stage approved Porter role routing; pending/rejected/suspended Porter accounts are blocked from Porter and Transport Provider workspaces. Browser E2E remains pending.
 - [x] Require active Admin Staff + MFA for the Administration route.
 - [ ] Browser E2E: Buyer, Seller, approved/pending/rejected Porter, Director, MD and each department; include MFA and unauthorized deep links.
 - [ ] Verify Admin MFA enrollment/verification redirects into Administration Dashboard.
@@ -64,7 +64,7 @@ NEXORA uses one website, one homepage, one login system and one shared backend. 
 - [x] Define Director, MD and department positions in governance plan.
 - [x] Stage central officer invite endpoint and SQL permission model.
 - [ ] Reconcile complete ordered Supabase migration history.
-- [ ] Extend profile role constraints, signup trigger, account-status guard and transport-provider approval workflow for pending Porter registration.
+- [x] Stage profile role/category constraints, Auth signup trigger, pending account status, audited Admin/Transport review RPC and Porter Provider onboarding access. Apply only after migration-chain reconciliation and isolated testing.
 - [ ] Test on isolated database.
 - [ ] Test invite rollback, duplicate identities, privilege escalation, department scope, MFA bypass and revocation.
 
