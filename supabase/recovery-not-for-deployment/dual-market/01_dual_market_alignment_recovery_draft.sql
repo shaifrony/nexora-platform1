@@ -53,6 +53,10 @@ BEGIN
     RAISE EXCEPTION 'public.handle_new_user() is missing; no changes made';
   END IF;
 
+  IF to_regprocedure('private.create_product_inquiry(uuid,text)') IS NULL THEN
+    RAISE EXCEPTION 'private.create_product_inquiry(uuid,text) is missing; inspect the inquiry workflow before proceeding';
+  END IF;
+
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies
     WHERE schemaname='public' AND tablename='products'
@@ -205,6 +209,84 @@ USING (
     )
   )
 );
+
+
+-- The inquiry RPC is SECURITY DEFINER, so it must repeat the Buyer-category
+-- authorization check rather than relying on products SELECT RLS.
+CREATE OR REPLACE FUNCTION private.create_product_inquiry(
+  p_product_id uuid,
+  p_message text DEFAULT NULL
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path=''
+AS $function$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_buyer_category text;
+  v_product record;
+  v_conversation_id uuid;
+  v_title text;
+  v_message text := left(btrim(coalesce(p_message,'')),500);
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Login required' USING errcode='42501';
+  END IF;
+
+  SELECT p.buyer_category
+    INTO v_buyer_category
+  FROM public.profiles p
+  WHERE p.id=v_user_id
+    AND p.role='buyer'
+    AND p.account_status='active';
+
+  IF NOT FOUND OR v_buyer_category NOT IN ('wholesale','retail') THEN
+    RAISE EXCEPTION 'An active Buyer account with a valid market category is required'
+      USING errcode='42501';
+  END IF;
+
+  SELECT p.id,p.seller_id,p.product_code,p.product_name,p.market_category
+    INTO v_product
+  FROM public.products p
+  JOIN public.business_profiles b ON b.id=p.business_id
+  JOIN public.public_businesses pb ON pb.business_id=p.business_id
+  WHERE p.id=p_product_id
+    AND p.listing_status='approved'
+    AND b.approval_status='approved'
+    AND p.market_category=v_buyer_category;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Product is unavailable or does not match your Buyer category'
+      USING errcode='42501';
+  END IF;
+
+  IF v_product.seller_id=v_user_id THEN
+    RAISE EXCEPTION 'You cannot send an inquiry to your own product'
+      USING errcode='42501';
+  END IF;
+
+  v_title:=left(
+    'Product Inquiry • '||v_product.product_code||' • '||
+    v_product.product_name||
+    CASE WHEN v_message<>'' THEN ' • Buyer note: '||v_message ELSE '' END,
+    900
+  );
+
+  INSERT INTO public.conversations(conversation_type,created_by,title,status)
+  VALUES('direct',v_user_id,v_title,'active')
+  RETURNING id INTO v_conversation_id;
+
+  INSERT INTO public.conversation_participants(
+    conversation_id,user_id,invited_by,invitation_status,joined_at
+  )
+  VALUES
+    (v_conversation_id,v_user_id,v_user_id,'accepted',now()),
+    (v_conversation_id,v_product.seller_id,v_user_id,'pending',NULL);
+
+  RETURN v_conversation_id;
+END;
+$function$;
 
 -- Verify expected metadata and policy definitions before committing this draft.
 DO $verify$
