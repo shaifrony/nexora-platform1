@@ -22,12 +22,12 @@ Status: **Implementation review in progress — not complete**
 
 | ক্ষেত্র | বর্তমান অবস্থা | পর্যালোচনার ফল |
 |---|---|---|
-| Buyer signup | Frontend staged | Wholesale/Retail নির্বাচন ও metadata পাঠানোর কোড আছে |
+| Buyer signup | Frontend staged | Buyer category selector নেই; universal Buyer access; tests pending |
 | OAuth signup | Migration staged | Google/Facebook signup Buyer হিসেবে শুরু করার নিয়ম আছে; final trigger chain পরীক্ষা বাকি |
 | Buyer account activation | Partially verified | Buyer profile active করার migration logic আছে; hosted Auth flow পরীক্ষা বাকি |
 | Category switch | Frontend + migration staged | Buyer-only category update, দুই category allowlist ও column-level grant আছে |
 | Product discovery | Frontend staged | Approved products query; Buyer category অনুযায়ী client filter আছে |
-| Product visibility | Database migration staged | RLS-এ active Buyer-এর buyer_category ও products.market_category মিলতে হয় |
+| Product visibility | Database migration staged | সব active Buyer উভয় market_category-এর approved listing দেখতে পারবে |
 | Product details | Frontend staged | Product ID, Business Display Name, specification, price, MOQ/stock/tiers দেখায় |
 | Buyer Demand form | Frontend staged | Product, category, subcategory, description, specifications, quantity, optional budget, currency, destination এবং required date |
 | Public Demand Board | Migration + frontend staged | Open demands প্রকাশ; identity/contact fields view-তে নেই বলে migration-এ নির্ধারিত |
@@ -68,13 +68,12 @@ Status: **Implementation review in progress — not complete**
 - [x] Frontend category update payload থেকে অতিরিক্ত `updated_at` বাদ: migration শুধু `buyer_category` column UPDATE grant করে; DB trigger updated_at সেট করে।
 - [x] Buyer category পরিবর্তনের জন্য owner-only UPDATE RLS policy যোগ; আগের baseline fixture-এ profiles-এর UPDATE policy ছিল না, তাই শুধু column grant যথেষ্ট ছিল না।
 - [x] Frontend update response-এ updated row ফেরত চাওয়া ও যাচাই; RLS-এ row update না হলে আর সফলতার বার্তা দেখাবে না।
-- [x] Signup role বদলানোর সময় Buyer-এর নির্বাচিত Wholesale/Retail অপশন reset না হওয়ার সংশোধন।
+- [x] Signup থেকে Buyer Wholesale/Retail selector সরানো হয়েছে।
 - [x] Market-category migration-এ baseline `protect_profile_updates` trigger-এর Buyer category পরিবর্তন নিষিদ্ধ করার conflict সংশোধন; Buyer কেবল নিজের category বদলাতে পারবে, role/status/Seller entitlements/name protected থাকে।
 - [x] Auth trigger-এর provider lookup `new.raw_app_meta_data`-এ সংশোধন।
 - [ ] Product Inquiry-এর SECURITY DEFINER RPC-তেও Buyer category যাচাই হয়; recovery-only draft-এ guard যোগ করা হয়েছে, কিন্তু এখনো প্রয়োগ/পরীক্ষা হয়নি।
 - [x] Product Inquiry SECURITY DEFINER RPC-তে Buyer category match server-side enforce করার migration guard যোগ করা হয়েছে।
-- [ ] Wholesale Buyer Retail product ID/slug সরাসরি খুললেও RLS-এ product data পাওয়া যায় না।
-- [ ] Retail Buyer Wholesale product সরাসরি খুললেও একইভাবে block হয়।
+- [ ] Buyer, Seller ও Admin authenticated account থেকে Wholesale এবং Retail—উভয় ধরনের approved product দেখতে পারে যাচাই।
 - [ ] Anonymous visitor ও authenticated non-Buyer access rules স্পষ্ট করা।
 - [ ] Service listing Buyer access-এর জন্য পৃথক policy/ব্যবসায়িক নিয়ম নির্ধারণ; product market_category-র সঙ্গে অযথা মিশবে না।
 
@@ -85,7 +84,7 @@ Status: **Implementation review in progress — not complete**
 - [ ] Buyer Demand close/cancel করলে নতুন quotation বন্ধ হয় এবং public board থেকে বাদ যায়।
 - [ ] Buyer একাধিক Seller quotation তুলনা করে একটি quotation গ্রহণ করতে পারবে কি না—business rule ও secure acceptance/order conversion workflow নির্ধারণ ও বাস্তবায়ন।
 - [ ] Required date, subcategory এবং field constraints final schema-তে মেলে।
-- [ ] Buyer category অনুযায়ী Demand matching-এর আচরণ Wholesale ও Retail উভয় ক্ষেত্রেই যাচাই।
+- [ ] Buyer Demand matching product category/subcategory ও approved Seller business অনুযায়ী হয়; market_category নির্বিশেষে যাচাই।
 
 ### B-04 — Orders, stock ও pricing
 - [ ] Buyer-এর category মেলে না এমন product order server-side reject হয়।
