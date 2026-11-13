@@ -5,6 +5,10 @@ begin;
 alter table public.products
   add column if not exists market_category text not null default 'wholesale';
 
+-- Existing products are backfilled as Wholesale; every new listing must explicitly
+-- select its own sale type in the Product Listing form.
+alter table public.products alter column market_category drop default;
+
 alter table public.products
   drop constraint if exists products_market_category_check;
 alter table public.products
