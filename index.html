@@ -946,8 +946,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <div id="nxAdminPermissionActions" class="hidden"></div>
       <div id="nxAdminManagement" class="hidden">
         <section class="card" aria-label="NEXORA governance summary"><h4>পরিচালনা কাঠামো</h4><p><b>Director:</b> NEXORA-এর মূল কাঠামো, নীতিমালা ও অনুমতির সর্বোচ্চ দায়িত্বে।</p><p><b>Managing Director (MD):</b> দৈনন্দিন পরিচালনা ও বিভাগগুলোর সমন্বয় করবেন; মূল কাঠামো পরিবর্তন করতে পারবেন না।</p><p><b>Marketing:</b> Buyer, Seller, ব্যবসা ও অংশীদার সংগ্রহ এবং ব্যবসা বৃদ্ধি।</p><p><b>Transport &amp; Logistics:</b> Retail ও Wholesale ডেলিভারি, Provider/Partner সমন্বয়, Assignment ও Tracking।</p><p><b>Accounts &amp; Finance:</b> আয়-ব্যয়, হিসাব, ফি, পাওনা, Refund ও Settlement নিয়ন্ত্রণ।</p><p class="muted">Director-এর বিদ্যমান Super Admin ক্ষমতা এই কাঠামোর সর্বোচ্চ পদ হিসেবে ব্যবহৃত হচ্ছে। MD-এর স্বতন্ত্র পদ, বিভাগীয় প্রধানের পদ ও নতুন Permission এখনো Database-এ বাস্তবায়িত হয়নি; অনুমোদিত Migration ও পরীক্ষার আগে কাউকে MD ক্ষমতা দেওয়া হবে না।</p></section>
-        <h4>Director: বিভাগীয় কর্মকর্তা ব্যবস্থাপনা</h4>
-        <p class="muted">Director অনুমোদিত বিভাগে নিবন্ধিত অ্যাকাউন্টকে বিভাগীয় কর্মকর্তা হিসেবে নিয়োগ করবেন। প্রতিটি কর্মকর্তার অনুমতি আলাদাভাবে নির্ধারিত হবে; Deactivate করলে Admin access বন্ধ হবে। এই বিদ্যমান ব্যবস্থাটি এখনো MD-এর পৃথক পদ বা কাঠামো পরিবর্তনের অনুমতি তৈরি করে না।</p>
+        <h4>Permission &amp; Administration Account</h4>
+        <p class="muted">এখান থেকেই MD, Marketing, Transport &amp; Logistics, Accounts &amp; Finance এবং ভবিষ্যতে Director অনুমোদিত সব বিভাগের কর্মকর্তা নিয়োগ, Admin Account তৈরি/আমন্ত্রণ, পদ ও বিভাগ নির্ধারণ, Permission প্রদান/পরিবর্তন এবং Account সক্রিয়/নিষ্ক্রিয় করা হবে। MD-সহ কোনো কর্মকর্তাই Director-এর অনুমতি ছাড়া মূল কাঠামো পরিবর্তন করতে পারবেন না। বর্তমানে বিদ্যমান নিয়োগ ফর্মটি শুধু আগে থেকে নিবন্ধিত অ্যাকাউন্টকে বিভাগীয় Admin হিসেবে যুক্ত করে; নতুন কর্মকর্তা invite করে Admin Account তৈরি করার নিরাপদ Backend provisioning এখনো তৈরি হয়নি।</p>
         <form id="nxAssistantAdminForm" class="card">
           <label>নিবন্ধিত অ্যাকাউন্টের Email *</label>
           <input name="email" type="email" required placeholder="assistant@example.com">
@@ -957,7 +957,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
             <option value="update">বিভাগ / অনুমতি পরিবর্তন বা পুনরায় সক্রিয়</option>
             <option value="deactivate">বিভাগীয় কর্মকর্তা নিষ্ক্রিয়</option>
           </select>
-          <label>বিভাগ</label>
+          <label>বিভাগ (বর্তমানে বিদ্যমান বিভাগসমূহ)</label>
           <select id="nxAssistantDepartment" name="department"><option value="">বিভাগ নির্বাচন করুন</option></select>
           <label>অনুমতি নির্ধারণ</label>
           <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p></div>
