@@ -96,7 +96,7 @@ begin
       using errcode='42501';
   end if;
 
-  if p_action not in ('create','update','deactivate') then
+  if p_action is null or p_action not in ('create','update','deactivate') then
     raise exception 'অবৈধ action।' using errcode='22023';
   end if;
   if v_email !~* '^[A-Z0-9.!#$%&''*+/=?^_`{|}~-]+@[A-Z0-9.-]+\.[A-Z]{2,}$' then
@@ -154,7 +154,8 @@ begin
         raise exception 'এই পদ ও বিভাগের জন্য Permission বৈধ নয়: %',v_permission
           using errcode='22023';
       end if;
-      select is_sensitive into v_sensitive
+      select coalesce(v_sensitive,false) or coalesce(is_sensitive,false)
+        into v_sensitive
       from public.admin_permission_catalog
       where permission_key=v_permission;
       v_permissions := array_append(v_permissions,v_permission);
