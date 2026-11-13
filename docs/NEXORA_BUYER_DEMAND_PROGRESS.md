@@ -73,5 +73,5 @@ No database schema, migration, hosted Supabase project, production deployment or
 - Buyer quotation acceptance, counter-offer, negotiation chat linking and quotation-to-order conversion are not implemented.
 - Seller Inbox routing and Demand SELECT policies have been source-reviewed, not exercised under real JWT/PostgREST sessions.
 - The local database currently has only the limited product/business visibility fixture, not the full Demand/offer/inbox schema. No full local Demand workflow test has run.
-- Added read-only catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. It is guarded for `nexora_test`, makes no database changes and will SKIP if full Marketplace Demand schema is absent. It has not yet been run.
+- Added and ran read-only catalog audit: `supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql`. User output: `SKIP: full Marketplace Demand schema is not installed in this local database`; script completed with ROLLBACK and made no changes. This is neither PASS nor FAIL; the existing local fixture intentionally contains only business/product visibility objects.
 - No migration was applied; Live Supabase, Production and `main` remain untouched.
