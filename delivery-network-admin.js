@@ -198,10 +198,25 @@
       const tOpts=options(approvedPartners.filter(p=>p.partner_kind==="nexora_team"),p=>p.display_name);
       const sOpts=options(activeStaff,s=>s.full_name);
       const vOpts=options(availableVehicles,v=>v.vehicle_type+" · "+v.registration_number);
-      return '<article class="offer" data-network-job="'+esc(j.id)+'"><div class="section-head"><strong>'+esc(j.job_reference)+'</strong><span class="tag">'+esc(j.job_status)+'</span></div><p>'+esc(j.package_description)+' · '+esc(j.package_count)+' package(s) · '+esc(j.delivery_mode)+'</p><p class="muted">Pickup: '+esc(j.pickup_city)+', '+esc(j.pickup_country)+' → Delivery: '+esc(j.delivery_city)+', '+esc(j.delivery_country)+'</p><p class="muted">'+esc(j.pickup_address)+' → '+esc(j.delivery_address)+'</p>'+
+      return '<article class="offer" data-network-job="'+esc(j.id)+'" data-job-status="'+esc(j.job_status)+'"><div class="section-head"><strong>'+esc(j.job_reference)+'</strong><span class="tag">'+esc(j.job_status)+'</span></div><p>'+esc(j.package_description)+' · '+esc(j.package_count)+' package(s) · '+esc(j.delivery_mode)+'</p><p class="muted">Pickup: '+esc(j.pickup_city)+', '+esc(j.pickup_country)+' → Delivery: '+esc(j.delivery_city)+', '+esc(j.delivery_country)+'</p><p class="muted">'+esc(j.pickup_address)+' → '+esc(j.delivery_address)+'</p>'+
       (["requested","assigned"].includes(j.job_status)?'<div class="grid"><label>Assignment Source<select data-field="source"><option value="independent_provider">Independent Provider</option><option value="nexora_team">NEXORA Own Team</option><option value="courier_partner">Courier Partner</option></select></label><label>Independent Provider<select data-field="provider"><option value="">Select Provider</option>'+pOpts+'</select></label><label>Vehicle (optional)<select data-field="vehicle"><option value="">No vehicle / not required</option>'+vOpts+'</select></label><label>NEXORA Team<select data-field="team"><option value="">Select Team</option>'+tOpts+'</select></label><label>Team Staff (optional)<select data-field="staff"><option value="">Select Staff</option>'+sOpts+'</select></label><label>Courier Partner<select data-field="courier"><option value="">Select Courier</option>'+cOpts+'</select></label></div><label>Assignment reason<input data-field="reason" maxlength="1000" placeholder="নতুন assignment / পরিবর্তনের কারণ"></label><button type="button" class="primary" data-assign-job="'+esc(j.id)+'">Assign / Reassign</button>':'<p class="muted">বর্তমান Assignment: '+esc(j.assignment_source||"—")+'</p>')+'</article>';
     }).join(""):'<p class="muted">কোনো Delivery Request নেই।</p>';
     host.querySelectorAll("[data-assign-job]").forEach(btn=>btn.addEventListener("click",()=>assignJob(btn,approvedProviders,availableVehicles,approvedPartners,activeStaff)));
+    const transitions={assigned:["accepted","delivery_failed"],accepted:["picked_up","delivery_failed"],picked_up:["in_transit","partially_delivered","delivery_failed"],in_transit:["out_for_delivery","partially_delivered","delivery_failed"],out_for_delivery:["delivered","partially_delivered","delivery_failed"],partially_delivered:["in_transit","out_for_delivery","delivered","disputed"],delivered:["disputed"],delivery_failed:["returned"],disputed:["delivered","returned"]};
+    host.querySelectorAll("[data-network-job]").forEach(card=>{
+      const choices=transitions[card.dataset.jobStatus]||[];
+      if(!choices.length)return;
+      card.insertAdjacentHTML("beforeend",'<form class="nxNetworkTrackingForm card"><h5>Tracking Status Update</h5><label>নতুন Status<select name="next_status">'+choices.map(x=>'<option value="'+x+'">'+x+'</option>').join("")+'</select></label><label>বর্তমান অবস্থান<input name="location" maxlength="500"></label><label>Tracking Number (ঐচ্ছিক)<input name="tracking_code" maxlength="160"></label><label>নোট<textarea name="note" maxlength="1500"></textarea></label><button class="secondary" type="submit">Status Update সংরক্ষণ করুন</button></form>');
+      card.querySelector(".nxNetworkTrackingForm").addEventListener("submit",updateJobStatus);
+    });
+  }
+
+  async function updateJobStatus(event) {
+    event.preventDefault();if(!isAdmin())return message("Admin account প্রয়োজন।");
+    const form=event.currentTarget,card=form.closest("[data-network-job]"),f=new FormData(form),btn=form.querySelector("button[type=submit]");
+    btn.disabled=true;
+    try{const {error}=await db().rpc("update_delivery_network_job_status",{p_job_id:card.dataset.networkJob,p_next_status:f.get("next_status"),p_location_description:String(f.get("location")||"").trim()||null,p_note:String(f.get("note")||"").trim()||null,p_external_tracking_code:String(f.get("tracking_code")||"").trim()||null});if(error)throw error;message("Delivery Tracking Status সংরক্ষিত হয়েছে।",true);await loadJobs();}
+    catch(err){message("Status Update হয়নি: "+err.message);btn.disabled=false;}
   }
   async function assignJob(btn,providers,vehicles,partners,staff) {
     const card=btn.closest("[data-network-job]"),get=n=>card.querySelector('[data-field="'+n+'"]')?.value||null;
