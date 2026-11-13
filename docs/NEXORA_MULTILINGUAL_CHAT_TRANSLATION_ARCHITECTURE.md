@@ -127,3 +127,11 @@ Create a human-reviewed, consented test set with at least 100 short messages in 
 - The references are seed references, not ground truth. Two independent bilingual reviewers must validate them before scoring; disputed examples are excluded until resolved.
 - The corpus includes protected-token checks, raw-output retention, per-direction human scoring, optional chrF++/COMET, and a results table that explicitly remains blank until actual inference.
 - No private NEXORA chat content is used. No model was downloaded or run; no model winner/quality score is claimed. Production translation remains disabled.
+
+
+## 11. Exact checkpoint and local runner gate (2026-11-13)
+- Identified official distilled checkpoints: `ai4bharat/indictrans2-en-indic-dist-200M` (English→Bengali) and `ai4bharat/indictrans2-indic-en-dist-200M` (Bengali→English). Both upstream model cards display MIT license; both repositories are Hugging Face gated and require the operator to accept access conditions. The exact immutable model commit SHA must be recorded before inference.
+- Despite the `200M` checkpoint naming, the current Hugging Face file listing shows a model.safetensors artifact around 1.1 GB. Do not assume a 200 MB download or run on the user's Android phone.
+- Argos package index lists direct `bn→en` and `en→bn` packages at package 1.9 / Argos 1.9.0. The index metadata does not state the package artifact license; production/commercial rights remain unverified pending inspection of the exact downloaded artifacts and terms.
+- Added `scripts/translation_pilot/run_bn_en_pilot.py` and `docs/NEXORA_BN_EN_MODEL_RUNBOOK.md`. Runner reads the synthetic 24-pair corpus, pins IndicTrans2 to 40-character revisions, uses only local inference, and writes raw outputs + latency to CSV. It does not auto-score or declare a winner.
+- No model was downloaded or run in this environment; no quality score or model winner is claimed. The runner is source-prepared but not runtime-tested. Automatic translation remains disabled.
