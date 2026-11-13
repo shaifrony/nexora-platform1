@@ -949,19 +949,28 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <h4>Permission &amp; Administration Account</h4>
         <p class="muted">এখান থেকেই MD, Marketing, Transport &amp; Logistics, Accounts &amp; Finance এবং ভবিষ্যতে Director অনুমোদিত সব বিভাগের কর্মকর্তা নিয়োগ, Admin Account তৈরি/আমন্ত্রণ, পদ ও বিভাগ নির্ধারণ, Permission প্রদান/পরিবর্তন এবং Account সক্রিয়/নিষ্ক্রিয় করা হবে। MD-সহ কোনো কর্মকর্তাই Director-এর অনুমতি ছাড়া মূল কাঠামো পরিবর্তন করতে পারবেন না। বর্তমানে বিদ্যমান নিয়োগ ফর্মটি শুধু আগে থেকে নিবন্ধিত অ্যাকাউন্টকে বিভাগীয় Admin হিসেবে যুক্ত করে; নতুন কর্মকর্তা invite করে Admin Account তৈরি করার নিরাপদ Backend provisioning এখনো তৈরি হয়নি।</p>
         <form id="nxAssistantAdminForm" class="card">
-          <label>নিবন্ধিত অ্যাকাউন্টের Email *</label>
-          <input name="email" type="email" required placeholder="assistant@example.com">
+          <label>কর্মকর্তার পূর্ণ নাম *<input name="full_name" type="text" maxlength="150" required placeholder="কর্মকর্তার নাম"></label>
+          <label>কর্মকর্তার ইমেইল *</label>
+          <input name="email" type="email" required placeholder="officer@example.com">
           <label>কাজের ধরন *</label>
           <select name="action" required>
-            <option value="create">নতুন বিভাগীয় কর্মকর্তা নিয়োগ</option>
-            <option value="update">বিভাগ / অনুমতি পরিবর্তন বা পুনরায় সক্রিয়</option>
-            <option value="deactivate">বিভাগীয় কর্মকর্তা নিষ্ক্রিয়</option>
+            <option value="create">নতুন কর্মকর্তা নিয়োগ ও আমন্ত্রণ</option>
+            <option value="update">বিভাগ / পদ / অনুমতি পরিবর্তন</option>
+            <option value="deactivate">অ্যাকাউন্ট নিষ্ক্রিয় ও অনুমতি বাতিল</option>
           </select>
-          <label>বিভাগ (বর্তমানে বিদ্যমান বিভাগসমূহ)</label>
-          <select id="nxAssistantDepartment" name="department"><option value="">বিভাগ নির্বাচন করুন</option></select>
-          <label>অনুমতি নির্ধারণ</label>
-          <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p></div>
-          <div class="form-actions"><button class="primary" type="submit">Save Admin Settings</button></div>
+          <label>বিভাগ *</label>
+          <select id="nxAssistantDepartment" name="department" required><option value="">বিভাগ নির্বাচন করুন</option></select>
+          <label>পদ *</label>
+          <select id="nxAssistantPosition" name="position" required>
+            <option value="department_officer">বিভাগীয় কর্মকর্তা</option>
+            <option value="department_head">বিভাগীয় প্রধান</option>
+            <option value="managing_director">ব্যবস্থাপনা পরিচালক (MD)</option>
+          </select>
+          <label>অনুমতি নির্ধারণ *</label>
+          <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ ও পদ নির্বাচন করলে অনুমতিগুলো দেখা যাবে। MD-এর জন্য সব বিভাগের অনুমতি থেকে নির্বাচন করা যাবে।</p></div>
+          <label>কারণ / নিয়োগের নোট<textarea name="reason" rows="2" maxlength="1000" placeholder="নিয়োগ বা Permission পরিবর্তনের কারণ; পরিবর্তন/নিষ্ক্রিয়ের ক্ষেত্রে বাধ্যতামূলক"></textarea></label>
+          <div class="form-actions"><button class="primary" type="submit">নিয়োগ / Permission সংরক্ষণ</button></div>
+          <p class="muted">নতুন কর্মকর্তাকে ইমেইলে নিরাপদ আমন্ত্রণ পাঠানো হবে। পাসওয়ার্ড Director তৈরি বা দেখতে পারবেন না। কর্মকর্তাকে নিজের নিরাপদ লগইন ও MFA সেটআপ করতে হবে।</p>
         </form>
         <h4>নিরাপদ Test Account</h4>
         <p class="muted">শুধু পরীক্ষার জন্য। Reserved example.com ঠিকানা ব্যবহার করুন; এই অ্যাকাউন্টগুলো বাস্তব ইমেইল পাঠাবে না। Buyer ও Seller role পরীক্ষা করা যাবে। Transport Provider enrollment আলাদা প্রক্রিয়া হবে.</p>
