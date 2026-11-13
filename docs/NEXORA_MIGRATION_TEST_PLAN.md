@@ -38,7 +38,8 @@ The user has PostgreSQL 18.6 running in Termux on Android 16, with a local `nexo
 | Work item | Status |
 |---|---|
 | Local PostgreSQL runtime | PASS — PostgreSQL 18.6 in Termux; `nexora_test` created |\n| Supabase compatibility scaffold | PASS — user executed on Android; readiness checks all true |\n| Available extensions | `pgcrypto`, `uuid-ossp` available; `pgtap` not found in Termux package search |
-| pgTAP catalog/privilege suite | PREPARED — not executed; pgTAP unavailable locally |\n| Read-only local catalog audit | PREPARED — committed; awaiting execution on device |
+| pgTAP catalog/privilege suite | PREPARED — not executed; pgTAP unavailable locally |
+| Read-only local catalog audit | PREPARED — committed; awaiting execution on device |
 | Fixture-based RLS tests | NOT RUN |
 | AAL2/JWT context tests | NOT RUN |
 | Default-privilege object-creation test | NOT RUN |
