@@ -98,3 +98,19 @@ No trusted schema-only export or pre-change SQL backup is available. A new desig
 It is explicitly **not original, not recovered, and not deployable**. It documents the proposed identity/account lifecycle, Admin organization and permission model, Auth provisioning, Porter approval gates, privacy requirements, migration conflicts and open decisions. It is a design document only; it creates no database objects.
 
 In particular, review the wholesale-only vs current `retail` category conflict, the Porter vs Buyer/Seller transport-provider ownership conflict, and the public identity projection privacy risk before any local-only SQL fixture is authored. Do not execute active migrations or recovery drafts.
+
+
+## Foundation design conflict resolution (2026-11-13)
+
+The proposal now includes an authoritative resolution section based on the user's latest product decisions and the approved organization governance charter. See Section 7 of `05_foundation_design_proposal.md`.
+
+Resolved target decisions:
+- Public registration roles: Buyer, Seller, Porter only; Admin roles are internal.
+- Porter is a user account role; Transport Provider is a separate profile linked only to an approved active Porter.
+- Buyer/Seller marketplace is Wholesale-Only; no `retail` category.
+- Seller business/listing visibility requires Admin approval.
+- Porter account, Provider profile and each vehicle have separate approval gates.
+- Public identity is a narrow approved projection; Buyer identity/contact must remain hidden on public Buyer Demands.
+- Admin hierarchy: Director → MD → Department Heads → Department Officers, with explicit least-privilege permissions and separation of duties.
+
+The older `NEXORA_PORTER_ARCHITECTURE.md` now carries a superseded-design notice. Conflicting active migrations and frontend code have **not** been edited in this design-only step. Do not replay them unchanged.
