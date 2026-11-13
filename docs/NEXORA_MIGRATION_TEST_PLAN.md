@@ -76,3 +76,18 @@ A source-based dependency assessment is recorded in:
 Key blocker: the core marketplace migration depends on `public.profiles`, `public.is_nexora_admin()`, and `auth.uid()`; the follow-up RLS migration additionally references `role_requests`, `profile_change_requests`, and admin helpers. Communications/delivery migrations also depend on Supabase Realtime publication and platform-specific objects. The Android scaffold does not supply a full Supabase environment.
 
 **Decision:** do not replay all 36 migrations or execute recovery drafts. Next work is a separately labelled local-only baseline reconstruction after exact foundational definitions/dependencies are reviewed. Keep all local-only scripts under `supabase/recovery-not-for-deployment/local-setup/`. No Live Supabase changes were made.
+
+
+## Foundation schema source-gap review (2026-11-13)
+
+A repository-tree review found no current-branch migration that creates the original `profiles`, `role_requests`, `profile_change_requests`, or foundational Admin Staff/permission tables. The first available migrations already reference these objects. The later centralized officer migration only alters/seeds existing Admin tables; it is not their initial schema definition.
+
+The exact source gap and referenced columns/functions are recorded in:
+`supabase/recovery-not-for-deployment/local-setup/04_foundation_schema_source_gap.md`
+
+A guarded, read-only local check was added:
+`supabase/recovery-not-for-deployment/local-setup/03_foundation_prerequisite_audit.sql`
+
+No foundational CREATE TABLE script has been invented. Exact types, defaults, constraints, RLS policies, grants, Auth trigger behavior and helper-function bodies are security-critical and cannot be recovered from column references alone. Obtain a trusted schema-only export or pre-change SQL backup before claiming exact recovery. If none exists, a separately reviewed local-only fixture may be designed, explicitly labelled as a new reconstruction rather than original schema.
+
+No Live Supabase SQL was executed and no active migration or recovery draft was applied.
