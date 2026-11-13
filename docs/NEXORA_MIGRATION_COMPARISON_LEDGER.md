@@ -154,3 +154,12 @@ The recovery package README documents the exact source status and evidence for e
 **Do not treat the package as a runnable migration sequence.** It is outside `supabase/migrations/`, has not been statically certified or tested against an isolated database, and has not been executed. In particular, the default-privilege draft requires extra scope review.
 
 The prior statement “original SQL not recovered” remains true for all 11 exact historical files. One migration body has a related GitHub source with a timestamp mismatch; the other ten are new reconstructions.
+
+
+## 10. Draft audit result (2026-11-13)
+
+See [NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md](NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md) for the detailed 11-file review and inferred dependency map.
+
+The current live catalog supports the public product/business allowlists, wholesale price columns/constraints, AAL2 helper definition, cancelled status constraint and safe buyer-demand view represented in the drafts. The default-privilege draft was narrowed during audit to API-facing grants and preserves service_role defaults. These are catalog-consistency findings, not proof of original SQL.
+
+No PostgreSQL parser or isolated migration replay was available. No draft was executed, and none is approved for Live deployment.
