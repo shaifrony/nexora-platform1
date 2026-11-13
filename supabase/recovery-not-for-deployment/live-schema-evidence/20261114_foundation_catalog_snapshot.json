@@ -7889,5 +7889,229 @@
         "object_type": "r"
       }
     ]
-  }
+  },
+  "complete_public_private_function_definitions": [
+    {
+      "args": "p_user_id uuid, p_action text, p_reason text",
+      "name": "admin_manage_user",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.admin_manage_user(p_user_id uuid, p_action text, p_reason text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_target public.profiles%rowtype; v_actor_code text; v_perm text;\nbegin\n if auth.uid() is null then raise exception 'Authentication required' using errcode='42501'; end if;\n if p_user_id=auth.uid() then raise exception 'নিজের অ্যাকাউন্ট পরিবর্তন করা যাবে না।'; end if;\n if p_action not in ('suspend','cancel','restore') then raise exception 'Invalid action'; end if;\n v_perm := case p_action when 'suspend' then 'users.suspend' when 'cancel' then 'users.cancel' else 'users.restore' end;\n if not private.has_nexora_permission(v_perm) then raise exception 'এই কাজের অনুমতি নেই।' using errcode='42501'; end if;\n select * into v_target from public.profiles where id=p_user_id for update;\n if not found then raise exception 'ব্যবহারকারী পাওয়া যায়নি।'; end if;\n if v_target.role='admin' then raise exception 'Admin অ্যাকাউন্ট এই পদ্ধতিতে পরিবর্তন করা যাবে না।'; end if;\n if p_action='suspend' and v_target.account_status<>'active' then raise exception 'শুধু সক্রিয় অ্যাকাউন্ট স্থগিত করা যাবে।'; end if;\n if p_action='cancel' and v_target.account_status='cancelled' then raise exception 'অ্যাকাউন্ট আগে থেকেই বাতিল।'; end if;\n if p_action='restore' and v_target.account_status<>'suspended' then raise exception 'শুধু স্থগিত অ্যাকাউন্ট পুনরায় চালু করা যাবে।'; end if;\n update public.profiles set account_status=case p_action when 'suspend' then 'suspended' when 'cancel' then 'cancelled' else 'active' end,updated_at=now() where id=p_user_id;\n select admin_code into v_actor_code from public.admin_staff where user_id=auth.uid() and is_active=true;\n insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details)\n values(auth.uid(),v_actor_code,'users.'||p_action,'profile',p_user_id::text,left(nullif(trim(p_reason),''),500),jsonb_build_object('previous_status',v_target.account_status,'new_status',case p_action when 'suspend' then 'suspended' when 'cancel' then 'cancelled' else 'active' end));\nend $function$\n"
+    },
+    {
+      "args": "p_business_id uuid, p_action text, p_note text",
+      "name": "admin_moderate_business",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.admin_moderate_business(p_business_id uuid, p_action text, p_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_row public.business_profiles%rowtype; v_actor_code text;\nbegin\n if auth.uid() is null then raise exception 'Authentication required' using errcode='42501'; end if;\n if p_action not in ('approve','reject','suspend','restore') then raise exception 'Invalid action'; end if;\n if p_action in ('approve','reject') then\n   if not private.is_nexora_super_admin() then raise exception 'শুধু Super Admin ব্যবসা অনুমোদন বা প্রত্যাখ্যান করতে পারবেন।' using errcode='42501'; end if;\n elsif not private.has_nexora_permission('businesses.suspend') then\n   raise exception 'এই কাজের অনুমতি নেই।' using errcode='42501';\n end if;\n select * into v_row from public.business_profiles where id=p_business_id for update;\n if not found then raise exception 'ব্যবসা পাওয়া যায়নি।'; end if;\n if p_action in ('approve','reject') and v_row.approval_status<>'pending' then raise exception 'শুধু Pending ব্যবসা পর্যালোচনা করা যাবে।'; end if;\n if p_action='suspend' and v_row.approval_status<>'approved' then raise exception 'শুধু Approved ব্যবসা স্থগিত করা যাবে।'; end if;\n if p_action='restore' and v_row.approval_status<>'suspended' then raise exception 'শুধু Suspended ব্যবসা পুনরায় চালু করা যাবে।'; end if;\n update public.business_profiles set approval_status=case p_action when 'approve' then 'approved' when 'reject' then 'rejected' when 'suspend' then 'suspended' else 'approved' end,admin_note=left(nullif(trim(p_note),''),500),reviewed_by=auth.uid(),reviewed_at=now(),updated_at=now() where id=p_business_id;\n select admin_code into v_actor_code from public.admin_staff where user_id=auth.uid() and is_active=true;\n insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details)\n values(auth.uid(),v_actor_code,'businesses.'||p_action,'business',p_business_id::text,left(nullif(trim(p_note),''),500),jsonb_build_object('display_name',v_row.display_name,'previous_status',v_row.approval_status));\nend $function$\n"
+    },
+    {
+      "args": "p_product_id uuid, p_action text, p_note text",
+      "name": "admin_moderate_product",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.admin_moderate_product(p_product_id uuid, p_action text, p_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_row public.products%rowtype; v_actor_code text; v_required text;\nbegin\n if auth.uid() is null then raise exception 'Authentication required' using errcode='42501'; end if;\n if p_action not in ('approve','reject','suspend','restore') then raise exception 'Invalid action'; end if;\n v_required := case p_action when 'suspend' then 'products.suspend' when 'restore' then 'products.restore' else null end;\n if v_required is null then\n   if not private.is_nexora_super_admin() then raise exception 'শুধু Super Admin অনুমোদন বা প্রত্যাখ্যান করতে পারবেন।' using errcode='42501'; end if;\n elsif not private.has_nexora_permission(v_required) then\n   raise exception 'এই কাজের অনুমতি নেই।' using errcode='42501';\n end if;\n select * into v_row from public.products where id=p_product_id for update;\n if not found then raise exception 'পণ্য পাওয়া যায়নি।'; end if;\n if p_action in ('approve','reject') and v_row.listing_status<>'pending' then raise exception 'শুধু Pending পণ্য পর্যালোচনা করা যাবে।'; end if;\n if p_action='suspend' and v_row.listing_status<>'approved' then raise exception 'শুধু Approved পণ্য স্থগিত করা যাবে।'; end if;\n if p_action='restore' and v_row.listing_status<>'suspended' then raise exception 'শুধু Suspended পণ্য পুনরায় চালু করা যাবে।'; end if;\n update public.products set listing_status=case p_action when 'approve' then 'approved' when 'reject' then 'rejected' when 'suspend' then 'suspended' else 'approved' end,admin_note=left(nullif(trim(p_note),''),500),reviewed_by=auth.uid(),reviewed_at=now(),updated_at=now() where id=p_product_id;\n select admin_code into v_actor_code from public.admin_staff where user_id=auth.uid() and is_active=true;\n insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details)\n values(auth.uid(),v_actor_code,'products.'||p_action,'product',p_product_id::text,left(nullif(trim(p_note),''),500),jsonb_build_object('product_code',v_row.product_code,'previous_status',v_row.listing_status));\nend $function$\n"
+    },
+    {
+      "args": "p_product_id uuid, p_message text",
+      "name": "create_product_inquiry",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.create_product_inquiry(p_product_id uuid, p_message text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n  v_user_id uuid := auth.uid();\n  v_product record;\n  v_conversation_id uuid;\n  v_title text;\n  v_message text := left(btrim(coalesce(p_message, '')), 500);\nbegin\n  if v_user_id is null then\n    raise exception 'লগইন করে Buyer হিসেবে Inquiry পাঠান।';\n  end if;\n\n  if not exists (\n    select 1 from public.profiles p\n    where p.id = v_user_id and p.role = 'buyer' and p.account_status = 'active'\n  ) then\n    raise exception 'শুধু সক্রিয় Buyer অ্যাকাউন্ট Inquiry পাঠাতে পারবে।';\n  end if;\n\n  select p.id, p.seller_id, p.product_code, p.product_name\n  into v_product\n  from public.products p\n  join public.business_profiles b on b.id = p.business_id\n  where p.id = p_product_id\n    and p.listing_status = 'approved'\n    and b.approval_status = 'approved';\n\n  if not found then\n    raise exception 'পণ্যটি পাওয়া যায়নি অথবা বর্তমানে অনুমোদিত নয়।';\n  end if;\n\n  if v_product.seller_id = v_user_id then\n    raise exception 'নিজের পণ্যে Inquiry পাঠানো যাবে না।';\n  end if;\n\n  v_title := left(\n    'Product Inquiry • ' || v_product.product_code || ' • ' ||\n    v_product.product_name ||\n    case when v_message <> '' then ' • Buyer note: ' || v_message else '' end,\n    900\n  );\n\n  insert into public.conversations (conversation_type, created_by, title, status)\n  values ('direct', v_user_id, v_title, 'active')\n  returning id into v_conversation_id;\n\n  insert into public.conversation_participants\n    (conversation_id, user_id, invited_by, invitation_status, joined_at)\n  values\n    (v_conversation_id, v_user_id, v_user_id, 'accepted', now()),\n    (v_conversation_id, v_product.seller_id, v_user_id, 'pending', null);\n\n  return v_conversation_id;\nend;\n$function$\n"
+    },
+    {
+      "args": "p_permission_key text",
+      "name": "has_nexora_permission",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.has_nexora_permission(p_permission_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and (\n      private.is_nexora_super_admin()\n      or exists (\n        select 1 from public.admin_staff s\n        join public.profiles p on p.id=s.user_id\n        join public.admin_permission_grants g on g.admin_user_id=s.user_id\n        where s.user_id=(select auth.uid())\n          and s.admin_level='assistant_admin' and s.is_active=true\n          and p.role='admin' and p.account_status='active'\n          and g.permission_key=p_permission_key and g.is_allowed=true\n      )\n    );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_active_nexora_user",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_active_nexora_user()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$ select exists(select 1 from public.profiles p where p.id=auth.uid() and p.account_status='active') $function$\n"
+    },
+    {
+      "args": "p_conversation_id uuid",
+      "name": "is_conversation_creator",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_conversation_creator(p_conversation_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select exists(\n  select 1 from public.conversations c\n  where c.id=p_conversation_id and c.created_by=(select auth.uid())\n );\n$function$\n"
+    },
+    {
+      "args": "p_conversation_id uuid",
+      "name": "is_conversation_invited",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_conversation_invited(p_conversation_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select exists(select 1 from public.conversation_participants cp\n where cp.conversation_id=p_conversation_id and cp.user_id=(select auth.uid()));\n$function$\n"
+    },
+    {
+      "args": "p_conversation_id uuid",
+      "name": "is_conversation_member",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_conversation_member(p_conversation_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select exists(\n  select 1 from public.conversation_participants cp\n  where cp.conversation_id=p_conversation_id\n    and cp.user_id=(select auth.uid())\n    and cp.invitation_status='accepted'\n );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_active_admin_staff",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_nexora_active_admin_staff()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and exists (\n      select 1\n      from public.admin_staff s\n      join public.profiles p on p.id = s.user_id\n      where s.user_id = (select auth.uid())\n        and s.is_active = true\n        and p.role = 'admin'\n        and p.account_status = 'active'\n    );\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_super_admin",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_nexora_super_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select (select auth.jwt()->>'aal') = 'aal2'\n    and exists (\n      select 1 from public.admin_staff s\n      join public.profiles p on p.id=s.user_id\n      where s.user_id=(select auth.uid())\n        and s.admin_level='super_admin' and s.is_active=true\n        and p.role='admin' and p.account_status='active'\n    );\n$function$\n"
+    },
+    {
+      "args": "p_business_id uuid",
+      "name": "is_public_business",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.is_public_business(p_business_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.public_businesses b\n    WHERE b.business_id = p_business_id\n  );\n$function$\n"
+    },
+    {
+      "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+      "name": "manage_marketplace_listing",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.manage_marketplace_listing(p_target_type text, p_target_id uuid, p_action text, p_reason text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n  v_actor uuid:=auth.uid(); v_actor_code text; v_permission text;\n  v_old_status text; v_new_status text; v_owner uuid; v_name text;\nbegin\n  if v_actor is null then raise exception 'লগইন প্রয়োজন।' using errcode='42501'; end if;\n  if p_target_type not in ('product','business') or p_action not in ('suspend','restore','cancel') then\n    raise exception 'Target বা action সঠিক নয়।';\n  end if;\n  if p_reason is null or length(trim(p_reason))<5 or length(trim(p_reason))>1000 then\n    raise exception 'কারণ কমপক্ষে ৫ এবং সর্বোচ্চ ১০০০ অক্ষরের হতে হবে।';\n  end if;\n  if p_target_type='product' then\n    v_permission:=case p_action when 'suspend' then 'products.suspend' when 'restore' then 'products.restore' else 'products.cancel' end;\n  else\n    if p_action<>'suspend' then raise exception 'Business restore/cancel এখনো অনুমোদিত workflow-তে নেই।'; end if;\n    v_permission:='businesses.suspend';\n  end if;\n  if not private.has_nexora_permission(v_permission) then\n    raise exception 'এই কাজের অনুমতি আপনার নেই: %',v_permission using errcode='42501';\n  end if;\n  select admin_code into v_actor_code from public.admin_staff where user_id=v_actor and is_active=true;\n  if v_actor_code is null then raise exception 'সক্রিয় Admin record পাওয়া যায়নি।' using errcode='42501'; end if;\n\n  if p_target_type='product' then\n    select listing_status,seller_id,product_name into v_old_status,v_owner,v_name\n      from public.products where id=p_target_id for update;\n    if not found then raise exception 'পণ্য পাওয়া যায়নি।'; end if;\n    if p_action='suspend' and v_old_status not in ('approved','pending') then raise exception 'এই অবস্থায় পণ্য স্থগিত করা যাবে না।'; end if;\n    if p_action='restore' and v_old_status<>'suspended' then raise exception 'শুধু স্থগিত পণ্য পুনরায় চালু করা যাবে।'; end if;\n    if p_action='cancel' and v_old_status in ('cancelled','rejected') then raise exception 'পণ্যটি ইতিমধ্যে বাতিল/প্রত্যাখ্যাত।'; end if;\n    v_new_status:=case p_action when 'suspend' then 'suspended' when 'restore' then 'approved' else 'cancelled' end;\n    update public.products set listing_status=v_new_status,admin_note=trim(p_reason),\n      reviewed_by=v_actor,reviewed_at=now(),updated_at=now() where id=p_target_id;\n  else\n    select approval_status,seller_id,display_name into v_old_status,v_owner,v_name\n      from public.business_profiles where id=p_target_id for update;\n    if not found then raise exception 'Business Profile পাওয়া যায়নি।'; end if;\n    if v_old_status not in ('approved','pending') then raise exception 'এই অবস্থায় Business স্থগিত করা যাবে না।'; end if;\n    v_new_status:='suspended';\n    update public.business_profiles set approval_status=v_new_status,admin_note=trim(p_reason),\n      reviewed_by=v_actor,reviewed_at=now(),updated_at=now() where id=p_target_id;\n  end if;\n  insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details)\n  values(v_actor,v_actor_code,'marketplace.'||p_target_type||'.'||p_action,p_target_type,p_target_id::text,\n    trim(p_reason),jsonb_build_object('name',v_name,'owner_id',v_owner,'old_status',v_old_status,'new_status',v_new_status,'permission',v_permission));\n  return jsonb_build_object('success',true,'target_type',p_target_type,'new_status',v_new_status);\nend;\n$function$\n"
+    },
+    {
+      "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+      "name": "manage_nexora_assistant_admin",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.manage_nexora_assistant_admin(p_email text, p_action text, p_department_key text DEFAULT NULL::text, p_permissions jsonb DEFAULT '[]'::jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n  v_actor uuid := auth.uid();\n  v_actor_code text;\n  v_target uuid;\n  v_staff public.admin_staff%rowtype;\n  v_code text;\n  v_permission text;\n  v_permissions text[] := array[]::text[];\n  v_details jsonb;\nbegin\n  if v_actor is null or not private.is_nexora_super_admin() then\n    raise exception 'শুধু সক্রিয় Super Admin এই কাজ করতে পারবেন।' using errcode='42501';\n  end if;\n  if p_action not in ('create','update','deactivate') then raise exception 'অবৈধ action।'; end if;\n\n  select admin_code into v_actor_code from public.admin_staff\n  where user_id=v_actor and admin_level='super_admin' and is_active=true;\n\n  select id into v_target from auth.users where lower(email)=lower(trim(p_email)) limit 1;\n  if v_target is null then raise exception 'এই ইমেইলে কোনো নিবন্ধিত অ্যাকাউন্ট পাওয়া যায়নি।'; end if;\n  if v_target=v_actor then raise exception 'নিজের Super Admin অ্যাকাউন্ট পরিবর্তন করা যাবে না।'; end if;\n\n  if p_action in ('create','update') then\n    if p_department_key is null or not exists (\n      select 1 from public.admin_departments where department_key=p_department_key and is_assignable=true\n    ) then raise exception 'সঠিক বিভাগ নির্বাচন করুন।'; end if;\n    if jsonb_typeof(coalesce(p_permissions,'[]'::jsonb)) <> 'array' then raise exception 'অনুমতির তালিকা array হতে হবে।'; end if;\n    for v_permission in select jsonb_array_elements_text(coalesce(p_permissions,'[]'::jsonb)) loop\n      if not exists (select 1 from public.admin_permission_catalog c\n        where c.permission_key=v_permission and c.department_key=p_department_key) then\n        raise exception 'এই বিভাগের জন্য অনুমতি বৈধ নয়: %', v_permission;\n      end if;\n      v_permissions := array_append(v_permissions,v_permission);\n    end loop;\n  end if;\n\n  select * into v_staff from public.admin_staff where user_id=v_target for update;\n\n  if p_action='create' then\n    if found then raise exception 'এই ব্যবহারকারীর Admin record আগে থেকেই আছে। Update ব্যবহার করুন।'; end if;\n    if not exists (select 1 from public.profiles where id=v_target and role='buyer' and account_status='active') then\n      raise exception 'শুধু সক্রিয় Buyer অ্যাকাউন্টকে Assistant Admin করা যাবে। আগে আলাদা Buyer অ্যাকাউন্ট তৈরি করুন।';\n    end if;\n    perform pg_advisory_xact_lock(hashtext('nexora-assistant-admin-code'));\n    select 'NEX-AA-' || lpad((coalesce(max(substring(admin_code from '[0-9]+$')::bigint),0)+1)::text,4,'0')\n      into v_code from public.admin_staff where admin_code like 'NEX-AA-%';\n    update public.profiles set role='admin',updated_at=now() where id=v_target;\n    insert into public.admin_staff(user_id,admin_code,admin_level,department_key,is_active,created_by)\n      values(v_target,v_code,'assistant_admin',p_department_key,true,v_actor);\n    insert into public.admin_permission_grants(admin_user_id,permission_key,is_allowed,granted_by)\n      select v_target, unnest(v_permissions), true, v_actor;\n    v_details := jsonb_build_object('email',lower(trim(p_email)),'admin_code',v_code,\n      'department_key',p_department_key,'permissions',to_jsonb(v_permissions));\n  elsif p_action='update' then\n    if not found or v_staff.admin_level <> 'assistant_admin' then raise exception 'এই ব্যবহারকারী Assistant Admin নন।'; end if;\n    update public.admin_staff set department_key=p_department_key,is_active=true,updated_at=now() where user_id=v_target;\n    delete from public.admin_permission_grants where admin_user_id=v_target;\n    insert into public.admin_permission_grants(admin_user_id,permission_key,is_allowed,granted_by)\n      select v_target, unnest(v_permissions), true, v_actor;\n    v_code := v_staff.admin_code;\n    v_details := jsonb_build_object('email',lower(trim(p_email)),'admin_code',v_code,\n      'department_key',p_department_key,'permissions',to_jsonb(v_permissions),'reactivated',true);\n  else\n    if not found or v_staff.admin_level <> 'assistant_admin' then raise exception 'এই ব্যবহারকারী Assistant Admin নন।'; end if;\n    update public.admin_staff set is_active=false,updated_at=now() where user_id=v_target;\n    v_code := v_staff.admin_code;\n    v_details := jsonb_build_object('email',lower(trim(p_email)),'admin_code',v_code,'is_active',false);\n  end if;\n\n  insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details)\n  values(v_actor,v_actor_code,'assistant_admin.'||p_action,'admin_staff',v_target::text,\n    'Super Admin dashboard action',v_details);\n  return jsonb_build_object('success',true,'admin_code',v_code,'action',p_action);\nend;\n$function$\n"
+    },
+    {
+      "args": "p_user_id uuid, p_action text, p_reason text",
+      "name": "manage_nexora_user",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.manage_nexora_user(p_user_id uuid, p_action text, p_reason text)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$ declare v_actor uuid := auth.uid(); v_target public.profiles%rowtype; v_permission text; v_staff_code text; begin if v_actor is null then raise exception 'Authentication required'; end if; if p_user_id is null or p_action not in ('suspend','restore','cancel') then raise exception 'Invalid target or action'; end if; if p_reason is null or length(btrim(p_reason)) < 5 then raise exception 'A reason of at least 5 characters is required'; end if; v_permission := 'users.' || p_action; if not private.has_nexora_permission(v_permission) then raise exception 'Permission denied: %', v_permission; end if; select * into v_target from public.profiles where id=p_user_id for update; if not found then raise exception 'User not found'; end if; if v_target.id=v_actor or v_target.role='admin' then raise exception 'You cannot manage your own account or an Admin account'; end if; if v_target.role not in ('buyer','seller','porter') then raise exception 'This account role cannot be managed here'; end if; if p_action='suspend' then if v_target.account_status<>'active' then raise exception 'Only active accounts can be suspended'; end if; update public.profiles set account_status='suspended',updated_at=now() where id=p_user_id; elsif p_action='restore' then if v_target.account_status<>'suspended' then raise exception 'Only suspended accounts can be restored'; end if; update public.profiles set account_status='active',updated_at=now() where id=p_user_id; else if v_target.account_status<>'active' then raise exception 'Only active accounts can be cancelled'; end if; update public.profiles set account_status='cancelled',updated_at=now() where id=p_user_id; end if; select admin_code into v_staff_code from public.admin_staff where user_id=v_actor and is_active=true; insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details) values(v_actor,v_staff_code,'users.'||p_action,'profile',p_user_id,btrim(p_reason),jsonb_build_object('previous_status',v_target.account_status,'new_status',case when p_action='suspend' then 'suspended' when p_action='restore' then 'active' else 'cancelled' end)); return jsonb_build_object('success',true,'user_id',p_user_id,'action',p_action); end; $function$\n"
+    },
+    {
+      "args": "",
+      "name": "protect_profile_role_and_status",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.protect_profile_role_and_status()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$ begin if auth.uid() is not null and auth.uid()=old.id and (new.role is distinct from old.role or new.account_status is distinct from old.account_status) then raise exception 'Role and account status are protected fields'; end if; return new; end; $function$\n"
+    },
+    {
+      "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+      "name": "review_profile_change_request",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.review_profile_change_request(p_request_id uuid, p_approve boolean, p_admin_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_request public.profile_change_requests%rowtype;\nbegin\n  if not private.is_nexora_super_admin() then raise exception 'Only Super Admin can review profile requests' using errcode='42501'; end if;\n  if p_approve is null then raise exception 'Approval decision is required'; end if;\n  select * into v_request from public.profile_change_requests where id=p_request_id for update;\n  if not found then raise exception 'Profile change request not found'; end if;\n  if v_request.status <> 'pending' then raise exception 'This request has already been reviewed'; end if;\n  if v_request.requested_full_name is null or length(trim(v_request.requested_full_name)) not between 1 and 150 then\n    raise exception 'Invalid requested name';\n  end if;\n  if p_approve then\n    update public.profiles set full_name=trim(v_request.requested_full_name),updated_at=now() where id=v_request.user_id;\n    if not found then raise exception 'Profile not found'; end if;\n    update public.profile_change_requests set status='approved',admin_note=nullif(trim(p_admin_note),''),reviewed_by=auth.uid(),reviewed_at=now() where id=p_request_id;\n  else\n    update public.profile_change_requests set status='rejected',admin_note=nullif(trim(p_admin_note),''),reviewed_by=auth.uid(),reviewed_at=now() where id=p_request_id;\n  end if;\nend;\n$function$\n"
+    },
+    {
+      "args": "request_id uuid, decision text",
+      "name": "review_role_request",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.review_role_request(request_id uuid, decision text)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare target_request public.role_requests%rowtype;\nbegin\n  if not private.is_nexora_super_admin() then raise exception 'Only Super Admin can review requests' using errcode='42501'; end if;\n  if decision not in ('approved','rejected') then raise exception 'Invalid decision'; end if;\n  select * into target_request from public.role_requests where id=request_id and status='pending' for update;\n  if not found then raise exception 'Pending request not found'; end if;\n  update public.role_requests set status=decision where id=request_id;\n  if decision='approved' then\n    update public.profiles set role=target_request.requested_role,account_status='active',updated_at=now()\n    where id=target_request.user_id;\n  end if;\nend;\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "touch_conversation_on_message",
+      "schema": "private",
+      "definition": "CREATE OR REPLACE FUNCTION private.touch_conversation_on_message()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n update public.conversations set updated_at=now() where id=new.conversation_id;\n return new;\nend;\n$function$\n"
+    },
+    {
+      "args": "p_user_id uuid, p_action text, p_reason text",
+      "name": "admin_manage_user",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_manage_user(p_user_id uuid, p_action text, p_reason text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.admin_manage_user(p_user_id,p_action,p_reason); $function$\n"
+    },
+    {
+      "args": "p_business_id uuid, p_action text, p_note text",
+      "name": "admin_moderate_business",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_moderate_business(p_business_id uuid, p_action text, p_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.admin_moderate_business(p_business_id,p_action,p_note); $function$\n"
+    },
+    {
+      "args": "p_product_id uuid, p_action text, p_note text",
+      "name": "admin_moderate_product",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.admin_moderate_product(p_product_id uuid, p_action text, p_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.admin_moderate_product(p_product_id,p_action,p_note); $function$\n"
+    },
+    {
+      "args": "p_product_id uuid, p_message text",
+      "name": "create_product_inquiry",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.create_product_inquiry(p_product_id uuid, p_message text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE sql\n SET search_path TO ''\nAS $function$\n  select private.create_product_inquiry(p_product_id, p_message);\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "guard_profile_updates",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_profile_updates()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n    -- Trusted service-role backend\n    IF auth.role() = 'service_role' THEN\n        RETURN NEW;\n    END IF;\n\n    -- Admin can update profiles\n    IF public.is_nexora_admin() THEN\n        RETURN NEW;\n    END IF;\n\n    -- Users can only update their own profile\n    IF auth.uid() IS NULL OR auth.uid() <> OLD.id THEN\n        RAISE EXCEPTION 'You cannot modify another user profile';\n    END IF;\n\n    -- Seller and Porter require Admin approval\n    IF OLD.role IS DISTINCT FROM 'buyer' THEN\n        RAISE EXCEPTION 'Profile changes require admin approval';\n    END IF;\n\n    -- Buyer can change only full_name\n    IF (to_jsonb(NEW) - 'full_name' - 'updated_at')\n       IS DISTINCT FROM\n       (to_jsonb(OLD) - 'full_name' - 'updated_at') THEN\n        RAISE EXCEPTION 'You cannot modify protected profile fields';\n    END IF;\n\n    IF NEW.full_name IS NULL\n       OR length(trim(NEW.full_name)) NOT BETWEEN 1 AND 150 THEN\n        RAISE EXCEPTION 'Invalid full name';\n    END IF;\n\n    NEW.updated_at := now();\n\n    RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "handle_new_user",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.handle_new_user()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nDECLARE\n    v_role text;\n    v_full_name text;\n    v_account_status text;\n    v_provider text;\nBEGIN\n    v_provider := lower(coalesce(NEW.app_metadata ->> 'provider', ''));\n\n    -- Social OAuth accounts always start as Buyer; never trust profile metadata for their role.\n    IF v_provider IN ('google', 'facebook') THEN\n        v_role := 'buyer';\n    ELSE\n        v_role := lower(trim(coalesce(NEW.raw_user_meta_data ->> 'role', 'buyer')));\n        IF v_role = '' THEN\n            v_role := 'buyer';\n        END IF;\n    END IF;\n\n    IF v_role NOT IN ('buyer', 'seller', 'porter') THEN\n        RAISE EXCEPTION 'Invalid registration role';\n    END IF;\n\n    v_full_name := nullif(trim(coalesce(\n        NEW.raw_user_meta_data ->> 'full_name',\n        NEW.raw_user_meta_data ->> 'name'\n    )), '');\n\n    IF v_full_name IS NOT NULL AND length(v_full_name) > 150 THEN\n        RAISE EXCEPTION 'Full name is too long';\n    END IF;\n\n    IF v_role = 'porter' THEN\n        v_account_status := 'pending';\n    ELSE\n        v_account_status := 'active';\n    END IF;\n\n    INSERT INTO public.profiles (id, full_name, role, account_status)\n    VALUES (NEW.id, v_full_name, v_role, v_account_status)\n    ON CONFLICT (id) DO NOTHING;\n\n    RETURN NEW;\nEND;\n$function$\n"
+    },
+    {
+      "args": "p_permission_key text",
+      "name": "has_nexora_permission",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.has_nexora_permission(p_permission_key text)\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select private.has_nexora_permission(p_permission_key); $function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_admin",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_nexora_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select private.is_nexora_super_admin(); $function$\n"
+    },
+    {
+      "args": "",
+      "name": "is_nexora_super_admin",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_nexora_super_admin()\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select private.is_nexora_super_admin(); $function$\n"
+    },
+    {
+      "args": "p_business_id uuid",
+      "name": "is_public_business",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.is_public_business(p_business_id uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$\n  SELECT EXISTS (\n    SELECT 1 FROM public.public_businesses b\n    WHERE b.business_id = p_business_id\n  );\n$function$\n"
+    },
+    {
+      "args": "p_target_type text, p_target_id uuid, p_action text, p_reason text",
+      "name": "manage_marketplace_listing",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.manage_marketplace_listing(p_target_type text, p_target_id uuid, p_action text, p_reason text)\n RETURNS jsonb\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.manage_marketplace_listing(p_target_type,p_target_id,p_action,p_reason); $function$\n"
+    },
+    {
+      "args": "p_email text, p_action text, p_department_key text, p_permissions jsonb",
+      "name": "manage_nexora_assistant_admin",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.manage_nexora_assistant_admin(p_email text, p_action text, p_department_key text DEFAULT NULL::text, p_permissions jsonb DEFAULT '[]'::jsonb)\n RETURNS jsonb\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.manage_nexora_assistant_admin(p_email,p_action,p_department_key,p_permissions); $function$\n"
+    },
+    {
+      "args": "p_user_id uuid, p_action text, p_reason text",
+      "name": "manage_nexora_user",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.manage_nexora_user(p_user_id uuid, p_action text, p_reason text)\n RETURNS jsonb\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.manage_nexora_user(p_user_id,p_action,p_reason); $function$\n"
+    },
+    {
+      "args": "p_request_id uuid, p_approve boolean, p_admin_note text",
+      "name": "review_profile_change_request",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.review_profile_change_request(p_request_id uuid, p_approve boolean, p_admin_note text DEFAULT NULL::text)\n RETURNS void\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.review_profile_change_request(p_request_id,p_approve,p_admin_note); $function$\n"
+    },
+    {
+      "args": "request_id uuid, decision text",
+      "name": "review_role_request",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.review_role_request(request_id uuid, decision text)\n RETURNS void\n LANGUAGE sql\n SET search_path TO ''\nAS $function$ select private.review_role_request(request_id,decision); $function$\n"
+    },
+    {
+      "args": "",
+      "name": "rls_auto_enable",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.rls_auto_enable()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE\n  cmd record;\n  tbl name;\nBEGIN\n  FOR cmd IN\n    SELECT *\n    FROM pg_event_trigger_ddl_commands()\n    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')\n      AND object_type IN ('table','partitioned table')\n  LOOP\n     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN\n      BEGIN\n        SELECT c.relname INTO tbl FROM pg_catalog.pg_class c WHERE c.oid = cmd.objid;\n        EXECUTE format('alter table if exists %I.%I enable row level security', cmd.schema_name, tbl);\n        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;\n      EXCEPTION\n        WHEN OTHERS THEN\n          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;\n      END;\n     ELSE\n        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;\n     END IF;\n  END LOOP;\nEND;\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "sync_public_business",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_public_business()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n if tg_op='DELETE' then\n   delete from public.public_businesses where business_id=old.id;\n   return old;\n end if;\n if new.approval_status <> 'approved' then\n   delete from public.public_businesses where business_id=new.id;\n   return new;\n end if;\n insert into public.public_businesses(business_id,seller_id,display_name,country,city,updated_at)\n values(new.id,new.seller_id,new.display_name,new.country,new.city,now())\n on conflict(business_id) do update set seller_id=excluded.seller_id,display_name=excluded.display_name,\n country=excluded.country,city=excluded.city,updated_at=excluded.updated_at;\n return new;\nend;\n$function$\n"
+    },
+    {
+      "args": "",
+      "name": "sync_public_identity",
+      "schema": "public",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_public_identity()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if tg_op = 'DELETE' then\n    delete from public.public_identities where id = old.id;\n    return old;\n  end if;\n\n  insert into public.public_identities (id, full_name, updated_at)\n  values (new.id, new.full_name, now())\n  on conflict (id) do update\n    set full_name = excluded.full_name,\n        updated_at = excluded.updated_at;\n\n  return new;\nend;\n$function$\n"
+    }
+  ]
 }
