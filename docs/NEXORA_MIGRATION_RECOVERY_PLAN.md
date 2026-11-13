@@ -282,3 +282,13 @@ Use the Supabase CLI documented supabase db dump workflow or a locally installed
 5. Run SQL behavior tests, then hosted JWT/PostgREST/RLS and browser tests only after an explicit, separately scoped approval.
 
 No Live Supabase object, migration history, production data, main, DNS or deployment was changed.
+
+### Addendum — Auth and Storage catalog coverage
+
+The evidence JSON was subsequently extended with:
+- the inventory of all 22 public relations and all 37 public/private functions;
+- all 12 non-internal triggers found in auth/storage, including trigger definitions and trigger-function source;
+- all four auth/storage RLS policies;
+- a count of 23 SECURITY DEFINER functions in the public/private inventory.
+
+The eight foundation tables and ten selected public/private function definitions remain the detailed Foundation snapshot. The other function definitions, grants/default privileges and a complete raw schema-only SQL export are still outstanding. The five public triggers and twelve auth/storage triggers are separate counts (17 observed non-internal triggers across these inspected scopes).
