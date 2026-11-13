@@ -118,9 +118,8 @@ with check(owner_user_id=(select auth.uid()) and application_status='pending'
  and p.role in ('buyer','seller') and p.account_status='active'));
 create policy transport_provider_owner_update on public.transport_providers for update to authenticated
 using(owner_user_id=(select auth.uid())) with check(owner_user_id=(select auth.uid()));
-create policy transport_provider_admin_update on public.transport_providers for update to authenticated
-using(private.has_nexora_permission('logistics.assign'))
-with check(private.has_nexora_permission('logistics.assign'));
+-- Admin review changes use audited, AAL2-gated SECURITY DEFINER RPCs only.
+-- Do not grant direct Admin UPDATE through RLS; that would bypass review audit checks.
 
 create policy transport_vehicle_owner_read on public.transport_vehicles for select to authenticated
 using(exists(select 1 from public.transport_providers p where p.id=provider_id and p.owner_user_id=(select auth.uid())));
@@ -133,9 +132,6 @@ with check(approval_status='pending' and admin_note is null and reviewed_by is n
 create policy transport_vehicle_owner_update on public.transport_vehicles for update to authenticated
 using(exists(select 1 from public.transport_providers p where p.id=provider_id and p.owner_user_id=(select auth.uid())))
 with check(exists(select 1 from public.transport_providers p where p.id=provider_id and p.owner_user_id=(select auth.uid())));
-create policy transport_vehicle_admin_update on public.transport_vehicles for update to authenticated
-using(private.has_nexora_permission('logistics.assign'))
-with check(private.has_nexora_permission('logistics.assign'));
 
 grant select,insert,update on public.transport_providers,public.transport_vehicles to authenticated;
 revoke delete on public.transport_providers,public.transport_vehicles from anon,authenticated;
