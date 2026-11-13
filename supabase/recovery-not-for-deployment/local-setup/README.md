@@ -236,3 +236,14 @@ Do not run `supabase link`, `db pull`, `db push`, `db reset --linked`, migration
 If Supabase CLI or Docker is unavailable, do not substitute a broad raw pg_dump command yet. The raw client can include Supabase-managed objects and cause restore problems. We will choose a scoped fallback after checking the exact Termux tool availability and connection mode.
 
 **Never send the database password or connection string in chat or commit them to GitHub.** Keep the schema file on the device for inspection; do not restore it to the live project. Any rehearsal must use a disposable local database only. Supabase documents the CLI dump workflow and its Docker requirement in its official backup guide: https://supabase.com/docs/guides/platform/migrating-within-supabase/backup-restore
+
+
+## Android-only fallback (current path)
+
+The user's only available device is Android/Termux, where the checks returned `No command supabase found` and `docker is not installed`. Do not install Docker CLI as a workaround: it does not provide a running Docker Engine. Do not ask for database credentials in chat.
+
+Continue recovery using the connected Supabase read-only catalog interface and SELECT-only metadata queries. The committed evidence file is:
+
+`supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json`
+
+It currently records relation/function inventories, view definitions, policies/triggers metadata, selected function definitions, and live migration history identifiers. This is not a complete schema-only SQL dump or a verified disposable database baseline. Keep collecting metadata in bounded, read-only batches; never query private user rows, message bodies, auth user records, or storage object contents. Do not perform DDL/DML, migration execution/repair, remote linking, or deployment.
