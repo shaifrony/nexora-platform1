@@ -2,7 +2,7 @@
 
 **Branch:** `nexora-development`  
 **Purpose:** A safe, zero-cost-first test harness for the reconstructed migration drafts.  
-**Execution status:** NOT RUN — this workspace has no PostgreSQL server/client, Docker, or Supabase CLI.
+**Execution status:** NOT RUN — Android PostgreSQL 18.6 is available; pgTAP is not available in the selected Termux package repository.
 
 ## Safety boundary
 
@@ -57,3 +57,8 @@ Run the test file using the test runner appropriate to that isolated environment
 - Test harness authored and committed to `nexora-development`.
 - Tests have NOT been executed.
 - No Live SQL, schema, data, migration history, production branch, or deployment was changed.
+
+
+## Android PostgreSQL note
+
+A limited, guarded scaffold is available under `../local-setup/`. It is suitable only for selected PostgreSQL syntax/catalog work after it is executed locally. It does not reproduce Supabase Auth, Storage, Realtime, PostgREST, actual JWT validation, or the full Supabase RLS runtime. Do not run the recovery drafts or the active migration chain against it.
