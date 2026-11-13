@@ -87,7 +87,8 @@ Status: **Implementation review in progress — not complete**
 - [x] Buyer UI closes/cancels only own open Demand; quotation INSERT policy blocks closed/cancelled Demand; public board view filters open only.
 - [x] Required date is NOT NULL and constrained to current_date or later; subcategory constraints and public projection field are present in final migration.
 - [x] Demand routing source uses approved Product category/subcategory + active Seller + approved public Business Profile; no Buyer/Seller account-category or Wholesale/Retail market_category gate.
-- [x] Read-only local catalog audit executed. Result: SKIP because full Marketplace Demand schema is absent from the limited local fixture; no changes made. This is not a Demand security PASS.
+- [x] Read-only catalog audit 24 initially executed and correctly SKIPped because full Demand schema was absent from visibility fixture 21. A separate local-only Demand fixture 25, behavior tests 26 and Termux runner 27 are now staged to enable focused local validation; user execution pending.
+- [ ] Run local Demand fixture 25 + audit 24 + behavior tests 26 using runner 27; inspect every PASS/FAIL.
 - [ ] Verify privacy, ownership, Seller inbox, quotations and status transitions under real JWT/PostgREST sessions and browser E2E.
 - [ ] Buyer quotation acceptance, counter-offer and quotation-to-order conversion workflow remains unimplemented.
 
