@@ -26,7 +26,7 @@ The form includes a date input whose minimum is set client-side to the user's lo
 
 ## Current submission behavior
 
-The initial marketplace core migration (`20261112050345_create_marketplace_core_schema.sql`) defines `buyer_demands` without a `subcategory` column, while the current client form and submit handler use `subcategory`. A later migration may add it, but that follow-on definition has not yet been confirmed. This is a schema-compatibility check to resolve before any demand-form changes or runtime claims. The core migration also does not by itself establish the final public view or its grants; those must be inspected in the later migration chain.
+The initial marketplace core migration (`20261112050345_create_marketplace_core_schema.sql`) defines `buyer_demands` without a `subcategory` column. The later migration `20261114160000_demand_inbox_quotations_subcategories.sql` adds the column and updates the public Demand view and grants. The final migration chain still requires local rehearsal because the repository migration history is not reconciled with Hosted Supabase.
 
 The `marketplace.js` submit handler:
 - Requires an active Buyer session.
