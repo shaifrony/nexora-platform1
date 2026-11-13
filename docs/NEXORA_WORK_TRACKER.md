@@ -528,3 +528,11 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Updated `private.guard_product_conversation_context()` in `20261114180000_product_linked_private_conversations.sql` to permit only the one-way transition from a non-NULL product ID to NULL. It continues to reject replacing the product ID or changing any other product/seller/price snapshot field.
 - Development-branch commit: `86ae1648ebcf675ca9b09b6901f5b5431a7286ee`. The updated file was fetched back and the exact trigger condition verified.
 - This is source-level reasoning and re-fetch verification only; no SQL parser/runtime or deletion integration test was run. No Live database or migration history was changed.
+
+
+## 2026-11-14 — Preserve Porter role through transport foundation migration
+
+- Static dependency review found that `20261113180000_transport_provider_vehicle_model.sql` temporarily narrowed `profiles.role` to buyer/seller/admin and `role_requests.requested_role` to seller only, even though the established NEXORA account model includes Porter and the later Porter review migration restores the role.
+- That intermediate constraint could reject an existing Porter profile or Porter role request during a full migration replay. Updated the transport foundation migration to preserve `porter` in both checks; Porter activation remains controlled by the later Admin-reviewed Porter workflow.
+- Development-branch commit: `ee408d6685ac9495b65ced871379dd550f35016b`. The migration was fetched back and the exact replacement constraints verified.
+- Source-level correction only; no SQL was executed and no Live data/schema was changed.
