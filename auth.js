@@ -320,7 +320,7 @@
       workspaceNav.className = "form-actions";
       document.getElementById("nxProfile").insertAdjacentElement("afterend", workspaceNav);
     }
-    if (p.account_status === "active" && ["buyer","seller","admin"].includes(p.role)) {
+    if (p.account_status === "active" && ["buyer","seller","porter","admin"].includes(p.role)) {
       workspaceNav.innerHTML = '<button class="secondary" type="button" onclick="openMyDashboard()">আমার Dashboard</button>' +
         (p.role === "buyer" ? '<button class="primary" type="button" onclick="showSection(\'postDemand\')">Post Demand</button>' : '');
       workspaceNav.classList.remove("hidden");
@@ -361,13 +361,17 @@
       } else {
         mfaVerified=false; mfaFactors=[]; mfaUnverifiedFactors=[]; mfaAssurance=null; adminStaff=null;
       }
-      if (currentUser && profile && profile.account_status !== "active" && !recoveryMode) {
+      const pendingPorter = currentUser && profile?.role === "porter" && profile?.account_status === "pending";
+      if (currentUser && profile && profile.account_status !== "active" && !pendingPorter && !recoveryMode) {
         await db.auth.signOut({ scope: "global" });
         currentUser = null; profile = null; adminStaff = null;
         render();
         say("আপনার অ্যাকাউন্ট বর্তমানে সক্রিয় নয়। প্রবেশাধিকার বন্ধ করা হয়েছে।");
-      } else render();
-      if (currentUser && profile?.account_status === "active" && ["buyer","seller","admin"].includes(profile?.role) && (!wasSignedIn || (!wasMfaVerified && mfaVerified))) {
+      } else {
+        render();
+        if (pendingPorter) say("আপনার Porter আবেদন Pending। Admin/Transport অনুমোদনের আগে কোনো Delivery কাজ বা Dashboard ব্যবহার করা যাবে না।");
+      }
+      if (currentUser && profile?.account_status === "active" && ["buyer","seller","porter","admin"].includes(profile?.role) && (!wasSignedIn || (!wasMfaVerified && mfaVerified))) {
         window.openMyDashboard?.();
       }
       if (wasSignedIn && !currentUser) window.showSection?.("market");
@@ -390,8 +394,8 @@
     if (requestedSignupRole === "seller" && (!sellerCategories.length || sellerCategories.length > 2)) {
       setBusy(form, false); return say("Seller-এর জন্য অন্তত একটি ক্যাটাগরি নির্বাচন করুন।");
     }
-    if (!["buyer","seller"].includes(requestedSignupRole)) {
-      return say("শুধু Buyer বা Seller অ্যাকাউন্ট তৈরি করা যাবে। Transport Provider-এর জন্য আলাদা আবেদন ব্যবস্থা থাকবে।");
+    if (!["buyer","seller","porter"].includes(requestedSignupRole)) {
+      setBusy(form, false); return say("শুধু Buyer, Seller অথবা Porter অ্যাকাউন্ট তৈরি করা যাবে।");
     }
     try {
       const { data, error } = await db.auth.signUp({
@@ -406,8 +410,12 @@
       });
       if (error) throw error;
       if (data.session) await sync(data.session);
-      say(data.session ? "অ্যাকাউন্ট তৈরি হয়েছে।" :
-        "রেজিস্ট্রেশন হয়েছে। ইমেইলে confirmation link এলে সেটি খুলে নিশ্চিত করুন।", true);
+      const successMessage = requestedSignupRole === "porter"
+        ? "Porter আবেদন জমা হয়েছে। Admin/Transport অনুমোদন না পাওয়া পর্যন্ত অ্যাকাউন্ট Pending থাকবে।"
+        : "অ্যাকাউন্ট তৈরি হয়েছে।";
+      say(data.session ? successMessage :
+        "রেজিস্ট্রেশন হয়েছে। ইমেইলে confirmation link এলে সেটি খুলে নিশ্চিত করুন। " +
+        (requestedSignupRole === "porter" ? "এরপর Admin/Transport অনুমোদনের জন্য অপেক্ষা করুন।" : ""), true);
       form.reset();
       updateSignupCategoryFields();
     } catch (err) { say("রেজিস্ট্রেশন ব্যর্থ: " + err.message); }
@@ -416,8 +424,18 @@
 
   function updateSignupCategoryFields() {
     const role = document.querySelector('#nxSignup select[name="role"]')?.value || "buyer";
-    document.getElementById("nxBuyerCategoryFields")?.classList.toggle("hidden", role !== "buyer");
-    document.getElementById("nxSellerCategoryFields")?.classList.toggle("hidden", role !== "seller");
+    const buyerFields = document.getElementById("nxBuyerCategoryFields");
+    const sellerFields = document.getElementById("nxSellerCategoryFields");
+    const buyerSelect = document.querySelector('#nxSignup select[name="buyer_category"]');
+    buyerFields?.classList.toggle("hidden", role !== "buyer");
+    sellerFields?.classList.toggle("hidden", role !== "seller");
+    if (buyerSelect) {
+      buyerSelect.required = role === "buyer";
+      buyerSelect.disabled = role !== "buyer";
+    }
+    document.querySelectorAll('#nxSignup input[name="seller_categories"]').forEach(input => {
+      input.disabled = role !== "seller";
+    });
   }
   document.querySelector('#nxSignup select[name="role"]')?.addEventListener("change", updateSignupCategoryFields);
   updateSignupCategoryFields();
@@ -696,15 +714,27 @@
     }
     const can=(key)=>isSuper||permissions.has(key);
     const safeDate=(v)=>v?escapeHtml(new Date(v).toLocaleString("bn-BD")):"—";
-    if(can("users.view")||can("users.suspend")||can("users.restore")||can("users.cancel")) {
-      const {data,error}=await db.from("profiles").select("id,full_name,role,account_status,created_at").in("role",["buyer","seller"]).order("created_at",{ascending:false}).limit(20);
+    const canManageUsers=can("users.view")||can("users.suspend")||can("users.restore")||can("users.cancel");
+    const canReviewPorters=can("logistics.assign");
+    if(canManageUsers||canReviewPorters) {
+      let userQuery=db.from("profiles").select("id,full_name,role,account_status,created_at");
+      userQuery=canManageUsers
+        ? userQuery.in("role",["buyer","seller","porter"])
+        : userQuery.eq("role","porter");
+      const {data,error}=await userQuery.order("created_at",{ascending:false}).limit(30);
       if(error) usersHost.textContent="ব্যবহারকারী তালিকা লোড হয়নি: "+error.message;
       else if(!data?.length) usersHost.textContent="কোনো ব্যবহারকারী পাওয়া যায়নি।";
       else usersHost.innerHTML=data.map(u=>{
         let actions="";
-        if(u.account_status==="active"&&can("users.suspend")) actions+='<button class="danger" data-admin-kind="user" data-admin-action="suspend" data-id="'+u.id+'">স্থগিত</button>';
-        if(u.account_status==="suspended"&&can("users.restore")) actions+='<button class="primary" data-admin-kind="user" data-admin-action="restore" data-id="'+u.id+'">পুনরায় চালু</button>';
-        if(u.account_status!=="cancelled"&&can("users.cancel")) actions+='<button class="light" data-admin-kind="user" data-admin-action="cancel" data-id="'+u.id+'">বাতিল</button>';
+        if(u.role==="porter" && canReviewPorters) {
+          if(u.account_status==="pending") actions+='<button class="primary" data-admin-kind="porter" data-admin-action="approve" data-id="'+u.id+'">Porter অনুমোদন</button><button class="danger" data-admin-kind="porter" data-admin-action="reject" data-id="'+u.id+'">প্রত্যাখ্যান</button>';
+          else if(u.account_status==="active") actions+='<button class="danger" data-admin-kind="porter" data-admin-action="suspend" data-id="'+u.id+'">Porter স্থগিত</button>';
+          else if(u.account_status==="suspended") actions+='<button class="primary" data-admin-kind="porter" data-admin-action="approve" data-id="'+u.id+'">পুনরায় অনুমোদন</button>';
+        } else {
+          if(u.account_status==="active"&&can("users.suspend")) actions+='<button class="danger" data-admin-kind="user" data-admin-action="suspend" data-id="'+u.id+'">স্থগিত</button>';
+          if(u.account_status==="suspended"&&can("users.restore")) actions+='<button class="primary" data-admin-kind="user" data-admin-action="restore" data-id="'+u.id+'">পুনরায় চালু</button>';
+          if(u.account_status!=="cancelled"&&can("users.cancel")) actions+='<button class="light" data-admin-kind="user" data-admin-action="cancel" data-id="'+u.id+'">বাতিল</button>';
+        }
         return '<div class="offer"><b>'+escapeHtml(u.full_name||"নাম নেই")+'</b><div class="muted">Role: '+escapeHtml(u.role)+' | Status: '+escapeHtml(u.account_status)+'<br>নিবন্ধন: '+safeDate(u.created_at)+'</div><div class="form-actions">'+actions+'</div></div>';
       }).join("");
     } else usersHost.textContent="এই বিভাগের ব্যবহারকারী দেখার অনুমতি নেই।";
@@ -1003,14 +1033,17 @@
     if(!b) return;
     const kind=b.dataset.adminKind, action=b.dataset.adminAction, id=b.dataset.id;
     const labels={approve:"অনুমোদন",reject:"প্রত্যাখ্যান",suspend:"স্থগিত",restore:"পুনরায় চালু",cancel:"বাতিল"};
-    if(!["user","business","product"].includes(kind)||!Object.hasOwn(labels,action)) return;
-    const note=window.prompt("কারণ / Admin Note (ঐচ্ছিক):","") ;
+    if(!["user","porter","business","product"].includes(kind)||!Object.hasOwn(labels,action)) return;
+    const note=window.prompt(kind==="porter" && action!=="approve" ? "এই সিদ্ধান্তের কারণ লিখুন (কমপক্ষে ৫ অক্ষর):" : "কারণ / Admin Note (ঐচ্ছিক):","") ;
     if(note===null) return;
+    if(kind==="porter" && action!=="approve" && note.trim().length<5) { say("কারণ অন্তত ৫ অক্ষরের হতে হবে।"); return; }
     if(!window.confirm("আপনি কি নিশ্চিতভাবে "+labels[action]+" করতে চান?")) return;
     const buttons=b.closest(".offer")?.querySelectorAll("button")||[b];
     buttons.forEach(x=>x.disabled=true);
-    const rpc=kind==="user"?"admin_manage_user":kind==="business"?"admin_moderate_business":"admin_moderate_product";
-    const args=kind==="user"?{p_user_id:id,p_action:action,p_reason:note}:{[kind==="business"?"p_business_id":"p_product_id"]:id,p_action:action,p_note:note};
+    const rpc=kind==="porter"?"review_porter_account":kind==="user"?"admin_manage_user":kind==="business"?"admin_moderate_business":"admin_moderate_product";
+    const args=kind==="porter"?{p_user_id:id,p_action:action,p_reason:note}:
+      kind==="user"?{p_user_id:id,p_action:action,p_reason:note}:
+      {[kind==="business"?"p_business_id":"p_product_id"]:id,p_action:action,p_note:note};
     try {
       const {error}=await db.rpc(rpc,args);
       if(error) throw error;
