@@ -215,3 +215,11 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Covers commercial chat risks: negation, price/quantity, currency, date/time, units, delivery instructions, IDs, and mixed Bangla-English terms.
 - References are explicitly seed references requiring two independent bilingual reviewers before scoring; 24 cases/direction is screening only, not statistically conclusive.
 - No private conversation data used. No model inference/download was executed in this environment; no scores or winner claimed. Automatic translation remains disabled; no SQL, Supabase, Edge Function or deployment change.
+
+
+## 2026-11-13 — Bengali-English local inference runner and exact model access review
+- Confirmed upstream MIT license labels for both official IndicTrans2 distilled checkpoints; both are gated on Hugging Face and require operator acceptance. Exact immutable revisions are required by the runner. Current repository file listing shows model.safetensors around 1.1 GB despite the 200M checkpoint label.
+- Confirmed Argos direct bn→en and en→bn package index entries at package 1.9 / Argos 1.9.0. Package index metadata does not disclose artifact license; commercial-use rights remain unverified.
+- Added `scripts/translation_pilot/run_bn_en_pilot.py` and `docs/NEXORA_BN_EN_MODEL_RUNBOOK.md` for local offline inference, raw CSV capture and per-case latency. The runner does not calculate a winner; human review remains mandatory.
+- Runtime not executed: this environment has no configured model runtime/weights and cannot provide a verified local inference host. No private chat content used; no model quality score claimed; no paid compute started.
+- No SQL, migration execution, Supabase, Edge Function, Live, Production, DNS or `main` change. Translation remains disabled.
