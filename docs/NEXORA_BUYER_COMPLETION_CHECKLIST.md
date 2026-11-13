@@ -65,6 +65,7 @@ Status: **Implementation review in progress — not complete**
 
 ### B-02 — Product visibility ও category integrity
 - [ ] Buyer category পরিবর্তনের পর Marketplace ও Buyer Dashboard reload/refresh-এ নতুন category কার্যকর হয়।
+- [ ] Product Inquiry-এর SECURITY DEFINER RPC-তেও Buyer category যাচাই হয়; recovery-only draft-এ guard যোগ করা হয়েছে, কিন্তু এখনো প্রয়োগ/পরীক্ষা হয়নি।
 - [ ] Wholesale Buyer Retail product ID/slug সরাসরি খুললেও RLS-এ product data পাওয়া যায় না।
 - [ ] Retail Buyer Wholesale product সরাসরি খুললেও একইভাবে block হয়।
 - [ ] Anonymous visitor ও authenticated non-Buyer access rules স্পষ্ট করা।
