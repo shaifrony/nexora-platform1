@@ -372,8 +372,6 @@
         options: { data: {
           full_name: String(f.get("full_name")).trim(),
           role: requestedSignupRole,
-          buyer_category: null,
-          seller_categories: []
         } }
       });
       if (error) throw error;
