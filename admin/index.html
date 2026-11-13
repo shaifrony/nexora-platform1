@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="bn">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243a">
+  <title>NEXORA Administration</title>
+  <link rel="stylesheet" href="./admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script defer src="./admin.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="NEXORA Administration">NEXORA <span>ADMIN</span></a>
+    <div class="top-actions">
+      <span id="sessionLabel" class="muted">সেশন যাচাই হচ্ছে…</span>
+      <button id="signOutBtn" class="secondary" hidden>লগআউট</button>
+    </div>
+  </header>
+  <main class="shell">
+    <section id="loginPanel" class="panel narrow" hidden>
+      <p class="eyebrow">SECURE ADMINISTRATION</p>
+      <h1>প্রশাসনিক লগইন</h1>
+      <p class="muted">শুধু অনুমোদিত NEXORA কর্মকর্তা প্রবেশ করতে পারবেন। সংবেদনশীল প্রশাসনিক কাজের জন্য MFA আবশ্যক।</p>
+      <form id="loginForm">
+        <label>ইমেইল<input name="email" type="email" autocomplete="username" required></label>
+        <label>পাসওয়ার্ড<input name="password" type="password" autocomplete="current-password" required></label>
+        <button type="submit">নিরাপদে লগইন</button>
+      </form>
+      <p id="loginMessage" class="message" role="status"></p>
+    </section>
+    <section id="mfaPanel" class="panel narrow" hidden>
+      <p class="eyebrow">MULTI-FACTOR AUTHENTICATION</p>
+      <h1>পরিচয় যাচাই</h1>
+      <p class="muted">আপনার Authenticator App-এর ৬ সংখ্যার কোড দিন।</p>
+      <form id="mfaForm">
+        <label>৬ সংখ্যার কোড<input name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required></label>
+        <button type="submit">যাচাই করুন</button>
+      </form>
+      <p id="mfaMessage" class="message" role="status"></p>
+    </section>
+    <section id="deniedPanel" class="panel narrow" hidden>
+      <h1>প্রবেশাধিকার নেই</h1>
+      <p id="deniedMessage" class="message" role="status">এই অ্যাকাউন্টে সক্রিয় NEXORA Administration অনুমতি নেই।</p>
+      <button id="deniedSignOut" class="secondary">লগআউট</button>
+    </section>
+    <section id="dashboard" hidden>
+      <div class="welcome">
+        <div><p class="eyebrow">NEXORA INTERNAL OPERATIONS</p><h1 id="welcomeTitle">Administration</h1><p id="welcomeSubtitle" class="muted"></p></div>
+        <div class="identity"><span id="adminCode">—</span><small id="adminPosition">—</small></div>
+      </div>
+      <nav id="moduleNav" class="module-grid" aria-label="অনুমোদিত প্রশাসনিক বিভাগ"></nav>
+      <section class="panel">
+        <div class="panel-head"><div><p class="eyebrow">ACCESS CONTROL</p><h2>আমার অনুমতিসমূহ</h2></div><span class="pill">MFA Verified</span></div>
+        <div id="permissionList" class="permission-grid"></div>
+      </section>
+      <section id="directorNotice" class="panel" hidden>
+        <p class="eyebrow">DIRECTOR CONTROL CENTER</p><h2>Permission &amp; Administration Account</h2>
+        <p>কর্মকর্তা নিয়োগ, অ্যাকাউন্ট আমন্ত্রণ, বিভাগ ও পদ নির্ধারণ এবং Permission পরিবর্তনের কেন্দ্রীয় মডিউল এখানে যুক্ত হবে। Backend migration ও নিরাপত্তা পরীক্ষা শেষ না হওয়া পর্যন্ত নিয়োগ/Permission পরিবর্তনের নিয়ন্ত্রণ এখানে সক্রিয় নয়।</p>
+        <span class="pill warning">পরবর্তী ধাপ — নিরাপত্তা পরীক্ষা বাকি</span>
+      </section>
+      <section class="panel">
+        <h2>কাজের অবস্থা</h2>
+        <p class="muted">এই Administration App বর্তমানে নিরাপদ লগইন, MFA gate, কর্মকর্তা পরিচয় ও Permission visibility-এর প্রাথমিক কাঠামো। বিভাগীয় অপারেশনাল মডিউলগুলো ধাপে ধাপে স্থানান্তর করা হবে।</p>
+      </section>
+    </section>
+    <footer>© NEXORA · Administration Environment</footer>
+  </main>
+</body>
+</html>
