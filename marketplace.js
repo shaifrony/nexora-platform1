@@ -676,6 +676,7 @@
         <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
+        ${activeBuyer()&&signedIn()?`<form id="nxProductNegotiationForm" class="card nx-order-form"><h3>দরদাম করুন</h3><p class="muted">Seller-এর নির্ধারিত মূল্য ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট। আপনার প্রস্তাবিত মূল্য দিন।</p><label>কত ইউনিট কিনবেন? *<input name="quantity" type="number" min="${esc(selected.minimum_order_quantity||1)}" step="0.001" value="${esc(selected.minimum_order_quantity||1)}" required></label><label>আপনার প্রস্তাবিত প্রতি ইউনিট দাম *<input name="unit_price" type="number" min="0.01" step="0.01" max="${esc(selected.price)}" required placeholder="যেমন: 90"></label><label>ডেলিভারি ঠিকানা *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>Seller-এর জন্য বার্তা (ঐচ্ছিক)<textarea name="note" maxlength="1000" placeholder="যেমন: ১০০ টাকার বদলে ৯০ টাকা দিতে চাই"></textarea></label><button class="primary" type="submit">দরদামের প্রস্তাব পাঠান</button><p data-negotiation-status aria-live="polite"></p><small class="muted">Seller গ্রহণ করলে অর্ডার তৈরি হবে। Seller পাল্টা দাম দিলে আপনি গ্রহণ বা নতুন প্রস্তাব দিতে পারবেন।</small></form>`:""}
         <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
         ${activeBuyer()&&signedIn()?`<form id="nxProductOrderForm" class="card nx-order-form"><h3>অর্ডার অনুরোধ</h3><label>পরিমাণ *<input name="quantity" type="number" min="${esc(selected.minimum_order_quantity||1)}" step="0.001" value="${esc(selected.minimum_order_quantity||1)}" required></label><label>ডেলিভারি ঠিকানা/গন্তব্য *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>অতিরিক্ত নির্দেশনা (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">অর্ডার অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">এটি অর্ডার অনুরোধ; পেমেন্ট বা ডেলিভারি বুকিং এখনো অন্তর্ভুক্ত নয়।</small></form>`:""}
         <section id="nxProductReviews" class="nx-listing-reviews" aria-live="polite"></section>
@@ -689,6 +690,15 @@
       }
       $("productContactSeller")?.addEventListener("click", () => startProductChat(selected));
       $("nxProductOrderForm")?.addEventListener("submit",e=>{e.preventDefault();const v=new FormData(e.currentTarget);submitCommerceOrder("product",selected.id,v.get("quantity"),v.get("location"),v.get("note"),e.currentTarget.querySelector("[data-order-status]"),e.currentTarget.querySelector("button[type=submit]"));});
+      $("nxProductNegotiationForm")?.addEventListener("submit",async e=>{
+        e.preventDefault();const form=e.currentTarget,v=new FormData(form),status=form.querySelector("[data-negotiation-status]"),button=form.querySelector("button[type=submit]");
+        const quantity=Number(v.get("quantity")),price=Number(v.get("unit_price")),min=Number(selected.minimum_order_quantity||1),available=selected.stock_tracking?Math.max(0,Number(selected.stock_quantity)-Number(selected.reserved_quantity)):null;
+        if(!Number.isFinite(quantity)||quantity<min||(available!==null&&quantity>available)){status.textContent="পরিমাণ MOQ এবং উপলব্ধ স্টকের মধ্যে হতে হবে।";return;}
+        if(!Number.isFinite(price)||price<=0){status.textContent="প্রস্তাবিত দাম ০-এর বেশি হতে হবে।";return;}
+        button.disabled=true;status.textContent="দরদামের প্রস্তাব পাঠানো হচ্ছে…";
+        try{const {data,error}=await client().rpc("start_product_price_negotiation",{p_product_id:selected.id,p_quantity:quantity,p_unit_price:price,p_note:String(v.get("note")||"").trim()||null,p_fulfilment_location:String(v.get("location")||"").trim()});if(error)throw error;status.textContent="প্রস্তাব Seller-এর কাছে পাঠানো হয়েছে। Negotiation ID: "+data;say("দরদামের প্রস্তাব পাঠানো হয়েছে।",true);}
+        catch(err){status.textContent="প্রস্তাব পাঠানো যায়নি: "+err.message;}finally{button.disabled=false;}
+      });
       return;
     }
     if (detailPanel) detailPanel.classList.add("hidden");
