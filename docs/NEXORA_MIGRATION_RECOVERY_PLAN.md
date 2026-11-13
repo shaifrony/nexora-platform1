@@ -358,3 +358,19 @@ CLI-based migration version repair is blocked because this workflow has no local
 The latest user decision supersedes the older dual-market and wholesale-only UI assumptions: do not split Marketplace products into Wholesale vs Retail categories; all users can view all approved products, while each Seller sets product price and quantity. Current branch source is not yet aligned: `marketplace.js` still selects/displays `market_category`, shows Wholesale/Retail badges and filters, submits `market_category` on product insert/edit, and includes Retail-specific copy; `index.html` still contains Wholesale/Retail discovery cards, seller category selectors, and market-type filters. The staged `20261113235900_product_market_category.sql` adds the product classification and `20261114150000_product_inventory_moq_quantity_pricing.sql` enforces MOQ=1 for Retail. These must be reconciled before rehearsal; no removal was made in this audit to avoid partial UI/schema changes.
 
 The older `docs/NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md` statement that the form is wholesale-only is superseded by the latest decision and must be revised with the coordinated UI/schema change.
+
+
+### Unified Marketplace alignment — staged source refactor completed 2026-11-14
+
+The previous “Unified Marketplace decision alignment” section described a pending mismatch. That mismatch has now been addressed on `nexora-development` across the Frontend and staged migrations:
+
+- `marketplace.js` and `index.html` no longer use product `market_category`, Wholesale/Retail product badges, discovery cards, seller filters, form fields or insert/edit payloads.
+- Buyer/Seller profile category columns are no longer created; the migration explicitly drops obsolete columns/constraint if they exist. Porter registration no longer expects those fields.
+- Listing edit/review/history SQL no longer validates, updates or snapshots product sale categories.
+- Retail-only MOQ=1 validation is removed. Seller-defined MOQ, price tiers, stock tracking, reservation and order controls remain.
+- Demand matching and its index/trigger now match by product category/subcategory and approved Seller/business state, not product sale type.
+- Transport/logistics delivery-mode terminology is intentionally retained where it refers to delivery service modes rather than product Marketplace segmentation.
+
+Static verification fetched the modified files from GitHub. Both frontend files have zero `market_category` references; all 40 migration files were scanned in batches and the migration directory has zero `market_category`, `buyer_category` or `seller_categories` references. The explicit profile migration cleanup statements are expected and do not create or consume those fields.
+
+**Verification gate remains open:** no JavaScript browser test, SQL parser/runtime test, disposable PostgreSQL rehearsal, Data API/RLS HTTP test, or Buyer/Seller E2E has been run. No Live SQL was executed. Continue next with the migration version collision/dedup plan and arrange a disposable PostgreSQL/Supabase runtime before declaring the schema refactor tested.
