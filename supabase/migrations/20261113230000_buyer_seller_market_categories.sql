@@ -51,7 +51,7 @@ declare
   v_buyer_category text;
   v_seller_categories text[];
 begin
-  v_provider := lower(coalesce(new.app_metadata ->> 'provider', ''));
+  v_provider := lower(coalesce(new.raw_app_meta_data ->> 'provider', ''));
 
   -- Social OAuth registrations start as Buyer; user-editable metadata never grants a privileged role.
   if v_provider in ('google','facebook') then
@@ -121,6 +121,41 @@ begin
       raise exception 'Only Buyer accounts may change Buyer category';
     end if;
   end if;
+  return new;
+end;
+$function$;
+
+-- The baseline profile guard originally blocked buyer_category updates.
+-- Replace it narrowly so an account owner can change only their own Buyer category;
+-- role, account status, Seller entitlements, identity and full name remain protected.
+create or replace function private.protect_profile_updates()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $function$
+begin
+  if (select auth.uid()) = old.id then
+    if new.id is distinct from old.id
+      or new.role is distinct from old.role
+      or new.account_status is distinct from old.account_status
+      or new.seller_categories is distinct from old.seller_categories
+      or new.full_name is distinct from old.full_name then
+      raise exception 'Protected profile fields require an authorized server-side workflow'
+        using errcode='42501';
+    end if;
+
+    if old.role = 'buyer' then
+      if new.buyer_category is null
+        or new.buyer_category not in ('wholesale','retail') then
+        raise exception 'Invalid Buyer market category' using errcode='22023';
+      end if;
+    elsif new.buyer_category is distinct from old.buyer_category then
+      raise exception 'Only Buyer accounts may change Buyer category' using errcode='42501';
+    end if;
+  end if;
+
+  new.updated_at := now();
   return new;
 end;
 $function$;
