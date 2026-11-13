@@ -645,3 +645,35 @@ The user-approved Buyer Demand form must include the date by which the Buyer nee
 - The comparison checks relation/column/function/trigger presence only; it does not prove complete SQL semantic equivalence or runtime behavior.
 
 No user rows, messages, Auth identities or Storage contents were queried. No Live writes, migrations or migration-history repairs occurred. No PostgreSQL parser, disposable database, JWT/RLS or E2E tests were run.
+
+
+## 21. Services, listing governance, inventory, officer management and multilingual chat — Live comparison
+
+Read-only metadata checks compared the remaining staged feature migrations with the current Live catalog.
+
+### 21.1 Findings
+
+| Branch migration | Live observation | Classification |
+|---|---|---|
+| `20261114090000_services_marketplace.sql` | No `service_listings` relation. | Pending |
+| `20261114100000_listing_image_storage.sql` | No `service_listings.image_urls`, no `nexora-listing-images` bucket metadata row, and no matching Storage object policies. | Pending; depends on Services Marketplace |
+| `20261114110000_seller_listing_edit.sql` | Depends on `service_listings.image_urls`, which is absent. | Pending; dependent grant-only migration |
+| `20261114120000_listing_edit_review_workflow.sql` | No `listing_edit_requests` table or listing-edit review functions were found; the current Live admin permission catalog relation exists but its new service edit permission was not established. | Pending |
+| `20261114130000_listing_edit_history.sql` | No `listing_edit_request_events` table or snapshot/event triggers were found. | Pending; depends on listing edit requests |
+| `20261114130100_verified_purchase_reviews.sql` | No `listing_reviews`, private `review_purchase_eligibility`, or review summary/eligibility/submission RPCs were found. | Pending |
+| `20261114150000_product_inventory_moq_quantity_pricing.sql` | Live products already contain `price_unit`, `minimum_order_quantity`, and `price_negotiable`; stock tracking/quantity/reserved fields, validation trigger, inventory RPC and stock index were not found in the inspected catalog. | Partially represented |
+| `20261114200000_centralized_officer_account_management.sql` | Base `admin_staff`, `admin_departments`, `admin_permission_catalog`, `admin_permission_grants`, and `admin_audit_logs` relations exist. Live `admin_staff` lacks the staged `position_key`, `reports_to_user_id`, and `staff_email` columns; officer management RPC is absent. | Partially represented |
+| `20261115120000_multilingual_chat_foundation.sql` | No `user_language_preferences` or `message_translations` relation was found. | Pending; suspended by product decision |
+
+### 21.2 Dependencies and sequencing
+
+- Services Marketplace must precede service image storage, service image edit permissions and the combined Product/Service listing-edit review workflow.
+- Listing edit history depends on the listing-edit request table and its review workflow.
+- Verified purchase reviews depend on the Commerce Order completion workflow and its private purchase-eligibility records; the staged review migration must be checked for exact dependency order before rehearsal.
+- Inventory/MOQ pricing extends the existing Product table. The three price-related fields are already present in Live, but this is not proof that the staged stock controls, trigger or inventory RPC are installed.
+- Centralized Officer Management extends existing Admin foundation tables; do not rerun base Admin migrations or overwrite current Admin data. The staged additive columns, seed/configuration changes, function and unique indexes require a careful additive migration plan.
+- Multilingual Chat remains suspended by product decision. Translation is not to be enabled in production; original messages must remain authoritative and private messages must never be used as translation test corpus.
+
+### 21.3 Migration status limits
+
+This comparison is based on relation, column, function, trigger, Storage bucket metadata and policy metadata presence. It does not establish complete behavioral equivalence, the exact state of every seed/configuration row, or API exposure. Storage object contents and user data were not read. No Live writes, schema changes, migration execution or migration-history repair occurred. No PostgreSQL parser, isolated database, JWT/RLS, Storage upload or end-to-end tests were run.
