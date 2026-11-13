@@ -301,3 +301,20 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 The 11 Live-only entries have current catalog evidence for several effects: product pricing columns exist; approved-product anon policy exists; selected anon column grants exist; safe public-business anon policy/projection exists; public business helper has private SECURITY DEFINER and public SECURITY INVOKER wrappers; profile account_status permits cancelled; AAL2 checks are present in the private admin helper functions; Buyer Demand public view omits buyer_id and is security_invoker. The remaining SQL effect equivalence is not proven solely by object-name presence.
 
 Evidence JSON updated at `supabase/recovery-not-for-deployment/live-schema-evidence/20261114_foundation_catalog_snapshot.json`, blob SHA `bfcf517535e4746d1b458c3ad9b0881bc4ad84c4`. No Live writes or migration execution.
+
+
+### Migration dependency/security audit — 2026-11-14
+
+**Static fixes applied on `nexora-development` only:**
+1. `20261114200000_centralized_officer_account_management.sql`: reject NULL `p_action` explicitly (previously NULL could fall through to the deactivate branch); accumulate `is_sensitive` across all selected permissions (previously a later non-sensitive permission could reset the flag and bypass the mandatory reason check).
+2. `20261114180000_unified_delivery_jobs_assignment.sql`: independent-provider vehicle assignment now also requires `transport_vehicles.is_available=true`, not just approved status and provider ownership.
+
+**Confirmed dependency order:** transport provider/vehicle model (131800) precedes delivery assignment system (132200); Delivery Network partner/staff tables (141700), Commerce Orders (141400), and delivery job base tables (132200) precede unified assignment (141800); delivery tracking (141900) follows unified assignment. Product-linked conversations (141800) depend on the private communications tables (120508/120509) and marketplace products (120503), all earlier. The two 141800 migrations still share the same version and remain blocked from migration-runner use.
+
+**Product decision mismatch to resolve before migration rehearsal:** `20261113235900_product_market_category.sql` introduces a per-product `wholesale/retail` market category, and `20261114150000_product_inventory_moq_quantity_pricing.sql` enforces Retail MOQ=1. This conflicts with the user's later decision that products are not separated into wholesale/retail visibility groups and all users can see all products; Sellers set their own price/quantity. These category-specific schema/UI rules must be removed or redesigned before staging. The `delivery_mode` / logistics `service_modes` retail/wholesale values are separate logistics concepts and are not changed by this audit.
+
+**Correction:** the Porter migration's `profiles_market_categories_check` is not a new category restriction; the same constraint already exists in 132300 to keep deprecated legacy profile category fields empty. This is intentional and not a new conflict.
+
+**Migration version resolution remains blocked:** local Supabase CLI and Docker Engine are unavailable on the Android-only workflow. Supabase guidance requires creating new migration files with `supabase migration new`; do not hand-invent a replacement timestamp or rename the colliding files through GitHub as a workaround. The two 141800 files remain unchanged in name. Also two exact duplicate-content pairs remain for explicit cleanup after a CLI-backed migration plan is available.
+
+No Live database writes, migration execution, or user-row queries. The two source fixes are static edits only; SQL runtime tests and isolated disposable-database rehearsal remain pending.
