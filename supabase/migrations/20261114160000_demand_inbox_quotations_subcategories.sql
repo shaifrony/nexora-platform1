@@ -211,6 +211,14 @@ revoke all on public.public_buyer_demands from public;
 grant select on public.public_buyer_demands to anon,authenticated;
 grant select (subcategory) on public.buyer_demands to anon;
 
+-- Buyer identity is private: authenticated clients may read safe demand fields only.
+revoke select on public.buyer_demands from authenticated;
+grant select (
+  id, demand_code, product_name, category, subcategory, description,
+  specifications_quality, required_quantity, budget, currency,
+  destination_country, destination_city, required_date, demand_status, created_at
+) on public.buyer_demands to authenticated;
+
 
 create or replace function private.submit_listing_edit_request(
   p_listing_type text,
