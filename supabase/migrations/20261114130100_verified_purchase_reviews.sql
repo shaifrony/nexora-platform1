@@ -85,7 +85,7 @@ language sql
 stable
 security invoker
 set search_path = pg_catalog, public
-as $
+as $$
   select
     count(*)::bigint,
     round(avg(r.rating)::numeric,1),
@@ -98,7 +98,7 @@ as $
   where r.listing_type=p_listing_type
     and r.listing_id=p_listing_id
     and r.review_status='published';
-$;
+$$;
 revoke all on function public.get_listing_review_summary(text,uuid) from public, anon;
 grant execute on function public.get_listing_review_summary(text,uuid) to anon,authenticated;
 
