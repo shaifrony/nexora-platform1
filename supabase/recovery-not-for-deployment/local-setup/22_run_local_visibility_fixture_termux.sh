@@ -19,6 +19,14 @@ do
   echo "Downloading $file ..."
   curl -fL --retry 3 -H "Cache-Control: no-cache" "$BASE_URL/$file?fresh=20261113-plain-sql-04746bf0" -o "$file"
   if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
+    # Strip legacy psql meta-command lines even if a stale CDN copy is served.
+    # ON_ERROR_STOP is already supplied by the psql command below.
+    sed -i '/set ON_ERROR_STOP on/d; /pset pager off/d' "$file"
+    if grep -nE 'set ON_ERROR_STOP on|pset pager off' "$file"; then
+      echo "STOP: could not remove legacy psql meta-command lines."
+      echo "No SQL has been executed."
+      exit 1
+    fi
     GRANT_LINE="$(grep -n "^DELETE FROM public.admin_permission_grants$" "$file" | cut -d: -f1 || true)"
     STAFF_LINE="$(grep -n "^DELETE FROM public.admin_staff$" "$file" | cut -d: -f1 || true)"
     USERS_LINE="$(grep -n "^DELETE FROM auth.users$" "$file" | cut -d: -f1 || true)"
