@@ -161,3 +161,12 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - The conversation stores a price snapshot for context; it does not overwrite the public Product price. A changed public listing price remains controlled by the Product listing, while past negotiation/order records retain their own agreed terms.
 - General non-product conversations remain supported. Existing historical conversations are not guessed or retroactively attached to a Product where no reliable Product ID exists.
 - Source-level review only. No local SQL/browser test has been run for this change. New migration is staged only; do not apply until migration history reconciliation and isolated rehearsal. Live Supabase, Production, and `main` remain untouched.
+
+## 2026-11-13 — Cross-department product conversation hardening
+- Continued Buyer-first work under the cross-department rule: reviewed the shared communications schema, conversation RLS/consent rules, Seller invitation visibility, Product detail route, and Buyer/Seller chat entry points together.
+- Hardened staged migration `20261114180000_product_linked_private_conversations.sql`: optional first inquiry message is now inserted once for a newly created thread; reusing an existing thread does not duplicate the first message.
+- Added a database trigger guard so participants cannot rewrite Product/Seller identity or the original Product name/image/slug/price/currency snapshot after the Product conversation is created. Conversation status/title remain outside this protected context.
+- Updated `marketplace.js` Product Detail so Buyer can include an optional first inquiry message (max 500 characters) before opening the same private Buyer–Seller Product thread.
+- Cross-department impact: Seller receives the same invitation and Product context; Seller must accept before messaging/calling under existing consent policy. Admin has no new access to private chat content. Porter/Delivery is not changed because this package does not create or assign a delivery job.
+- No Product public price change; the conversation snapshot is historical context only. Buyer/Seller negotiation currently has separate negotiation records/UI and still needs integration into this same conversation history.
+- Source review only; no SQL, local DB, hosted JWT/PostgREST, or browser E2E test was run. Migration history divergence remains a hard deployment blocker. No Live Supabase, Production, DNS or main changed.
