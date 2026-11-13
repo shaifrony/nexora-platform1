@@ -196,3 +196,40 @@ Each dashboard must hide unauthorized data and actions. UI visibility is conveni
 This charter is a governance design document. It does **not** mean the MD role, department dashboards, new permission keys, staff invitation lifecycle or financial maker-checker controls are already implemented. The existing Development Branch contains an earlier Super Admin / Assistant Admin and permission-grant foundation. That foundation must be inspected and safely mapped before schema changes.
 
 No hosted migration, production deployment or change to the `main` branch is authorized by this document.
+
+
+## 10. Central Permission & Administration Account (Director Dashboard)
+
+The Director Dashboard must contain a central menu named **Permission & Administration Account**. All internal officer appointments and staff-account administration must originate here:
+
+- Managing Director (MD).
+- Marketing Department officers and head.
+- Transport & Logistics Department officers and head.
+- Accounts & Finance Department officers and head.
+- Any future department or office approved by the Director.
+
+For every appointment, the Director must be able to:
+1. Create/invite the staff identity account through a secure server-side Auth provisioning flow (never expose the Supabase service-role key in browser code).
+2. Assign a unique internal Admin/Staff ID, office title, department, reporting manager and employment status.
+3. Select the exact allowed permissions from a centrally maintained permission catalogue.
+4. Review the effective permissions before confirming appointment.
+5. Later grant additional permissions, reduce/revoke permissions, transfer department, change title, suspend/reactivate or terminate access.
+6. View the complete history of appointments, account changes and permission changes.
+
+### Account and permission rules
+- This is the only authorized place for creating or inviting internal MD/department/staff accounts. Public Buyer/Seller signup must never create an employee/Admin account.
+- MD is appointed here and receives only explicitly granted operational permissions. MD cannot create/modify departments, alter the permission catalogue, grant protected privileges to themselves, appoint a Director, or change the constitutional structure.
+- Department staff receive permissions scoped to their department. A Marketing officer cannot receive Transport or Finance permissions by default; cross-department access requires explicit Director authorization and an audit reason.
+- Director is the only role allowed to change the organization chart, create/retire departments, modify protected permission definitions and appoint/remove the MD.
+- Sensitive permissions require MFA and server-side enforcement. Hiding a button is not authorization.
+- Permission changes must take effect on the server, invalidate or refresh stale authorization claims/sessions where needed, and create append-only audit records.
+- Financial permissions require separation of duties: the same officer cannot both request and approve their own refund, expense, payout or settlement.
+- Account provisioning must use a trusted server-side function with restricted secrets, short-lived invitation links, rate limits, duplicate-account checks and audit logging. Never place service-role credentials in HTML or JavaScript.
+
+### Staff account lifecycle in this menu
+
+**Create / Invite → Assign office and department → Grant least-privilege permissions → Activate after MFA setup → Review/change permissions → Suspend or deactivate → Preserve audit history.**
+
+### UI and backend status
+
+The Director Dashboard currently has an older Assistant Admin management form that can attach an already registered account to an assignable department and grant existing catalogue permissions. It does not yet securely create/invite new staff Auth accounts, and the current catalogue does not yet prove that MD and all three new departments are fully modelled. Therefore the menu label and governance description are being aligned now, but the complete central account provisioning and new role/permission backend remains a staged implementation task. Do not claim that new MD/department accounts can already be created until the secure backend, database authorization, audit trail and end-to-end tests are complete.
