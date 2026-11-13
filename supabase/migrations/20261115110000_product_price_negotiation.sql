@@ -55,7 +55,7 @@ create or replace function private.append_product_negotiation_chat_event(
   p_conversation_id uuid,p_actor_id uuid,p_event jsonb
 ) returns void
 language plpgsql security definer set search_path=''
-as $
+as $$
 begin
   if p_conversation_id is null or p_actor_id is null then
     raise exception 'Negotiation conversation context is missing';
@@ -63,7 +63,7 @@ begin
   insert into public.messages(conversation_id,sender_id,body,message_type)
   values(p_conversation_id,p_actor_id,p_event::text,'system');
 end;
-$;
+$$;
 revoke all on function private.append_product_negotiation_chat_event(uuid,uuid,jsonb) from public,anon,authenticated;
 
 create or replace function private.respond_to_product_price_negotiation(
