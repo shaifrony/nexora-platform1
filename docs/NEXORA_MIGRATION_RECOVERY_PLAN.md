@@ -325,3 +325,14 @@ Advisors report: leaked-password protection disabled (WARN); 6 unindexed foreign
 Captured four profile/business trigger function definitions. The profile guards structurally restrict buyer self-edits to full_name, prevent self-changing role/account_status, and require admin approval for seller/porter profile changes. Business public projection is synchronized only for approved businesses. The public profile update guard uses deprecated `auth.role()`; consider replacing with current role-check pattern in a reviewed development migration, but do not alter Live until behavior is verified.
 
 Anon SELECT is granted only on `public_buyer_demands`; products and `public_businesses` are currently SELECT-accessible to authenticated but not anon. This could affect logged-out Marketplace browsing, but is not classified as a defect until guest browsing is confirmed as a product requirement. No grants or policies were changed.
+
+
+### 2026-11-14 reconciliation correction and migration ledger
+
+Correction: the previous anon access summary considered only table-level grants. Catalog inspection shows explicit column-level SELECT grants for anon on selected product fields and public-business fields. Product RLS allows only approved listings belonging to a public business; public_businesses is a safe projection with business_id, display_name, country, city. Sensitive product columns such as seller_id, reviewed_by, reviewed_at and admin_note are not granted to anon. Public Buyer Demand projection omits buyer_id. This is structural evidence that guest Marketplace read is enabled for selected columns; still requires HTTP/API behavior testing.
+
+Migration inventory: branch contains 40 SQL files and 39 unique migration versions; Live history has 24 entries. Thirteen version/name pairs match; 27 branch-only files (26 unique versions); 11 Live-only entries. Two pairs are exact duplicate SQL contents: versions 20261112051711 and 20261112051801; versions 20261112051906 and 20261112052010. Two unrelated migrations share version 20261114180000, which must be resolved to unique timestamps before running the migration chain. Do not run or repair history remotely.
+
+Current Live catalog contains evidence for several effects from Live-only migrations: product pricing columns; anon approved-product RLS; safe column-level anon grants; public-business anon projection; private SECURITY DEFINER/public SECURITY INVOKER public-business helper; cancelled account status constraint; AAL2-enforcing admin helper functions; and a security-invoker Buyer Demand projection without buyer_id. Object-level presence does not establish exact SQL equivalence or migration reproducibility.
+
+Snapshot JSON records the complete version/name ledger, branch-only/live-only lists, duplicate version/content SHA evidence, and corrected anon column grants. No Live writes, migrations, or private user-data reads were performed.
