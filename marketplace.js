@@ -458,7 +458,7 @@
       return;
     }
     const { data, error } = await client().from("products")
-      .select("id,product_code,slug,product_name,category,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id")
+      .select("id,product_code,slug,product_name,category,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
       .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
     if (error) {
@@ -533,6 +533,13 @@
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
+  async function updateSellerProductInventory(productId){
+    const product=(window.NEXORA_SELLER_PRODUCTS||[]).find(p=>p.id===productId);if(!product)return say("পণ্যের তথ্য পাওয়া যায়নি।");
+    const enabled=confirm("OK চাপলে Stock Tracking চালু হবে; Cancel চাপলে সীমাহীন স্টক থাকবে।");let quantity=null;
+    if(enabled){const raw=prompt("মোট হাতে থাকা স্টক লিখুন (সংরক্ষিত অর্ডারসহ):",String(product.stock_quantity??""));if(raw===null)return;quantity=Number(raw);if(!Number.isFinite(quantity)||quantity<Number(product.reserved_quantity||0))return say("স্টক সংরক্ষিত অর্ডারের পরিমাণের কম হতে পারবে না।");}
+    try{const {error}=await client().rpc("set_product_inventory",{p_product_id:productId,p_stock_tracking:enabled,p_stock_quantity:quantity});if(error)throw error;say("স্টক তথ্য আপডেট হয়েছে।",true);await loadSellerDashboard();}catch(err){say("স্টক আপডেট হয়নি: "+err.message);}
+  }
+
   async function loadSellerOrders(){
     const host=$("nxSellerOrders");if(!host)return;
     if(!signedIn()||!activeSeller()){host.textContent="Active Seller লগইন প্রয়োজন।";return;}
@@ -645,12 +652,15 @@
         <h3>পণ্যের তথ্য</h3>
         <p><strong>উৎপত্তি:</strong> ${esc(selected.origin)}</p>
         <p><strong>Specifications & Quality:</strong> ${esc(selected.specifications_quality || "তথ্য দেওয়া হয়নি")}</p>
-        <p class="price"><strong>${selected.market_category === "retail" ? "খুচরা মূল্য:" : "পাইকারি মূল্য:"}</strong> ${esc(selected.price)} ${esc(selected.currency)}</p>
+        <p class="price"><strong>${selected.market_category === "retail" ? "খুচরা মূল্য:" : "পাইকারি মূল্য:"}</strong> ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট</p>
+        <p><strong>MOQ:</strong> ${esc(selected.minimum_order_quantity||1)} ইউনিট</p>
+        ${(selected.price_tiers||[]).length?'<div class="card"><strong>পরিমাণভিত্তিক মূল্য</strong>'+selected.price_tiers.map(t=>'<p>'+esc(t.min_quantity)+'+ ইউনিট: '+esc(t.unit_price)+' '+esc(selected.currency)+' / ইউনিট</p>').join('')+'</div>':''}
+        ${selected.stock_tracking?'<p><strong>উপলব্ধ স্টক:</strong> '+esc(Math.max(0,Number(selected.stock_quantity)-Number(selected.reserved_quantity)))+' ইউনিট</p>':'<p class="muted">স্টক সীমা প্রকাশ করা হয়নি।</p>'}
         <p><strong>Business Display Name:</strong> ${esc(business?.display_name || "Approved Seller")}</p>
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
         <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
-        ${activeBuyer()&&signedIn()?`<form id="nxProductOrderForm" class="card nx-order-form"><h3>অর্ডার অনুরোধ</h3><label>পরিমাণ *<input name="quantity" type="number" min="1" step="1" value="1" required></label><label>ডেলিভারি ঠিকানা/গন্তব্য *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>অতিরিক্ত নির্দেশনা (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">অর্ডার অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">এটি অর্ডার অনুরোধ; পেমেন্ট বা ডেলিভারি বুকিং এখনো অন্তর্ভুক্ত নয়।</small></form>`:""}
+        ${activeBuyer()&&signedIn()?`<form id="nxProductOrderForm" class="card nx-order-form"><h3>অর্ডার অনুরোধ</h3><label>পরিমাণ *<input name="quantity" type="number" min="${esc(selected.minimum_order_quantity||1)}" step="0.001" value="${esc(selected.minimum_order_quantity||1)}" required></label><label>ডেলিভারি ঠিকানা/গন্তব্য *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>অতিরিক্ত নির্দেশনা (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">অর্ডার অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">এটি অর্ডার অনুরোধ; পেমেন্ট বা ডেলিভারি বুকিং এখনো অন্তর্ভুক্ত নয়।</small></form>`:""}
         <section id="nxProductReviews" class="nx-listing-reviews" aria-live="polite"></section>
       `;
       loadListingReviews("product",selected.id,"nxProductReviews");
@@ -1126,11 +1136,13 @@
           <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           ${p.image_urls?.[0]?'<img class="product-image" src="'+esc(p.image_urls[0])+'" alt="'+esc(p.product_name)+'" loading="lazy">':''}
           <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} | ${esc(p.origin)}</p>
-          <p class="price">${esc(p.price)} ${esc(p.currency)}</p>
+          <p class="price">${esc(p.price)} ${esc(p.currency)} / ইউনিট · MOQ ${esc(p.minimum_order_quantity||1)}</p>
+          <p class="muted">${p.stock_tracking?'স্টক: '+esc(p.stock_quantity)+' · সংরক্ষিত: '+esc(p.reserved_quantity)+' · উপলব্ধ: '+esc(Math.max(0,Number(p.stock_quantity)-Number(p.reserved_quantity))):'স্টক ট্র্যাকিং বন্ধ'}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
-          ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button></div>` : ""}
+          ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : ""}
         </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
+      productHost.querySelectorAll("button[data-inventory-product]").forEach(b=>b.addEventListener("click",()=>updateSellerProductInventory(b.dataset.inventoryProduct)));
 
       const applyProductFilters = () => {
         const query = String($("nxSellerProductSearch")?.value || "").trim().toLowerCase();
