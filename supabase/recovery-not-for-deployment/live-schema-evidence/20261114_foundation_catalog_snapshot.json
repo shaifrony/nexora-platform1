@@ -9459,5 +9459,35 @@
         ]
       }
     ]
-  }
+  },
+  "profile_business_guard_trigger_definitions": [
+    {
+      "table": "business_profiles",
+      "trigger": "business_profiles_sync_public_business",
+      "function": "sync_public_business",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_public_business()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n if tg_op='DELETE' then\n   delete from public.public_businesses where business_id=old.id;\n   return old;\n end if;\n if new.approval_status <> 'approved' then\n   delete from public.public_businesses where business_id=new.id;\n   return new;\n end if;\n insert into public.public_businesses(business_id,seller_id,display_name,country,city,updated_at)\n values(new.id,new.seller_id,new.display_name,new.country,new.city,now())\n on conflict(business_id) do update set seller_id=excluded.seller_id,display_name=excluded.display_name,\n country=excluded.country,city=excluded.city,updated_at=excluded.updated_at;\n return new;\nend;\n$function$\n",
+      "function_schema": "public"
+    },
+    {
+      "table": "profiles",
+      "trigger": "profiles_sync_public_identity",
+      "function": "sync_public_identity",
+      "definition": "CREATE OR REPLACE FUNCTION public.sync_public_identity()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if tg_op = 'DELETE' then\n    delete from public.public_identities where id = old.id;\n    return old;\n  end if;\n\n  insert into public.public_identities (id, full_name, updated_at)\n  values (new.id, new.full_name, now())\n  on conflict (id) do update\n    set full_name = excluded.full_name,\n        updated_at = excluded.updated_at;\n\n  return new;\nend;\n$function$\n",
+      "function_schema": "public"
+    },
+    {
+      "table": "profiles",
+      "trigger": "protect_profile_role_and_status",
+      "function": "protect_profile_role_and_status",
+      "definition": "CREATE OR REPLACE FUNCTION private.protect_profile_role_and_status()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$ begin if auth.uid() is not null and auth.uid()=old.id and (new.role is distinct from old.role or new.account_status is distinct from old.account_status) then raise exception 'Role and account status are protected fields'; end if; return new; end; $function$\n",
+      "function_schema": "private"
+    },
+    {
+      "table": "profiles",
+      "trigger": "protect_profile_updates",
+      "function": "guard_profile_updates",
+      "definition": "CREATE OR REPLACE FUNCTION public.guard_profile_updates()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n    -- Trusted service-role backend\n    IF auth.role() = 'service_role' THEN\n        RETURN NEW;\n    END IF;\n\n    -- Admin can update profiles\n    IF public.is_nexora_admin() THEN\n        RETURN NEW;\n    END IF;\n\n    -- Users can only update their own profile\n    IF auth.uid() IS NULL OR auth.uid() <> OLD.id THEN\n        RAISE EXCEPTION 'You cannot modify another user profile';\n    END IF;\n\n    -- Seller and Porter require Admin approval\n    IF OLD.role IS DISTINCT FROM 'buyer' THEN\n        RAISE EXCEPTION 'Profile changes require admin approval';\n    END IF;\n\n    -- Buyer can change only full_name\n    IF (to_jsonb(NEW) - 'full_name' - 'updated_at')\n       IS DISTINCT FROM\n       (to_jsonb(OLD) - 'full_name' - 'updated_at') THEN\n        RAISE EXCEPTION 'You cannot modify protected profile fields';\n    END IF;\n\n    IF NEW.full_name IS NULL\n       OR length(trim(NEW.full_name)) NOT BETWEEN 1 AND 150 THEN\n        RAISE EXCEPTION 'Invalid full name';\n    END IF;\n\n    NEW.updated_at := now();\n\n    RETURN NEW;\nEND;\n$function$\n",
+      "function_schema": "public"
+    }
+  ]
 }
