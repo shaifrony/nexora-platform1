@@ -61,7 +61,7 @@ Status: **Implementation review in progress — not complete**
 - [x] Buyer ও Seller signup profile active হয়; Seller public listing/business visibility আলাদা Admin approval gate-এ থাকে।
 - [x] Trigger function SECURITY DEFINER, empty search_path এবং PUBLIC/anon/authenticated EXECUTE revoke যোগ করা হয়েছে।
 - [x] Frontend source review: signup role allowlist Buyer/Seller/Porter; Google/Facebook UI Buyer-only; non-active account sign-out, pending Porter exception সহ।
-- [ ] Local B-01 alignment/regression script চালিয়ে SQL trigger behavior, OAuth provider normalization, metadata ignore, role allowlist ও function ACL পরীক্ষা: `supabase/recovery-not-for-deployment/local-setup/23_local_buyer_auth_trigger_alignment_tests.sql`.
+- [x] Local B-01 alignment/regression script চালানো হয়েছে: Buyer/Seller category metadata ignore, OAuth provider Buyer-only, Admin/Director rejection, Porter pending, trigger SECURITY DEFINER/empty search_path এবং anon/authenticated EXECUTE revoke — সব PASS; test users ROLLBACK হয়েছে।
 - [ ] Real Supabase Auth signup/confirmation, JWT, hosted trigger attachment, RLS and browser E2E পরীক্ষা; migration history reconcile না হওয়া পর্যন্ত deploy নয়।
 
 ### B-02 — Product visibility ও sale-type integrity
