@@ -6,7 +6,7 @@
   const db = () => auth()?.client;
   const user = () => auth()?.user;
   const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-  const state = { conversationId: null, channel: null, callChannel: null, conversations: [], participants: [], directory: [], messages: [], pc: null, localStream: null, activeCall: null, incomingCall: null, pendingIce: [] };
+  const state = { preferredLanguage: 'bn', conversationId: null, channel: null, callChannel: null, conversations: [], participants: [], directory: [], messages: [], pc: null, localStream: null, activeCall: null, incomingCall: null, pendingIce: [] };
   const note = (msg, ok=false) => { const n=$("chatNotice"); if(n){n.textContent=msg;n.style.color=ok?"#087b5f":"#b42318";} };
   const isSignedIn = () => Boolean(user()?.id);
 
@@ -35,10 +35,45 @@
     host.querySelectorAll("[data-user]").forEach(b=>b.addEventListener("click",()=>startConversation(b.dataset.user)));
   }
 
+  const supportedChatLanguages = ["bn","ar","en","zh","hi","ur","fr","es","de","tr","ru","pt","ja","ko"];
+  async function loadChatLanguagePreference(){
+    const control=$("chatPreferredLanguage");if(!control||!isSignedIn())return;
+    try{
+      const {data,error}=await db().from("user_language_preferences")
+        .select("preferred_language").eq("user_id",user().id).maybeSingle();
+      if(error)throw error;
+      let language=data?.preferred_language;
+      if(!language){
+        const browserLanguage=String(navigator.language||"").split("-")[0].toLowerCase();
+        language=supportedChatLanguages.includes(browserLanguage)?browserLanguage:"bn";
+      }
+      state.preferredLanguage=supportedChatLanguages.includes(language)?language:"bn";
+      control.value=state.preferredLanguage;
+    }catch(err){
+      control.value=state.preferredLanguage;
+      note("Chat ভাষার পছন্দ লোড হয়নি: "+err.message);
+    }
+  }
+  async function saveChatLanguagePreference(language){
+    if(!isSignedIn()||!supportedChatLanguages.includes(language))return;
+    const control=$("chatPreferredLanguage");if(control)control.disabled=true;
+    try{
+      const {error}=await db().from("user_language_preferences").upsert({
+        user_id:user().id,preferred_language:language,updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+      if(error)throw error;
+      state.preferredLanguage=language;
+      note("আপনার Chat ভাষার পছন্দ সংরক্ষণ হয়েছে। স্বয়ংক্রিয় অনুবাদ Engine চালু হলে এই ভাষা ব্যবহার হবে।",true);
+    }catch(err){
+      note("Chat ভাষার পছন্দ সংরক্ষণ হয়নি: "+err.message);
+      await loadChatLanguagePreference();
+    }finally{if(control)control.disabled=false;}
+  }
+
   async function loadChatHome() {
     if(!isSignedIn()){ $("chatLoginHint").classList.remove("hidden"); $("chatWorkspace").classList.add("hidden"); return; }
     $("chatLoginHint").classList.add("hidden"); $("chatWorkspace").classList.remove("hidden");
-    await Promise.all([loadDirectory(),loadConversationList()]);
+    await Promise.all([loadDirectory(),loadConversationList(),loadChatLanguagePreference()]);
   }
 
   function systemEventFromMessage(message){
@@ -410,6 +445,7 @@
   $("declineIncomingCall")?.addEventListener("click",declineIncomingCall);
   $("endCall")?.addEventListener("click",endCall);
   $("chatComposer")?.addEventListener("submit",sendMessage);
+  $("chatPreferredLanguage")?.addEventListener("change",e=>saveChatLanguagePreference(e.target.value));
   $("chatFile")?.addEventListener("change",uploadChatFile);
   window.addEventListener("nexora:auth-change",()=>{state.conversationId=null;if(state.channel){db().removeChannel(state.channel);state.channel=null;}if(state.callChannel){db().removeChannel(state.callChannel);state.callChannel=null;}closeCall("Authentication state changed.");if(isSignedIn())setupCallNotifications();if($("privateChat")&&!$("privateChat").classList.contains("hidden"))loadChatHome();});
   window.NEXORA_OPEN_CONVERSATION = async function(conversationId) {
