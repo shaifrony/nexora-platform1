@@ -80,6 +80,47 @@ select o.id,o.seller_id,'seller','initial_quote',o.current_quantity,o.current_un
 from public.seller_offers o
 where not exists(select 1 from public.seller_offer_negotiations n where n.offer_id=o.id);
 
+create unique index if not exists commerce_orders_source_offer_unique_idx
+  on public.commerce_orders(source_offer_id) where source_offer_id is not null;
+
+create or replace function private.initialise_seller_offer_negotiation()
+returns trigger language plpgsql security definer set search_path=''
+as $
+declare v_qty numeric(18,3); v_unit numeric(18,2);
+begin
+  v_qty:=nullif(new.available_quantity,'')::numeric;
+  if v_qty is null or v_qty<=0 then
+    raise exception 'Seller quotation availability must be a positive number' using errcode='22023';
+  end if;
+  v_unit:=case when new.price_basis='total' then round(new.offer_price/v_qty,2) else new.offer_price end;
+  if v_unit<=0 then raise exception 'Seller quotation unit price must be positive' using errcode='22023'; end if;
+  new.current_quantity:=coalesce(new.current_quantity,v_qty);
+  new.current_unit_price:=coalesce(new.current_unit_price,v_unit);
+  return new;
+end;
+$;
+revoke all on function private.initialise_seller_offer_negotiation() from public,anon,authenticated;
+drop trigger if exists seller_offer_initialise_negotiation on public.seller_offers;
+create trigger seller_offer_initialise_negotiation
+before insert on public.seller_offers
+for each row execute function private.initialise_seller_offer_negotiation();
+
+create or replace function private.log_initial_seller_offer_negotiation()
+returns trigger language plpgsql security definer set search_path=''
+as $
+begin
+  insert into public.seller_offer_negotiations(
+    offer_id,actor_id,actor_role,action,proposed_quantity,proposed_unit_price,note
+  ) values(new.id,new.seller_id,'seller','initial_quote',new.current_quantity,new.current_unit_price,new.message);
+  return new;
+end;
+$;
+revoke all on function private.log_initial_seller_offer_negotiation() from public,anon,authenticated;
+drop trigger if exists seller_offer_log_initial_negotiation on public.seller_offers;
+create trigger seller_offer_log_initial_negotiation
+after insert on public.seller_offers
+for each row execute function private.log_initial_seller_offer_negotiation();
+
 create or replace function private.respond_to_demand_offer(
   p_offer_id uuid,
   p_action text,
