@@ -125,3 +125,13 @@ No database schema, migration, hosted Supabase project, production deployment or
 - Listing change request payload validation, Admin approval updates and before/after snapshots no longer require or store product `market_category`.
 - This preserves universal product visibility and Seller-specific pricing/quantity terms; demand matching is based on product taxonomy, not a retail/wholesale channel.
 - Static source review only. No SQL was run, and no local/hosted E2E tests are claimed.
+
+
+## 2026-11-14 — Buyer Demand flow focused source audit
+
+- Rechecked the Buyer Demand UI path from the required-by date form through Buyer Dashboard, public Demand Board, Seller Demand Inbox, Seller quotation submission, Buyer/Seller counter-offers, quotation acceptance and Buyer Demand order status transitions.
+- Confirmed the form maps `requiredDate` to `buyer_demands.required_date`; Buyer and Seller views display the same required date. Public Demand projection selects no Buyer identity/contact fields.
+- Confirmed Buyer and Seller quotation actions call the same guarded `respond_to_demand_offer` RPC; the SQL contract checks active account role, Demand ownership / assigned Seller, latest-proposal turn, positive quantity and unit price, offer expiry and open Demand state.
+- Confirmed acceptance creates one source-linked `buyer_demand` Commerce Order. Buyer acceptance creates a pending order for Seller confirmation; Seller acceptance of a Buyer counter-offer creates an accepted order and event. Order transition RPC restricts accept/ready/reject to assigned Seller and complete/cancel to the owning Buyer in the allowed prior state.
+- Improved the Buyer Demand date input: it now sets the local current date as the minimum and rejects a missing/past required date before insert. Database validation remains authoritative.
+- This is source inspection only. No browser, SQL runtime, disposable DB, hosted Supabase JWT/PostgREST or E2E test was run. The Commerce Order migration remains staged and blocked by migration-history/version reconciliation.
