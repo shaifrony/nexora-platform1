@@ -2,8 +2,8 @@
 -- LOCAL ONLY: nexora_test. Run only after both psql sessions are closed.
 -- Deletes only the dedicated fixture IDs from file 17.
 -- Dependency order matters: permission grants -> admin staff -> role request -> auth users.
-\\set ON_ERROR_STOP on
-\\pset pager off
+\set ON_ERROR_STOP on
+\pset pager off
 DO $guard$
 BEGIN
   IF current_database() <> 'nexora_test' THEN
