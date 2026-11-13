@@ -136,3 +136,14 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - কোনো Live Supabase, Production, DNS বা `main` পরিবর্তন করা হয়নি।
 - Migration history divergence unresolved; migration replay/deploy এখনো blocked।
 - Local superuser SQL tests hosted Supabase Auth/JWT/PostgREST/RLS-এর বিকল্প নয়।
+
+
+## 8. Updated Buyer visibility and Seller sale-type rule (2026-11-13)
+
+- Buyer account has no Wholesale/Retail category; signup and dashboard category selectors are removed.
+- Every active Buyer can discover all Admin-approved Wholesale and Retail product listings.
+- Buyer product detail, inquiry, order creation and product dashboard no longer reject a listing based on Buyer category.
+- Seller selects Wholesale or Retail separately on each Product Listing. This sale type remains visible as product information; it does not restrict who can view the listing.
+- Buyer Demand matching is based on product category/subcategory and Seller's approved public Business Profile, not Buyer/Seller account market categories.
+- Legacy profiles.buyer_category and profiles.seller_categories fields are retained only for migration compatibility, cleared to NULL/empty, and must not be used for authorization.
+- This is staged source-code work only. No migration was run, no local SQL/browser tests were run in this turn, and Hosted Supabase remains untouched.
