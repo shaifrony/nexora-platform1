@@ -142,3 +142,18 @@ curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-de
 Expected final lines:
 `=== LOCAL FOUNDATION FIXTURE CREATED ===`
 `This is a new local-only reconstruction, not original schema and not deployable.`
+
+
+## Foundation fixture smoke tests
+
+A rollback-only test script is also available:
+
+- `07_foundation_smoke_tests.sql`
+
+After the fixture has completed successfully, run:
+
+```sh
+curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/07_foundation_smoke_tests.sql' -o "$HOME/07_foundation_smoke_tests.sql" && psql -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/07_foundation_smoke_tests.sql"
+```
+
+It checks local Buyer/Seller/Porter signup behavior, Porter pending review, OAuth Buyer-only behavior, rejection of public Admin and Retail signup, and profile-role immutability. All test rows are rolled back. It does not validate real Supabase Auth, PostgREST, actual JWT/RLS session behavior, Storage, Realtime or MFA/AAL2.
