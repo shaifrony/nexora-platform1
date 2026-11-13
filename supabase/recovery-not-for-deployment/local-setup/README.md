@@ -107,7 +107,7 @@ The proposal now includes an authoritative resolution section based on the user'
 Resolved target decisions:
 - Public registration roles: Buyer, Seller, Porter only; Admin roles are internal.
 - Porter is a user account role; Transport Provider is a separate profile linked only to an approved active Porter.
-- Buyer/Seller marketplace is Wholesale-Only; no `retail` category.
+- Buyer and Seller accounts have no account-level market category. Each Product carries its own `market_category` (`wholesale` or `retail`); all users can view every approved Product. Demand matching does not gate on sale type.
 - Seller business/listing visibility requires Admin approval.
 - Porter account, Provider profile and each vehicle have separate approval gates.
 - Public identity is a narrow approved projection; Buyer identity/contact must remain hidden on public Buyer Demands.
@@ -156,4 +156,16 @@ After the fixture has completed successfully, run:
 curl -fL 'https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup/07_foundation_smoke_tests.sql' -o "$HOME/07_foundation_smoke_tests.sql" && psql -d nexora_test -v ON_ERROR_STOP=1 -f "$HOME/07_foundation_smoke_tests.sql"
 ```
 
-It checks local Buyer/Seller/Porter signup behavior, Porter pending review, OAuth Buyer-only behavior, rejection of public Admin and Retail signup, and profile-role immutability. All test rows are rolled back. It does not validate real Supabase Auth, PostgREST, actual JWT/RLS session behavior, Storage, Realtime or MFA/AAL2.
+It checks local Buyer/Seller/Porter signup behavior, Porter pending review, OAuth Buyer-only behavior, rejection of public Admin and ignores legacy Wholesale/Retail signup metadata, and profile-role immutability. All test rows are rolled back. It does not validate real Supabase Auth, PostgREST, actual JWT/RLS session behavior, Storage, Realtime or MFA/AAL2.
+
+
+## Current universal marketplace visibility decision (2026-11-13)
+
+The older Wholesale-Only and Buyer-category-gated model above is superseded. The authoritative current model is:
+- Buyer, Seller, Admin and Public Visitor can see every approved Wholesale and Retail Product.
+- Seller chooses `market_category` separately for each Product.
+- Buyer signup has no market-category choice; Buyer Dashboard has no market-category switch.
+- `profiles.buyer_category` and `profiles.seller_categories` are not authorization controls.
+- Buyer Demand routing uses Product category/subcategory and approved Business eligibility only; it does not filter on `market_category`.
+- The old recovery draft at `supabase/recovery-not-for-deployment/dual-market/01_dual_market_alignment_recovery_draft.sql` is marked SUPERSEDED / DO NOT EXECUTE.
+- The local visibility fixture tests the public approved-listing projection only. It does not contain the complete Demand/Inbox/Quotation schema.
