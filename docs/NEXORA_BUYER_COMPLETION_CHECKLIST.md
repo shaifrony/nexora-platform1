@@ -57,7 +57,7 @@ Status: **Implementation review in progress — not complete**
 ## 4. এখনো সমাধান/পরীক্ষা বাকি
 
 ### B-01 — Auth trigger ও migration chain
-- [ ] Final `public.handle_new_user()` definition-এ Buyer wholesale/retail সঠিকভাবে সংরক্ষণ করে নিশ্চিত করা।
+- [ ] Final `public.handle_new_user()` definition-এ Buyer-এর legacy category NULL এবং Seller-এর legacy categories empty থাকে নিশ্চিত করা।
 - [ ] Google/Facebook OAuth Buyer-only এবং user-editable metadata দিয়ে privileged role নেওয়া অসম্ভব—final trigger-এ যাচাই।
 - [ ] Porter ও Seller registration migration-এর সঙ্গে trigger conflict নেই—পূর্ণ migration order-এ যাচাই।
 - [ ] Buyer account Admin approval ছাড়াই ব্যবহারযোগ্য, কিন্তু inactive/suspended account blocked—পরীক্ষা।
@@ -124,7 +124,7 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - সব B-01 থেকে B-06 critical checks সমাধান হয়েছে;
 - migration history নিরাপদে reconcile করে isolated DB-তে rehearsal হয়েছে;
 - Buyer-এর happy-path ও negative authorization tests পাস করেছে;
-- Buyer privacy, Demand privacy, product category RLS, order state এবং chat consent বাস্তব authenticated session-এ যাচাই হয়েছে;
+- Buyer privacy, Demand privacy, public product safe-column RLS, order state এবং chat consent বাস্তব authenticated session-এ যাচাই হয়েছে;
 - mobile/browser E2E-এর ফল নথিভুক্ত হয়েছে;
 - কোনো unresolved blocker গোপন না রেখে চূড়ান্ত closeout report তৈরি হয়েছে।
 
