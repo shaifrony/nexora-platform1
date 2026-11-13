@@ -42,9 +42,6 @@ begin
   if new.minimum_order_quantity is null or new.minimum_order_quantity <= 0 then
     raise exception 'Minimum order quantity must be greater than zero';
   end if;
-  if new.market_category = 'retail' and new.minimum_order_quantity <> 1 then
-    raise exception 'Retail products must have minimum order quantity 1';
-  end if;
   if new.stock_tracking then
     if new.stock_quantity is null or new.stock_quantity < 0 or new.reserved_quantity > new.stock_quantity then
       raise exception 'Stock quantity cannot be lower than reserved quantity';
@@ -81,7 +78,7 @@ $$;
 
 drop trigger if exists products_validate_commercial_fields on public.products;
 create trigger products_validate_commercial_fields
-before insert or update of market_category,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers
+before insert or update of minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers
 on public.products
 for each row execute function private.validate_product_commercial_fields();
 
