@@ -12,7 +12,8 @@ alter table public.commerce_orders
   add column if not exists source_demand_id uuid references public.buyer_demands(id) on delete restrict,
   add column if not exists source_offer_id uuid references public.seller_offers(id) on delete restrict,
   add column if not exists delivery_charge numeric(18,2) not null default 0 check (delivery_charge>=0),
-  add column if not exists grand_total numeric(18,2) generated always as (round(quantity*unit_price+delivery_charge,2)) stored;
+  add column if not exists source_offer_total numeric(18,2) check (source_offer_total is null or source_offer_total>=0),
+  add column if not exists grand_total numeric(18,2) generated always as (round(coalesce(source_offer_total,quantity*unit_price)+delivery_charge,2)) stored;
 
 alter table public.commerce_orders
   drop constraint if exists commerce_orders_demand_source_check;
@@ -20,8 +21,8 @@ alter table public.commerce_orders
   add constraint commerce_orders_demand_source_check
   check (
     (listing_type='buyer_demand' and source_demand_id is not null and source_offer_id is not null
-      and listing_id=source_demand_id)
-    or (listing_type in ('product','service') and source_demand_id is null and source_offer_id is null)
+      and listing_id=source_demand_id and source_offer_total is not null)
+    or (listing_type in ('product','service') and source_demand_id is null and source_offer_id is null and source_offer_total is null)
   );
 
 alter table public.seller_offers
@@ -140,6 +141,7 @@ declare
   v_latest public.seller_offer_negotiations%rowtype;
   v_qty numeric(18,3);
   v_price numeric(18,2);
+  v_total numeric(18,2);
   v_order_id uuid;
   v_location text;
   v_currency text;
@@ -216,6 +218,13 @@ begin
     v_price:=v_offer.current_unit_price;
   end if;
   if v_qty is null or v_price is null or v_price<=0 then raise exception 'Negotiated terms are incomplete'; end if;
+  -- Preserve the Seller's exact total-price quote; a rounded unit-price division can otherwise lose cents.
+  v_total:=case
+    when v_role='buyer' and v_latest.action='initial_quote' and v_offer.price_basis='total'
+      then round(v_offer.offer_price*v_qty/nullif(v_offer.available_quantity::numeric,0),2)
+    else round(v_qty*v_price,2)
+  end;
+  if v_total is null or v_total<=0 then raise exception 'Negotiated total must be positive'; end if;
 
   v_currency:=upper(v_offer.currency);
   v_location:=concat_ws(', ',nullif(v_demand.destination_city,''),nullif(v_demand.destination_country,''));
@@ -223,13 +232,13 @@ begin
 
   insert into public.commerce_orders(
     listing_type,listing_id,buyer_id,seller_id,quantity,unit_price,currency,
-    fulfilment_location,buyer_note,order_status,accepted_at,source_demand_id,source_offer_id,delivery_charge
+    fulfilment_location,buyer_note,order_status,accepted_at,source_demand_id,source_offer_id,delivery_charge,source_offer_total
   ) values (
     'buyer_demand',v_demand.id,v_demand.buyer_id,v_offer.seller_id,v_qty,v_price,v_currency,
     v_location,'Created from accepted Buyer Demand quotation',
     case when v_role='seller' then 'accepted' else 'pending' end,
     case when v_role='seller' then now() else null end,
-    v_demand.id,v_offer.id,coalesce(v_offer.delivery_charge,0)
+    v_demand.id,v_offer.id,coalesce(v_offer.delivery_charge,0),v_total
   ) returning id into v_order_id;
 
   insert into public.commerce_order_events(order_id,actor_user_id,event_type,note)
