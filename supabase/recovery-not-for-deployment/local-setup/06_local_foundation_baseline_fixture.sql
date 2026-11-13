@@ -56,13 +56,7 @@ CREATE TABLE public.profiles (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT profiles_market_categories_check CHECK (
-    (role='buyer' AND buyer_category='wholesale' AND seller_categories='{}'::text[])
-    OR
-    (role='seller' AND buyer_category IS NULL
-      AND seller_categories=ARRAY['wholesale']::text[])
-    OR
-    (role IN ('porter','admin') AND buyer_category IS NULL
-      AND seller_categories='{}'::text[])
+    buyer_category IS NULL AND seller_categories='{}'::text[]
   )
 );
 
@@ -319,11 +313,12 @@ DECLARE
   v_role text;
   v_name text;
   v_provider text;
-  v_categories text[];
-  v_status text;
+  v_status text := 'active';
 BEGIN
   v_provider:=lower(coalesce(NEW.raw_app_meta_data->>'provider',''));
-  IF v_provider IN ('google','facebook') THEN
+  -- Every non-email/non-phone identity provider is Buyer-only.
+  -- Email/phone signup may request only Buyer, Seller or Porter.
+  IF v_provider NOT IN ('','email','phone') THEN
     v_role:='buyer';
   ELSE
     v_role:=lower(trim(coalesce(NEW.raw_user_meta_data->>'role','buyer')));
@@ -342,36 +337,23 @@ BEGIN
     RAISE EXCEPTION 'Full name is too long';
   END IF;
 
-  IF v_role='buyer' THEN
-    IF lower(trim(coalesce(NEW.raw_user_meta_data->>'buyer_category','wholesale'))) <> 'wholesale' THEN
-      RAISE EXCEPTION 'NEXORA is Wholesale-Only; Buyer category must be wholesale';
-    END IF;
-    INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
-    VALUES(NEW.id,v_name,'buyer','active','wholesale','{}'::text[]);
-  ELSIF v_role='seller' THEN
-    IF jsonb_typeof(NEW.raw_user_meta_data->'seller_categories')='array' THEN
-      SELECT coalesce(array_agg(DISTINCT x),'{}'::text[])
-      INTO v_categories
-      FROM jsonb_array_elements_text(NEW.raw_user_meta_data->'seller_categories') AS t(x);
-      IF v_categories IS DISTINCT FROM ARRAY['wholesale']::text[] THEN
-        RAISE EXCEPTION 'NEXORA is Wholesale-Only; Seller category must be wholesale';
-      END IF;
-    ELSE
-      v_categories:=ARRAY['wholesale']::text[];
-    END IF;
-    v_status:='active';
-    INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
-    VALUES(NEW.id,v_name,'seller',v_status,NULL,v_categories);
-  ELSIF v_role='porter' THEN
-    v_status:='pending';
-    INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
-    VALUES(NEW.id,v_name,'porter',v_status,NULL,'{}'::text[]);
+  IF v_role='porter' THEN v_status:='pending'; END IF;
+
+  INSERT INTO public.profiles(id,full_name,role,account_status,buyer_category,seller_categories)
+  VALUES(NEW.id,v_name,v_role,v_status,NULL,'{}'::text[])
+  ON CONFLICT(id) DO NOTHING;
+
+  IF v_role='porter' THEN
     INSERT INTO public.porter_account_reviews(user_id,review_status)
-    VALUES(NEW.id,'pending');
+    VALUES(NEW.id,'pending')
+    ON CONFLICT(user_id) DO NOTHING;
   END IF;
   RETURN NEW;
 END;
 $fn$;
+
+-- Trigger functions are not client RPCs; remove PostgreSQL's default PUBLIC EXECUTE grant.
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC,anon,authenticated;
 
 DO $trigger$
 BEGIN
