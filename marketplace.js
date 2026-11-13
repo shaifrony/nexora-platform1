@@ -481,10 +481,11 @@
       renderProducts();
       return;
     }
-    const { data, error } = await client().from("products")
+    let productQuery = client().from("products")
       .select("id,product_code,slug,product_name,category,subcategory,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
-      .eq("listing_status", "approved")
-      .order("created_at", { ascending: false });
+      .eq("listing_status", "approved");
+    if (activeBuyer()) productQuery = productQuery.eq("market_category", profile()?.buyer_category || "wholesale");
+    const { data, error } = await productQuery.order("created_at", { ascending: false });
     if (error) {
       console.error("NEXORA products could not be loaded:", error.message);
       state.products = [];
@@ -1455,7 +1456,7 @@
   function renderProductEditor(p,requestMode=false) {
     const id=String(p.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
     const categories=["Food & Agriculture","Textile & Garments","Electronics","Industrial Products","Handicrafts","Other"];
-    const marketOptions=(profile()?.seller_categories||[]).map(v=>'<option value="'+esc(v)+'" '+(p.market_category===v?"selected":"")+'>'+(v==="retail"?"Retail (খুচরা)":"Wholesale (পাইকারি)")+'</option>').join("");
+    const marketOptions=["wholesale","retail"].map(v=>'<option value="'+v+'" '+(p.market_category===v?"selected":"")+'>'+(v==="retail"?"Retail (খুচরা)":"Wholesale (পাইকারি)")+'</option>').join("");
     const categoryOptions=categories.map(v=>'<option '+(p.category===v?"selected":"")+'>'+esc(v)+'</option>').join("");
     const currencies=["BDT","USD","EUR","GBP","CNY"];
     const currencyOptions=currencies.map(v=>'<option '+(p.currency===v?"selected":"")+'>'+v+'</option>').join("");
@@ -1523,8 +1524,7 @@
     if(old.error)throw old.error;
     const oldUrls=old.data.image_urls||[];
     const v=Object.fromEntries(new FormData(form));
-    const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
-    if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
+    if(!["wholesale","retail"].includes(v.market_category))throw new Error("Wholesale অথবা Retail নির্বাচন করুন।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     const minimumOrderQuantity=v.minimum_order_quantity===undefined?Number(old.data.minimum_order_quantity||1):Number(v.minimum_order_quantity);
     if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
@@ -1573,8 +1573,7 @@
     if(current.error)throw current.error;
     if(current.data.listing_status!=="approved")throw new Error("এই পণ্য আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
     const v=Object.fromEntries(new FormData(form));
-    const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
-    if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
+    if(!["wholesale","retail"].includes(v.market_category))throw new Error("Wholesale অথবা Retail নির্বাচন করুন।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     const minimumOrderQuantity=Number(v.minimum_order_quantity||1);if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
     const tiers=parseProductPriceTiers(v.price_tiers,minimumOrderQuantity);
@@ -1782,7 +1781,7 @@
       const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
-        product_name: v.name.trim(), category: v.category, subcategory: null, market_category: "wholesale", image_urls: images,
+        product_name: v.name.trim(), category: v.category, subcategory: null, market_category: v.market_category, image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
         price: Number(v.price), currency: String(v.currency).toUpperCase(),
