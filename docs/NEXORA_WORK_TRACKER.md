@@ -2,6 +2,8 @@
 
 Updated: 2026-11-13
 
+Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Repeated local logic testing is closed; two-session concurrency remains unverified and is not a blocker for continuing product implementation. Hosted deployment remains blocked.
+
 Status definitions: **Done (staged)** = committed to Development, not necessarily deployed; **Partial** = foundation exists; **Pending** = not implemented; **Blocked** = prerequisite or release approval missing.
 
 | Workstream | Status | Notes |
@@ -22,6 +24,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
 | Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
+| Review RPC local logic validation | Done (local only) | Base and extended local suites passed; local superuser caveat documented; concurrency not yet verified; hosted deployment not approved |
 | Separate Admin domain | Not required | Earlier prototype retained temporarily; do not deploy as a second app |
 | Production release | Blocked | Migration history mismatch, isolated DB and E2E missing; no approval |
 
@@ -36,6 +39,8 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [ ] Remove/archive separate Admin prototype after code review.
 
 ## M1 — Identity / governance
+- [x] Local Review RPC base and extended logic-test cycle closed; see closeout document. No more repetitive local tests unless code changes materially.
+- [ ] Optional focused two-session concurrency check before any hosted Review RPC release.
 - [x] Director, MD and department governance defined.
 - [x] Officer invite and permission backend staged.
 - [ ] Reconcile all migrations in order.
@@ -78,6 +83,6 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## Blockers
 1. Hosted Supabase migration history is behind staged migrations; do not apply only the latest migration.
-2. No isolated development DB for integration testing.
+2. No isolated development DB for integration testing; hosted JWT/PostgREST/RLS verification remains unavailable.
 3. Previous Vercel deploy hit a rolling 24-hour cap; no deploy retry without approval.
 4. Separate Admin prototype is reference only and must not be deployed.
