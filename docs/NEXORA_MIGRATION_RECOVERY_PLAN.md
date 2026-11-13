@@ -578,3 +578,40 @@ This migration is genuinely pending on Live at the product-context object level;
 The branch SQL includes explicit function revokes/grants, `SECURITY DEFINER SET search_path = ''`, an authenticated-only public invoker wrapper, active Buyer and Seller checks, approved product/business checks, and immutable product-context fields. Static review cannot prove PostgreSQL parser acceptance, concurrent uniqueness behavior, message RLS acceptance, or runtime transaction behavior. These require an isolated PostgreSQL/Supabase test environment.
 
 No Live writes, schema changes, migration-history repairs, private message reads, user-row reads, or storage-content reads were performed.
+
+
+## 19. Transport Provider, Delivery Network and Porter approval — Live comparison
+
+Read-only catalog checks were performed after re-verifying branch HEAD `4ecaf5223b27338e7c2b301e3e529e8b2073ace7`.
+
+### 19.1 Result-level findings
+
+| Branch migration | Live catalog observation | Classification |
+|---|---|---|
+| `20261113100000_create_porter_delivery_workflow.sql` | File is explicitly marked SUPERSEDED and is a no-op; do not deploy. | Retired source; not a pending schema migration |
+| `20261113180000_transport_provider_vehicle_model.sql` | `transport_providers` and `transport_vehicles` relations are absent from Live. | Pending |
+| `20261113200000_transport_provider_admin_review.sql` | Provider/vehicle review functions are absent; dependent tables are also absent. | Pending, depends on provider/vehicle base |
+| `20261113220000_delivery_assignment_system.sql` | `delivery_jobs` relation is absent. | Pending |
+| `20261114170000_delivery_network_management.sql` | Delivery Network job/assignment objects are absent from Live. | Pending; depends on provider/vehicle and delivery job base |
+| `20261114180000_unified_delivery_jobs_assignment.sql` | Unified assignment objects are staged in branch; Live delivery job base and network relations are absent. | Pending, but blocked by duplicate version collision |
+| `20261114190000_delivery_tracking_status_history.sql` | `delivery_tracking_events` relation and status update RPCs are absent. | Pending; depends on unified delivery assignment |
+| `20261114210000_porter_public_registration_and_review.sql` | Live role check already permits buyer/seller/porter/admin and role_requests requested_role permits seller/porter; however `porter_account_reviews` table and `review_porter_account` RPC are absent. | Partially represented / pending review workflow |
+
+### 19.2 Porter registration nuance
+
+Live metadata confirms `profiles_role_check` already includes `porter`, and `role_requests_requested_role_check` includes `porter`. However this does **not** prove that the new public-registration workflow is installed. The review table and review RPC are absent. The current Live `handle_new_user()` is SECURITY DEFINER and is not executable directly by anon/authenticated roles; its trigger behavior was not functionally tested and its complete definition was not used to assert the staged Porter review behavior.
+
+Do not mark Porter Admin approval as complete until `porter_account_reviews`, the updated Auth trigger, account-status transition logic, and the Admin AAL2 review RPC have been safely deployed and tested in an isolated environment.
+
+### 19.3 Important sequencing and dependency notes
+
+- The legacy individual-Porter delivery workflow migration is intentionally a no-op. Keep it as historical source; do not revive its user-ID job assignment model.
+- The transport-provider/vehicle model is the prerequisite for provider-owned vehicle dispatch.
+- Provider/vehicle Admin review depends on the base transport tables and Admin logistics permissions.
+- Delivery assignment base precedes unified network assignment; tracking follows the unified assignment model.
+- Porter account approval is a separate account activation gate. Transport Provider and Vehicle approval are separate operational gates; approval of one must not silently imply approval of the others.
+- Version `20261114180000` remains shared by the product-conversation and unified-delivery-assignment migration files. This remains a hard migration-runner blocker.
+
+### 19.4 Limits and safety
+
+This is an object/catalog-level comparison, not recovery of historical SQL bodies or runtime proof. No user rows, chat messages, Auth identity records, or Storage object contents were read. No Live write, schema change, migration-history repair, or migration execution occurred. PostgreSQL parser, JWT/RLS behavior, concurrency and end-to-end delivery workflow tests remain unavailable without an isolated DB/runtime.
