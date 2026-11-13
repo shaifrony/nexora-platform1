@@ -1554,21 +1554,22 @@
 
   async function saveProductEdit(form) {
     const id=form.dataset.editProductForm;
-    const old=(await client().from("products").select("image_urls").eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").single());
+    const old=(await client().from("products").select("image_urls,minimum_order_quantity,price_tiers").eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").single());
     if(old.error)throw old.error;
     const oldUrls=old.data.image_urls||[];
     const v=Object.fromEntries(new FormData(form));
     const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
     if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
-    if(!Number.isFinite(Number(v.minimum_order_quantity))||Number(v.minimum_order_quantity)<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
-    const tiers=parseProductPriceTiers(v.price_tiers,v.minimum_order_quantity);
+    const minimumOrderQuantity=v.minimum_order_quantity===undefined?Number(old.data.minimum_order_quantity||1):Number(v.minimum_order_quantity);
+    if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
+    const tiers=v.price_tiers===undefined?(old.data.price_tiers||[]):parseProductPriceTiers(v.price_tiers,minimumOrderQuantity);
     const images=await saveListingImages(form,oldUrls,"product",5);
     try{
       const {data,error}=await client().from("products").update({
         product_name:v.name.trim(),market_category:v.market_category,category:v.category,
         image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
-        specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),price_tiers:tiers
+        specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
       }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
       if(error)throw error;
       if(!data)throw new Error("পণ্যটি আর Pending অবস্থায় নেই; পৃষ্ঠা Refresh করে দেখুন।");
