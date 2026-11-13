@@ -544,3 +544,13 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Removed those two direct Admin UPDATE policies from `20261113180000_transport_provider_vehicle_model.sql`. Owner updates remain available under owner-scoped policies and trigger-protected review fields; Admin review remains through the audited AAL2-gated SECURITY DEFINER review functions.
 - Development-branch commit: `6a64e18f41299353d2e574674a213fbda4583eeb`. Re-fetched the migration and verified the direct Admin UPDATE policies are absent.
 - Source-level only; no database migration or SQL execution performed.
+
+
+## 2026-11-14 — Delivery Network static security and input validation fixes
+
+- Transport Provider/Vehicle update guards no longer treat `logistics.assign` permission alone as a bypass. Ordinary `authenticated` table updates remain owner-scoped and cannot change review fields; privileged review RPC execution is distinguished by its SECURITY DEFINER execution context. This closes the case where an Admin who also owns a provider record could use direct table UPDATE to bypass the AAL2/audit RPC.
+- Removed the previous direct Admin UPDATE RLS policies from the transport foundation migration; verified both guards and policies after re-fetch.
+- Hardened `create_delivery_network_job` server-side validation for pickup/delivery city and country, contact name/phone lengths, external reference, special-instruction length, and deadline ordering. These are validated before INSERT instead of relying on lower-level NOT NULL/CHECK failures.
+- Development-branch commits: `eeb31c514cc6061bc965456c7299b1c95a0c7a4c` and `493302e7f4cf79b6ffc4ae5be0f6a16d5c94d9c6`. Both changed files were re-fetched and exact blob SHAs verified.
+- Static/source review only. No SQL runtime, disposable DB, hosted write, or browser test was run.
+- Supabase CLI v3 changelog checked: database commands default to local; hosted changes require explicit `--remote` and confirmation/`--yes` for unattended execution. No hosted migration command was run.
