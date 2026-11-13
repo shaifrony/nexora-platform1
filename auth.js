@@ -596,12 +596,13 @@
   async function loadAdminManagement() {
     const host = document.getElementById("nxAdminStaffList");
     const dept = document.getElementById("nxAssistantDepartment");
+    const position = document.getElementById("nxAssistantPosition");
     const permissionHost = document.getElementById("nxAssistantPermissions");
-    if (!host || !dept || !permissionHost || adminStaff?.admin_level !== "super_admin") return;
+    if (!host || !dept || !position || !permissionHost || adminStaff?.admin_level !== "super_admin") return;
     const [departments, catalog, staff, grants] = await Promise.all([
       db.from("admin_departments").select("department_key,department_name").eq("is_assignable",true).order("department_name"),
-      db.from("admin_permission_catalog").select("permission_key,permission_name,description,department_key,is_sensitive").order("permission_key"),
-      db.from("admin_staff").select("user_id,admin_code,department_key,is_active,profiles(full_name)").eq("admin_level","assistant_admin").order("admin_code"),
+      db.from("admin_permission_catalog").select("permission_key,permission_name,description,department_key,is_sensitive").order("department_key").order("permission_key"),
+      db.from("admin_staff").select("user_id,admin_code,department_key,position_key,staff_email,is_active,profiles(full_name)").neq("admin_level","super_admin").order("admin_code"),
       db.from("admin_permission_grants").select("admin_user_id,permission_key,is_allowed")
     ]);
     const failure = [departments,catalog,staff,grants].find(x=>x.error);
@@ -609,17 +610,19 @@
     dept.innerHTML = '<option value="">বিভাগ নির্বাচন করুন</option>' + (departments.data||[]).map(d=>'<option value="'+escapeHtml(d.department_key)+'">'+escapeHtml(d.department_name)+'</option>').join("");
     const drawPermissions = () => {
       const selected = dept.value;
-      const rows = (catalog.data||[]).filter(c=>c.department_key===selected);
-      permissionHost.innerHTML = rows.length ? rows.map(c=>'<label class="nx-permission-option"><input type="checkbox" name="assistant_permission" value="'+escapeHtml(c.permission_key)+'"> <span><b>'+escapeHtml(c.permission_name)+'</b><small>'+escapeHtml(c.description||"")+(c.is_sensitive?' • সংবেদনশীল অনুমতি':'')+'</small></span></label>').join("") : '<p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
+      const isMd = position.value === "managing_director";
+      const rows = (catalog.data||[]).filter(c=>isMd || c.department_key===selected);
+      permissionHost.innerHTML = rows.length ? rows.map(c=>'<label class="nx-permission-option"><input type="checkbox" name="assistant_permission" value="'+escapeHtml(c.permission_key)+'"> <span><b>'+escapeHtml(c.permission_name)+'</b><small>'+escapeHtml(c.description||"")+' • '+escapeHtml(c.department_key)+(c.is_sensitive?' • সংবেদনশীল অনুমতি':'')+'</small></span></label>').join("") : '<p class="muted">বিভাগ ও পদ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
     };
     if (!dept.dataset.bound) { dept.addEventListener("change",drawPermissions); dept.dataset.bound="1"; }
+    if (!position.dataset.bound) { position.addEventListener("change",drawPermissions); position.dataset.bound="1"; }
     drawPermissions();
     host.innerHTML = (staff.data||[]).length ? staff.data.map(s=>{
       const count=(grants.data||[]).filter(g=>g.admin_user_id===s.user_id && g.is_allowed).length;
+      const title=({managing_director:"ব্যবস্থাপনা পরিচালক (MD)",department_head:"বিভাগীয় প্রধান",department_officer:"বিভাগীয় কর্মকর্তা"})[s.position_key]||s.position_key||"বিভাগীয় কর্মকর্তা";
       return '<div class="offer"><b>'+escapeHtml(s.admin_code)+'</b> — '+escapeHtml(s.profiles?.full_name||"নাম নেই")+
-        '<div class="muted">বিভাগ: '+escapeHtml(s.department_key)+' | অনুমতি: '+count+' | অবস্থা: '+(s.is_active?'সক্রিয়':'নিষ্ক্রিয়')+
-        '<br>অ্যাকাউন্ট ইমেইল দিয়ে নিচের ফর্মে Update বা Deactivate করতে পারবেন।</div></div>';
-    }).join("") : '<p class="muted">এখনো কোনো বিভাগীয় কর্মকর্তা নিয়োগ করা হয়নি।</p>';
+        '<div class="muted">'+escapeHtml(s.staff_email||"ইমেইল অনুপস্থিত")+'<br>পদ: '+escapeHtml(title)+' | বিভাগ: '+escapeHtml(s.department_key||"—")+' | অনুমতি: '+count+' | অবস্থা: '+(s.is_active?'সক্রিয়':'নিষ্ক্রিয়')+'</div></div>';
+    }).join("") : '<p class="muted">এখনো কোনো কর্মকর্তা নিয়োগ করা হয়নি।</p>';
   }
   document.getElementById("nxAssistantAdminForm")?.addEventListener("submit", async e => {
     e.preventDefault();
@@ -627,24 +630,31 @@
     const form=e.currentTarget, f=new FormData(form);
     const action=String(f.get("action")), email=String(f.get("email")||"").trim();
     const department=String(f.get("department")||"");
+    const position=String(f.get("position")||"department_officer");
+    const fullName=String(f.get("full_name")||"").trim();
+    const reason=String(f.get("reason")||"").trim();
     const permissions=[...form.querySelectorAll('input[name="assistant_permission"]:checked')].map(x=>x.value);
-    if (!email) return say("বিভাগীয় কর্মকর্তার নিবন্ধিত ইমেইল দিন।");
-    if (action!=="deactivate" && !department) return say("বিভাগ নির্বাচন করুন।");
+    if (!email) return say("কর্মকর্তার ইমেইল দিন।");
+    if (action!=="deactivate" && (!department || !position)) return say("বিভাগ ও পদ নির্বাচন করুন।");
+    if (action!=="deactivate" && !permissions.length) return say("কমপক্ষে একটি Permission নির্বাচন করুন।");
+    if (action!=="create" && reason.length<5) return say("পরিবর্তন বা অ্যাকাউন্ট বন্ধের কারণ অন্তত ৫ অক্ষরে লিখুন।");
+    if (action==="create" && !fullName) return say("কর্মকর্তার পূর্ণ নাম লিখুন।");
     setBusy(form,true); say("");
     try {
-      const {data,error}=await db.rpc("manage_nexora_assistant_admin",{
-        p_email:email,p_action:action,p_department_key:department||null,p_permissions:permissions
+      const {data,error}=await db.functions.invoke("nexora-admin-officer-management",{
+        body:{action,email,full_name:fullName,department_key:department,position_key:position,permissions,reason}
       });
       if(error) throw error;
-      say("পরিবর্তন সংরক্ষিত হয়েছে। Admin ID: "+(data?.admin_code||"—"),true);
+      if(data?.error) throw new Error(data.error);
+      say((action==="create"?"নতুন কর্মকর্তা আমন্ত্রণ পাঠানো হয়েছে। ":"পরিবর্তন সংরক্ষিত হয়েছে। ")+"Admin ID: "+(data?.admin_code||"—"),true);
       form.reset(); drawAssistantPermissionReset();
       await loadAdminManagement();
-    } catch(err) { say("Admin পরিবর্তন হয়নি: "+err.message); }
+    } catch(err) { say("কর্মকর্তার অ্যাকাউন্ট পরিবর্তন হয়নি: "+err.message); }
     finally { setBusy(form,false); }
   });
   function drawAssistantPermissionReset() {
     const host=document.getElementById("nxAssistantPermissions");
-    if(host) host.innerHTML='<p class="muted">বিভাগ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
+    if(host) host.innerHTML='<p class="muted">বিভাগ ও পদ নির্বাচন করলে অনুমতিগুলো দেখা যাবে।</p>';
   }
 
   async function loadAdminOperations() {
