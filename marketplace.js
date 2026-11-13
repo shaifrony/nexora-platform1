@@ -458,7 +458,7 @@
       return;
     }
     const { data, error } = await client().from("products")
-      .select("id,product_code,slug,product_name,category,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+      .select("id,product_code,slug,product_name,category,subcategory,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
       .eq("listing_status", "approved")
       .order("created_at", { ascending: false });
     if (error) {
@@ -763,7 +763,7 @@
     if (!activeBuyer() || !signedIn()) { host.textContent = "সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।"; return; }
     host.textContent = "অনুমোদিত পণ্য লোড হচ্ছে…";
     try {
-      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,market_category,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,subcategory,market_category,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       state.buyerProducts = data || [];
       renderBuyerDashboardProducts();
@@ -1498,6 +1498,7 @@
       '<label>Product Name *<input name="name" required maxlength="180" value="'+esc(p.product_name)+'"></label>'+
       '<label>বিক্রয় ক্যাটাগরি *<select name="market_category" required>'+marketOptions+'</select></label>'+
       '<label>Product Category *<select name="category" required>'+categoryOptions+'</select></label>'+
+      '<label>Product Subcategory *<input name="subcategory" required minlength="2" maxlength="120" value="'+esc(p.subcategory||"")+'" placeholder="যেমন: Mobile Phones"></label>'+
       '<label>বর্তমান ছবি — যেগুলো রাখতে চান সেগুলোতে টিক রাখুন</label><div class="nx-existing-images">'+renderExistingImageChecks(p.image_urls||[],"product")+'</div>'+
       '<label>নতুন ছবি যোগ করুন (প্রতিটি সর্বোচ্চ ৫ MB)</label><input id="nxEditProductFiles-'+safeId+'" name="image_files" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>'+
       '<div id="nxEditProductPreview-'+safeId+'" class="nx-upload-preview"></div>'+
@@ -1505,6 +1506,7 @@
       '<label>Product Description *<textarea name="description" required>'+esc(p.description||"")+'</textarea></label>'+
       '<label>Origin *<input name="origin" required value="'+esc(p.origin||"")+'"></label>'+
       '<label>Specifications & Quality<textarea name="specifications">'+esc(p.specifications_quality||"")+'</textarea></label>'+
+      '<div class="grid"><label>MOQ *<input name="minimum_order_quantity" type="number" min="1" step="0.001" required value="'+esc(p.minimum_order_quantity||1)+'"></label><label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক)<textarea name="price_tiers" placeholder="100=95">'+(p.price_tiers||[]).map(t=>esc(t.min_quantity+"="+t.unit_price)).join("\\n")+'</textarea></label></div><p class="muted">Retail পণ্যের MOQ ১।</p>'+
       '<div class="grid"><label>মূল্য *<input name="price" type="number" min="0.01" step="0.01" required value="'+esc(p.price)+'"></label>'+
       '<label>Currency *<select name="currency" required>'+currencyOptions+'</select></label></div>'+
       '<div class="form-actions"><button class="primary" type="submit">'+(requestMode?'পরিবর্তন Admin Review-এ পাঠান':'পরিবর্তন সংরক্ষণ')+'</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
@@ -1564,7 +1566,7 @@
     const images=await saveListingImages(form,oldUrls,"product",5);
     try{
       const {data,error}=await client().from("products").update({
-        product_name:v.name.trim(),market_category:v.market_category,category:v.category,
+        product_name:v.name.trim(),market_category:v.market_category,category:v.category,subcategory:v.subcategory.trim(),
         image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
         specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
       }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
@@ -1601,18 +1603,20 @@
 
   async function submitProductEditRequest(form) {
     const id=form.dataset.requestProductForm;
-    const current=await client().from("products").select("image_urls,listing_status").eq("id",id).eq("seller_id",user().id).single();
+    const current=await client().from("products").select("image_urls,listing_status,minimum_order_quantity,price_tiers").eq("id",id).eq("seller_id",user().id).single();
     if(current.error)throw current.error;
     if(current.data.listing_status!=="approved")throw new Error("এই পণ্য আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
     const v=Object.fromEntries(new FormData(form));
     const allowed=Array.isArray(profile()?.seller_categories)?profile().seller_categories:[];
     if(!allowed.includes(v.market_category))throw new Error("আপনার Seller Registration-এ নেই এমন ক্যাটাগরি নির্বাচন করা যাবে না।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
+    const minimumOrderQuantity=Number(v.minimum_order_quantity||1);if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
+    const tiers=parseProductPriceTiers(v.price_tiers,minimumOrderQuantity);
     const images=await saveListingImages(form,current.data.image_urls||[],"product",5);
     const changes={
       product_name:v.name.trim(),market_category:v.market_category,category:v.category,
       image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
-      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase()
+      specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
     };
     try{
       const {data,error}=await client().rpc("submit_listing_edit_request",{
@@ -1820,7 +1824,7 @@
       const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
-        product_name: v.name.trim(), category: v.category, market_category: v.market_category, image_urls: images,
+        product_name: v.name.trim(), category: v.category, subcategory:v.subcategory.trim(), market_category: v.market_category, image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
         price: Number(v.price), currency: String(v.currency).toUpperCase(),minimum_order_quantity:Number(v.minimum_order_quantity||1),stock_tracking:v.stock_tracking==="true",stock_quantity:v.stock_tracking==="true"?Number(v.stock_quantity):null,price_tiers:priceTiers,
@@ -1846,7 +1850,7 @@
     setBusy(form, true);
     try {
       const { error } = await client().from("buyer_demands").insert({
-        buyer_id: user().id, product_name: v.name.trim(), category: v.category,
+        buyer_id: user().id, product_name: v.name.trim(), category: v.category, subcategory:v.subcategory.trim(),
         description: v.description.trim(), specifications_quality: v.specifications.trim(),
         required_quantity: v.quantity.trim(), budget: v.budget === "" ? null : Number(v.budget), currency: String(v.currency).toUpperCase(),
         destination_country: v.country.trim(), destination_city: v.destination.trim(), required_date: v.requiredDate
