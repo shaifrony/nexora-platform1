@@ -110,9 +110,9 @@ SELECT
       (SELECT 1 FROM public.public_businesses b WHERE b.business_id=p.business_id)
     GROUP BY market_category ORDER BY market_category;
 
-  SELECT id::text AS test_buyer_uid FROM public.profiles
-    WHERE role='buyer' AND account_status='active' ORDER BY created_at LIMIT 1 \gset
-  \if :{?test_buyer_uid}
+  SELECT coalesce((SELECT id::text FROM public.profiles
+    WHERE role='buyer' AND account_status='active' ORDER BY created_at LIMIT 1),'') AS test_buyer_uid \gset
+  \if :test_buyer_uid
     SET LOCAL ROLE authenticated;
     SELECT set_config('request.jwt.claim.sub', :'test_buyer_uid', true);
     SELECT count(*)::bigint AS buyer_approved_count FROM public.products p
@@ -125,9 +125,9 @@ SELECT
     \echo 'SKIP: no active Buyer profile exists.'
   \endif
 
-  SELECT id::text AS test_seller_uid FROM public.profiles
-    WHERE role='seller' AND account_status='active' ORDER BY created_at LIMIT 1 \gset
-  \if :{?test_seller_uid}
+  SELECT coalesce((SELECT id::text FROM public.profiles
+    WHERE role='seller' AND account_status='active' ORDER BY created_at LIMIT 1),'') AS test_seller_uid \gset
+  \if :test_seller_uid
     SET LOCAL ROLE authenticated;
     SELECT set_config('request.jwt.claim.sub', :'test_seller_uid', true);
     SELECT count(*)::bigint AS seller_approved_count FROM public.products p
