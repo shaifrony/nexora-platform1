@@ -49,7 +49,7 @@ begin
   if new.listing_type='product' then
     select jsonb_build_object(
       'product_name',p.product_name,'category',p.category,
-      'market_category',p.market_category,'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
+      'image_urls',coalesce(to_jsonb(p.image_urls),'[]'::jsonb),
       'description',p.description,'origin',p.origin,
       'specifications_quality',p.specifications_quality,'price',p.price,'currency',p.currency
     ) into v_old
