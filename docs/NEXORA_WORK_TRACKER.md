@@ -676,3 +676,15 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Verified Admin-managed NEXORA Team partner/staff/job creation and assignment, followed by five successful tracking transitions ending in `delivered`.
 - All synthetic test records and local database were destroyed after the run. No Live mutation, `main`, Production or DNS change occurred.
 - Remaining: independent-provider self-service tracking, external courier integration, receipt confirmation/proof, payment/settlement, dispute/return, PostgREST/HTTP and browser E2E, and concurrency/load testing.
+
+
+## 2026-11-14 — Independent Provider self-service tracking validated
+
+- In a fresh disposable Supabase CLI v3.1.0 Native Runtime database, all 38 branch migrations applied through `20261115120000`; 41 public tables were checked and zero lacked RLS; `db lint --level warning --fail-on error` reported no schema errors.
+- The local-only baseline recreated the existing Live Auth `on_auth_user_created` trigger. No Live auth identities or user rows were copied.
+- Synthetic Porter signup → pending review → AAL2 Admin approval → active profile succeeded. The Porter then created a `transport_providers` application; AAL2 Admin approval changed it from pending to approved.
+- Admin created a Delivery Job and assigned it to the approved independent Provider. The Provider account itself (AAL1, not Admin) successfully submitted each allowed status transition: `accepted → picked_up → in_transit → out_for_delivery → delivered`.
+- The final job status was `delivered`; five append-only tracking events were stored with `actor_type='independent_provider'`. The assigned Provider could read all five events under its RLS policy.
+- The separate Admin-managed NEXORA Team path was also validated in an earlier disposable run: approved team partner, staff roster, job assignment and five Admin-authored tracking transitions through delivered.
+- Disposable stack and all synthetic records were stopped and destroyed. No Live database mutation, `main`, Production, DNS or paid resource was used.
+- Remaining release work: approved-vehicle assignment/availability, courier-partner operational tracking, delivery receipt OTP/digital proof, delivery charge/payment/settlement, disputes/returns, external courier APIs/webhooks, PostgREST/HTTP and browser/device E2E, and concurrency/load testing.
