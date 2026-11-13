@@ -387,7 +387,6 @@ declare
   v_permission text;
   v_listing_id uuid;
   v_business_id uuid;
-  v_seller_categories text[];
 begin
   if v_actor is null or p_action is null or p_action not in ('approve','reject') then
     raise exception 'Invalid review request' using errcode='22023';
