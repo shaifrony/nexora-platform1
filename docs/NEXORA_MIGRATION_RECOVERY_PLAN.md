@@ -237,3 +237,10 @@ All 12 package files (README plus 11 SQL drafts) were fetched back from GitHub a
 **Critical:** The recovery directory is outside `supabase/migrations/` and must stay there until a separate review. No draft was executed. No live migration history, schema, data, grants, policies, production branch or deployment was changed.
 
 Package index: `supabase/recovery-not-for-deployment/README.md`.
+
+
+## 15. Recovery draft audit (2026-11-13)
+
+A per-file review is recorded in [NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md](NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md). The review rechecked the relevant Live catalog definitions, grants, policies, helper functions, default ACLs and demand view. Eight drafts were catalog-consistent under manual review, one SQL body was source-recovered with a version mismatch, and two require special privilege/security testing before any use.
+
+The default-privilege draft was narrowed to API-facing table CRUD, sequence USAGE/SELECT and function EXECUTE grants; service_role defaults are not revoked. No parser/isolated replay test was available. No recovery draft was executed.
