@@ -40,8 +40,10 @@ declare
  v_allowed boolean:=false;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
- if private.has_nexora_permission('logistics.assign')
-    and (select auth.jwt()->>'aal')='aal2' then
+ if private.has_nexora_permission('logistics.assign') then
+   if (select auth.jwt()->>'aal') is distinct from 'aal2' then
+     raise exception 'Admin MFA (AAL2) is required' using errcode='42501';
+   end if;
    select s.admin_code into v_admin_code from public.admin_staff s join public.profiles p on p.id=s.user_id
     where s.user_id=v_actor and s.is_active=true and p.role='admin' and p.account_status='active';
    if v_admin_code is null then raise exception 'Active Admin membership required' using errcode='42501'; end if;
