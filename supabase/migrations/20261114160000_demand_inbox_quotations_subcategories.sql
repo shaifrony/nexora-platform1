@@ -197,6 +197,20 @@ with check (
 grant update (subcategory) on public.products to authenticated;
 grant update (subcategory) on public.buyer_demands to authenticated;
 
+-- Public Demand Board exposes only safe demand fields; security_invoker keeps underlying RLS active.
+create or replace view public.public_buyer_demands
+with (security_invoker=true)
+as
+select id,demand_code,product_name,category,subcategory,description,specifications_quality,
+       required_quantity,budget,currency,destination_country,destination_city,
+       required_date,demand_status,created_at
+from public.buyer_demands
+where demand_status='open';
+revoke all on public.public_buyer_demands from public;
+grant select on public.public_buyer_demands to anon,authenticated;
+grant select (subcategory) on public.buyer_demands to anon;
+
+
 create or replace function private.submit_listing_edit_request(
   p_listing_type text,
   p_listing_id uuid,
