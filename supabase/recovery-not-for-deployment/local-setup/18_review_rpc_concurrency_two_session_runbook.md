@@ -1,24 +1,24 @@
 # NEXORA Review RPC — two-session concurrency procedure
 
-**Local-only target:** \`nexora_test\`  
+**Local-only target:** `nexora_test`  
 **Prerequisites:** local fixture 06, RPC prototype 12, original RPC tests 13, extended tests 15 all completed.  
 **Never run against hosted/production Supabase.**
 
 ## A. Prepare fixture (one time)
 
-Run \`17_prepare_review_rpc_concurrency_fixture.sql\` in one Termux session. It creates two dedicated test users, an authorized reviewer, and one pending Buyer-to-Seller request. Unlike rollback-based tests, this fixture is committed so two independent sessions can see it. Clean it up after the test with script 19.
+Run `17_prepare_review_rpc_concurrency_fixture.sql` in one Termux session. It creates two dedicated test users, an authorized reviewer, and one pending Buyer-to-Seller request. Unlike rollback-based tests, this fixture is committed so two independent sessions can see it. Clean it up after the test with script 19.
 
 ## B. Session A — hold the first successful review open
 
 Open Termux session A and run:
 
-\`\`\`sh
+```sh
 psql -d nexora_test
-\`\`\`
+```
 
 At the psql prompt, paste these statements **one at a time**:
 
-\`\`\`sql
+```sql
 BEGIN;
 SELECT set_config('request.jwt.claim.sub','22000000-0000-4000-8000-000000000001',true);
 SELECT public.rpc_review_role_request(
@@ -26,7 +26,7 @@ SELECT public.rpc_review_role_request(
   'approved',
   'Concurrency test — session A'
 );
-\`\`\`
+```
 
 Do **not** COMMIT yet. Leave Session A open. The successful function call should return, but its transaction keeps the request-row lock until COMMIT/ROLLBACK.
 
@@ -34,13 +34,13 @@ Do **not** COMMIT yet. Leave Session A open. The successful function call should
 
 Open a second independent Termux session and run:
 
-\`\`\`sh
+```sh
 psql -d nexora_test
-\`\`\`
+```
 
 At the psql prompt, paste these statements **one at a time**:
 
-\`\`\`sql
+```sql
 BEGIN;
 SELECT set_config('request.jwt.claim.sub','22000000-0000-4000-8000-000000000001',true);
 SELECT public.rpc_review_role_request(
@@ -48,7 +48,7 @@ SELECT public.rpc_review_role_request(
   'approved',
   'Concurrency test — session B'
 );
-\`\`\`
+```
 
 The final RPC call should wait because Session A still holds the row lock. This is expected PostgreSQL row-lock behavior.
 
@@ -56,15 +56,15 @@ The final RPC call should wait because Session A still holds the row lock. This 
 
 Return to Session A and run:
 
-\`\`\`sql
+```sql
 COMMIT;
-\`\`\`
+```
 
-Now Session B should resume and return SQLSTATE \`55000\` with a message that the request is no longer pending. Because the statement failed, finish Session B with:
+Now Session B should resume and return SQLSTATE `55000` with a message that the request is no longer pending. Because the statement failed, finish Session B with:
 
-\`\`\`sql
+```sql
 ROLLBACK;
-\`\`\`
+```
 
 If Session B returns before Session A commits, the test did not demonstrate the intended blocking sequence.
 
@@ -72,7 +72,7 @@ If Session B returns before Session A commits, the test did not demonstrate the 
 
 Run:
 
-\`\`\`sql
+```sql
 SELECT id, status, reviewed_by, reviewed_at, admin_note
 FROM public.role_requests
 WHERE id='32000000-0000-4000-8000-000000000001';
@@ -80,19 +80,19 @@ WHERE id='32000000-0000-4000-8000-000000000001';
 SELECT count(*) AS matching_audit_rows
 FROM public.admin_audit_logs
 WHERE target_id='32000000-0000-4000-8000-000000000001';
-\`\`\`
+```
 
 Expected:
-- request status = \`approved\`;
-- reviewed_by = reviewer UID \`22000000-0000-4000-8000-000000000001\`;
+- request status = `approved`;
+- reviewed_by = reviewer UID `22000000-0000-4000-8000-000000000001`;
 - admin_note belongs to Session A;
 - exactly one matching audit row.
 
-Then exit both psql sessions with \`\\q\`.
+Then exit both psql sessions with `\\q`.
 
 ## F. Cleanup
 
-Run \`19_cleanup_review_rpc_concurrency_fixture.sql\` once, after both sessions are closed. It removes only the dedicated test request, its matching audit rows, and the two dedicated auth identities. Verify it prints \`CLEANED\`.
+Run `19_cleanup_review_rpc_concurrency_fixture.sql` once, after both sessions are closed. It removes only the dedicated test request, its matching audit rows, and the two dedicated auth identities. Verify it prints `CLEANED`.
 
 ## Interpretation
 
