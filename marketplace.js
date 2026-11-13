@@ -1865,11 +1865,20 @@ service_category:"সেবার বিভাগ",description:"বিবরণ"
     finally { setBusy(form, false); }
   });
 
+  const requiredDateInput = $("requiredDate");
+  if (requiredDateInput) {
+    const now = new Date();
+    requiredDateInput.min = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+
   $("demandForm")?.addEventListener("submit", async e => {
     e.preventDefault();
     const form = e.currentTarget;
     if (!activeBuyer()) return say("চাহিদা প্রকাশ করতে সক্রিয় Buyer হিসেবে লগইন করুন।");
     const v = Object.fromEntries(new FormData(form));
+    const now = new Date();
+    const todayLocal = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    if (!v.requiredDate || v.requiredDate < todayLocal) return say("প্রয়োজনের তারিখ আজকের দিন অথবা ভবিষ্যতের তারিখ হতে হবে।");
     if (v.budget !== "" && (!Number.isFinite(Number(v.budget)) || Number(v.budget) < 0)) return say("সঠিক Budget লিখুন।");
     setBusy(form, true);
     try {
