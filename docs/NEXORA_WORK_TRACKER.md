@@ -208,3 +208,10 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Identified AI4Bharat IndicTrans2 as a stronger first Bengali-English pilot candidate: official project supports `ben_Beng` + `eng_Latn` both directions and supplies FLORES/IN22 evaluation tooling with chrF++, BLEU and COMET. The English→Indic distilled 200M model card shows MIT; exact license/revision for the paired Indic→English checkpoint must be confirmed before deployment.
 - Decision: benchmark IndicTrans2 and Argos on the same consented bilingual test set before choosing. No model was run in this environment, no translation quality is claimed as tested, and no engine is enabled.
 - Hosting/RAM/latency/throughput, exact paired-model licenses, privacy/consent and server security remain approval gates. IndicTrans2 covers Indic languages, not Arabic or all global languages.
+
+
+## 2026-11-13 — Bengali ↔ English reproducible pilot corpus prepared
+- Added `docs/NEXORA_BN_EN_PILOT_CORPUS.md` with 24 synthetic parallel cases, testable in both directions, plus reviewer protocol, protected-token checks and blank results matrix.
+- Covers commercial chat risks: negation, price/quantity, currency, date/time, units, delivery instructions, IDs, and mixed Bangla-English terms.
+- References are explicitly seed references requiring two independent bilingual reviewers before scoring; 24 cases/direction is screening only, not statistically conclusive.
+- No private conversation data used. No model inference/download was executed in this environment; no scores or winner claimed. Automatic translation remains disabled; no SQL, Supabase, Edge Function or deployment change.
