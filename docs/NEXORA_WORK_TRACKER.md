@@ -520,3 +520,11 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - The replacement must be created with `supabase migration new product_linked_private_conversations`, then checked to ensure its generated version is unique and sorts after `20261114190000`. If not, stop; do not hand-author a timestamp or use undocumented flags.
 - No file was renamed or changed: local Supabase CLI and PostgreSQL/Supabase runtime remain unavailable in the Android/Termux workflow. No SQL, Live history, or schema write was performed.
 - Next gate: obtain a supported CLI environment, create and verify the replacement filename, then run the complete sequence only in a no-cost disposable local database. Production remains blocked.
+
+
+## 2026-11-14 — Product conversation deletion/FK consistency fix
+
+- Static review found that `conversations.context_product_id` uses `ON DELETE SET NULL`, while the immutable-context trigger rejected every change to that field. This combination would block deletion of a referenced product because the FK's automatic NULL update would be rejected by the trigger.
+- Updated `private.guard_product_conversation_context()` in `20261114180000_product_linked_private_conversations.sql` to permit only the one-way transition from a non-NULL product ID to NULL. It continues to reject replacing the product ID or changing any other product/seller/price snapshot field.
+- Development-branch commit: `86ae1648ebcf675ca9b09b6901f5b5431a7286ee`. The updated file was fetched back and the exact trigger condition verified.
+- This is source-level reasoning and re-fetch verification only; no SQL parser/runtime or deletion integration test was run. No Live database or migration history was changed.
