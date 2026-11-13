@@ -799,7 +799,7 @@
     host.textContent = "আপনার চাহিদা লোড হচ্ছে…";
     try {
       const { data, error } = await client().from("buyer_demands")
-        .select("id,demand_code,product_name,category,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
+        .select("id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at")
         .eq("buyer_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       state.buyerDemands = data || [];
