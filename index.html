@@ -1193,6 +1193,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
             </select>
           </div>
         </div>
+        <label>পণ্যের Subcategory / নির্দিষ্ট ধরন *<input name="subcategory" required minlength="2" maxlength="120" placeholder="যেমন: Mobile Phones / Smartphone"></label>
 
         <label>বিস্তারিত বিবরণ *</label>
         <textarea name="description" required placeholder="আপনার কী ধরনের পণ্য প্রয়োজন বিস্তারিত লিখুন"></textarea>
@@ -1311,10 +1312,8 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
     </div>
 
     <div class="card">
-      <h3>Matched Buyer Demands</h3>
-      <p class="muted">
-        আপনার যোগ করা পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন চাহিদাগুলো এখানে দেখানো হবে।
-      </p>
+      <h3>Buyer Demand Inbox</h3>
+      <p class="muted">আপনার অনুমোদিত পণ্যের Category ও Subcategory এবং Buyer-এর Wholesale/Retail ধরন অনুযায়ী প্রাসঙ্গিক চাহিদা এখানে আসবে। প্রতিটি চাহিদার বিপরীতে সরাসরি Quotation পাঠাতে পারবেন।</p>
       <div id="matchedDemands"></div>
     </div>
 
@@ -1388,6 +1387,7 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
           <option>Handicrafts</option>
           <option>Other</option>
         </select>
+        <label>Product Subcategory / মডেল-ধরন *<input name="subcategory" required minlength="2" maxlength="120" placeholder="যেমন: Mobile Phones, Smartphone, Laptop"></label>
 
         <label>পণ্যের ছবি আপলোড করুন (সর্বোচ্চ ৫টি, প্রতিটি ৫ MB)</label>
         <input name="image_files" id="nxProductImageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
