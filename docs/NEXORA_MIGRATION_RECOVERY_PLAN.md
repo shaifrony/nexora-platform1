@@ -292,3 +292,10 @@ The evidence JSON was subsequently extended with:
 - a count of 23 SECURITY DEFINER functions in the public/private inventory.
 
 The eight foundation tables and ten selected public/private function definitions remain the detailed Foundation snapshot. The other function definitions, grants/default privileges and a complete raw schema-only SQL export are still outstanding. The five public triggers and twelve auth/storage triggers are separate counts (17 observed non-internal triggers across these inspected scopes).
+
+
+### Addendum — Android-only read-only catalog recovery (2026-11-14)
+
+The user has only an Android/Termux device; Supabase CLI and Docker are absent. Do not ask them to install Docker CLI as a workaround: a Docker Engine is not available through that alone. Recovery is continuing through the already connected Supabase database tool using catalog-only SELECT queries. The evidence JSON now contains the 22 public relations, public/private function inventory, public/private view definitions, policy/trigger counts, and all 24 live migration version/name entries.
+
+This is a structured catalog snapshot, not a full schema-only SQL export. Remaining evidence includes complete function bodies for non-foundation routines, grants and default privileges, extension/version metadata, and a verified local/disposable rehearsal route. Keep all queries metadata-only; never inspect user rows, chat contents, auth identities or storage object records. No remote writes, migrations, deployment or migration-history repair are authorized.
