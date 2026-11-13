@@ -470,7 +470,7 @@
       return;
     }
     let productQuery = client().from("products")
-      .select("id,product_code,slug,product_name,category,subcategory,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+      .select("id,product_code,slug,product_name,category,subcategory,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
       .eq("listing_status", "approved");
     const { data, error } = await productQuery.order("created_at", { ascending: false });
     if (error) {
@@ -712,7 +712,6 @@
       detailPanel.classList.remove("hidden");
       detailPanel.innerHTML = `
         <p><a href="${esc(window.location.pathname)}">← Marketplace-এ ফিরে যান</a></p>
-        <span class="tag">${esc(selected.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")}</span>
         <span class="tag">${esc(selected.category)}</span>
         <h2>${esc(selected.product_name)}</h2>
         ${images.length ? `<div class="grid">${images.map((src,i) => `<img class="product-image" src="${esc(src)}" alt="${esc(selected.product_name)} image ${i+1}" loading="lazy" onerror="this.style.display='none'">`).join("")}</div>` : ""}
@@ -721,7 +720,7 @@
         <p><strong>উৎপত্তি:</strong> ${esc(selected.origin)}</p>
         <p><strong>ক্যাটাগরি:</strong> ${esc(selected.category)} · ${esc(selected.subcategory||"")}</p>
         <p><strong>Specifications & Quality:</strong> ${esc(selected.specifications_quality || "তথ্য দেওয়া হয়নি")}</p>
-        <p class="price"><strong>${selected.market_category === "retail" ? "খুচরা মূল্য:" : "পাইকারি মূল্য:"}</strong> ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট</p>
+        <p class="price"><strong>মূল্য:</strong> ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট</p>
         <p><strong>MOQ:</strong> ${esc(selected.minimum_order_quantity||1)} ইউনিট</p>
         ${(selected.price_tiers||[]).length?'<div class="card"><strong>পরিমাণভিত্তিক মূল্য</strong>'+selected.price_tiers.map(t=>'<p>'+esc(t.min_quantity)+'+ ইউনিট: '+esc(t.unit_price)+' '+esc(selected.currency)+' / ইউনিট</p>').join('')+'</div>':''}
         ${selected.stock_tracking?'<p><strong>উপলব্ধ স্টক:</strong> '+esc(Math.max(0,Number(selected.stock_quantity)-Number(selected.reserved_quantity)))+' ইউনিট</p>':'<p class="muted">স্টক সীমা প্রকাশ করা হয়নি।</p>'}
@@ -790,18 +789,18 @@
     // Clearly labelled visual samples appear only until real approved listings exist.
     if (!state.products.length) {
       const demos = [
-        {name:"Fresh Mango",market_category:"wholesale",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
-        {name:"Premium Cotton Fabric",market_category:"wholesale",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
-        {name:"Handcrafted Decor",market_category:"wholesale",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
-        {name:"Electronic Components",market_category:"wholesale",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"},
-        {name:"Retail Cotton T-Shirt",market_category:"retail",category:"Textile & Garments",description:"খুচরা বিক্রয়ের জন্য নমুনা টি-শার্ট বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
-        {name:"Retail Home Decor",market_category:"retail",category:"Handicrafts",description:"খুচরা ক্রেতাদের জন্য নমুনা ঘর সাজানোর পণ্য।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"}
+        {name:"Fresh Mango",category:"Food & Agriculture",description:"বাংলাদেশি আমের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=900&q=80"},
+        {name:"Premium Cotton Fabric",category:"Textile & Garments",description:"কটন কাপড়ের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
+        {name:"Handcrafted Decor",category:"Handicrafts",description:"হস্তশিল্পের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"},
+        {name:"Electronic Components",category:"Electronics",description:"ইলেকট্রনিক যন্ত্রাংশের নমুনা পণ্য বিজ্ঞাপন।",origin:"International",image:"https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80"},
+        {name:"Cotton T-Shirt",category:"Textile & Garments",description:"টি-শার্টের নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=900&q=80"},
+        {name:"Home Decor",category:"Handicrafts",description:"ঘর সাজানোর নমুনা পণ্য বিজ্ঞাপন।",origin:"Bangladesh",image:"https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=900&q=80"}
       ].filter(p =>
         (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
         (!category || p.category === category)
       );
       host.innerHTML = demos.length ? demos.map(p => `<article class="card product-card nx-product-card nx-demo-product-card">
-        <div class="nx-product-card-media nx-demo-media"><img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'"><span class="nx-product-market-badge">${esc(p.market_category === "retail" ? "RETAIL" : "WHOLESALE")}</span></div>
+        <div class="nx-product-card-media nx-demo-media"><img class="product-image" src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'"></div>
         <div class="nx-product-card-body"><span class="tag">DEMO • নমুনা বিজ্ঞাপন</span><span class="tag">${esc(p.category)}</span>
         <h3>${esc(p.name)}</h3><p class="muted nx-product-description">${esc(p.description)}</p>
         <p class="muted nx-product-origin">📍 ${esc(p.origin)}</p><p class="price">দাম জানতে যোগাযোগ করুন</p></div>
@@ -815,7 +814,7 @@
       return `<article class="card product-card nx-product-card">
         <a class="nx-product-card-media" href="?product=${encodeURIComponent(p.slug)}" aria-label="${esc(p.product_name)} বিস্তারিত দেখুন">
           ${image ? `<img class="product-image" src="${esc(image)}" alt="${esc(p.product_name)}" loading="lazy" onerror="this.style.display='none'">` : '<span class="nx-product-image-fallback" aria-hidden="true">📦</span>'}
-          <span class="nx-product-market-badge">${esc(p.market_category === "retail" ? "RETAIL" : "WHOLESALE")}</span>
+          
         </a>
         <div class="nx-product-card-body">
           <span class="tag">${esc(p.category)}</span>
@@ -835,7 +834,7 @@
     if (!activeBuyer() || !signedIn()) { host.textContent = "সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।"; return; }
     host.textContent = "অনুমোদিত পণ্য লোড হচ্ছে…";
     try {
-      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,subcategory,market_category,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,subcategory,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       state.buyerProducts = data || [];
       renderBuyerDashboardProducts();
@@ -851,7 +850,7 @@
     host.innerHTML = rows.map(p => {
       const image = (p.image_urls || []).find(Boolean);
       return '<article class="card">' + (image ? '<img class="product-image" src="' + esc(image) + '" alt="' + esc(p.product_name) + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
-        '<span class="tag">' + esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)") + '</span><span class="tag">' + esc(p.category) + '</span><h3>' + esc(p.product_name) + '</h3><p class="price">' + esc(p.price) + ' ' + esc(p.currency) + '</p><p class="muted">' + esc(p.origin || '') + '</p>' +
+        '<span class="tag">' + esc(p.category) + '</span><h3>' + esc(p.product_name) + '</h3><p class="price">' + esc(p.price) + ' ' + esc(p.currency) + '</p><p class="muted">' + esc(p.origin || '') + '</p>' +
         '<p class="muted">' + esc(p.description || '') + '</p>' + (p.slug ? '<a href="' + esc(window.location.pathname) + '?product=' + encodeURIComponent(p.slug) + '">পণ্য বিস্তারিত দেখুন</a>' : '<span class="muted">Product ID: ' + esc(p.product_code) + '</span>') + '</article>';
     }).join("");
   }
@@ -1258,7 +1257,7 @@
       await loadSellerOrders();
       await loadSellerPriceNegotiations();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+        .select("id,product_code,product_name,category,subcategory,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -1278,36 +1277,32 @@
       window.NEXORA_SELLER_PRODUCTS=products;
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
-        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-market-category="${esc(p.market_category)}" data-search="${esc([p.product_name,p.category,p.subcategory,p.market_category,p.product_code,p.origin].join(" ").toLowerCase())}">
+        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.subcategory,p.product_code,p.origin].join(" ").toLowerCase())}">
           <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           ${p.image_urls?.[0]?'<img class="product-image" src="'+esc(p.image_urls[0])+'" alt="'+esc(p.product_name)+'" loading="lazy">':''}
-          <p class="muted">${esc(p.market_category === "retail" ? "Retail (খুচরা)" : "Wholesale (পাইকারি)")} · ${esc(p.category)} · ${esc(p.subcategory||"")} | ${esc(p.origin)}</p>
+          <p class="muted">${esc(p.category)} · ${esc(p.subcategory||"")} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)} / ইউনিট · MOQ ${esc(p.minimum_order_quantity||1)}</p>
           <p class="muted">${p.stock_tracking?'স্টক: '+esc(p.stock_quantity)+' · সংরক্ষিত: '+esc(p.reserved_quantity)+' · উপলব্ধ: '+esc(Math.max(0,Number(p.stock_quantity)-Number(p.reserved_quantity))):'স্টক ট্র্যাকিং বন্ধ'}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
           ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : ""}
-        </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে Wholesale অথবা Retail পণ্য যোগ করুন।</p>';
+        </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে নতুন পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
       productHost.querySelectorAll("button[data-inventory-product]").forEach(b=>b.addEventListener("click",()=>updateSellerProductInventory(b.dataset.inventoryProduct)));
 
       const applyProductFilters = () => {
         const query = String($("nxSellerProductSearch")?.value || "").trim().toLowerCase();
         const selectedStatus = $("nxSellerProductStatus")?.value || "all";
-        const selectedMarketCategory = $("nxSellerProductMarketFilter")?.value || "all";
         productHost.querySelectorAll("[data-seller-product]").forEach(card => {
           const matchesText = !query || (card.dataset.search || "").includes(query);
           const matchesStatus = selectedStatus === "all" || card.dataset.status === selectedStatus ||
             (selectedStatus === "rejected" && ["rejected","declined"].includes(card.dataset.status));
-          const matchesMarketCategory = selectedMarketCategory === "all" || card.dataset.marketCategory === selectedMarketCategory;
-          card.hidden = !(matchesText && matchesStatus && matchesMarketCategory);
+          card.hidden = !(matchesText && matchesStatus);
         });
       };
       const productSearch = $("nxSellerProductSearch");
       const productStatus = $("nxSellerProductStatus");
-      const productMarketFilter = $("nxSellerProductMarketFilter");
       if (productSearch) productSearch.oninput = applyProductFilters;
       if (productStatus) productStatus.onchange = applyProductFilters;
-      if (productMarketFilter) productMarketFilter.onchange = applyProductFilters;
       applyProductFilters();
 
       await loadSellerDemandInbox();
@@ -1532,14 +1527,12 @@
   function renderProductEditor(p,requestMode=false) {
     const id=String(p.id), safeId=id.replace(/[^a-zA-Z0-9_-]/g,"");
     const categories=["Food & Agriculture","Textile & Garments","Electronics","Industrial Products","Handicrafts","Other"];
-    const marketOptions=["wholesale","retail"].map(v=>'<option value="'+v+'" '+(p.market_category===v?"selected":"")+'>'+(v==="retail"?"Retail (খুচরা)":"Wholesale (পাইকারি)")+'</option>').join("");
     const categoryOptions=categories.map(v=>'<option '+(p.category===v?"selected":"")+'>'+esc(v)+'</option>').join("");
     const currencies=["BDT","USD","EUR","GBP","CNY"];
     const currencyOptions=currencies.map(v=>'<option '+(p.currency===v?"selected":"")+'>'+v+'</option>').join("");
     return '<form class="nx-listing-editor" '+(requestMode?'data-request-product-form="'+esc(id)+'"':'data-edit-product-form="'+esc(id)+'')+'>'+
       '<h4>পণ্য সম্পাদনা · '+esc(p.product_code)+'</h4>'+
       '<label>Product Name *<input name="name" required maxlength="180" value="'+esc(p.product_name)+'"></label>'+
-      '<label>বিক্রয় ক্যাটাগরি *<select name="market_category" required>'+marketOptions+'</select></label>'+
       '<label>Product Category *<select name="category" required>'+categoryOptions+'</select></label>'+
       '<label>Product Subcategory *<input name="subcategory" required minlength="2" maxlength="120" value="'+esc(p.subcategory||"")+'" placeholder="যেমন: Mobile Phones"></label>'+
       '<label>বর্তমান ছবি — যেগুলো রাখতে চান সেগুলোতে টিক রাখুন</label><div class="nx-existing-images">'+renderExistingImageChecks(p.image_urls||[],"product")+'</div>'+
@@ -1549,7 +1542,7 @@
       '<label>Product Description *<textarea name="description" required>'+esc(p.description||"")+'</textarea></label>'+
       '<label>Origin *<input name="origin" required value="'+esc(p.origin||"")+'"></label>'+
       '<label>Specifications & Quality<textarea name="specifications">'+esc(p.specifications_quality||"")+'</textarea></label>'+
-      '<div class="grid"><label>MOQ *<input name="minimum_order_quantity" type="number" min="1" step="0.001" required value="'+esc(p.minimum_order_quantity||1)+'"></label><label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক)<textarea name="price_tiers" placeholder="100=95">'+(p.price_tiers||[]).map(t=>esc(t.min_quantity+"="+t.unit_price)).join("\n")+'</textarea></label></div><p class="muted">Retail পণ্যের MOQ ১।</p>'+
+      '<div class="grid"><label>MOQ *<input name="minimum_order_quantity" type="number" min="1" step="0.001" required value="'+esc(p.minimum_order_quantity||1)+'"></label><label>পরিমাণভিত্তিক মূল্য (ঐচ্ছিক)<textarea name="price_tiers" placeholder="100=95">'+(p.price_tiers||[]).map(t=>esc(t.min_quantity+"="+t.unit_price)).join("\n")+'</textarea></label></div>'+
       '<div class="grid"><label>মূল্য *<input name="price" type="number" min="0.01" step="0.01" required value="'+esc(p.price)+'"></label>'+
       '<label>Currency *<select name="currency" required>'+currencyOptions+'</select></label></div>'+
       '<div class="form-actions"><button class="primary" type="submit">'+(requestMode?'পরিবর্তন Admin Review-এ পাঠান':'পরিবর্তন সংরক্ষণ')+'</button><button class="light" type="button" data-cancel-listing-edit>বাতিল</button></div>'+
@@ -1600,7 +1593,6 @@
     if(old.error)throw old.error;
     const oldUrls=old.data.image_urls||[];
     const v=Object.fromEntries(new FormData(form));
-    if(!["wholesale","retail"].includes(v.market_category))throw new Error("Wholesale অথবা Retail নির্বাচন করুন।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     const minimumOrderQuantity=v.minimum_order_quantity===undefined?Number(old.data.minimum_order_quantity||1):Number(v.minimum_order_quantity);
     if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
@@ -1608,7 +1600,7 @@
     const images=await saveListingImages(form,oldUrls,"product",5);
     try{
       const {data,error}=await client().from("products").update({
-        product_name:v.name.trim(),market_category:v.market_category,category:v.category,subcategory:v.subcategory.trim(),
+        product_name:v.name.trim(),category:v.category,subcategory:v.subcategory.trim(),
         image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
         specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
       }).eq("id",id).eq("seller_id",user().id).eq("listing_status","pending").select("id").maybeSingle();
@@ -1649,13 +1641,12 @@
     if(current.error)throw current.error;
     if(current.data.listing_status!=="approved")throw new Error("এই পণ্য আর Approved অবস্থায় নেই। Refresh করে দেখুন।");
     const v=Object.fromEntries(new FormData(form));
-    if(!["wholesale","retail"].includes(v.market_category))throw new Error("Wholesale অথবা Retail নির্বাচন করুন।");
     if(!Number.isFinite(Number(v.price))||Number(v.price)<=0)throw new Error("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     const minimumOrderQuantity=Number(v.minimum_order_quantity||1);if(!Number.isFinite(minimumOrderQuantity)||minimumOrderQuantity<=0)throw new Error("MOQ শূন্যের বেশি হতে হবে।");
     const tiers=parseProductPriceTiers(v.price_tiers,minimumOrderQuantity);
     const images=await saveListingImages(form,current.data.image_urls||[],"product",5);
     const changes={
-      product_name:v.name.trim(),market_category:v.market_category,category:v.category,subcategory:v.subcategory.trim(),
+      product_name:v.name.trim(),category:v.category,subcategory:v.subcategory.trim(),
       image_urls:images.urls,description:v.description.trim(),origin:v.origin.trim(),
       specifications_quality:v.specifications.trim()||null,price:Number(v.price),currency:String(v.currency).toUpperCase(),minimum_order_quantity:minimumOrderQuantity,price_tiers:tiers
     };
@@ -1697,7 +1688,7 @@
 
   const listingHistoryLabels={
     product_name:"পণ্যের নাম",service_name:"সেবার নাম",category:"পণ্যের বিভাগ",
-    market_category:"বিক্রয় ধরন",service_category:"সেবার বিভাগ",description:"বিবরণ",
+service_category:"সেবার বিভাগ",description:"বিবরণ",
     origin:"Origin",specifications_quality:"Specifications & Quality",price:"মূল্য",
     price_amount:"সেবার মূল্য",currency:"Currency",image_urls:"ছবি",
     country:"দেশ",city:"শহর",service_area:"সেবার এলাকা",price_basis:"মূল্য নির্ধারণ",
@@ -1857,7 +1848,7 @@
       const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
-        product_name: v.name.trim(), category: v.category, subcategory: null, market_category: v.market_category, image_urls: images,
+        product_name: v.name.trim(), category: v.category, subcategory: null,  image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
         price: Number(v.price), currency: String(v.currency).toUpperCase(),
