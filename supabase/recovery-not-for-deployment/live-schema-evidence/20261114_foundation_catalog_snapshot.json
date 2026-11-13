@@ -8113,5 +8113,520 @@
       "schema": "public",
       "definition": "CREATE OR REPLACE FUNCTION public.sync_public_identity()\n RETURNS trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n  if tg_op = 'DELETE' then\n    delete from public.public_identities where id = old.id;\n    return old;\n  end if;\n\n  insert into public.public_identities (id, full_name, updated_at)\n  values (new.id, new.full_name, now())\n  on conflict (id) do update\n    set full_name = excluded.full_name,\n        updated_at = excluded.updated_at;\n\n  return new;\nend;\n$function$\n"
     }
-  ]
+  ],
+  "extended_security_catalog": {
+    "roles": [
+      {
+        "role": "anon",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "authenticated",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "dashboard_user",
+        "inherit": true,
+        "createdb": true,
+        "bypassrls": false,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": true,
+        "replication": true
+      },
+      {
+        "role": "pgbouncer",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "postgres",
+        "inherit": true,
+        "createdb": true,
+        "bypassrls": true,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": true,
+        "replication": true
+      },
+      {
+        "role": "service_role",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": true,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "supabase_auth_admin",
+        "inherit": false,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": true,
+        "replication": false
+      },
+      {
+        "role": "supabase_etl_admin",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": true,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": true
+      },
+      {
+        "role": "supabase_privileged_role",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "supabase_read_only_user",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": true,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "supabase_realtime_admin",
+        "inherit": false,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": false,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": false
+      },
+      {
+        "role": "supabase_replication_admin",
+        "inherit": true,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": false,
+        "replication": true
+      },
+      {
+        "role": "supabase_storage_admin",
+        "inherit": false,
+        "createdb": false,
+        "bypassrls": false,
+        "can_login": true,
+        "connlimit": -1,
+        "superuser": false,
+        "createrole": true,
+        "replication": false
+      }
+    ],
+    "schema_acl": [
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "anon",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "authenticated",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "dashboard_user",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "dashboard_user",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "postgres",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "service_role",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "supabase_admin",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "supabase_admin",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "supabase_auth_admin",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "auth",
+        "grantee": "supabase_auth_admin",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "postgres",
+        "schema": "private",
+        "grantee": "authenticated",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "postgres",
+        "schema": "private",
+        "grantee": "postgres",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "postgres",
+        "schema": "private",
+        "grantee": "postgres",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "anon",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "authenticated",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "pg_database_owner",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "pg_database_owner",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "postgres",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "service_role",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "grantee": "PUBLIC",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "anon",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "authenticated",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "dashboard_user",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "dashboard_user",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "postgres",
+        "grantable": true,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "service_role",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "supabase_admin",
+        "grantable": false,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "supabase_admin",
+        "grantable": false,
+        "privilege": "USAGE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "supabase_storage_admin",
+        "grantable": true,
+        "privilege": "CREATE"
+      },
+      {
+        "owner": "supabase_admin",
+        "schema": "storage",
+        "grantee": "supabase_storage_admin",
+        "grantable": true,
+        "privilege": "USAGE"
+      }
+    ],
+    "memberships": [
+      {
+        "role": "anon",
+        "member": "authenticator",
+        "admin_option": false
+      },
+      {
+        "role": "anon",
+        "member": "postgres",
+        "admin_option": true
+      },
+      {
+        "role": "anon",
+        "member": "supabase_realtime_admin",
+        "admin_option": false
+      },
+      {
+        "role": "authenticated",
+        "member": "authenticator",
+        "admin_option": false
+      },
+      {
+        "role": "authenticated",
+        "member": "postgres",
+        "admin_option": true
+      },
+      {
+        "role": "authenticated",
+        "member": "supabase_realtime_admin",
+        "admin_option": false
+      },
+      {
+        "role": "authenticator",
+        "member": "postgres",
+        "admin_option": true
+      },
+      {
+        "role": "authenticator",
+        "member": "supabase_storage_admin",
+        "admin_option": false
+      },
+      {
+        "role": "service_role",
+        "member": "authenticator",
+        "admin_option": false
+      },
+      {
+        "role": "service_role",
+        "member": "postgres",
+        "admin_option": true
+      },
+      {
+        "role": "service_role",
+        "member": "supabase_realtime_admin",
+        "admin_option": false
+      },
+      {
+        "role": "supabase_privileged_role",
+        "member": "postgres",
+        "admin_option": false
+      },
+      {
+        "role": "supabase_privileged_role",
+        "member": "supabase_etl_admin",
+        "admin_option": false
+      }
+    ],
+    "view_security": [
+      {
+        "view": "public_buyer_demands",
+        "schema": "public",
+        "options": [
+          "security_invoker=true"
+        ],
+        "definition": " SELECT id,\n    demand_code,\n    product_name,\n    category,\n    description,\n    specifications_quality,\n    required_quantity,\n    budget,\n    currency,\n    destination_country,\n    destination_city,\n    required_date,\n    demand_status,\n    created_at\n   FROM buyer_demands\n  WHERE demand_status = 'open'::text;"
+      },
+      {
+        "view": "public_profiles",
+        "schema": "public",
+        "options": [
+          "security_invoker=true",
+          "security_barrier=true"
+        ],
+        "definition": " SELECT id,\n    full_name\n   FROM public_identities;"
+      }
+    ],
+    "event_triggers": [
+      {
+        "name": "ensure_rls",
+        "tags": [
+          "CREATE TABLE",
+          "CREATE TABLE AS",
+          "SELECT INTO"
+        ],
+        "event": "ddl_command_end",
+        "enabled": "O",
+        "function": "rls_auto_enable",
+        "function_schema": "public"
+      },
+      {
+        "name": "issue_graphql_placeholder",
+        "tags": [
+          "DROP EXTENSION"
+        ],
+        "event": "sql_drop",
+        "enabled": "O",
+        "function": "set_graphql_placeholder",
+        "function_schema": "extensions"
+      },
+      {
+        "name": "issue_pg_cron_access",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "event": "ddl_command_end",
+        "enabled": "O",
+        "function": "grant_pg_cron_access",
+        "function_schema": "extensions"
+      },
+      {
+        "name": "issue_pg_graphql_access",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "event": "ddl_command_end",
+        "enabled": "O",
+        "function": "grant_pg_graphql_access",
+        "function_schema": "extensions"
+      },
+      {
+        "name": "issue_pg_net_access",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "event": "ddl_command_end",
+        "enabled": "O",
+        "function": "grant_pg_net_access",
+        "function_schema": "extensions"
+      },
+      {
+        "name": "pgrst_ddl_watch",
+        "tags": null,
+        "event": "ddl_command_end",
+        "enabled": "O",
+        "function": "pgrst_ddl_watch",
+        "function_schema": "extensions"
+      },
+      {
+        "name": "pgrst_drop_watch",
+        "tags": null,
+        "event": "sql_drop",
+        "enabled": "O",
+        "function": "pgrst_drop_watch",
+        "function_schema": "extensions"
+      }
+    ]
+  }
 }
