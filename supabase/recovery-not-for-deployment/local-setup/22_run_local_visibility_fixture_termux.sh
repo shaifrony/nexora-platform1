@@ -5,7 +5,7 @@
 set -euo pipefail
 
 DB="nexora_test"
-BASE_URL="https://raw.githubusercontent.com/shaifrony/nexora-platform1/nexora-development/supabase/recovery-not-for-deployment/local-setup"
+BASE_URL="https://raw.githubusercontent.com/shaifrony/nexora-platform1/b88177ecc571c2370dee6a82e1e2f446bbd60051/supabase/recovery-not-for-deployment/local-setup"
 WORK_DIR="$HOME/nexora-local-visibility"
 
 mkdir -p "$WORK_DIR"
@@ -17,7 +17,7 @@ for file in \
   20_dual_market_visibility_read_only_verification.sql
 do
   echo "Downloading $file ..."
-  curl -fL --retry 3 -H "Cache-Control: no-cache" "$BASE_URL/$file?fresh=20261113-plain-sql-04746bf0" -o "$file"
+  curl -fL --retry 3 "$BASE_URL/$file" -o "$file"
   if [ "$file" = "19_cleanup_review_rpc_concurrency_fixture.sql" ]; then
     # Strip legacy psql meta-command lines even if a stale CDN copy is served.
     # ON_ERROR_STOP is already supplied by the psql command below.
