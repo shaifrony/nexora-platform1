@@ -108,10 +108,17 @@ begin
     raise exception 'Only pending or approved products can update stock';
   end if;
   if p_stock_tracking then
-    if p_stock_quantity is null or p_stock_quantity < v_product.reserved_quantity then
-      raise exception 'Stock must be at least the currently reserved quantity';
+    if p_stock_quantity is null then raise exception 'Stock quantity is required'; end if;
+    if v_product.stock_tracking then
+      if p_stock_quantity < v_product.reserved_quantity then raise exception 'Stock must be at least the currently reserved quantity'; end if;
+      update public.products set stock_tracking=true,stock_quantity=p_stock_quantity where id=p_product_id;
+    else
+      select coalesce(sum(o.quantity),0) into v_product.reserved_quantity
+      from public.commerce_orders o where o.listing_type='product' and o.listing_id=p_product_id
+        and o.order_status in ('pending','accepted','ready_for_confirmation');
+      if p_stock_quantity < v_product.reserved_quantity then raise exception 'Stock must cover all outstanding orders'; end if;
+      update public.products set stock_tracking=true,stock_quantity=p_stock_quantity,reserved_quantity=v_product.reserved_quantity where id=p_product_id;
     end if;
-    update public.products set stock_tracking=true,stock_quantity=p_stock_quantity where id=p_product_id;
   else
     if v_product.reserved_quantity > 0 then
       raise exception 'Stock tracking cannot be disabled while orders have reserved stock';
@@ -122,6 +129,8 @@ end;
 $$;
 
 revoke all on function private.set_product_inventory(uuid,boolean,numeric) from public,anon,authenticated;
+-- Pending listing edits may change MOQ and tier prices; stock itself remains RPC-only.
+grant update (minimum_order_quantity,price_tiers) on public.products to authenticated;
 grant usage on schema private to authenticated;
 grant execute on function private.set_product_inventory(uuid,boolean,numeric) to authenticated;
 
