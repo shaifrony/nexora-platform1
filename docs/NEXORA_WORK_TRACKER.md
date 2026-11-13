@@ -141,3 +141,14 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - Added `26_local_buyer_demand_behavior_tests.sql` with transactional/rollback test data for anonymous privacy, Buyer ownership, Seller Inbox routing, per-product Wholesale/Retail independence, late product routing, quotation permissions, duplicate offers, spoofed Buyer ID and required date.
 - Added `27_run_local_buyer_demand_tests_termux.sh` to download immutable SQL versions, preflight the local database, then run fixture 25, audit 24 and behavior tests 26.
 - All three are local reconstruction/test assets under `recovery-not-for-deployment`; not migrations and not production schema recovery. No hosted DB touched. User run pending.
+
+
+
+## 2026-11-13 — B-03 local Demand behavior verification completed
+- User ran Termux runner commit `f202a630dc4e2503daada8ef2130cab90f3b88a6` successfully on `nexora_test`; preflight passed and existing complete local Demand fixture was reused.
+- Narrow local policy dependency repair applied: private boolean helpers replace direct policy dependencies on protected `public_businesses.seller_id` and Buyer Demand ownership; authenticated-only helper EXECUTE, anon denied.
+- Read-only B-03 catalog audit: 8 PASS.
+- Transactional B-03 behavior suite: 12 PASS, covering public Demand privacy, Buyer ownership/isolation, Wholesale + Retail Seller routing, product taxonomy re-match, quotation permission/read isolation, no direct Inbox writes, no duplicate offers, Buyer ID spoof rejection, past required date rejection and RLS/private ACL boundaries.
+- Runner final output: `LOCAL B-03 DEMAND BEHAVIOR TESTS PASSED; ALL TEST DATA ROLLED BACK`; all runner steps completed. Test data rolled back.
+- B-03 local reconstructed fixture logic is complete for these covered cases. Hosted Supabase JWT/RLS/PostgREST, Data API, Storage/Realtime/Edge Functions and browser E2E remain pending; no production readiness claim.
+- No migrations deployed/applied; Live Supabase, Production and `main` untouched.
