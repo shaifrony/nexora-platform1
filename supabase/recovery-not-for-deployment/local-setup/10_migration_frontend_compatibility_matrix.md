@@ -274,3 +274,15 @@ Choose canonical departments for Logistics/Transport, Product/Business, user gov
 - Trust & Safety cannot grant permissions, appoint staff, change roles, access finance or private chat/call content. Cross-department exceptions are explicit and audited.
 - No RPC aliases. User moderation and listing moderation remain separate narrow RPC contracts; role review remains separate Director-only row-locked RPC.
 - Proposal only, pending explicit owner confirmation; no executable seeds/RPC/migration authorized.
+
+## 18. Owner approval and bootstrap implementation gate (2026-11-14)
+
+- Project owner explicitly approved the §17 Admin Governance proposal.
+- Canonical departments: `managing_director`, `marketing`, `transport`, `logistics`, `product_business`, `trust_safety`, `accounts`.
+- Logistics stays separate from Transport; Product/Service edits belong to Product & Business; moderation belongs to Trust & Safety; Marketing remains leads/campaigns; Accounts retains finance.
+- Initial audit-log viewing, public Seller/Business/Product/Service approvals, Admin appointment and Buyer→Seller role review remain Director-only.
+- Trust & Safety key set is proposed/approved at the catalogue level, but each mutation remains unavailable until its narrow server RPC, action/target allowlist, row lock, reason and audit path are implemented and tested. `users.cancel` is reversible deactivation, never Auth hard delete.
+- Source blocker: migration #34 `manage_nexora_officer` only permits `marketing|transport|accounts`, omits `logistics|product_business|trust_safety`, and attempts to seed `logistics.*` under `transport` with `ON CONFLICT DO NOTHING`. This must be corrected in reviewed source/replay strategy before the new catalogue can be used.
+- Other blockers: missing role-request historical SQL (must implement confirmed frontend contract as new recovery baseline); stale/missing user/listing moderation RPCs; no local Supabase CLI/Docker/psql runtime in current environment.
+- Bootstrap order documented in Foundation spec §18.4: platform preflight → schemas/least privilege → profiles → departments/staff/catalog/grants → audit/lifecycle tables → canonical resolver → Auth function/trigger → RLS event trigger + table RLS → explicit grants/policies → assertions → all 38 migration replay → synthetic security/E2E.
+- No SQL candidate is labelled deployable; no hosted project was changed. Next step is source correction plan for #34 and a suitable disposable local Supabase runtime, then generate a recovery-only candidate outside `supabase/migrations/`.
