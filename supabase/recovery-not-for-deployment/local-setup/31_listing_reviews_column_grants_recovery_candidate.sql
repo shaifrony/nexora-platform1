@@ -5,7 +5,17 @@
 -- has been reconciled. Never apply this file to NEXORA-TEST or Live/Production.
 begin;
 
-revoke select on table public.listing_reviews from public, anon, authenticated;
+revoke all on table public.listing_reviews from public, anon, authenticated;
+
+-- Table-level REVOKE does not remove separately granted column privileges.
+-- Explicitly close every non-public column in the current schema as well.
+revoke select (
+  buyer_id,
+  reviewed_by,
+  reviewed_at,
+  moderation_note,
+  updated_at
+) on table public.listing_reviews from public, anon, authenticated;
 
 grant select (
   id,
