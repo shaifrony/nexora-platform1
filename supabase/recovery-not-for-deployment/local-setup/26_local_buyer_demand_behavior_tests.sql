@@ -156,7 +156,7 @@ BEGIN
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Seller A should see Demand'; END IF;
   SELECT count(*) INTO v_count FROM public.buyer_demand_inbox;
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Seller should see only own Inbox row'; END IF;
-  RAISE NOTICE 'PASS: routed Wholesale Seller sees Demand and own Inbox';
+  RAISE NOTICE 'PASS: routed Seller A sees Demand and own Inbox';
 END
 $seller_wholesale$;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
@@ -165,7 +165,7 @@ DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.buyer_demands;
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Seller B should see same Demand'; END IF;
-  RAISE NOTICE 'PASS: Retail Seller also receives same Demand; no sale-type gate';
+  RAISE NOTICE 'PASS: routed Seller B also receives the same Demand';
 END
 $seller_retail$;
 
