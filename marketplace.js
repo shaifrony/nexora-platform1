@@ -639,7 +639,7 @@
     let quantity=null,unitPrice=null,note=null;
     if(action==="counter"){
       const q=prompt("কত ইউনিটের প্রস্তাব দেবেন?",String(currentQuantity||1));if(q===null)return;quantity=Number(q);
-      if(!Number.isFinite(quantity)||quantity<=0||quantity>currentQuantity)return say("পরিমাণ ০-এর বেশি এবং Buyer-এর চাহিদার সর্বোচ্চ পরিমাণের মধ্যে হতে হবে।");
+      if(!Number.isFinite(quantity)||quantity<=0)return say("পরিমাণ ০-এর বেশি হতে হবে।");
       const p=prompt("প্রতি ইউনিটে আপনার প্রস্তাবিত দাম লিখুন:",String(currentPrice||""));if(p===null)return;unitPrice=Number(p);
       if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("দাম ০-এর বেশি হতে হবে।");
       note=prompt("অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
@@ -1114,7 +1114,7 @@
     let quantity=null,unitPrice=null,note=null;
     if(action==="counter"){
       const q=prompt("আপনি কত ইউনিট সরবরাহ করতে পারবেন? Buyer-এর প্রস্তাবিত পরিমাণ "+currentQuantity+"।",String(currentQuantity));if(q===null)return;quantity=Number(q);
-      if(!Number.isFinite(quantity)||quantity<=0)return say("পরিমাণ ০-এর বেশি হতে হবে।");
+      if(!Number.isFinite(quantity)||quantity<=0||quantity>currentQuantity)return say("পরিমাণ ০-এর বেশি এবং Buyer-এর চাহিদার সর্বোচ্চ পরিমাণের মধ্যে হতে হবে।");
       const p=prompt("আপনার প্রস্তাবিত প্রতি ইউনিট মূল্য লিখুন:");if(p===null)return;unitPrice=Number(p);
       if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("প্রতি ইউনিট মূল্য ০-এর বেশি হতে হবে।");
       note=prompt("Buyer-এর জন্য অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
