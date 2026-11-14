@@ -340,3 +340,14 @@ Required tests: six operational departments accept valid officers; Logistics per
 - 16/16 create/deactivate/department/permission/audit assertions and 3/3 update/AAL1/sensitive-reason assertions passed locally.
 - Combined local test suites: 46 assertions passed. Extension-owned table event-trigger behavior, protected initial Director bootstrap, remaining Admin RPC contracts and end-to-end Buyer browser validation remain open.
 - No hosted database or production surface was changed.
+
+
+## 21. Buyer Demand quotation SELECT policy dependency — 2026-11-14
+
+- Active migration #16 defines offers_select_buyer_seller_or_admin with a direct subquery over buyer_demands.buyer_id to establish Buyer ownership.
+- The same migration intentionally revokes table-level SELECT from authenticated and grants only safe Buyer Demand columns; buyer_id is deliberately excluded. A policy subquery must not bypass that privacy boundary or depend on a private column grant.
+- Local PostgreSQL 17 behavior test reproduced quotation SELECT failure during RLS policy evaluation. This was a real policy dependency defect, not merely an audit-script naming mismatch.
+- Recovery-only patch 30 replaces the direct subquery with private.is_buyer_demand_owner(uuid), SECURITY DEFINER, empty search_path, explicit auth.uid + active Buyer check, PUBLIC/anon EXECUTE revoked, authenticated EXECUTE only. It returns a boolean and does not expose Buyer identity.
+- With patch 30 applied after all 38 migrations, read-only audit 24 and transactional behavior test 26 pass. Buyer owner sees own quotation; unrelated Buyer sees none; Seller sees own offers; Buyer ID remains unavailable to anon/authenticated.
+- Patch 30 is NOT an active migration and NOT deployable. Generate a genuine forward migration later using the Supabase CLI's natural timestamp after the latest active migration; do not edit historical SQL or fabricate a version.
+- Real hosted JWT/PostgREST/browser tests remain pending.
