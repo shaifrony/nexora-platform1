@@ -1,0 +1,146 @@
+/* NEXORA Financial Configuration Domain
+ * Pure validation/calculation only. No defaults, persistence, payment or payout actions.
+ * All rates must be supplied by an approved, effective-dated server configuration.
+ */
+(function (root) {
+  "use strict";
+
+  const BPS_DENOMINATOR = 10000;
+  const SALE_TYPES = new Set(["wholesale", "retail"]);
+
+  function assert(condition, message) {
+    if (!condition) throw new TypeError(message);
+  }
+
+  function isPlainObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+
+  function assertBps(value, label) {
+    assert(Number.isSafeInteger(value) && value >= 0 && value <= BPS_DENOMINATOR,
+      label + " must be an integer from 0 to 10000 basis points.");
+  }
+
+  function assertMinorUnits(value, label) {
+    assert(Number.isSafeInteger(value) && value >= 0,
+      label + " must be a non-negative safe integer in minor currency units.");
+  }
+
+  function validateSchedule(schedule) {
+    assert(isPlainObject(schedule), "A financial schedule object is required.");
+    assert(typeof schedule.schedule_id === "string" && schedule.schedule_id.trim(), "schedule_id is required.");
+    assert(Number.isSafeInteger(schedule.version) && schedule.version > 0, "A positive schedule version is required.");
+    assert(typeof schedule.currency === "string" && /^[A-Z]{3}$/.test(schedule.currency), "A three-letter uppercase currency code is required.");
+    assert(typeof schedule.effective_from === "string" && !Number.isNaN(Date.parse(schedule.effective_from)), "A valid effective_from date is required.");
+    assert(["draft", "pending_approval", "approved", "retired"].includes(schedule.status), "Invalid schedule status.");
+    if (schedule.effective_until != null) {
+      assert(!Number.isNaN(Date.parse(schedule.effective_until)), "effective_until must be a valid date.");
+      assert(Date.parse(schedule.effective_until) > Date.parse(schedule.effective_from), "effective_until must be after effective_from.");
+    }
+
+    const fees = schedule.fees;
+    assert(isPlainObject(fees), "fees configuration is required.");
+    assert(isPlainObject(fees.marketplace_commission), "marketplace_commission configuration is required.");
+    assertBps(fees.marketplace_commission.wholesale_bps, "Wholesale commission");
+    assertBps(fees.marketplace_commission.retail_bps, "Retail commission");
+    assert(fees.marketplace_commission.basis === "goods_subtotal_after_discount", "Unsupported marketplace commission basis.");
+
+    assert(isPlainObject(fees.buyer_agent_fee), "buyer_agent_fee configuration is required.");
+    assert(fees.buyer_agent_fee.required_when_agent_used === true, "Buyer Agent fee must be mandatory when Buyer Agent service is used.");
+    assertBps(fees.buyer_agent_fee.rate_bps, "Buyer Agent fee");
+    assert(fees.buyer_agent_fee.basis === "goods_subtotal_after_discount", "Unsupported Buyer Agent fee basis.");
+
+    assert(isPlainObject(fees.transport_split), "transport_split configuration is required.");
+    const split = fees.transport_split;
+    assertBps(split.carrier_bps, "Carrier share");
+    assertBps(split.local_distribution_bps, "Local Distribution share");
+    assertBps(split.nexora_bps, "NEXORA logistics share");
+    assert(split.carrier_bps + split.local_distribution_bps + split.nexora_bps === BPS_DENOMINATOR,
+      "Transport shares must total exactly 10000 basis points.");
+
+    return true;
+  }
+
+  function selectEffectiveSchedule(schedules, at) {
+    assert(Array.isArray(schedules), "Schedules must be an array.");
+    const instant = at == null ? Date.now() : Date.parse(at);
+    assert(Number.isFinite(instant), "A valid schedule-selection date is required.");
+    const eligible = schedules.filter((schedule) => {
+      validateSchedule(schedule);
+      if (schedule.status !== "approved") return false;
+      const start = Date.parse(schedule.effective_from);
+      const end = schedule.effective_until == null ? Infinity : Date.parse(schedule.effective_until);
+      return start <= instant && instant < end;
+    });
+    assert(eligible.length > 0, "No approved financial schedule is effective for this date.");
+    eligible.sort((a, b) => b.version - a.version);
+    return eligible[0];
+  }
+
+  function calculateBasisPoints(amountMinor, bps) {
+    assertMinorUnits(amountMinor, "Fee base");
+    assertBps(bps, "Fee rate");
+    const amount = BigInt(amountMinor);
+    const rate = BigInt(bps);
+    const rounded = (amount * rate + 5000n) / 10000n;
+    assert(rounded <= BigInt(Number.MAX_SAFE_INTEGER), "Calculated fee exceeds the safe integer range.");
+    return Number(rounded);
+  }
+
+  function calculateOrderFees(input) {
+    assert(isPlainObject(input), "Order fee input is required.");
+    const schedule = input.schedule;
+    validateSchedule(schedule);
+    assert(schedule.status === "approved", "Only an approved financial schedule can price an order.");
+    assert(SALE_TYPES.has(input.sale_type), "sale_type must be wholesale or retail.");
+    assertMinorUnits(input.goods_subtotal_after_discount_minor, "Goods subtotal after discount");
+    assertMinorUnits(input.transport_charge_minor, "Transport charge");
+    assert(typeof input.buyer_agent_used === "boolean", "buyer_agent_used must be explicitly true or false.");
+
+    const commissionRate = input.sale_type === "wholesale"
+      ? schedule.fees.marketplace_commission.wholesale_bps
+      : schedule.fees.marketplace_commission.retail_bps;
+    const base = input.goods_subtotal_after_discount_minor;
+    const marketplaceCommission = calculateBasisPoints(base, commissionRate);
+    const buyerAgentFee = input.buyer_agent_used
+      ? calculateBasisPoints(base, schedule.fees.buyer_agent_fee.rate_bps)
+      : 0;
+    const transport = input.transport_charge_minor;
+    const split = schedule.fees.transport_split;
+
+    return Object.freeze({
+      currency: schedule.currency,
+      goods_subtotal_after_discount_minor: base,
+      marketplace_commission_minor: marketplaceCommission,
+      buyer_agent_fee_minor: buyerAgentFee,
+      transport_charge_minor: transport,
+      transport_carrier_share_minor: calculateBasisPoints(transport, split.carrier_bps),
+      transport_local_distribution_share_minor: calculateBasisPoints(transport, split.local_distribution_bps),
+      transport_nexora_share_minor: calculateBasisPoints(transport, split.nexora_bps),
+      schedule_id: schedule.schedule_id,
+      schedule_version: schedule.version
+    });
+  }
+
+  function createOrderFeeSnapshot(input) {
+    const fees = calculateOrderFees(input);
+    const snapshot = {
+      ...fees,
+      order_id: String(input.order_id || ""),
+      sale_type: input.sale_type,
+      schedule_effective_from: input.schedule.effective_from
+    };
+    assert(snapshot.order_id.trim(), "order_id is required for an order fee snapshot.");
+    return Object.freeze(snapshot);
+  }
+
+  const api = Object.freeze({
+    validateSchedule,
+    selectEffectiveSchedule,
+    calculateOrderFees,
+    createOrderFeeSnapshot
+  });
+
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  if (root) Object.defineProperty(root, "NEXORA_FINANCE", { value: api, configurable: false, writable: false });
+})(typeof window !== "undefined" ? window : globalThis);
