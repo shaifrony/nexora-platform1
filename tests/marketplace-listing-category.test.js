@@ -225,3 +225,67 @@ test("Listing edit history captures immutable before/after snapshots through dat
   assert.match(listingHistorySql, /revoke all on function private\.snapshot_listing_before_edit_request\(\) from public,anon,authenticated/i);
   assert.match(listingHistorySql, /revoke all on function private\.log_listing_edit_request_event\(\) from public,anon,authenticated/i);
 });
+
+
+const productNegotiationSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261115110000_product_price_negotiation.sql"),
+  "utf8"
+);
+
+test("Product price negotiations and event history are private to their Buyer and Seller participants", () => {
+  assert.match(productNegotiationSql, /alter table public\.product_price_negotiations enable row level security/i);
+  assert.match(productNegotiationSql, /alter table public\.product_price_negotiation_events enable row level security/i);
+  assert.match(productNegotiationSql, /product_price_negotiations_participant_read[\s\S]*?buyer_id=\(select auth\.uid\(\)\) or seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(productNegotiationSql, /product_price_negotiation_events_participant_read[\s\S]*?n\.buyer_id=\(select auth\.uid\(\)\) or n\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(productNegotiationSql, /revoke all on public\.product_price_negotiations,public\.product_price_negotiation_events from public,anon,authenticated/i);
+});
+
+test("Only an active Buyer can start a negotiation on another Seller's approved product", () => {
+  const fn = productNegotiationSql.slice(
+    productNegotiationSql.indexOf("create or replace function public.start_product_price_negotiation("),
+    productNegotiationSql.indexOf("revoke all on function private.respond_to_product_price_negotiation")
+  );
+  assert.match(fn, /listing_status='approved' for update/i);
+  assert.match(fn, /v_seller=v_actor/i);
+  assert.match(fn, /role='buyer' and account_status='active'/i);
+  assert.match(fn, /public\.public_businesses/i);
+  assert.match(fn, /p_quantity<coalesce\(v_product\.minimum_order_quantity,1\)/i);
+  assert.match(fn, /p_quantity>v_available/i);
+  assert.match(fn, /length\(btrim\(coalesce\(p_fulfilment_location,''\)\)\)<5/i);
+});
+
+test("Negotiation responses require the correct active participant and enforce turn-taking", () => {
+  const fn = productNegotiationSql.slice(
+    productNegotiationSql.indexOf("create or replace function private.respond_to_product_price_negotiation("),
+    productNegotiationSql.indexOf("create or replace function public.start_product_price_negotiation(")
+  );
+  assert.match(fn, /where id=p_negotiation_id for update/i);
+  assert.match(fn, /where id=v_n\.product_id for update/i);
+  assert.match(fn, /account_status='active' and role in \('buyer','seller'\)/i);
+  assert.match(fn, /v_n\.buyer_id<>v_actor/i);
+  assert.match(fn, /v_n\.seller_id<>v_actor/i);
+  assert.match(fn, /v_n\.negotiation_status in \('accepted','rejected','ordered'\)/i);
+  assert.match(fn, /v_actor=v_n\.last_actor_id/i);
+});
+
+test("Negotiation acceptance rechecks MOQ and stock, reserves inventory and creates an order atomically", () => {
+  const fn = productNegotiationSql.slice(
+    productNegotiationSql.indexOf("create or replace function private.respond_to_product_price_negotiation("),
+    productNegotiationSql.indexOf("create or replace function public.start_product_price_negotiation(")
+  );
+  assert.match(fn, /v_n\.quantity<coalesce\(v_p\.minimum_order_quantity,1\)/i);
+  assert.match(fn, /v_n\.quantity>v_available/i);
+  assert.match(fn, /update public\.products set reserved_quantity=reserved_quantity\+v_n\.quantity/i);
+  assert.match(fn, /insert into public\.commerce_orders/i);
+  assert.match(fn, /insert into public\.commerce_order_events/i);
+  assert.match(fn, /set negotiation_status='ordered',order_id=v_order_id/i);
+});
+
+test("Negotiation actions append immutable event and chat history through protected server-side functions", () => {
+  assert.match(productNegotiationSql, /insert into public\.product_price_negotiation_events/i);
+  assert.match(productNegotiationSql, /perform private\.append_product_negotiation_chat_event/i);
+  assert.match(productNegotiationSql, /revoke all on function private\.append_product_negotiation_chat_event\(uuid,uuid,jsonb\) from public,anon,authenticated/i);
+  assert.match(productNegotiationSql, /revoke all on function private\.respond_to_product_price_negotiation\(uuid,text,numeric,numeric,text,text\) from public,anon,authenticated/i);
+  assert.match(productNegotiationSql, /security invoker set search_path=''/i);
+  assert.match(productNegotiationSql, /grant execute on function public\.respond_to_product_price_negotiation\(uuid,text,numeric,numeric,text,text\) to authenticated/i);
+});
