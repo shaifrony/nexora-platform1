@@ -51,7 +51,7 @@ jobs:
           if (files.length === 0) throw new Error("No active migrations found");
           const timestamps = [];
           for (const name of files) {
-            const match = name.match(/^(\\d{14})_[a-z0-9_]+\\.sql$/);
+            const match = name.match(/^(\d{14})_[a-z0-9_]+\.sql$/);
             if (!match) throw new Error("Invalid active migration filename: " + name);
             timestamps.push(match[1]);
           }
