@@ -873,3 +873,21 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Before applying anything, create a separately reviewed, clearly labelled **Test-only foundation baseline** for the hosted Supabase platform (Auth, roles, schemas, Admin authorization, Auth trigger, RLS and Realtime prerequisites). Compare it with the local-only fixture and schema-only catalog evidence; do not copy any Live user rows, auth identities, private messages, calls, or Storage objects. Keep recovered-history drafts excluded.
 - Only after that baseline is independently reviewed should we rehearse the 38 active migrations in a disposable local Supabase stack and then on NEXORA-TEST, using explicit project targeting and synthetic identities/data. Calling remains paused.
 - This was a read-only audit: no migration, hosted schema/data, `main`, Production, DNS or paid plan was changed.
+
+
+## 2026-11-14 — NEXORA-TEST Foundation Baseline design v1
+
+- Created the current authoritative Test-only foundation contract:
+  `supabase/recovery-not-for-deployment/local-setup/09_nexora_test_foundation_baseline_spec.md`.
+- The specification consolidates identity/profile lifecycle, Buyer/Seller/Porter/Admin role boundaries, Porter approval, Admin hierarchy/permissions, audit, Auth provisioning, private-schema helpers, RLS/grants and privacy requirements, migration prerequisites and validation gates.
+- **Corrected a stale business-model contradiction:** current Marketplace is unified. No Buyer/Seller Wholesale/Retail category fields or category-based visibility. Sellers set their own prices/quantities; everyone sees approved marketplace listings. Logistics delivery modes remain a separate concept. This supersedes the old Wholesale-Only category model in `05_foundation_design_proposal.md`.
+- Marked `05_foundation_design_proposal.md` as superseded historical context and `06_local_foundation_baseline_fixture.sql` as a superseded local compatibility fixture. Do not use the old fixture as the current baseline; it still contains the obsolete market-category model.
+- Updated `supabase/recovery-not-for-deployment/README.md` to point to the current specification.
+- Commits on `nexora-development`:
+  - Specification: `c2f491c3eb9ce827a0237eb1f0504e1a7d7d6276`
+  - Old proposal marked superseded: `d10c3817ab3d12aa2d2a8f0df7dffcf14e78ca7d`
+  - Old local fixture marked superseded: `d92fd37c4beff0701b694c9ef0824ecb1ecafe67`
+  - Recovery README updated: `6a7d35f9a4a484ec27d0a725d663de27aaa60420`
+- This is design/documentation only. No SQL was generated or executed, no hosted Test schema/data changed, no Live/Production/ `main` / DNS / paid service changed. No real users or private content used. Calling remains paused.
+- Supabase CLI v3 breaking behavior rechecked: hosted database commands require explicit `--remote`; hosted mutations prompt for confirmation and require `--yes` when unattended. References: Supabase CLI v3 migration guide and Nov 4, 2026 changelog.
+- **Next gate:** produce a full dependency/compatibility matrix for all 38 active migrations and frontend dependencies, then write a new Test-only SQL baseline only after all required columns, permission keys, trigger behavior and function signatures are confirmed. Migration timestamp generation gate still applies; do not invent or rename timestamps.
