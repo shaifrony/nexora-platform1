@@ -520,7 +520,7 @@ test("Seller cannot spoof protected Buyer Demand quotation state or agreed terms
   );
   assert.match(fn, /select \* into v_demand from public\.buyer_demands where id=new\.demand_id for update/i);
   assert.match(fn, /v_demand\.demand_status<>'open'/i);
-  assert.match(fn, /new\.current_quantity:=v_qty/i);
+  assert.match(fn, /new\.current_quantity:=least\(v_qty,v_demand_qty\)/i);
   assert.match(fn, /new\.current_unit_price:=v_unit/i);
   assert.match(fn, /new\.negotiation_status:='open'/i);
   assert.match(fn, /new\.last_negotiator_id:=new\.seller_id/i);
@@ -1033,4 +1033,15 @@ test("Buyer Demand quantity parser accepts a numeric amount followed by a unit o
   assert.match(demandOrderSql, /regexp_replace\(btrim\(v_demand\.required_quantity\),',','','g'\)/i);
   assert.match(demandOrderSql, /from '\^\[0-9\]\+\[\.\]\?\[0-9\]\*'\)/i);
   assert.match(demandOrderSql, /v_demand_qty is null or v_demand_qty<=0/i);
+});
+
+
+test("Initial Seller quotation quantity is capped at Buyer demand while Seller availability remains intact", () => {
+  const trigger = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.initialise_seller_offer_negotiation()"),
+    demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
+  );
+  assert.match(trigger, /v_qty:=nullif\(new\.available_quantity,''\)::numeric/i);
+  assert.match(trigger, /new\.current_quantity:=least\(v_qty,v_demand_qty\)/i);
+  assert.match(trigger, /new\.available_quantity/);
 });
