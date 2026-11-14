@@ -1609,3 +1609,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - The first run exposed a test-only formatting mismatch: the public profile view formats `SELECT` and `FROM` on separate lines. Updated the assertion to allow SQL whitespace; the migration source was already correct.
 - GitHub Actions Development CI [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) for commit `4a3ee309ab3407883669c65528e7fd7100f45fc7` completed successfully: **93/93 tests passed**, JavaScript syntax and migration filename/order guard passed.
 - No schema, migration, hosted DB or Production changes were made by this test addition. These are source regression checks, not live role/JWT/RLS tests.
+
+
+## 2026-11-15 — Authenticated Product and Service listing read privacy hardening
+- Source audit found that authenticated users had table-wide SELECT on Product and Service listing tables. Public marketplace UI already selected safe fields, but direct Data API queries could still retrieve Admin `admin_note`, `reviewed_by` and `reviewed_at` metadata.
+- Product SELECT is now column-allowlisted for authenticated clients in `20261114175118_add_dual_listing_market_category.sql`; listing fields needed by Buyer/Seller/Admin UI remain available, while Admin review metadata is excluded.
+- Service listing SELECT is now column-allowlisted in `20261114160000_demand_inbox_quotations_subcategories.sql`; the owning active Seller retrieves their own `admin_note`/`reviewed_at` through `get_my_service_listing_review_notes()` instead of direct table access. Seller Service UI now calls that RPC and merges only the owner-scoped notes.
+- Added three source regression tests for Product and Service safe-column grants, private review-note RPC scope, and Seller UI wiring. One initial test matched an earlier Product subcategory grant and over-captured the Service grant; corrected the capture to the Service-specific column list.
+- GitHub Actions Development CI [#43648182187](https://github.com/shaifrony/nexora-platform1/actions/runs/43648182187) for commit `ab8a3781dfea6b0bd0f1b9ecc238d158d0b8be71` completed successfully: **96/96 tests passed**, JavaScript syntax and migration filename/order guard passed.
+- No migration was applied and no hosted database grants changed. Runtime column-privilege tests under anon/authenticated JWTs and browser E2E remain pending.
