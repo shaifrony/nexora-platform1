@@ -149,3 +149,79 @@ test("Super Admin review UI checks active Admin identity before applying approva
   assert.match(handler, /admin_level !== "super_admin"/);
   assert.match(handler, /is_active !== true/);
 });
+
+
+const listingEditSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114120000_listing_edit_review_workflow.sql"),
+  "utf8"
+);
+const listingHistorySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114130000_listing_edit_history.sql"),
+  "utf8"
+);
+
+test("Listing change submission is limited to active Sellers editing their own approved listings", () => {
+  const fn = listingEditSql.slice(
+    listingEditSql.indexOf("create or replace function private.submit_listing_edit_request("),
+    listingEditSql.indexOf("create or replace function private.review_listing_edit_request(")
+  );
+  assert.match(fn, /role='seller' and account_status='active'/i);
+  assert.match(fn, /v_seller_id<>v_actor or v_listing_status<>'approved'/i);
+  assert.match(fn, /An approved Business Profile is required/i);
+  assert.match(fn, /from public\.products where id=p_listing_id for update/i);
+  assert.match(fn, /from public\.service_listings where id=p_listing_id for update/i);
+});
+
+test("Listing change payloads use explicit allowlists and field validation for both listing types", () => {
+  const submit = listingEditSql.slice(
+    listingEditSql.indexOf("create or replace function private.submit_listing_edit_request("),
+    listingEditSql.indexOf("create or replace function private.review_listing_edit_request(")
+  );
+  for (const field of ["product_name","category","image_urls","description","origin","specifications_quality","price","currency"]) {
+    assert.ok(submit.includes("'" + field + "'"), "Product allowlist missing " + field);
+  }
+  for (const field of ["service_name","service_category","description","country","city","service_area","price_basis","price_amount","currency","availability","image_urls"]) {
+    assert.ok(submit.includes("'" + field + "'"), "Service allowlist missing " + field);
+  }
+  assert.match(submit, /jsonb_object_keys\(p_proposed_changes\)/i);
+  assert.match(submit, /jsonb_array_length\(p_proposed_changes->'image_urls'\)>5/i);
+  assert.match(submit, /jsonb_array_length\(p_proposed_changes->'image_urls'\)>3/i);
+});
+
+test("Only one pending change request can exist per Product or Service listing", () => {
+  assert.match(listingEditSql, /create unique index if not exists listing_edit_requests_one_pending_product[\s\S]*?where status='pending' and product_id is not null/i);
+  assert.match(listingEditSql, /create unique index if not exists listing_edit_requests_one_pending_service[\s\S]*?where status='pending' and service_listing_id is not null/i);
+});
+
+test("Listing change review requires matching permission, active Admin membership and a pending request", () => {
+  const fn = listingEditSql.slice(
+    listingEditSql.indexOf("create or replace function private.review_listing_edit_request("),
+    listingEditSql.indexOf("revoke all on function private.submit_listing_edit_request")
+  );
+  assert.match(fn, /private\.has_nexora_permission\(v_permission\)/i);
+  assert.match(fn, /s\.is_active=true[\s\S]*?p\.role='admin' and p\.account_status='active'/i);
+  assert.match(fn, /v_request\.status<>'pending'/i);
+  assert.match(fn, /p_action='reject' and length\(btrim\(coalesce\(p_reason,''\)\)\)<5/i);
+  assert.match(fn, /for update/i);
+});
+
+test("Approvals apply proposed listing fields, while rejections preserve live listing data and record an audit event", () => {
+  const fn = listingEditSql.slice(
+    listingEditSql.indexOf("create or replace function private.review_listing_edit_request("),
+    listingEditSql.indexOf("revoke all on function private.submit_listing_edit_request")
+  );
+  assert.match(fn, /if p_action='approve' then\s*update public\.products set/i);
+  assert.match(fn, /if p_action='approve' then\s*update public\.service_listings set/i);
+  assert.match(fn, /update public\.listing_edit_requests\s*set status=case when p_action='approve'/i);
+  assert.match(fn, /insert into public\.admin_audit_logs/i);
+  assert.match(fn, /'listing_edit_request\.'\|\|p_action/i);
+});
+
+test("Listing edit history captures immutable before/after snapshots through database triggers", () => {
+  assert.match(listingHistorySql, /before insert on public\.listing_edit_requests\s*for each row execute function private\.snapshot_listing_before_edit_request\(\)/i);
+  assert.match(listingHistorySql, /after insert or update of status on public\.listing_edit_requests\s*for each row execute function private\.log_listing_edit_request_event\(\)/i);
+  assert.match(listingHistorySql, /new\.original_data:=v_old/i);
+  assert.match(listingHistorySql, /insert into public\.listing_edit_request_events/i);
+  assert.match(listingHistorySql, /revoke all on function private\.snapshot_listing_before_edit_request\(\) from public,anon,authenticated/i);
+  assert.match(listingHistorySql, /revoke all on function private\.log_listing_edit_request_event\(\) from public,anon,authenticated/i);
+});
