@@ -906,3 +906,22 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Matrix commit: `c51c7247573f9535ad20278d5bd0578c276d61c7`.
 - README link commit: `5c911e87789d35db14931bfd72ca31763176cf1b`.
 - **Next blocker:** reconcile legacy Porter frontend RPC/table paths and formalize Admin/role-request RPC contracts; only then prepare Test-only Foundation SQL. No hosted SQL operation is authorized by this audit.
+
+
+## 2026-11-14 — Buyer-stage safety and frontend entry-point repair
+
+- Reconfirmed the active product focus: **Buyer Module first**. Seller/Porter/Admin feature work is deferred unless a prerequisite is required to unblock safe Buyer work.
+- Buyer-facing source inspection covered registration/login/profile entry, public Marketplace discovery/search, product detail, Seller contact request, product price negotiation, order request/history, Buyer Demand creation with required-by date, public Demand board and private Buyer Demand/quotation dashboard. This was a static source review, not a runtime acceptance test.
+- Fixed the environment-routing fail-open condition:
+  - `supabase-config.js` now supplies explicit URL and publishable key for both the allowlisted Test host and the explicit Production host.
+  - `auth.js` and `admin/admin.js` now require a valid, explicit `test` or `production` configuration with URL and publishable key. Missing, blocked, malformed or unknown configuration stops before client creation; there is no fallback to Live credentials.
+- Repaired missing closing `</script>` tags for `supabase-config.js` in both `index.html` and `admin/index.html`. Previously, the subsequent application scripts were nested as script text rather than separate script elements, preventing the intended loading sequence.
+- Commits on `nexora-development`:
+  - Explicit environment routing: `0397886de8332554c7bbf37c45ff39fe4e43d579`
+  - Buyer authentication fail-closed guard: `dec70226c4b3e3c49cf2463346e75ab784efef51`
+  - Admin authentication fail-closed guard: `bb6202d66906cfa31f69c5062d77ec16e2091503`
+  - Main page script closure: `38af2e9e2c17afafe61fb8234cf54339e031461f`
+  - Admin page script closure: `14a5e14877a33e39dbc585c9e7dd62b47985c9b5`
+- No database schema/data, SQL migrations, Test project, Live/Production data, `main`, DNS or paid service was changed. No login or real-user testing was attempted.
+- **Validation still required:** browser/runtime test of script loading and explicit host routing; Test-host deployment is currently constrained by Vercel deployment quota/protection and NEXORA-TEST remains empty. Do not ask the user to log in on an unverified preview.
+- **Next Buyer gate:** complete a focused Buyer acceptance checklist and identify any remaining Buyer UX/security gaps across Marketplace browse/search/detail, Buyer Demand, Seller inquiry, quotation negotiation, orders, Buyer profile and chat. Use only synthetic identities/data in the disposable local test environment; do not apply migrations to empty NEXORA-TEST until the Foundation baseline is reconciled and separately authorized.
