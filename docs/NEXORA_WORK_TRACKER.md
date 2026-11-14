@@ -1633,3 +1633,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Hardened `private.respond_to_demand_offer()` to parse the Buyer-requested quantity and cap Seller initial quotes, Buyer/Seller counter-offers and final order quantity at both the requested quantity and Seller available quantity.
 - Added dependency-free regression coverage for forged initial quotation state and requested-quantity limits. GitHub Actions Development CI run [#43648638922](https://github.com/shaifrony/nexora-platform1/actions/runs/43648638922) for commit `bc27acb03abb3b01bb366166908a480245bdb044` completed successfully: JavaScript syntax, regression tests and migration filename/order guard all passed.
 - This is source-level regression coverage, not executed PostgreSQL/Supabase migration or live RLS/JWT/PostgREST integration. Hosted migration remains blocked pending migration-history reconciliation and explicit release approval. No hosted database, Production, DNS or `main` changed.
+
+
+## 2026-11-15 — Buyer Demand quantity parsing and currency consistency
+- Corrected the Demand negotiation quantity parser to accept the actual Buyer form format (numeric amount followed by a unit, e.g. `5000 KG`) and comma-separated amounts, instead of casting the entire free-text value directly to numeric. Invalid or non-positive numeric quantities are rejected.
+- Added a server-side check requiring each Seller quotation currency to match the currency selected on the Buyer Demand, preventing cross-currency quotations from being treated as directly comparable.
+- Updated dependency-free regression checks for the quantity parser, requested-quantity ceiling and currency consistency. GitHub Actions Development CI run [#43649052531](https://github.com/shaifrony/nexora-platform1/actions/runs/43649052531) for commit `9a9b0ddbc9f66b61d0346465623d4e25cc6a4b83` completed successfully; JavaScript syntax, regression tests and migration filename/order guard passed.
+- CI source checks do not replace actual PostgreSQL migration execution, RLS/JWT/PostgREST tests or browser E2E. Hosted database and Production remain untouched; no `main` changes.
