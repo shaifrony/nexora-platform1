@@ -503,3 +503,23 @@ Before a Foundation bootstrap candidate is authored:
 4. Reconcile or disable missing user/listing moderation RPC paths; no alias-by-guessing.
 5. Implement and test `review_role_request` contract, row locking, pending uniqueness, role transition and audit.
 6. Run synthetic positive/negative tests for each key and department. Until then, missing keys deny and all affected UI actions remain nonfunctional rather than bypassing security.
+
+## 16. Environment readiness and remaining approval decisions (2026-11-14)
+
+### Verified environment constraints
+- The current execution environment has no `supabase` CLI, Docker, or `psql` executable, and the repository is not mounted as a local working tree. Therefore a disposable local PostgreSQL/Supabase instance cannot be created or replayed in this session.
+- Read-only Supabase MCP checks against NEXORA-TEST reconfirmed: zero migration-history rows, zero tables in the inspected `public`/`private` schemas, and zero security advisor lints. The empty-project result is not evidence that a Foundation implementation is secure; there is no schema to lint.
+- Do not use hosted NEXORA-TEST as a substitute for a disposable local database. No schema mutation was attempted.
+
+### Department governance decisions that must be finalized before bootstrap SQL
+The current source contracts are internally inconsistent. Candidate choices requiring explicit product/governance approval:
+1. Whether `logistics` remains its own department or is consolidated into `transport`. If consolidated, update #19/#34 seed reconciliation and all existing grants/policies/RPC assumptions as one migration plan.
+2. Whether `product_business` remains a distinct department for `products.edit`/`services.edit`, and seed its department before any officer can receive those keys.
+3. Whether User/Business/Product moderation belongs to a new `trust_safety`/governance department or an existing department. Marketing should not automatically inherit suspension/cancellation powers merely because it manages acquisition leads.
+4. Whether audit log viewing is Director-only by default or may be granted to a separate audited role; default is Director-only until approved.
+5. Define whether Product/Business approve/reject remains Director-only or receives separate explicit permission keys.
+
+Until these are decided, missing permission keys remain unseeded and all related non-Director UI actions must fail closed. No department ownership is guessed in SQL.
+
+### Current gate
+**Foundation candidate SQL is not authorized for creation or application yet.** The next safe step is to settle the above permission ownership decisions and make a disposable local Supabase/Postgres environment available. Then prepare a clearly marked recovery-only bootstrap candidate, replay all 38 feature migrations and test before any NEXORA-TEST change.
