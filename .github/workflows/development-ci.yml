@@ -58,6 +58,11 @@ jobs:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_test
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/buyer-demand-negotiation-postgres.test.sql
 
+      - name: Execute Product Price Negotiation migration against disposable PostgreSQL
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/product-price-negotiation-postgres.test.sql
+
       - name: Validate active migration filenames and ordering
         shell: bash
         run: |
