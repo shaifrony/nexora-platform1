@@ -2,6 +2,7 @@
 -- 31_listing_reviews_column_grants_recovery_candidate.sql
 -- only in a disposable local database with the full migration chain replayed.
 -- This script is read-only and raises an exception if the grant boundary is wrong.
+begin;
 
 do $$
 declare
@@ -45,3 +46,4 @@ select * from public.get_listing_review_summary(
   '00000000-0000-0000-0000-000000000000'::uuid
 );
 reset role;
+rollback;
