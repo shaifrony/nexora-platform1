@@ -1542,3 +1542,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - GitHub Actions run `43645864453` for commit `765273e265c4551d93033e6b04dc262e70c0a91e` completed successfully (JavaScript syntax, dependency-free tests, migration filename/order guard).
 - Scope is repository source regression coverage; no live Supabase/PostgREST/JWT integration was run. No migration applied and no hosted data changed.
 - Work remains on `nexora-development`; `main`, Production, DNS and public deployment aliases untouched.
+
+
+## 2026-11-15 — Product price negotiation and order-conversion regression coverage
+- Added five dependency-free source regression tests for participant-only RLS visibility, active Buyer/approved Product eligibility, participant and turn-taking checks, closed-negotiation protection, MOQ/stock rechecks, inventory reservation + order creation, and protected event/chat history.
+- GitHub Actions run `43645919829` for commit `7a02d79d81dc51c94783bb2d04a4ef476553a921` completed successfully.
+- Combined with the preceding listing-edit workflow coverage (six tests; run `43645864453`, successful), these are repository source checks only, not live Supabase integration tests.
+- No migration applied, no hosted DB changed; work remains on `nexora-development`.
