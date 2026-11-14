@@ -1345,3 +1345,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Local Node test run: 15 tests passed, 0 failed. The run used a local verification copy of the current financial-config.js source; this is a unit-level calculation test, not Supabase/database integration evidence.
 - No SQL migration or database change was applied. No Production/Live, main, DNS, deployment or paid service was changed.
 - Next safe work: reconcile the latest approved separate Wholesale/Retail Listing model against the current unified-product source, then establish a reproducible local Supabase CLI v3 environment and generate migrations only through supabase migration new. If a local Supabase runtime cannot be made available without a paid service, pause before hosted Test schema changes and report the blocker.
+
+
+### Environment-routing regression coverage — 2026-11-14
+- Added tests/supabase-config.test.js using Node's built-in test runner and vm isolation.
+- Coverage: exact approved development host routes to NEXORA-TEST; exact production host is labelled production; unknown hosts fail closed; lookalike suffix domains are blocked; hostname matching is case-insensitive.
+- Combined local unit run: 20 tests passed, 0 failed (15 financial configuration + 5 environment-routing tests). The tests were run against local verification copies of the branch source; the repository test files reference the actual source paths when run from a checkout.
+- This does not establish Vercel Preview deployment correctness or Supabase Auth/PostgREST/RLS runtime behavior. No deployment or database mutation was performed.
