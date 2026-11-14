@@ -523,3 +523,58 @@ Until these are decided, missing permission keys remain unseeded and all related
 
 ### Current gate
 **Foundation candidate SQL is not authorized for creation or application yet.** The next safe step is to settle the above permission ownership decisions and make a disposable local Supabase/Postgres environment available. Then prepare a clearly marked recovery-only bootstrap candidate, replay all 38 feature migrations and test before any NEXORA-TEST change.
+
+## 17. Recommended department and moderation governance baseline (PROPOSAL — pending owner confirmation)
+
+**Purpose:** remove ambiguity for the recovery-only Foundation candidate without silently treating recommendations as approved business policy. This is a conservative proposal only; no SQL seeds or RPCs are authorized by this section.
+
+### 17.1 Recommended department boundaries
+
+| Department key | Responsibility | Permission scope |
+|---|---|---|
+| `logistics` | Internal order fulfilment, delivery assignment and operational delivery workflow | Existing `logistics.view`, `logistics.assign` |
+| `transport` | External transport partners, provider onboarding, vehicles and transport staff | Existing #34 `transport.partners.*`, `transport.staff.manage` |
+| `product_business` | Product and service listing review/edit workflow, Seller business listing administration | Existing `services.edit`; proposed `products.edit` |
+| `trust_safety` | User account moderation, business safety moderation, product listing enforcement and appeals intake | Proposed `users.*`, `businesses.*`, `products.*` moderation keys |
+| `marketing` | Leads and campaigns only | Existing `marketing.*`; no suspension/cancellation authority by default |
+| `accounts` | Finance visibility, transactions, refunds and payouts | Existing `finance.*` |
+
+Keep Logistics separate from Transport: assigning an order to a delivery resource is not the same authority as approving/managing a transport provider. Explicitly seed `logistics` and `product_business` in Foundation. Do not remap existing `logistics.*` rows to `transport`.
+
+### 17.2 Recommended moderation permission catalog
+
+| Key | Department | Sensitivity | Proposed scope |
+|---|---|---:|---|
+| `users.view` | trust_safety | true | Limited public/admin-safe user summary; no unrestricted private profile/contact dump |
+| `users.suspend` | trust_safety | true | Suspend eligible non-Admin account with reason and audit |
+| `users.restore` | trust_safety | true | Restore only eligible previously suspended non-Admin account |
+| `users.cancel` | trust_safety | true | Reversible cancellation/deactivation only; permanent deletion excluded |
+| `businesses.view` | trust_safety | true | Safe business review projection |
+| `businesses.suspend` | trust_safety | true | Suspend business listing visibility; do not silently suspend owner's Buyer account |
+| `products.view` | trust_safety | false | Moderation-safe product projection |
+| `products.suspend` | trust_safety | true | Hide listing with reason/audit |
+| `products.restore` | trust_safety | true | Restore eligible hidden listing with audit |
+| `products.cancel` | trust_safety | true | Cancel listing, not commerce orders; require reason/audit |
+| `products.edit` | product_business | true | Controlled product listing edits only; preserve Seller ownership and audit |
+| `services.edit` | product_business | true | Existing service listing edit review |
+
+No permission above grants unrestricted access to private Buyer identity/contact, chat/call contents, private profile data, or payment secrets. Every mutation must be a narrow server-side RPC with action-specific validation, reason where sensitive, append-only audit, and idempotency/concurrency protection. `users.cancel` must not mean hard-delete Auth users.
+
+### 17.3 Recommended approval and audit boundary
+
+- Seller business public activation, initial Product/Service public approval, Director/Assistant Admin appointment, and Buyer→Seller role approval/rejection remain Director-only in the first safe release. A later explicit delegation can be introduced with separate keys and tests.
+- Audit-log viewing is Director-only by default. Do not seed `security.audit_logs.view` for ordinary staff in the initial bootstrap. If later delegated, use a separately reviewed read-only permission and redact sensitive details.
+- Trust & Safety officers may execute only explicitly granted user/listing moderation actions. They cannot grant permissions, appoint staff, change roles, view private chat/call data, or access finance.
+- Managing Director/Department Head cross-department access remains an explicit, audited exception; no implicit all-department grants.
+
+### 17.4 RPC reconciliation proposal
+
+Do not preserve two competing user RPC names. Select one future canonical RPC after the action contract is implemented and all callers are migrated atomically. The candidate should be a typed action allowlist, not arbitrary table updates. The old `manage_nexora_user` and `admin_manage_user` names should be removed from active callers only after a tested replacement exists.
+
+Keep listing moderation separate from user moderation. A future `admin_moderate_listing(target_type,target_id,action,reason)` may accept only `product|business|service` and a strict action allowlist; each target type has a separate server-side branch and permission key. Do not create a generic polymorphic update that trusts client target fields.
+
+Seller role request review remains a separate Director-only `review_role_request(request_id,decision)` contract with owner-only pending request creation, unique pending request, row lock, active Buyer precondition, atomic Buyer→Seller transition, rejection preserving Buyer, and append-only audit.
+
+### 17.5 Approval gate before SQL
+
+The proposal is suitable as the default recovery design, but it changes department boundaries and moderation governance. Obtain explicit owner confirmation before turning these keys/departments into executable SQL. Until approved, the bootstrap candidate must not seed them and all missing permission paths remain fail-closed.
