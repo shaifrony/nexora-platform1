@@ -43,21 +43,16 @@ NOTICE: PASS: inactive Admin, missing permission, Seller/Porter denial, missing 
 5. Continue implementation only on `nexora-development`.
 6. Do not modify `main`, hosted Supabase, production deployment, DNS or paid services without explicit approval.
 
-## Next implementation workstream
+## Historical next-workstream note — superseded
 
-Proceed with the **wholesale-only Buyer/Seller/Porter onboarding and Seller business/product foundation**, reusing the existing repository implementation where possible.
+The earlier recommendation below was written before the Marketplace decisions evolved. It is retained as historical context only and is **not** the current implementation instruction.
 
-Before writing schema changes, inspect the current staged migrations and existing frontend/backend code to avoid duplicate tables, conflicting policies or role drift. Preserve these product rules:
+Current direction is the unified Buyer/Seller Marketplace:
+- Buyer does not select a Wholesale/Retail account category and can browse all approved listings.
+- Seller selects Wholesale or Retail independently for each Product Listing; listing category is not an account permission or visibility gate.
+- Buyer, Seller, Porter and Admin role/approval rules remain as stated in the identity/governance sections of the current Work Tracker.
+- One Business Profile and one sales-center address per business; multiple products belong to that sales center; each product has its own Product ID and stable URL.
+- The current product form and category-specific commercial rules must follow the latest Work Tracker and Marketplace specification, not the historical initial-form-only note below.
+- Buyer Demand remains public while Buyer identity/contact details stay private; required-by date remains mandatory.
 
-- Public homepage registration exposes exactly Buyer, Seller and Porter; never Admin.
-- Buyer can register and use the account without Admin approval.
-- Seller can register and complete business details without prior approval, but public storefront/listings require Admin approval.
-- Porter can register but remains pending until Admin approval before Porter work access.
-- Users cannot self-change role, account status, verification status or protected fields.
-- NEXORA is wholesale-only; no retail listings or retail order flow.
-- One Business Profile and one sales-center address per business; multiple products belong to that sales center.
-- Each product has its own Product ID and stable URL.
-- Initial product form fields: Product Name, Category, Product Images, Product Description, Origin, Specifications & Quality, Price & Currency. Do not add MOQ, supply capacity or packaging/delivery fields to this initial form.
-- Buyer Demand remains public while Buyer identity/contact details stay private; include the required-by date.
-
-No migration is ready for hosted deployment merely because it is staged in GitHub.
+The historical recommendation that NEXORA be wholesale-only and that Retail listings/order flow must not exist is superseded. No migration is ready for hosted deployment merely because it is staged in GitHub.
