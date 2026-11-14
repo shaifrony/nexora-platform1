@@ -26,6 +26,11 @@
       label + " must be a non-negative safe integer in minor currency units.");
   }
 
+  function normalizeMarketCategory(value) {
+    assert(SALE_TYPES.has(value), "market_category must be wholesale or retail.");
+    return value;
+  }
+
   function validateSchedule(schedule) {
     assert(isPlainObject(schedule), "A financial schedule object is required.");
     assert(typeof schedule.schedule_id === "string" && schedule.schedule_id.trim(), "schedule_id is required.");
@@ -119,7 +124,11 @@
     const schedule = input.schedule;
     validateSchedule(schedule);
     assert(schedule.status === "approved", "Only an approved financial schedule can price an order.");
-    assert(SALE_TYPES.has(input.sale_type), "sale_type must be wholesale or retail.");
+    const suppliedCategory = input.market_category !== undefined ? input.market_category : input.sale_type;
+    const marketCategory = normalizeMarketCategory(suppliedCategory);
+    if (input.market_category !== undefined && input.sale_type !== undefined) {
+      assert(input.market_category === input.sale_type, "market_category and sale_type must match when both are supplied.");
+    }
     assert(isPlainObject(input.amount_bases_minor), "Configurable fee amount bases are required.");
     Object.entries(input.amount_bases_minor).forEach(([key, value]) => {
       assert(key.trim(), "Fee amount-base keys cannot be empty.");
@@ -129,10 +138,10 @@
     assert(typeof input.buyer_agent_used === "boolean", "buyer_agent_used must be explicitly true or false.");
 
     const commissionConfig = schedule.fees.marketplace_commission;
-    const commissionRate = input.sale_type === "wholesale"
+    const commissionRate = marketCategory === "wholesale"
       ? commissionConfig.wholesale_bps
       : commissionConfig.retail_bps;
-    const commissionBasis = input.sale_type === "wholesale"
+    const commissionBasis = marketCategory === "wholesale"
       ? commissionConfig.wholesale_basis
       : commissionConfig.retail_basis;
     assert(Object.prototype.hasOwnProperty.call(input.amount_bases_minor, commissionBasis),
@@ -156,6 +165,7 @@
 
     return Object.freeze({
       currency: schedule.currency,
+      market_category: marketCategory,
       marketplace_commission_basis: commissionBasis,
       marketplace_commission_rate_bps: commissionRate,
       marketplace_commission_base_minor: commissionBase,
@@ -181,7 +191,8 @@
     const snapshot = {
       ...fees,
       order_id: String(input.order_id || ""),
-      sale_type: input.sale_type,
+      market_category: normalizeMarketCategory(input.market_category !== undefined ? input.market_category : input.sale_type),
+      sale_type: normalizeMarketCategory(input.market_category !== undefined ? input.market_category : input.sale_type),
       schedule_effective_from: input.schedule.effective_from
     };
     assert(snapshot.order_id.trim(), "order_id is required for an order fee snapshot.");
@@ -190,6 +201,7 @@
 
   const api = Object.freeze({
     validateSchedule,
+    normalizeMarketCategory,
     selectEffectiveSchedule,
     calculateOrderFees,
     createOrderFeeSnapshot
