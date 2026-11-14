@@ -59,11 +59,16 @@ create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
 do $$ begin
  if (select length(payload->>'code') from otp_result)<>10 then raise exception 'FAIL: Buyer did not receive a 10-character OTP'; end if;
+end $;
+reset role;
+do $ begin
  if (select code_hash from private.delivery_receipt_challenges limit 1)=(select payload->>'code' from otp_result) then
    raise exception 'FAIL: raw OTP was stored';
  end if;
-end $$;
-do $$ begin
+end $;
+set role authenticated;
+select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
+do $ begin
  perform public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000002');
  raise exception 'FAIL: unrelated Buyer requested another Buyer shipment OTP';
 exception when insufficient_privilege then null; end $$;
@@ -78,9 +83,11 @@ do $$ begin
  );
  raise exception 'FAIL: legacy public status RPC bypassed OTP';
 exception when insufficient_privilege then null; end $$;
-if has_function_privilege('authenticated','private.update_delivery_network_job_status_legacy(uuid,text,text,text,text)','EXECUTE') then
- raise exception 'FAIL: authenticated can execute renamed legacy transition function';
-end if;
+do $ begin
+ if has_function_privilege('authenticated','private.update_delivery_network_job_status_legacy(uuid,text,text,text,text)','EXECUTE') then
+  raise exception 'FAIL: authenticated can execute renamed legacy transition function';
+ end if;
+end $;
 reset role;
 
 -- The assigned Provider verifies the Buyer code once; wrong codes consume attempts.
