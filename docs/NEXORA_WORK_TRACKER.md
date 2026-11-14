@@ -1677,3 +1677,8 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 ## 2026-11-15 — Buyer Demand lifecycle-only RLS integration
 - Extended the disposable PostgreSQL 17 harness to execute the Buyer Demand update permissions as the `authenticated` role under RLS, not merely inspect grants: the owning Buyer can close their own open Demand, while direct currency changes are rejected.
 - GitHub Actions Development CI run [#43650116697](https://github.com/shaifrony/nexora-platform1/actions/runs/43650116697) for commit `40b7ae1d9ade147a08cb306dd1afd102c6e114ab` completed successfully. JavaScript syntax, all 105 dependency-free tests, PostgreSQL 17 migration + integration tests, and migration filename/order guard passed.
+
+
+## 2026-11-15 — Buyer Demand cancellation, rejection and cross-Buyer authorization tests
+- Expanded PostgreSQL integration coverage to verify an unrelated Buyer cannot accept another Buyer's quotation, the owning Buyer can cancel a pending Demand order, and the assigned Seller can reject a pending Demand order with a reason.
+- GitHub Actions Development CI run [#43650280592](https://github.com/shaifrony/nexora-platform1/actions/runs/43650280592) for commit `b43adde507e86c78c76dea24c7fa2a8ef86041eb` completed successfully: JavaScript syntax, 105 dependency-free tests, PostgreSQL 17 migration/integration harness and migration filename/order guard all passed.
