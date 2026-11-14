@@ -318,3 +318,44 @@ test("Translation rows are tied to the exact source message and conversation, wi
   assert.match(multilingualChatSql, /unique\(message_id, target_language\)/i);
   assert.match(multilingualChatSql, /translated_body text not null check \(length\(translated_body\) <= 10000\)/i);
 });
+
+
+const marketplaceUi = fs.readFileSync(path.join(__dirname, "..", "marketplace.js"), "utf8");
+
+test("Buyer and Seller negotiation dashboards query only their own participant records", () => {
+  const buyer = marketplaceUi.slice(marketplaceUi.indexOf("async function loadBuyerPriceNegotiations()"), marketplaceUi.indexOf("async function loadBuyerOrders()"));
+  const seller = marketplaceUi.slice(marketplaceUi.indexOf("async function loadSellerPriceNegotiations()"), marketplaceUi.indexOf("async function respondToProductNegotiation("));
+  assert.match(buyer, /activeBuyer\(\)/);
+  assert.match(buyer, /\.eq\("buyer_id",user\(\)\.id\)/);
+  assert.match(seller, /activeSeller\(\)/);
+  assert.match(seller, /\.eq\("seller_id",user\(\)\.id\)/);
+});
+
+test("Negotiation UI exposes response actions only to the party whose turn it is", () => {
+  const buyer = marketplaceUi.slice(marketplaceUi.indexOf("async function loadBuyerPriceNegotiations()"), marketplaceUi.indexOf("async function loadBuyerOrders()"));
+  const seller = marketplaceUi.slice(marketplaceUi.indexOf("async function loadSellerPriceNegotiations()"), marketplaceUi.indexOf("async function respondToProductNegotiation("));
+  assert.match(buyer, /n\.negotiation_status==="seller_countered"/);
+  assert.match(seller, /n\.negotiation_status==="buyer_countered"/);
+  assert.match(buyer, /data-buyer-product-neg="accept"/);
+  assert.match(seller, /data-seller-product-neg="accept"/);
+});
+
+test("Buyer negotiation submission validates positive quantity and price before RPC", () => {
+  const submit = marketplaceUi.slice(marketplaceUi.indexOf('form.addEventListener("submit"'), marketplaceUi.indexOf("async function loadBuyerPriceNegotiations()"));
+  assert.match(submit, /Number\.isFinite\(quantity\)/);
+  assert.match(submit, /quantity<=0/);
+  assert.match(submit, /Number\.isFinite\(price\)/);
+  assert.match(submit, /price<=0/);
+  assert.match(submit, /start_product_price_negotiation/);
+});
+
+test("Negotiation dashboard interpolates user and listing data through HTML escaping", () => {
+  const buyer = marketplaceUi.slice(marketplaceUi.indexOf("async function loadBuyerPriceNegotiations()"), marketplaceUi.indexOf("async function loadBuyerOrders()"));
+  const seller = marketplaceUi.slice(marketplaceUi.indexOf("async function loadSellerPriceNegotiations()"), marketplaceUi.indexOf("async function respondToProductNegotiation("));
+  assert.match(buyer, /esc\(products\[n\.product_id\]/);
+  assert.match(buyer, /esc\(n\.quantity\)/);
+  assert.match(buyer, /esc\(n\.current_unit_price\)/);
+  assert.match(seller, /esc\(products\[n\.product_id\]/);
+  assert.match(seller, /esc\(n\.fulfilment_location\)/);
+  assert.match(seller, /esc\(n\.quantity\)/);
+});
