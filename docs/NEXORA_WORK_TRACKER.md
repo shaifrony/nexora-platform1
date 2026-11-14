@@ -1108,3 +1108,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Important replay finding: a new timestamped Foundation migration after latest feature migration cannot repair earlier timestamp-ordered dependencies. Do not fabricate history. Recovery-only bootstrap may be considered only in a disposable local DB before full feature replay.
 - Design/documentation only. No SQL, code, migration, trigger, DB, NEXORA-TEST, Production, main, DNS or deployment changed; no runtime tests performed.
 - Next: search any remaining authoritative baseline source; if unavailable, create a clearly labeled recovery-only bootstrap candidate after completing exact dependency inventory and local environment availability check.
+
+## 2026-11-14 — Admin permission catalog + RPC reconciliation audit
+
+- Re-read all current Admin UI key consumers in `auth.js`, `marketplace.js`, `admin/admin.js`; confirmed frontend-only keys without migration seeds: `users.view/suspend/restore/cancel`, `businesses.view/suspend`, `products.view/suspend/restore/cancel/edit`, `security.audit_logs.view`.
+- Reconciled actual migration seeds: #19 `logistics.view/assign`; #25 `services.edit`; #34 Marketing, Transport, Logistics and Finance key set.
+- Found material department conflict: #19 inserts Logistics keys under `logistics`; #34 attempts same keys under `transport` with `ON CONFLICT DO NOTHING`, leaving the original department unchanged. #34 officer grant validation requires department match, so Transport staff cannot receive these keys. #25 seeds `services.edit` under `product_business`, but #34 does not seed that department; #25 references unseeded `products.edit`.
+- Confirmed missing frontend RPCs: `review_role_request(request_id,decision)`, `manage_nexora_user(p_user_id,p_action,p_reason)`, alternate `admin_manage_user`, and `manage_marketplace_listing(p_target_type,p_target_id,p_action,p_reason)`. Do not add aliases or generic mutation without action/permission contract.
+- Recorded exact Seller role request owner contract and requirements for row lock, pending uniqueness, active Buyer precondition, atomic approval/rejection and audit.
+- Added Foundation spec §15, compatibility matrix §15 and tracker. No SQL, code, seed, RPC, DB, NEXORA-TEST, Production, main or deployment changed. No runtime tests.
+- Next: decide canonical department ownership and reconcile missing UI RPCs; only then prepare recovery-only Foundation bootstrap candidate.
