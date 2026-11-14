@@ -1402,3 +1402,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Product queries now request market_category. Legacy rows are displayed as 'ধরন নির্ধারিত হয়নি' rather than guessed into Wholesale or Retail.
 - Added tests/marketplace-listing-category.test.js to verify form requirements, write validation, query coverage, category filtering and safe legacy display.
 - IMPORTANT: this frontend now depends on the pending database market_category column. It must not be deployed or activated against a database that has not received the reviewed schema migration. No DB change or deployment was performed.
+
+
+### Wholesale/Retail listing source verification — 2026-11-14
+- Synced the frontend implementation from the development branch into the verification checkout and ran the full committed suite: 29 passed, 0 failed.
+- All JavaScript files pass node --check; git diff --check passes; checkout is clean on nexora-development.
+- Frontend contract now requires market_category on new product submissions, displays the type on public/Buyer/Seller/Admin views, supports an optional type filter (default both), and visibly labels legacy records as unclassified.
+- Database column market_category is still absent from the active migration chain. This frontend commit is not deployable until a reviewed database migration and RLS/constraint tests are completed. No deployment was made.
