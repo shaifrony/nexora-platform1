@@ -554,9 +554,9 @@
       const rows=data||[];
       const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
       rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
-      const summary='<div class="nx-order-summary"><span>মোট '+rows.length+'টি</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div>';
+      const summary='<div class="nx-order-summary"><span>সর্বশেষ দেখানো '+rows.length+'টি</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div>';
       const filter='<label>অর্ডার দেখুন <select id="nxBuyerOrderStatusFilter"><option value="all">সব অর্ডার</option><option value="pending">Seller-এর অপেক্ষায়</option><option value="accepted">গ্রহণ করা</option><option value="ready_for_confirmation">আপনার নিশ্চিতকরণ বাকি</option><option value="completed">সম্পন্ন</option><option value="cancelled">বাতিল</option><option value="rejected">প্রত্যাখ্যাত</option></select></label>';
-      host.innerHTML=summary+filter+'<div id="nxBuyerOrderRows">'+rows.map(o=>{
+      host.innerHTML=summary+filter+'<p class="muted">সর্বশেষ ৫০টি অর্ডার দেখানো হচ্ছে।</p><div id="nxBuyerOrderRows">'+rows.map(o=>{
         const itemType=o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"আপনার চাহিদার অর্ডার":"সেবা বুকিং";
         const itemSubtotal=o.source_offer_total!==null&&o.source_offer_total!==undefined
           ?Number(o.source_offer_total):Number(o.total_price??(Number(o.quantity)*Number(o.unit_price)));
