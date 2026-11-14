@@ -25,12 +25,13 @@ The current review migration grants table-level `SELECT` on `public.listing_revi
 
 **Required hardening in the next genuine forward migration:**
 
-1. Revoke table-level SELECT from `anon, authenticated`.
-2. Grant column-level SELECT only for the public review fields actually required by the UI and summary RPC: `id, listing_type, listing_id, rating, review_title, review_body, reviewer_label, purchased_quantity, review_status, created_at`.
-3. Keep `buyer_id`, `reviewed_by`, `moderation_note`, and other internal fields unavailable to API roles. Do not add them to a public view or grant.
-4. Preserve the existing RLS row policies. Column grants do not replace RLS.
-5. Verify that `get_listing_review_summary` still works as SECURITY INVOKER with only the necessary column grants, and that authenticated/anon cannot select any withheld column.
-6. Review any future moderation workflow separately; staff must use narrow audited RPCs rather than broad public column grants.
+1. Revoke all table-level privileges from `PUBLIC, anon, authenticated` (then grant only the required column SELECT).
+2. Explicitly revoke any pre-existing column-level SELECT from `PUBLIC, anon, authenticated` on `buyer_id`, `reviewed_by`, `reviewed_at`, `moderation_note`, and `updated_at`; table-level REVOKE alone does not remove independent column grants.
+3. Grant column-level SELECT only for the public review fields actually required by the UI and summary RPC: `id, listing_type, listing_id, rating, review_title, review_body, reviewer_label, purchased_quantity, review_status, created_at`.
+4. Keep `buyer_id`, `reviewed_by`, `reviewed_at`, `moderation_note`, `updated_at`, and other internal fields unavailable to API roles. Do not add them to a public view or grant.
+5. Preserve the existing RLS row policies. Column grants do not replace RLS.
+6. Verify that `get_listing_review_summary` still works as SECURITY INVOKER with only the necessary column grants, and that authenticated/anon cannot select any withheld column.
+7. Review any future moderation workflow separately; staff must use narrow audited RPCs rather than broad public column grants.
 
 This is a pre-existing exposure in the staged review schema, not evidence that a hosted database has been changed. The migration has not been applied to hosted environments.
 
