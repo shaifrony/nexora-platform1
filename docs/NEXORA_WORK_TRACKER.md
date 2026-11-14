@@ -1199,3 +1199,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - After patch 30, read-only audit 24 and transactional behavior suite 26 both passed. Synthetic checks cover Demand routing, anonymous projection, Buyer ownership, Seller inbox isolation, quotation creation/read, unrelated Buyer denial, unmatched Seller denial, duplicate offer denial, Buyer-ID spoof denial, required-date validation and grants.
 - No active migration was edited; #30 remains recovery-only until a natural forward-migration timestamp can be generated after the current latest version. Real JWT/PostgREST/browser/mobile tests remain open.
 - No hosted NEXORA-TEST, Live/Production, main, DNS or deployment changes.
+
+
+## 2026-11-14 — Buyer Demand negotiation and order conversion tests passed
+
+- Expanded recovery-only behavior test 26 to cover both order conversion paths: Seller acceptance of a Buyer counter creates an accepted order with an accepted event; Buyer acceptance of a Seller counter creates a pending order, then the assigned Seller confirms it.
+- Added counter-turn-taking checks, same-side repeat-counter denial, Buyer rejection, expired-quotation denial and negotiation-history visibility isolation.
+- Local PostgreSQL 17 test suite completed with 27 PASS notices; all test data was rolled back and post-test counts for synthetic Auth users, Demands and offers were zero.
+- A second private-column policy dependency was found in seller_offer_negotiations_participant_read. Recovery patch #30 now uses the same private ownership helper for both offer and negotiation-history SELECT policies; no Buyer ID grant was added.
+- Termux runner #27 was updated to fetch immutable current commits for audit #24, behavior #26 and patch #30; fixture-only patch #28 is skipped when the full migration schema already exists.
+- Remaining: duplicate-order/concurrency tests, inactive participant tests, broader order-state transitions, real JWT/PostgREST and browser/mobile E2E. Patch #30 remains recovery-only pending a genuine forward migration timestamp.
+- No active migration was edited; no hosted database, Live/Production, main, DNS or deployment changed.
