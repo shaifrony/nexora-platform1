@@ -861,6 +861,7 @@ test("Public Buyer Demand view is security-invoker and omits Buyer identity and 
   assert.match(view, /with \(security_invoker=true\)/i);
   assert.match(view, /select id,demand_code,product_name,category,description,specifications_quality,[\s\S]*?required_quantity,budget,currency,destination_country,destination_city,[\s\S]*?required_date,demand_status,created_at,subcategory/i);
   assert.doesNotMatch(view, /buyer_id|full_name|email|phone|contact_number|address/i);
-  assert.match(publicDemandProjectionSql, /grant select \([\s\S]*?required_date[\s\S]*?\) on public\.buyer_demands to anon/i);
+  assert.match(publicDemandProjectionSql, /grant select \(subcategory\) on public\.buyer_demands to anon/i);
+  assert.match(publicDemandProjectionSql, /grant select \([\s\S]*?required_date[\s\S]*?\) on public\.buyer_demands to authenticated/i);
   assert.match(publicDemandProjectionSql, /revoke select on public\.buyer_demands from authenticated/i);
 });
