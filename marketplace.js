@@ -552,6 +552,27 @@
         .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
       if(error)throw error;
       const rows=data||[];
+      const trackingByOrder=new Map();
+      let trackingUnavailable=false;
+      if(rows.length){
+        const trackingResult=await client().rpc("get_my_order_delivery_updates",{p_order_ids:rows.map(o=>o.id)});
+        if(trackingResult.error){trackingUnavailable=true;console.warn("NEXORA delivery tracking:",trackingResult.error.message);}
+        else (trackingResult.data||[]).forEach(update=>{
+          if(!trackingByOrder.has(update.order_id))trackingByOrder.set(update.order_id,[]);
+          trackingByOrder.get(update.order_id).push(update);
+        });
+      }
+      const deliveryStatusLabels={
+        preparing:"ডেলিভারি প্রস্তুতি",
+        picked_up:"পণ্য সংগ্রহ করা হয়েছে",
+        in_transit:"পথে রয়েছে",
+        out_for_delivery:"পৌঁছে দেওয়ার জন্য বের হয়েছে",
+        partially_delivered:"আংশিক ডেলিভারি",
+        delivered:"ডেলিভারি সম্পন্নের রিপোর্ট",
+        delivery_issue:"ডেলিভারিতে সমস্যা",
+        returned:"ফেরত পাঠানো হচ্ছে",
+        cancelled:"ডেলিভারি বাতিল"
+      };
       const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
       rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
       const summary='<div class="nx-order-summary"><span>সর্বশেষ দেখানো '+rows.length+'টি</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div>';
@@ -587,14 +608,20 @@
           :o.order_status==="pending"
             ?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার বাতিল</button>'
             :'';
+        const updates=trackingByOrder.get(o.id)||[];
+        const trackingHtml=trackingUnavailable
+          ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>'
+          :updates.length
+            ?'<div class="nx-order-timeline"><b>ডেলিভারি ট্র্যাকিং</b><ol>'+updates.map(u=>'<li><b>'+esc(deliveryStatusLabels[u.customer_status]||u.customer_status)+'</b> · '+esc(u.job_reference)+'<br>'+esc(u.customer_message)+(u.customer_location_label?'<br><span class="muted">'+esc(u.customer_location_label)+'</span>':'')+' <span class="muted">· '+esc(formatOrderDate(u.created_at))+'</span></li>').join("")+'</ol><p class="muted">একটি অর্ডারে একাধিক চালান থাকতে পারে। ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়; পণ্য হাতে পেয়ে যাচাই করে আপনাকেই নিশ্চিত করতে হবে।</p></div>'
+            :'<p class="muted">এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই। ডেলিভারি ব্যবস্থা তৈরি বা আপডেট হলে এখানে দেখা যাবে।</p>';
         return '<article class="card nx-order-card" data-buyer-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div>'+
           '<p><b>'+itemType+'</b></p>'+priceLine+
           '<p>পণ্যের মূল্য: '+esc(Number.isFinite(itemSubtotal)?itemSubtotal.toFixed(2):"—")+' '+esc(o.currency)+'</p>'+
           '<p>ডেলিভারি চার্জ: '+esc(delivery.toFixed(2))+' '+esc(o.currency)+'</p>'+
           '<strong>সর্বমোট: '+esc(Number.isFinite(total)?total.toFixed(2):"—")+' '+esc(o.currency)+'</strong>'+
-          nextAction+history+
+          nextAction+history+trackingHtml+
           (o.seller_note?'<p class="muted"><b>Seller-এর আপডেট:</b> '+esc(o.seller_note)+'</p>':'')+
-          '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়। এই পৃষ্ঠায় আলাদা Delivery Tracking এখনো দেখানো হচ্ছে না।</p>'+
+          '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়।</p>'+
           action+'</article>';
       }).join("")+'</div><p class="muted" data-buyer-order-empty hidden>এই অবস্থায় কোনো অর্ডার নেই।</p>';
       const filterSelect=$("nxBuyerOrderStatusFilter");
