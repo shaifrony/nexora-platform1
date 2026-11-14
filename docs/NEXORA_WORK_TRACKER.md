@@ -953,3 +953,5 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - No SQL or migration was generated or executed; NEXORA-TEST remains empty; no Live/Production, main, DNS, paid service or deployment was changed.
 
 - Follow-up Buyer gap audit added to docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md (commit 4618133a6888b9e728268bb3bd08d6ae98d1defc): Buyer profile editing/request flow is absent; Buyer order delivery tracking is not yet proven; wallet/payment remains unavailable and is now disclosed honestly. These gaps are explicitly open, not marked complete.
+
+- Buyer account settings implementation: Buyer-only login email change (confirmation required) and password change forms/handlers added. Commits: index.html e48a5da4409ee388fcfaeb3fad62f2bc8011cc02; auth.js b7d81c66c769c4a96f2d3154344500240fd589c1. JavaScript syntax and static guards verified; Supabase Auth runtime/E2E still pending. Legal/display name change request remains blocked by missing Foundation table/RPC contract; no direct profiles update added. Checklist update commit 1e94ddef8798eb630e52a9646f6df8865a19466c.
