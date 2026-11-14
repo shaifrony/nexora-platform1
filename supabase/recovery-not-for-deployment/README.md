@@ -77,3 +77,11 @@ See [NEXORA Missing Migration Draft Audit](../../docs/NEXORA_MISSING_MIGRATION_D
 The default-privilege draft was narrowed during review to Data API-facing grants only (table CRUD, sequence USAGE/SELECT, function EXECUTE); it does not revoke service_role defaults. This remains a reconstructed proposal, not verified original SQL.
 
 No PostgreSQL parser or isolated replay test was available, so no draft is certified as execution-ready.
+
+
+## Current NEXORA-TEST Foundation Design
+
+- Current authoritative Test-only foundation contract: [`local-setup/09_nexora_test_foundation_baseline_spec.md`](local-setup/09_nexora_test_foundation_baseline_spec.md).
+- [`local-setup/05_foundation_design_proposal.md`](local-setup/05_foundation_design_proposal.md) is retained as superseded historical proposal; its Wholesale-Only Buyer/Seller category model is no longer current.
+- [`local-setup/06_local_foundation_baseline_fixture.sql`](local-setup/06_local_foundation_baseline_fixture.sql) is a legacy local PostgreSQL compatibility fixture and is explicitly superseded. Do not apply it as the current NEXORA baseline or to hosted Supabase.
+- The new specification is design only: no SQL has been generated or executed against NEXORA-TEST. Do not replay feature migrations until the compatibility matrix and runtime gates are complete.
