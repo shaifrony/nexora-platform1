@@ -85,3 +85,11 @@ No PostgreSQL parser or isolated replay test was available, so no draft is certi
 - [`local-setup/05_foundation_design_proposal.md`](local-setup/05_foundation_design_proposal.md) is retained as superseded historical proposal; its Wholesale-Only Buyer/Seller category model is no longer current.
 - [`local-setup/06_local_foundation_baseline_fixture.sql`](local-setup/06_local_foundation_baseline_fixture.sql) is a legacy local PostgreSQL compatibility fixture and is explicitly superseded. Do not apply it as the current NEXORA baseline or to hosted Supabase.
 - The new specification is design only: no SQL has been generated or executed against NEXORA-TEST. Do not replay feature migrations until the compatibility matrix and runtime gates are complete.
+
+
+## 38-Migration and Frontend Compatibility Matrix
+
+- Current static audit: [`local-setup/10_migration_frontend_compatibility_matrix.md`](local-setup/10_migration_frontend_compatibility_matrix.md).
+- It maps all 38 active migration files, required Foundation/platform/earlier-migration dependencies, Admin permission functions, Auth trigger prerequisites, and current frontend RPC/table call mismatches.
+- Audit conclusion is BLOCKED for a clean empty Test DB: the feature migrations assume a pre-existing Foundation; the legacy Porter frontend still references table/RPC names absent from the active migration set.
+- Static source audit only. No SQL was generated/executed and no hosted database was changed.
