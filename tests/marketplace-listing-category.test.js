@@ -510,6 +510,8 @@ test("Seller cannot spoof protected Buyer Demand quotation state or agreed terms
     demandOrderSql.indexOf("create or replace function private.initialise_seller_offer_negotiation()"),
     demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
   );
+  assert.match(fn, /select \* into v_demand from public\.buyer_demands where id=new\.demand_id for update/i);
+  assert.match(fn, /v_demand\.demand_status<>'open'/i);
   assert.match(fn, /new\.current_quantity:=v_qty/i);
   assert.match(fn, /new\.current_unit_price:=v_unit/i);
   assert.match(fn, /new\.negotiation_status:='open'/i);
