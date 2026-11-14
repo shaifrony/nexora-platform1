@@ -1520,3 +1520,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - No SQL migration content, hosted database, Production/Live, DNS or `main` branch was changed.
 
 - Follow-up: first execution exposed an over-escaped JavaScript regex in the workflow. Corrected it in `a751a9317568451b9dfbc69e66d0491956bd0dc0`; the matching Development CI run [#43644925203](https://github.com/shaifrony/nexora-platform1/actions/runs/43644925203) completed successfully. The active migration filename/order guard is now verified in GitHub Actions.
+
+
+## 2026-11-15 — Buyer Demand negotiation RPC security regression tests
+- Extended the existing marketplace regression test file to inspect the Buyer Demand quotation/negotiation migration.
+- Added checks for SECURITY DEFINER + empty search_path on private RPC implementations; explicit revocation of direct client-role execution; SECURITY INVOKER public wrappers with anonymous execution revoked; and row locks on offer, demand and order transitions.
+- GitHub Actions run [#43645145543](https://github.com/shaifrony/nexora-platform1/actions/runs/43645145543) completed successfully; JavaScript syntax, dependency-free regression suite and migration filename/order guard all passed.
+- Commit: `84091510a0d1bbe34b59f46a18424cf371811900`.
+- These are source-level regression checks only; they do not replace PostgreSQL/Supabase execution, RLS integration tests or role-impersonation tests. No migration was applied to any database.
