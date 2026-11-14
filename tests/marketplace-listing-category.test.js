@@ -33,3 +33,21 @@ test("marketplace category filter defaults to all and can narrow by category", (
 test("legacy listings remain visibly unclassified rather than being guessed", () => {
   assert.match(js, /ধরন নির্ধারিত হয়নি/);
 });
+
+
+test("Buyer Demand requires a required-by date in the form and rejects past dates", () => {
+  assert.match(html, /<input type="date" name="requiredDate" id="requiredDate" required>/);
+  assert.match(js, /requiredDateInput\.min\s*=\s*new Date\(now\.getTime\(\)\s*-\s*now\.getTimezoneOffset\(\)\s*\*\s*60000\)/);
+  assert.match(js, /if\s*\(!v\.requiredDate\s*\|\|\s*v\.requiredDate\s*<\s*todayLocal\)/);
+  assert.match(js, /required_date:\s*v\.requiredDate/);
+});
+
+test("public Buyer Demand projection includes the required date but excludes buyer identity and contact fields", () => {
+  const query = js.match(/from\("public_buyer_demands"\)\s*\.select\("([^"]+)"\)/);
+  assert.ok(query, "public Buyer Demand query must use an explicit column allowlist");
+  const columns = query[1].split(",").map(value => value.trim());
+  assert.ok(columns.includes("required_date"));
+  for (const privateField of ["buyer_id", "full_name", "email", "phone", "contact_number", "address"]) {
+    assert.ok(!columns.includes(privateField), "public projection must not expose " + privateField);
+  }
+});
