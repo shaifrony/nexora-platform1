@@ -554,12 +554,20 @@
       const rows=data||[];
       const trackingByOrder=new Map();
       let trackingUnavailable=false;
+      const receiptJobsByOrder=new Map();
+      let receiptJobsUnavailable=false;
       if(rows.length){
         const trackingResult=await client().rpc("get_my_order_delivery_updates",{p_order_ids:rows.map(o=>o.id)});
         if(trackingResult.error){trackingUnavailable=true;console.warn("NEXORA delivery tracking:",trackingResult.error.message);}
         else (trackingResult.data||[]).forEach(update=>{
           if(!trackingByOrder.has(update.order_id))trackingByOrder.set(update.order_id,[]);
           trackingByOrder.get(update.order_id).push(update);
+        });
+        const receiptResult=await client().rpc("get_my_order_receipt_jobs",{p_order_ids:rows.map(o=>o.id)});
+        if(receiptResult.error){receiptJobsUnavailable=true;console.warn("NEXORA receipt jobs:",receiptResult.error.message);}
+        else (receiptResult.data||[]).forEach(job=>{
+          if(!receiptJobsByOrder.has(job.order_id))receiptJobsByOrder.set(job.order_id,[]);
+          receiptJobsByOrder.get(job.order_id).push(job);
         });
       }
       const deliveryStatusLabels={
@@ -608,6 +616,12 @@
           :o.order_status==="pending"
             ?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার বাতিল</button>'
             :'';
+        const receiptJobs=receiptJobsByOrder.get(o.id)||[];
+        const receiptHtml=receiptJobsUnavailable
+          ?'<p class="muted">রিসিপ্ট OTP সুবিধা আপাতত লোড করা যাচ্ছে না।</p>'
+          :receiptJobs.map(job=>job.job_status==="out_for_delivery"
+            ?'<div class="offer"><b>পণ্য গ্রহণ নিশ্চিতকরণ · '+esc(job.job_reference)+'</b><p class="muted">পণ্য হাতে পেয়ে যাচাই করার পর OTP তৈরি করুন। কোডটি শুধু আপনার স্ক্রিনে দেখানো হবে; দায়িত্বপ্রাপ্ত Provider-কে সরাসরি দিন।</p><button type="button" class="light" data-receipt-request="'+esc(job.job_id)+'">রিসিপ্ট OTP তৈরি করুন</button><p class="muted" data-receipt-code="'+esc(job.job_id)+'" aria-live="polite"></p></div>'
+            :'').join("");
         const updates=trackingByOrder.get(o.id)||[];
         const trackingHtml=trackingUnavailable
           ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>'
@@ -619,7 +633,7 @@
           '<p>পণ্যের মূল্য: '+esc(Number.isFinite(itemSubtotal)?itemSubtotal.toFixed(2):"—")+' '+esc(o.currency)+'</p>'+
           '<p>ডেলিভারি চার্জ: '+esc(delivery.toFixed(2))+' '+esc(o.currency)+'</p>'+
           '<strong>সর্বমোট: '+esc(Number.isFinite(total)?total.toFixed(2):"—")+' '+esc(o.currency)+'</strong>'+
-          nextAction+history+trackingHtml+
+          nextAction+history+trackingHtml+receiptHtml+
           (o.seller_note?'<p class="muted"><b>Seller-এর আপডেট:</b> '+esc(o.seller_note)+'</p>':'')+
           '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়।</p>'+
           action+'</article>';
@@ -635,6 +649,17 @@
       const empty=host.querySelector("[data-buyer-order-empty]");
       if(empty)empty.hidden=rows.length>0;
       if(!rows.length)host.innerHTML=summary+'<p class="muted">আপনার কোনো অর্ডার নেই। অর্ডার করলে এখানে Seller-এর উত্তর ও অগ্রগতি দেখতে পাবেন।</p>';
+      host.querySelectorAll("[data-receipt-request]").forEach(button=>button.addEventListener("click",async()=>{
+        const jobId=button.dataset.receiptRequest,output=host.querySelector('[data-receipt-code="'+jobId+'"]');
+        button.disabled=true;if(output)output.textContent="OTP তৈরি হচ্ছে…";
+        try{
+          const {data,error}=await client().rpc("request_delivery_receipt_code",{p_job_id:jobId});
+          if(error)throw error;
+          if(!data?.code)throw new Error("OTP response পাওয়া যায়নি");
+          if(output)output.textContent="আপনার রিসিপ্ট OTP: "+data.code+" · মেয়াদ ১০ মিনিট। দায়িত্বপ্রাপ্ত Provider-কে দিন।";
+        }catch(err){if(output)output.textContent="OTP তৈরি হয়নি: "+err.message;}
+        finally{button.disabled=false;}
+      }));
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction,b.dataset.orderType)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
