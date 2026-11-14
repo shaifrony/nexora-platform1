@@ -1,12 +1,21 @@
 (() => {
   "use strict";
-  const backend = window.NEXORA_SUPABASE_CONFIG || {};
-  if (backend.blocked) {
-    document.body.innerHTML = "<main style='max-width:680px;margin:12vh auto;padding:24px;font:16px/1.6 system-ui'><h1>NEXORA Preview নিরাপত্তা-লক</h1><p>এই Preview-র Backend অনুমোদিত নয়। নিরাপত্তার জন্য Admin Login বন্ধ রাখা হয়েছে। নির্ধারিত Development Preview ব্যবহার করুন।</p></main>";
+  const backend = window.NEXORA_SUPABASE_CONFIG;
+  const backendReady = Boolean(
+    backend &&
+    !backend.blocked &&
+    ["test", "production"].includes(backend.environment) &&
+    typeof backend.url === "string" &&
+    /^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(backend.url) &&
+    typeof backend.publishableKey === "string" &&
+    backend.publishableKey.startsWith("sb_publishable_")
+  );
+  if (!backendReady) {
+    document.body.innerHTML = "<main style='max-width:680px;margin:12vh auto;padding:24px;font:16px/1.6 system-ui'><h1>NEXORA নিরাপত্তা-লক</h1><p>অনুমোদিত Backend configuration পাওয়া যায়নি। নিরাপত্তার জন্য Admin Login বন্ধ রাখা হয়েছে।</p></main>";
     return;
   }
-  const SUPABASE_URL = backend.url || "https://qsjdeqljpnjumceewsjq.supabase.co";
-  const SUPABASE_PUBLISHABLE_KEY = backend.publishableKey || "sb_publishable_ZHxwvrwjAn2_UCCYsNLu8A_9twoGAKs";
+  const SUPABASE_URL = backend.url;
+  const SUPABASE_PUBLISHABLE_KEY = backend.publishableKey;
   const $ = (id) => document.getElementById(id);
   const client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
   if (!client) { document.body.textContent = "NEXORA: authentication library unavailable."; return; }
