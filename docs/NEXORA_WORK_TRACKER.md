@@ -1118,3 +1118,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Recorded exact Seller role request owner contract and requirements for row lock, pending uniqueness, active Buyer precondition, atomic approval/rejection and audit.
 - Added Foundation spec §15, compatibility matrix §15 and tracker. No SQL, code, seed, RPC, DB, NEXORA-TEST, Production, main or deployment changed. No runtime tests.
 - Next: decide canonical department ownership and reconcile missing UI RPCs; only then prepare recovery-only Foundation bootstrap candidate.
+
+## 2026-11-14 — Foundation environment readiness recheck
+
+- Confirmed current tool container has no `supabase` CLI, Docker or `psql`; repository is not mounted locally, so disposable local replay cannot be performed in this session.
+- Read-only NEXORA-TEST recheck: 0 migration-history rows, 0 tables in inspected `public`/`private` schemas, 0 security advisor lints. No hosted schema mutation.
+- Added Foundation spec §16 with remaining department/governance decisions: Logistics vs Transport, Product/Business department, User/Business/Product moderation ownership, Audit Log access and listing approval powers.
+- Foundation recovery-only SQL is not yet safe to author/apply: department scope conflicts remain and no local runtime is available. Do not substitute hosted NEXORA-TEST for disposable local testing.
