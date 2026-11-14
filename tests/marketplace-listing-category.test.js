@@ -99,6 +99,14 @@ test("Buyer Demand negotiation serializes offer and demand changes with row lock
   assert.match(demandOrderSql, /from public\.seller_offers where id=p_offer_id for update/i);
   assert.match(demandOrderSql, /from public\.buyer_demands where id=v_offer\.demand_id for update/i);
   assert.match(demandOrderSql, /from public\.commerce_orders\s+where id=p_order_id and listing_type='buyer_demand' for update/i);
+  const negotiation = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
+    demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order(")
+  );
+  const demandLock = negotiation.indexOf("select * into v_demand from public.buyer_demands where id=v_offer.demand_id for update");
+  const offerLock = negotiation.indexOf("select * into v_offer from public.seller_offers where id=p_offer_id for update");
+  assert.ok(demandLock >= 0 && offerLock > demandLock, "Demand row must be locked before Offer row");
+
 });
 
 
