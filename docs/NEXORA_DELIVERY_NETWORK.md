@@ -116,3 +116,14 @@ Before any real buyer delivery is enabled:
 - Buyer Dashboard now groups safe updates under each of the latest 50 orders and supports multiple delivery jobs per order. Operator-reported `delivered` does not complete the Commerce Order; Buyer receipt confirmation remains separate.
 - Disposable PostgreSQL integration passed for status mapping, append-only history, Buyer A/Buyer B isolation, private-table access denial and anonymous RPC denial. Development CI [#43652641287](https://github.com/shaifrony/nexora-platform1/actions/runs/43652641287) passed 120/120 source tests and 40 active migration filename/order checks.
 - Remaining: Buyer receipt OTP/alternative proof, order-to-delivery job creation/assignment UX, delivery charges/payment/settlement, disputes/returns and full Supabase/browser E2E.
+
+
+## 2026-11-15 — Buyer receipt OTP security foundation (staged)
+
+- Added staged migration `20261115140000_buyer_delivery_receipt_otp.sql` with a private receipt-challenge table. The Buyer can request a 10-character one-time code only for their own shipment while its status is `out_for_delivery`.
+- The raw code is returned only in the authenticated Buyer request response; only an MD5 digest bound to the code, shipment, Buyer and a fixed domain-separation string is stored. Codes expire after 10 minutes, requests are rate-limited to one per 60 seconds per shipment, and each challenge allows at most five verification attempts.
+- Only the assigned independent Provider owner or an Admin with active membership, `logistics.assign` permission and AAL2 may verify a code. A successful verification appends the operational delivered event; Buyer Order completion remains a separate action.
+- Hardened the old status RPC: its legacy implementation is renamed and revoked, the public wrapper is rebound to a guard that rejects `delivered`, and a database trigger blocks direct `delivery_jobs` updates to `delivered` unless the receipt-verification function has established a one-transaction proof marker.
+- Added disposable PostgreSQL coverage and source regressions for Buyer ownership, private OTP storage, wrong-code attempt handling, one-time verification and bypass prevention. CI execution is pending.
+- Scope limitation: this is the database/API foundation only. Buyer screen for requesting/showing the code, Provider/Admin verification UI, SMS/WhatsApp delivery and courier-partner/NEXORA-team staff verification are not yet implemented. No code is sent externally; Buyer and assigned Provider must currently exchange it through an approved communication channel once UI exists.
+- No hosted Supabase migration, Production deployment, DNS/public alias or `main` change is intended.
