@@ -646,3 +646,43 @@ The candidate, when generated in a suitable disposable local Supabase environmen
 - No Live/Production/main/DNS/paid-service operation is in scope.
 
 **Current status:** Governance approved; bootstrap architecture and dependency order prepared. Executable SQL remains blocked by the #34 source compatibility repair and unavailable disposable local runtime. No SQL or database was changed.
+
+## 19. Migration #34 compatibility repair plan (recovery-only; 2026-11-14)
+
+**Status: source-audited repair specification; NOT SQL, NOT an active migration, NOT applied.** The approved Governance in §18 is authoritative. Preserve historical migration #34 unchanged until a disposable replay strategy and runtime are available; do not silently rewrite an already-versioned migration.
+
+### 19.1 Exact repair contract
+
+A recovery-only post-#34 compatibility patch (or an explicitly reviewed source correction if the project later establishes that #34 has never been applied anywhere) must:
+
+1. Upsert the seven canonical departments exactly as approved in §18.1: `managing_director`, `marketing`, `transport`, `logistics`, `product_business`, `trust_safety`, `accounts`. Do not merge Logistics into Transport.
+2. Keep #34's Marketing keys under `marketing`, Transport partner/staff keys under `transport`, and Finance keys under `accounts`.
+3. Ensure `logistics.view` and `logistics.assign` are owned by `logistics`, not `transport`. Because #19 already seeds them under `logistics`, the repair must correct the catalog row's department deterministically rather than relying on `ON CONFLICT DO NOTHING`.
+4. Keep `services.edit` under `product_business`; add `products.edit` only after its exact UI action and server-side RPC contract are verified.
+5. Add the approved Trust & Safety catalog entries from §18.2. Until each corresponding narrow RPC is implemented and tested, mutation permissions must remain inactive/ungrantable; catalog presence alone is not authorization. `users.cancel` remains reversible deactivation, never Auth deletion.
+6. Change `manage_nexora_officer` department validation so non-MD positions may be assigned only to the six operational departments (`marketing`, `transport`, `logistics`, `product_business`, `trust_safety`, `accounts`). `managing_director` remains reserved for the MD position and is not an ordinary assignable department.
+7. During grant validation, require the permission to be active, match the selected department (except a separately authorized MD policy), and be explicitly grantable. Reject unknown, inactive, cross-department, duplicate/malformed or not-yet-enabled mutation permissions. Do not rely on client UI filtering.
+8. Preserve all existing transaction/locking/audit behavior, Director AAL2 and protected appointment checks, active Buyer prerequisite for officer provisioning, no self-promotion, and atomic profile/staff/grant changes. Any correction must also ensure the sensitivity flag is accumulated across the entire requested permission set and that the audit reason is retained as supplied.
+9. Keep Director-only boundaries from §18.2: audit log viewing, initial public Seller/Business/Product/Service approvals, Admin appointment/deactivation and Buyer→Seller role review. Do not grant these to departmental staff by default.
+
+### 19.2 Replay ordering and why no active migration is created here
+
+- The current #34 file is timestamped `20261114200000`; the active feature set has later timestamps. A new forward migration cannot retroactively provide prerequisites required by earlier migrations.
+- A recovery-only patch is therefore an explicit test/replay artifact, not a new historical migration and not a timestamp-fabricated file under `supabase/migrations/`.
+- The disposable replay must establish the Foundation baseline, replay the 38 active feature migrations in their actual timestamp order, apply the reviewed #34 compatibility repair at the correct post-#34 point before Admin officer workflows are exercised, then run the complete security/E2E suite.
+- After local replay succeeds, determine the genuine forward migration strategy for any already-existing environment separately. Never assume that editing a migration source updates a database where that version was previously applied.
+
+### 19.3 Required tests for this repair
+
+- Each of the six operational departments can receive an eligible department head/officer; `managing_director` cannot be assigned as an ordinary department.
+- A Logistics officer can receive `logistics.view|assign`; a Transport officer cannot.
+- Product & Business can receive only active, approved listing-edit permissions; `services.edit` ownership is correct; `products.edit` remains unavailable until its action contract is closed.
+- Trust & Safety can be staffed, but each mutation grant remains rejected while its catalog entry/RPC is inactive or absent.
+- Marketing cannot receive Trust & Safety, Product & Business, Logistics, Transport or Accounts permissions; equivalent negative tests cover every cross-department boundary.
+- Director-only operations reject all non-Director staff even if a forged grant row or client argument is supplied.
+- AAL1, inactive Admin, inactive staff, suspended profile, non-Buyer target, self-target, duplicate MD/Head, missing reason for sensitive actions, and malformed permission payloads fail closed.
+- All failure cases leave profile role, staff rows, grants and audit state transactionally consistent; all successful changes create exactly one accurate audit entry.
+
+### 19.4 Environment gate
+
+The current session has no local Supabase CLI, Docker, `psql`, or checked-out working tree. The hosted NEXORA-TEST project remains intentionally empty and is not a substitute for disposable local replay. Therefore no SQL candidate, active migration, hosted query mutation, migration replay, or runtime verification is claimed. Generate the actual recovery-only SQL only in a suitable disposable local Supabase environment and validate it there before considering any hosted action.
