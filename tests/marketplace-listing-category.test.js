@@ -503,3 +503,20 @@ test("Buyer Demand order transitions enforce assigned Buyer or Seller identity a
   assert.match(fn, /p_action='complete'[\s\S]*?v_actor<>v_order\.buyer_id[\s\S]*?v_order\.order_status<>'ready_for_confirmation'/);
   assert.match(fn, /p_action='cancel'[\s\S]*?v_actor<>v_order\.buyer_id[\s\S]*?v_order\.order_status<>'pending'/);
 });
+
+
+test("Seller cannot spoof protected Buyer Demand quotation state or agreed terms on initial insert", () => {
+  const fn = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.initialise_seller_offer_negotiation()"),
+    demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
+  );
+  assert.match(fn, /new\.current_quantity:=v_qty/i);
+  assert.match(fn, /new\.current_unit_price:=v_unit/i);
+  assert.match(fn, /new\.negotiation_status:='open'/i);
+  assert.match(fn, /new\.last_negotiator_id:=new\.seller_id/i);
+  assert.match(fn, /new\.accepted_quantity:=null/i);
+  assert.match(fn, /new\.accepted_unit_price:=null/i);
+  assert.match(fn, /new\.demand_order_id:=null/i);
+  assert.doesNotMatch(fn, /coalesce\(new\.(current_quantity|current_unit_price)/i);
+  assert.match(demandOrderSql, /before insert on public\.seller_offers\s*for each row execute function private\.initialise_seller_offer_negotiation\(\)/i);
+});
