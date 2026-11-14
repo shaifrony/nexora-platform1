@@ -82,8 +82,8 @@ declare
  v_next_status text;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
- if p_action not in ('counter','accept','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
- if length(coalesce(p_note,''))>1000 then raise exception 'Note is too long' using errcode='22023'; end if;
+ if p_action is null or p_action not in ('counter','accept','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
+ if length(coalesce(btrim(p_note),''))>1000 then raise exception 'Note is too long' using errcode='22023'; end if;
  select * into v_n from public.product_price_negotiations where id=p_negotiation_id for update;
  if not found then raise exception 'Price negotiation not found'; end if;
  select * into v_p from public.products where id=v_n.product_id for update;
@@ -95,11 +95,10 @@ begin
    raise exception 'Only this Buyer and Seller may negotiate' using errcode='42501';
  end if;
  if v_n.negotiation_status in ('accepted','rejected','ordered') then raise exception 'Negotiation is already closed'; end if;
- v_available:=case when v_p.stock_tracking then greatest(0,coalesce(v_p.stock_quantity,0)-coalesce(v_p.reserved_quantity,0)) else null end;
- if v_n.quantity<coalesce(v_p.minimum_order_quantity,1) then raise exception 'Quantity is below product MOQ'; end if;
- if v_available is not null and v_n.quantity>v_available then raise exception 'Quantity exceeds available stock'; end if;
-
  if p_action='reject' then
+   if v_actor=v_n.last_actor_id then
+     raise exception 'The other party must respond before you reject their proposal' using errcode='22023';
+   end if;
    update public.product_price_negotiations set negotiation_status='rejected',last_actor_id=v_actor,updated_at=now() where id=p_negotiation_id;
    insert into public.product_price_negotiation_events(negotiation_id,actor_id,action,note)
    values(p_negotiation_id,v_actor,'rejected',nullif(btrim(p_note),''));
@@ -107,6 +106,12 @@ begin
      jsonb_build_object('kind','product_negotiation','action','rejected','negotiation_id',p_negotiation_id,'note',nullif(btrim(p_note),'')));
    return null;
  end if;
+
+ -- Rejection must remain possible even if stock or MOQ changed after the proposal.
+ -- Availability is enforced only when a new counter or an Order is created.
+ v_available:=case when v_p.stock_tracking then greatest(0,coalesce(v_p.stock_quantity,0)-coalesce(v_p.reserved_quantity,0)) else null end;
+ if v_n.quantity<coalesce(v_p.minimum_order_quantity,1) then raise exception 'Quantity is below product MOQ'; end if;
+ if v_available is not null and v_n.quantity>v_available then raise exception 'Quantity exceeds available stock'; end if;
 
  if p_action='counter' then
    if p_quantity is null or p_quantity<=0 or p_unit_price is null or p_unit_price<=0 then
