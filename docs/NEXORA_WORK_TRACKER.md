@@ -1314,3 +1314,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added illustrative, Admin-configurable defaults only: Agent-Seller marketplace commission 3%; Direct-Seller marketplace commission 3%; onward transport allocation 50% inter-area carrier / 36% Local Distribution Agent / 14% NEXORA logistics coordination margin. Example calculation uses BDT 10,000 goods value and BDT 500 transport charge; these are not approved launch rates or live settlement rules.
 - Added JSON sample configuration, calculation bases, 100% transport-share validation, effective-dated/versioned rates, maker-checker approval, immutable order rate snapshots, separate ledger lines and verified-delivery payout gates.
 - Documentation/configuration example only. No app/frontend/backend/SQL/schema/RPC/migration/payment/payout code or live fee engine implemented. Do not bypass migration-history/Foundation reconciliation, isolated replay, legal/payment-provider review or explicit release approval. No NEXORA-TEST, Live/Production, `main`, DNS, deployment or paid service changed.
+
+## 2026-11-14 — Configurable financial calculation core (initial code)
+
+- Added `financial-config.js` as a pure financial domain module. Rates are supplied as approved, effective-dated configuration; no commission or transport rate defaults are embedded in the module.
+- Added validation for versioned schedule metadata, Wholesale/Retail commission basis, mandatory Buyer Agent fee when the service is used, and transport allocation totaling exactly 10000 basis points.
+- Added effective-schedule selection, integer-minor-unit/basis-point calculations, and order fee snapshots carrying the schedule ID/version.
+- Loaded the module before `marketplace.js` so later integration can use `window.NEXORA_FINANCE`.
+- Verified locally with Node: valid schedule, Wholesale/Retail fee calculation, Buyer Agent fee on/off behavior, exact transport-share validation, and order snapshot checks passed.
+- This is domain logic only: no persistent configuration UI/API, Database table, RLS, RPC, migration, payment, wallet, escrow, payout or settlement integration has been implemented. Existing migration-history/Foundation blockers remain. No Live/Production, `main`, DNS, deployment or paid service changed.
