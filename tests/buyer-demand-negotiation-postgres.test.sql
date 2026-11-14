@@ -72,6 +72,8 @@ create table public.seller_offers (
   updated_at timestamptz not null default now()
 );
 
+grant select on public.seller_offers to authenticated;
+
 create table public.commerce_orders (
   id uuid primary key default gen_random_uuid(),
   order_code text not null default ('NXO-' || upper(substr(replace(gen_random_uuid()::text,'-',''),1,12))),
@@ -113,6 +115,7 @@ create table public.commerce_order_events (
 
 insert into public.profiles(id,role,account_status) values
   ('10000000-0000-4000-8000-000000000001','buyer','active'),
+  ('10000000-0000-4000-8000-000000000002','buyer','active'),
   ('10000000-0000-4000-8000-000000000011','seller','active'),
   ('10000000-0000-4000-8000-000000000012','seller','active');
 
@@ -124,7 +127,8 @@ insert into public.buyer_demands(id,buyer_id,required_quantity,currency,destinat
 values
   ('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','5,000 KG','BDT','Dhaka','Bangladesh'),
   ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','100 units','BDT','Dhaka','Bangladesh'),
-  ('20000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','KG only','BDT','Dhaka','Bangladesh');
+  ('20000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','KG only','BDT','Dhaka','Bangladesh'),
+  ('20000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','80 units','BDT','Dhaka','Bangladesh');
 
 do $test$
 declare
@@ -196,6 +200,39 @@ begin
   end;
   if not v_denied then raise exception 'FAIL: duplicate quotation acceptance was allowed'; end if;
 
+  -- Exercise the opposite turn: Buyer counter-offer followed by Seller acceptance.
+  insert into public.seller_offers(
+    id,demand_id,seller_id,offer_price,currency,available_quantity
+  ) values (
+    '30000000-0000-4000-8000-000000000002',
+    '20000000-0000-4000-8000-000000000004',
+    '10000000-0000-4000-8000-000000000012',
+    120,'BDT','100'
+  ) returning id into v_offer;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  perform public.respond_to_demand_offer(v_offer,'counter',70,90,'Buyer counter');
+  v_denied:=false;
+  begin
+    perform public.respond_to_demand_offer(v_offer,'counter',60,85,'Repeated Buyer counter');
+  exception when raise_exception then
+    v_denied:=true;
+  end;
+  if not v_denied then raise exception 'FAIL: Buyer sent a second counter without Seller response'; end if;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000012',true);
+  v_order:=public.respond_to_demand_offer(v_offer,'accept',null,null,'Seller accepts Buyer counter');
+  select order_status,quantity,source_offer_total into v_status,v_qty,v_total
+  from public.commerce_orders where id=v_order;
+  if v_status<>'accepted' or v_qty<>70 or v_total<>6300 then
+    raise exception 'FAIL: Seller acceptance of Buyer counter produced incorrect order';
+  end if;
+  if not exists(select 1 from public.seller_offers where id=v_offer
+      and negotiation_status='ordered' and accepted_quantity=70 and accepted_unit_price=90) then
+    raise exception 'FAIL: accepted Buyer counter terms were not saved on quotation';
+  end if;
+  perform public.transition_buyer_demand_order(v_order,'ready','Seller dispatches counter order');
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  perform public.transition_buyer_demand_order(v_order,'complete','Buyer received counter order');
+
   -- Currency must match the Buyer Demand currency.
   v_denied:=false;
   begin
@@ -237,3 +274,30 @@ begin
   raise notice 'PASS: Buyer Demand quote spoofing, quantity parser/cap, currency, Seller approval, order conversion, transitions and update grants';
 end
 $test$;
+
+-- Participant-only negotiation history: Buyer owner can read; unrelated Buyer cannot.
+set role authenticated;
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',false);
+do $rls_buyer_owner$
+begin
+  if (select count(*) from public.seller_offer_negotiations
+      where offer_id='30000000-0000-4000-8000-000000000001')<>2 then
+    raise exception 'FAIL: Buyer owner cannot read its negotiation history';
+  end if;
+  if has_table_privilege('authenticated','public.seller_offer_negotiations','INSERT')
+     or has_function_privilege('anon','public.respond_to_demand_offer(uuid,text,numeric,numeric,text)','EXECUTE')
+     or not has_function_privilege('authenticated','public.respond_to_demand_offer(uuid,text,numeric,numeric,text)','EXECUTE') then
+    raise exception 'FAIL: negotiation table/RPC grants are not least-privilege';
+  end if;
+end
+$rls_buyer_owner$;
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
+do $rls_other_buyer$
+begin
+  if (select count(*) from public.seller_offer_negotiations)<>0 then
+    raise exception 'FAIL: unrelated Buyer can read another Buyer negotiation history';
+  end if;
+end
+$rls_other_buyer$;
+reset role;
