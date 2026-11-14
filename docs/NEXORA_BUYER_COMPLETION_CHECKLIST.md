@@ -301,3 +301,13 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - Not runtime-tested: email confirmation workflow, password update, session behavior, Auth rate limits and actual UI interaction require isolated Supabase Auth + browser E2E.
 - Display/legal name changes remain blocked: the approved Foundation design names profile_change_requests, but no active migration/table/RPC currently defines it. Do not update public.profiles directly or fake a request. Implement only after Foundation contract and migration history are safely reconciled.
 - No schema/migration or hosted DB was changed; NEXORA-TEST remains empty; no Live/Production/main/DNS/paid service/deployment changes.
+
+
+## 11. 2026-11-14 — Password minimum length preference update
+
+- User preference: Password পরিবর্তনে কমপক্ষে ৬ অক্ষর; ১০ অক্ষর বাধ্যতামূলক নয়।
+- Buyer account password form ও client-side validation ৬ অক্ষরে নামানো হয়েছে; confirmation field-এও একই HTML minimum আছে। দুই Password না মিললে Auth update বন্ধ থাকে; সফল/ব্যর্থ ফলাফল status message-এ দেখানো হয়।
+- Password recovery/reset form-ও ৬ অক্ষরের সঙ্গে সামঞ্জস্য করা হয়েছে, যাতে একই অ্যাকাউন্টের নতুন Password সেট করার দুই পথে ভিন্ন minimum না থাকে।
+- Static source checks: Buyer min 6, recovery min 6, both input minimums 6, mismatch guard and success/failure feedback all PASS. Runtime Auth test এখনও হয়নি।
+- Commits: auth.js `460dffab7fad5828fbbd424560347d8b236fab2b`; index.html `17aad13356b613e1f56c4d90f77464c7502019ee`.
+- No database/migration, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed.
