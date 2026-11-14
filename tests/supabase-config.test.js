@@ -16,14 +16,14 @@ function configFor(hostname) {
 test("known development preview routes only to NEXORA-TEST", () => {
   const { config, backend } = configFor("nexora-platform1-git-nexora-development-shaifrony-7200.vercel.app");
   assert.equal(config.environment, "test");
-  assert.match(config.url, /lhxmqoyxoywntmkmmnjb\\.supabase\\.co$/);
+  assert.ok(config.url.endsWith("lhxmqoyxoywntmkmmnjb.supabase.co"));
   assert.equal(backend, "test");
 });
 
 test("known production host is explicitly labelled production", () => {
   const { config, backend } = configFor("nexora-platform1-mu.vercel.app");
   assert.equal(config.environment, "production");
-  assert.match(config.url, /qsjdeqljpnjumceewsjq\\.supabase\\.co$/);
+  assert.ok(config.url.endsWith("qsjdeqljpnjumceewsjq.supabase.co"));
   assert.equal(backend, "production");
 });
 
