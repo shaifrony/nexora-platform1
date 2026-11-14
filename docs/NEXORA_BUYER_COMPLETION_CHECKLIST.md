@@ -311,3 +311,27 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - Static source checks: Buyer min 6, recovery min 6, both input minimums 6, mismatch guard and success/failure feedback all PASS. Runtime Auth test এখনও হয়নি।
 - Commits: auth.js `460dffab7fad5828fbbd424560347d8b236fab2b`; index.html `17aad13356b613e1f56c4d90f77464c7502019ee`.
 - No database/migration, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed.
+
+
+## NEXORA Product & Revenue Principle — Buyer-first, Seller-funded
+
+**মূলনীতি (ব্যবহারকারীর নির্দেশ, 2026-11-14): NEXORA-এর আয় মূলত Seller-দের কাছ থেকে আসবে; কিন্তু Buyer না থাকলে Seller-দেরও থাকার কারণ থাকবে না। তাই Buyer acquisition, trust, repeat use এবং সহজ অভিজ্ঞতাকে সর্বোচ্চ অগ্রাধিকার দিতে হবে।**
+
+Implementation rules:
+- Buyer-এর জন্য Marketplace browse/search, product details এবং public Buyer Demand discovery সহজ ও friction-light থাকবে; যেখানে নিরাপদ ও সম্ভব, শুধু দেখার জন্য account বাধ্যতামূলক করা হবে না।
+- Buyer account, Demand posting, inquiry, quotation response এবং order request-এ প্রয়োজনের অতিরিক্ত বাধ্যতামূলক ধাপ/তথ্য চাওয়া যাবে না। প্রয়োজনীয় তথ্যের কারণ UI-তে সহজ ভাষায় বোঝাতে হবে।
+- Buyer-এর কাছ থেকে platform access, browsing, Demand posting বা quotation গ্রহণের জন্য কোনো fee নেওয়া হবে না—আলাদা অনুমোদিত business model সিদ্ধান্ত না হওয়া পর্যন্ত।
+- Buyer-এর কাছে wallet/payment চালু আছে এমন ভ্রান্ত ধারণা দেওয়া যাবে না; Order request-কে payment বা delivery booking হিসেবে দেখানো যাবে না।
+- Price, currency, quantity, delivery charge, required-by date, seller response এবং order status স্পষ্টভাবে দেখাতে হবে; hidden fee বা অস্পষ্ট commitment নয়।
+- Buyer-এর ব্যক্তিগত পরিচয়/যোগাযোগ গোপন থাকবে; Seller-এর সঙ্গে যোগাযোগে consent/authorization বজায় থাকবে।
+- Mobile-first, বাংলা-সহজ ভাষা, কম field, sensible defaults, clear validation/error/success feedback এবং duplicate-submit protection হবে UX acceptance criteria।
+- Seller monetization হবে value-linked এবং transparent; Buyer experience-এ বিজ্ঞাপন/fee/forced payment দিয়ে বাধা সৃষ্টি করা যাবে না।
+
+এই নীতি architecture, feature prioritization, UX, pricing, QA এবং future monetization decisions-এ প্রযোজ্য। নিরাপত্তা, privacy বা transaction correctness কমিয়ে Buyer friction কমানো যাবে না।
+
+
+### Buyer friction audit — current source observations
+- Product detail currently exposes separate price-negotiation, direct-order and Seller-chat actions. Review the hierarchy and simplify wording/decision-making without removing meaningful buyer choice or consent.
+- Buyer Demand currently marks product name, category, subcategory, description, specifications, quantity, currency, destination country/city and required date as required. Some may be operationally necessary, but must be checked against schema constraints before relaxing. Budget remains optional.
+- Demand quotation acceptance/counter flow uses browser prompt/confirm dialogs for quantity, price and note. This is functional source but not an easy/mobile-friendly experience; replace only after preserving all server-side constraints and adding accessible inline controls.
+- No source change to these flows in this audit; the exact Foundation/migration and runtime test blockers still apply.
