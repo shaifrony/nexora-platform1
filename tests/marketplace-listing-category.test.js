@@ -1027,3 +1027,10 @@ test("Seller retains access to own Demand quotation history after Buyer closes t
   const sellerBranch = policy.slice(0, policy.indexOf("or exists"));
   assert.doesNotMatch(sellerBranch, /join public\.buyer_demands/i);
 });
+
+
+test("Buyer Demand quantity parser accepts a numeric amount followed by a unit or thousands separators", () => {
+  assert.match(demandOrderSql, /regexp_replace\(btrim\(v_demand\.required_quantity\),',','','g'\)/i);
+  assert.match(demandOrderSql, /from '\^\[0-9\]\+\(\[\.\]\[0-9\]\+\)\?'\)/i);
+  assert.match(demandOrderSql, /v_demand_qty is null or v_demand_qty<=0/i);
+});
