@@ -31,6 +31,16 @@ BEGIN
 END
 $roles$;
 
+-- Realtime catalog placeholder for migration DDL rehearsal only.
+-- This does not start or emulate Supabase Realtime.
+DO $publication$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname='supabase_realtime') THEN
+    CREATE PUBLICATION supabase_realtime;
+  END IF;
+END
+$publication$;
+
 CREATE SCHEMA IF NOT EXISTS auth;
 CREATE SCHEMA IF NOT EXISTS private;
 CREATE SCHEMA IF NOT EXISTS storage;
