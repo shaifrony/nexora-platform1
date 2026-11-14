@@ -277,3 +277,15 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - JavaScript syntax-only checks and isolated required-date/order-total logic checks passed as documented in `NEXORA_BUYER_DEMAND_PROGRESS.md`. These are not SQL runtime, full database, JWT/PostgREST/RLS, concurrency or browser E2E tests.
 - The local installed-contract audit `29_local_buyer_demand_order_contract_audit.sql` is staged but has not been run because the reconstructed local fixtures do not include the complete commerce/negotiation schema. No full isolated migration rehearsal is currently safe; migration-history/version reconciliation and a trusted schema baseline remain blockers.
 - No hosted migration, Live Supabase, Production, `main`, DNS or deployment changed.
+
+
+## 9. 2026-11-14 — Buyer completion execution re-audit
+
+- Buyer-first priority reaffirmed; non-Buyer module work remains deferred unless required to unblock Buyer functionality or safe testing.
+- Source inspection reconfirmed the staged Buyer journeys for signup/login, approved product discovery, product detail, Buyer Demand, required-by date, Buyer-owned Demand/offer list, product-price negotiation, order list and consent-based chat. These remain source-level findings, not end-to-end proof.
+- Buyer profile gap: the current Buyer menu opens the account section, but the current HTML/JS contains no Buyer profile-edit form or profile-change-request submission flow. Do not write directly to protected profile fields; first reconcile the exact trusted Foundation/RPC contract, then implement only permitted self-service fields through the approved workflow.
+- Buyer wallet/payment gap: no wallet ledger or payment integration exists. The misleading “WALLET BALANCE / Available Balance” presentation was replaced with an explicit “WALLET & PAYMENTS — এখনো চালু হয়নি — Order request মানেই Payment নয়” disclosure in index.html (commit 7c79161248193c2aac996e968d4897bc850dab37).
+- Buyer order gap: current Buyer order cards show order state and total but do not yet prove end-to-end delivery tracking or buyer-visible shipment events.
+- Syntax-only JavaScript compilation of auth.js, marketplace.js and chat.js passed after the wallet UI change; index.html script opening/closing tag counts are balanced (7/7). This is not browser/runtime, database, Auth, RLS or mobile acceptance testing.
+- Critical test/deployment blocker remains: NEXORA-TEST is empty and the exact original Foundation DDL plus migration-history reconciliation are not yet available. Do not invent/replay a Foundation or active migration chain. No hosted SQL or real user data may be used.
+- Buyer Module remains INCOMPLETE / NOT ACCEPTANCE-TESTED. Next steps: obtain/reconcile trusted Foundation contract, implement safe Buyer profile-change request, validate Buyer data/API contracts in an isolated Supabase-compatible runtime, then run synthetic two-account browser/mobile acceptance tests for the complete Buyer journey.
