@@ -358,3 +358,15 @@ Implementation rules:
 - Static verification: marketplace.js syntax compilation PASS; no `create_product_inquiry` call or old direct Chat button remains; consent explanation present; negotiation and order paths remain. No browser/runtime or DB integration test performed.
 - Commit: `89a78e69f9e53b5db7a94e092114b714335ee3a7`.
 - No SQL/migration or hosted database was changed. NEXORA-TEST remains untouched; no Live/Production, `main`, DNS, paid service or deployment change.
+
+
+## 2026-11-14 — Buyer Order Dashboard clarity pass
+
+- Improved Buyer order cards with plain-language status labels and a next-step explanation for each supported order state: pending, accepted, ready for confirmation, completed, cancelled and rejected.
+- Added a real timestamp timeline from the existing Commerce Order fields: created_at, accepted_at, ready_at, completed_at and cancelled_at. No synthetic events or guessed dates are displayed.
+- Made the financial summary explicit: agreed/item subtotal, delivery charge (including zero), and delivery-inclusive grand total with currency. The order card states clearly that an order request is not payment and does not imply delivery booking.
+- Added a safety reminder that the Buyer should confirm completion only after actually receiving the product/service. Seller note is shown as Seller update, not as verified courier tracking.
+- Delivery tracking remains unavailable in the Buyer order card: the staged delivery_tracking_events policy currently exposes events to authorized Admin/provider roles, not Buyers. No Buyer tracking query was added and no privacy/RLS policy was weakened. The UI discloses that separate Delivery Tracking is not currently shown.
+- Static validation: marketplace.js compiles with `new Function`; the query uses only columns present in the Commerce Order table plus the later staged delivery-charge/total extension; state actions remain the existing server-validated cancel/complete RPCs. No browser, Auth, PostgREST, RLS or DB runtime test was performed.
+- Source commit: fc7e9d0a6d2f2d440110f8b6198bb70f1d6c4dc0.
+- No SQL/migration, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment changed. Buyer Module remains incomplete and not acceptance-tested.
