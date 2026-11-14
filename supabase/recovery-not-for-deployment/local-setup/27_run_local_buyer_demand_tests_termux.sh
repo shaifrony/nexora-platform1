@@ -12,9 +12,10 @@ cd "$WORK_DIR"
 
 echo "Downloading immutable local-only SQL files ..."
 curl -fL --retry 3 "$BASE/cf3dc4991cad964d664ecb47f031c72e19914114/supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql" -o 25_local_buyer_demand_fixture.sql
-curl -fL --retry 3 "$BASE/7c8bb362e082cbc76de22c6e9defac2198d6952b/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
-curl -fL --retry 3 "$BASE/844304bbb79e8984fefdb9d3085997c78f69eab1/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
-curl -fL --retry 3 "$BASE/442827e1927ba8fa47cea8eac563e6c66f1975df/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
+curl -fL --retry 3 "$BASE/5e0c4cc14c0e078097d3a8ae9b4df1bc29183e9a/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
+curl -fL --retry 3 "$BASE/0939b2b9c87e36939f10e487efcebf79a8ba77ac/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
+curl -fL --retry 3 "$BASE/442827e1927ba8fa47cea8eac563e6c66f1975df/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql
+curl -fL --retry 3 "$BASE/8d7276f57d1c090aef49daf971794f3dbe5d7cb1/supabase/recovery-not-for-deployment/local-setup/30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
 
 echo
 echo "Preflight: verifying local target and prerequisites ..."
@@ -50,16 +51,25 @@ if [ "$OPEN_SESSIONS" != "0" ]; then
 fi
 
 echo "Preflight PASS."
+FIXTURE_CREATED=0
 if [ "$DEMAND_OBJECTS" = "0" ]; then
   echo "Creating only the local Buyer Demand fixture ..."
   psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 25_local_buyer_demand_fixture.sql
+  FIXTURE_CREATED=1
 else
-  echo "Existing complete local Demand fixture detected; skipping fixture creation."
+  echo "Existing complete local Demand schema detected; skipping fixture creation."
 fi
 
 echo
-echo "Applying narrow local policy dependency repair (seller_id remains private) ..."
-psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 28_local_buyer_demand_policy_dependency_patch.sql
+if [ "$FIXTURE_CREATED" = "1" ]; then
+  echo "Applying fixture-only narrow policy dependency repair (seller_id remains private) ..."
+  psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 28_local_buyer_demand_policy_dependency_patch.sql
+else
+  echo "Skipping fixture-only policy patch because the full migration schema is already present."
+fi
+
+echo "Applying Buyer quotation privacy patch (Buyer ID remains private) ..."
+psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 30_buyer_demand_offer_select_policy_recovery_patch.sql
 
 echo
 echo "Running read-only privacy / RLS / routing catalog audit ..."
