@@ -891,3 +891,18 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - This is design/documentation only. No SQL was generated or executed, no hosted Test schema/data changed, no Live/Production/ `main` / DNS / paid service changed. No real users or private content used. Calling remains paused.
 - Supabase CLI v3 breaking behavior rechecked: hosted database commands require explicit `--remote`; hosted mutations prompt for confirmation and require `--yes` when unattended. References: Supabase CLI v3 migration guide and Nov 4, 2026 changelog.
 - **Next gate:** produce a full dependency/compatibility matrix for all 38 active migrations and frontend dependencies, then write a new Test-only SQL baseline only after all required columns, permission keys, trigger behavior and function signatures are confirmed. Migration timestamp generation gate still applies; do not invent or rename timestamps.
+
+
+## 2026-11-14 — 38-Migration + Frontend compatibility audit v1
+
+- Completed a source-level dependency inventory of all **38 active SQL migration files** on `nexora-development`, plus frontend call-surface scan of `auth.js`, `marketplace.js`, `chat.js`, `app.js`, `admin/admin.js`, `delivery-network-admin.js`.
+- Added authoritative working matrix: `supabase/recovery-not-for-deployment/local-setup/10_migration_frontend_compatibility_matrix.md`.
+- Confirmed no active Foundation migration creates `profiles`, role/profile request tables, Admin staff/departments/catalog/grants/audit tables, or the main Admin permission resolver. First migration expects `public.rls_auto_enable()` to pre-exist; Marketplace migrations expect `profiles` and `is_nexora_admin()`; Admin/Transport/Listing/Delivery/Porter expect additional Admin and permission helpers.
+- Confirmed #15 `20261113100000_create_porter_delivery_workflow.sql` is a documented no-op. Current frontend still references legacy `porter_delivery_jobs`, `porter_delivery_job_events`, and legacy Porter RPCs not created by the active migration set. These need reconciliation against the approved unified Transport Provider + Vehicle + `delivery_jobs` model before SQL is authored; do not create duplicate legacy tables by assumption.
+- Recorded required Admin permission keys observed in active migration SQL: `logistics.view`, `logistics.assign`, `products.edit`, `services.edit`; migration #34 adds further department catalogue seeds requiring exact frontend cross-check.
+- The matrix lists each of the 38 migrations with its principal objects and Foundation/platform/earlier-migration dependencies, plus Auth trigger, Realtime/Storage, RLS, Demand privacy, role lifecycle, Calling pause and Translation restrictions.
+- Audit was static only. No SQL generation/execution, no NEXORA-TEST schema/data mutation, no Live/Production/`main`/DNS/paid services touched. No user rows or private content used.
+- Supabase CLI v3 changelog checked: hosted DB mutations require explicit `--remote` and `--yes` in noninteractive runs; new migrations must be created by `supabase migration new`, never by inventing timestamps.
+- Matrix commit: `c51c7247573f9535ad20278d5bd0578c276d61c7`.
+- README link commit: `5c911e87789d35db14931bfd72ca31763176cf1b`.
+- **Next blocker:** reconcile legacy Porter frontend RPC/table paths and formalize Admin/role-request RPC contracts; only then prepare Test-only Foundation SQL. No hosted SQL operation is authorized by this audit.
