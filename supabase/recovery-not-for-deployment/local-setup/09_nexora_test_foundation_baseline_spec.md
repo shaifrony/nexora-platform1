@@ -275,3 +275,16 @@ The canonical `private.has_nexora_permission(text)` must:
 - Auth signup cannot create Admin; Porter stays pending until separate approval; Buyer/Seller signup remains active.
 
 **Status:** contracts are now more precise, but original missing historical SQL remains missing. This document is still NOT SQL / NOT DEPLOYABLE / NOT APPLIED. Continue to keep NEXORA-TEST empty until local Supabase runtime gates pass.
+
+
+### 11.6 Admin permission keys consumed by frontend and active migrations
+
+Additional source inspection of `marketplace.js` and Admin/Logistics migrations identifies these permission keys:
+
+- Current Assistant Admin UI checks `users.view`, `users.suspend`, `users.restore`, `users.cancel`.
+- It checks `products.suspend`, `products.restore`, `products.cancel`, and `businesses.suspend` for listing moderation.
+- Listing edit workflow uses `products.edit` and `services.edit`.
+- Logistics / Porter review and delivery workflows use `logistics.view` and `logistics.assign`.
+- #34 adds `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
+
+The Foundation seed audit must account for every key above and every additional key found in the remaining active migrations. The UI's grant lookup is presentation-only. Each RPC must enforce its own server-side key; never treat a visible button or a row in `admin_permission_grants` as sufficient by itself. In particular, the exact permissions for the older `manage_nexora_user` / newer `admin_manage_user` and `manage_marketplace_listing` calls remain unverified and must be reconciled before those operations are enabled.
