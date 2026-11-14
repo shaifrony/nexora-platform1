@@ -248,3 +248,48 @@ NEXORA illustrative gross revenue for this order is **BDT 370** (BDT 300 marketp
 - Carrier and Local Distribution Agent payment eligibility depends on their own verified custody/delivery events. A delivery failure, partial delivery, return or dispute must pause or proportionally adjust affected service payments under an approved rule; no automatic full payout on assignment alone.
 - No Agent may approve their own fee, payout, adjustment or dispute. Accounts/Finance and authorized Admins use maker-checker controls.
 - The rates above are documentation/sample data only. No schema, migration, RPC, payment integration, wallet, payout, production pricing or live settlement has been implemented. Existing migration/foundation reconciliation and isolated replay gates still apply. Legal, tax, consumer-protection and payment-provider review is required before live collection/settlement.
+
+## 10. User-confirmed policy updates — supersede conflicting earlier draft text
+
+The following decisions were confirmed after the earlier sections were drafted. Where any earlier paragraph in this document conflicts with this section, this section takes precedence and the earlier paragraph must be treated as superseded.
+
+### Seller Agent is the direct NEXORA Seller
+
+- A Seller Agent who purchases/obtains goods from a farmer or small business for resale is the direct Seller on NEXORA, using the Agent's own approved account and business identity.
+- NEXORA must not create a separate Unregistered Seller Record, Seller login, or Seller profile for the unregistered farmer/small supplier in this model.
+- The Agent is responsible for maintaining their own supplier, source, procurement, ownership, purchase-cost and stock records outside the NEXORA Seller identity model, subject to applicable law and traceability requirements.
+- The Agent controls their own resale listing, sale price, negotiation and Seller-side order obligations. This is distinct from a Direct Seller who operates their own Seller account and uses Agents only for physical collection/handling/transport services.
+- The Agent's legal ownership, invoice/tax obligations and consumer-facing disclosure must be documented and reviewed before launch; the platform must not assume a regulated payment or escrow role.
+
+### Wholesale and Retail listings
+
+- Wholesale and Retail are separate Listing types. A Seller/Agent may create separate listings for the same underlying goods where both sale channels are offered.
+- Each listing has its own sale type, price/terms and permanent listing identity. A buyer can browse both types; the type is not a Buyer account category or a visibility restriction.
+
+### Buyer Agent Fee
+
+- When a Buyer uses a Buyer Agent for the transaction, the Buyer Agent Fee is mandatory and must be disclosed before order confirmation.
+- No Buyer Agent Fee is charged where the Buyer completes the transaction without using a Buyer Agent.
+- The fee rate and calculation base remain configurable and are not fixed by this policy document.
+
+### Transport and final-mile responsibility
+
+- The Seller Agent bears/pays the applicable transport charge for the onward movement from the Seller Agent's collection point under the approved commercial terms.
+- NEXORA is responsible for arranging the onward movement from the selling Agent's location and assigning the receiving-area/local distribution Agent.
+- A separate Local Distribution Agent receives the goods and completes local distribution/delivery to the Buyer, unless a future explicitly approved exception applies.
+- Carrier, Drop Point and Local Distribution Agent custody events, quantities, condition and handovers must be recorded separately. The same work must not be paid twice.
+
+### Buyer receipt and Buyer Demand
+
+- The normal settlement eligibility trigger is `buyer_received`: the Buyer must confirm actual receipt before normal settlement can complete. Any legal/provider exception must be separately approved and auditable.
+- Orders created from Buyer Demand quotations use the same Agent, transport, custody, Buyer receipt and settlement workflow as Product Marketplace orders.
+- Buyer Demand identity/contact privacy remains unchanged; public Demand content must not expose private Buyer identity or contact data.
+
+### Configurable financial rates
+
+- No commission, Agent fee, transport share, logistics margin, minimum, maximum or other financial rate may be permanently hardcoded.
+- All rates and calculation bases must be managed through versioned, effective-dated, permission-controlled Financial Configuration. Every order must preserve the configuration version and calculated amount snapshot used at confirmation.
+- Maker-checker approval, immutable audit history, exact allocation reconciliation and non-retroactive changes are mandatory.
+- Previously shown sample rates/splits are illustrative only and are not approved permanent or launch rates.
+
+These updates resolve the earlier draft's open questions about the Seller Agent's own-resale model, Buyer Demand workflow parity, Buyer receipt settlement trigger, separate Wholesale/Retail listings and configurable rates. Other financial details (including exact rates, calculation bases, payout rails, timeout handling, partial-delivery settlement and refund/dispute treatment) remain subject to explicit user decisions and legal/payment-provider review.
