@@ -1479,3 +1479,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Sales Agent / Employee business-control features are explicitly deferred. Do not add their tables, migrations, screens, permissions or workflows during the current core Marketplace phase. Revisit after Buyer/Seller/Porter/Admin core flows, Marketplace, Demand, Orders, communications, security and release-readiness work are materially complete.
 - When revisited, preserve the agreed hierarchy Admin → Sales Agent → Employees, Admin-defined permission ceilings, separate employee identities and activity/accounting, and controlled transfer/deactivation behavior. Agents must never grant permissions beyond Admin policy.
 - Existing safety gates remain binding: Development branch only; no Production/Live/main/DNS changes; no hosted database writes or migration application without the required explicit approval and validation gates; never represent static/PGlite checks as full Supabase runtime verification.
+
+
+## 2026-11-15 — Autonomous development agent setup
+- Added `docs/NEXORA_AUTONOMOUS_AGENT_ARCHITECTURE.md` with the proposed separate eve runtime, bounded scheduled work-cycle, GitHub least-privilege model, fail-closed permission boundaries, rollout phases and acceptance criteria.
+- Inspected the `nexora-development` tree (161 entries): the app is currently a root-level static JavaScript application; no root package manifest/lockfile, `.github/workflows/`, `vercel.json` or existing agent runtime was present.
+- Confirmed the existing Vercel project/team and Hobby plan. Attempted isolated Vercel Sandbox provisioning for implementation/testing; the API returned HTTP 402 because the team's Hobby snapshot-storage quota is exceeded. No sandbox was created.
+- Scheduled GitHub Actions are not a suitable branch-only scheduler because scheduled workflows run against the default branch; do not modify `main` to enable them.
+- **Status: Architecture staged; runtime blocked pending Vercel Sandbox quota resolution and isolated implementation environment.** No deployment, billing/plan change, repository secret change, `main` write, Production/Live/DNS change, or hosted Supabase write occurred.
+- Next safe step after quota resolution: initialize the isolated eve agent project, verify package/API versions in its sandbox, implement read-only GitHub access, then add a narrowly allowlisted writer that can commit only to `nexora-development`.
