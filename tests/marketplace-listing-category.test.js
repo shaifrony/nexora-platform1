@@ -944,3 +944,15 @@ test("Seller Product dashboard loads and displays review notes through the scope
   assert.match(ui, /Admin Note:/);
   assert.doesNotMatch(ui, /\.select\("[^"]*admin_note/);
 });
+
+
+test("Buyer Demand negotiation RPC caps Buyer and Seller counter quantities at requested demand quantity", () => {
+  const fn = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
+    demandOrderSql.indexOf("revoke all on function private.respond_to_demand_offer")
+  );
+  assert.match(fn, /v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),' '\)::numeric|v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),'\'\)::numeric/i);
+  assert.match(fn, /p_quantity>least\(coalesce\(nullif\(v_offer\.available_quantity,'\'\)::numeric,0\),v_demand_qty\)/i);
+  assert.match(fn, /least\(v_latest\.proposed_quantity,v_demand_qty\)/i);
+  assert.match(fn, /v_qty>v_demand_qty[\s\S]*?v_qty>coalesce\(nullif\(v_offer\.available_quantity,'\'\)::numeric,0\)/i);
+});
