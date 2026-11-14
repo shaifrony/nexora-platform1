@@ -104,11 +104,29 @@ CREATE TABLE IF NOT EXISTS storage.buckets (
   allowed_mime_types text[]
 );
 
+
+-- Minimal Storage path helper used by the active NEXORA migration policies.
+-- This mirrors folder-segment extraction only; it does not emulate the Supabase Storage API.
+CREATE OR REPLACE FUNCTION storage.foldername(name text)
+RETURNS text[]
+LANGUAGE sql IMMUTABLE PARALLEL SAFE
+AS $function$
+  WITH path_parts AS (
+    SELECT string_to_array(coalesce(name,''), '/') AS parts
+  )
+  SELECT CASE
+    WHEN cardinality(parts) <= 1 THEN ARRAY[]::text[]
+    ELSE parts[1:cardinality(parts)-1]
+  END
+  FROM path_parts;
+$function$;
+
 CREATE TABLE IF NOT EXISTS storage.objects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   bucket_id text REFERENCES storage.buckets(id),
   name text NOT NULL,
   owner uuid,
+  owner_id text,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   metadata jsonb
