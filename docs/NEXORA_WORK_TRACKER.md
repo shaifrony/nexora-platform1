@@ -1715,6 +1715,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Development CI [#43655233048](https://github.com/shaifrony/nexora-platform1/actions/runs/43655233048) passed on commit `e16c139556a93b2e419c865b75ce17441339f2d9`: JavaScript syntax, dependency-free regressions, Buyer Demand PostgreSQL, Product Price Negotiation PostgreSQL, Buyer-safe Delivery PostgreSQL, Buyer Receipt OTP PostgreSQL and migration filename/order checks all passed.
 - This is a disposable PostgreSQL harness result, not a hosted Supabase Auth/PostgREST/RLS or browser verification. Buyer OTP request/display UI and assigned Provider/Admin verification UI remain unimplemented; no SMS/WhatsApp delivery is configured. No hosted migration, NEXORA-TEST mutation, Production deployment, DNS/public alias change or `main` change was made.
 
+## 2026-11-15 — Receipt OTP Buyer / Provider / Admin interfaces (staged)
+
+- Added migration `20261115150000_receipt_otp_work_queues.sql` with two narrow SECURITY DEFINER RPCs: `get_my_order_receipt_jobs(uuid[])` checks active Buyer ownership and returns only own order/job IDs, job reference and status; `get_my_assigned_receipt_jobs()` returns only eligible jobs assigned to an approved independent Provider owned by the caller.
+- Buyer Order cards now request OTP only for own `out_for_delivery` jobs via `request_delivery_receipt_code`; the returned code is rendered in the Buyer card with a 10-minute expiry notice. It is not written to browser storage or sent to Seller.
+- Approved independent Provider owners now have a receipt verification queue in the Transport Provider workspace. They submit the Buyer code through `verify_delivery_receipt_code`; server-side ownership and assignment checks remain authoritative.
+- Admin Delivery Network job cards now have OTP verification controls. Database verification still requires active Admin membership, `logistics.assign` and JWT AAL2; the UI does not bypass MFA.
+- Extended the disposable PostgreSQL receipt test to assert Buyer A cannot discover Buyer B jobs and only the assigned approved Provider owner can list the eligible jobs. Development CI [#43655663997](https://github.com/shaifrony/nexora-platform1/actions/runs/43655663997) passed on commit `fd3e58d9dc00f1b53e2d77b525599df7cfece708`, including JavaScript syntax and all PostgreSQL test suites.
+- Updated `docs/NEXORA_BUYER_DELIVERY_TRACKING_ACCESS_DESIGN.md`. Remaining: NEXORA own-team and courier-partner staff verification identities, MFA step-up UI, external SMS/WhatsApp delivery, and full hosted Supabase Auth/PostgREST/RLS + browser/mobile E2E. No hosted migration, NEXORA-TEST mutation, Production deployment, DNS/public alias or `main` change was made.
+
 ## 2026-11-15 — Buyer receipt OTP security foundation (staged)
 
 - Added staged migration `20261115140000_buyer_delivery_receipt_otp.sql` with a private receipt-challenge table. The Buyer can request a 16-character one-time code only for their own shipment while its status is `out_for_delivery`.
