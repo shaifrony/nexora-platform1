@@ -729,3 +729,80 @@ test("Commerce orders cannot be inserted directly by clients and are visible onl
   assert.match(commerceOrderSql, /commerce_order_events_participant_read[\s\S]*?o\.buyer_id=\(select auth\.uid\(\)\) or o\.seller_id=\(select auth\.uid\(\)\)/i);
   assert.match(commerceOrderSql, /revoke all on function public\.create_commerce_order\(text,uuid,numeric,text,text\) from public,anon/i);
 });
+
+
+const verifiedReviewSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114130100_verified_purchase_reviews.sql"),
+  "utf8"
+);
+
+test("Purchase eligibility records remain private and writable only by trusted service roles", () => {
+  assert.match(verifiedReviewSql, /create table if not exists private\.review_purchase_eligibility/i);
+  assert.match(verifiedReviewSql, /revoke all on private\.review_purchase_eligibility from public, anon, authenticated/i);
+  assert.match(verifiedReviewSql, /grant select, insert, update on private\.review_purchase_eligibility to service_role/i);
+  assert.doesNotMatch(verifiedReviewSql, /grant .*private\.review_purchase_eligibility to authenticated/i);
+});
+
+test("Public reviews expose only published rows while Buyers can read their own moderation state", () => {
+  assert.match(verifiedReviewSql, /listing_reviews_public_anonymous_read[\s\S]*?review_status = 'published'/i);
+  assert.match(verifiedReviewSql, /listing_reviews_public_or_owner_read[\s\S]*?review_status = 'published'[\s\S]*?buyer_id = \(select auth\.uid\(\)\)[\s\S]*?public\.is_nexora_admin\(\)[\s\S]*?aal2/i);
+  assert.match(verifiedReviewSql, /grant select on public\.listing_reviews to anon,authenticated/i);
+  assert.match(verifiedReviewSql, /revoke all on public\.listing_reviews from public, anon, authenticated/i);
+});
+
+test("Review eligibility lookup is authenticated and scoped to the caller's completed purchase", () => {
+  const fn = verifiedReviewSql.slice(
+    verifiedReviewSql.indexOf("create or replace function public.get_my_review_eligibility("),
+    verifiedReviewSql.indexOf("revoke all on function public.get_my_review_eligibility")
+  );
+  assert.match(fn, /security definer/i);
+  assert.match(fn, /v_buyer uuid := auth\.uid\(\)/i);
+  assert.match(fn, /e\.buyer_id=v_buyer and e\.consumed_at is null/i);
+  assert.match(fn, /not exists \([\s\S]*?r\.buyer_id=v_buyer/i);
+  assert.match(verifiedReviewSql, /revoke all on function public\.get_my_review_eligibility\(text,uuid\) from public, anon/i);
+  assert.match(verifiedReviewSql, /grant execute on function public\.get_my_review_eligibility\(text,uuid\) to authenticated/i);
+});
+
+test("Review submission requires an active Buyer, approved listing and matching unconsumed purchase", () => {
+  const fn = verifiedReviewSql.slice(
+    verifiedReviewSql.indexOf("create or replace function public.submit_verified_listing_review("),
+    verifiedReviewSql.indexOf("revoke all on function public.submit_verified_listing_review")
+  );
+  assert.match(fn, /p\.role='buyer' and p\.account_status='active'/i);
+  assert.match(fn, /listing_status='approved'/i);
+  assert.match(fn, /v_seller=v_buyer/i);
+  assert.match(fn, /where e\.listing_type=p_listing_type and e\.listing_id=p_listing_id[\s\S]*?e\.buyer_id=v_buyer and e\.consumed_at is null[\s\S]*?for update/i);
+  assert.match(fn, /A completed verified purchase is required before reviewing/i);
+  assert.match(fn, /You have already reviewed this listing/i);
+});
+
+test("A Buyer can review a listing only once and submission consumes the selected purchase eligibility", () => {
+  assert.match(verifiedReviewSql, /create unique index if not exists listing_reviews_one_per_buyer_listing_idx[\s\S]*?on public\.listing_reviews\(listing_type, listing_id, buyer_id\)/i);
+  const fn = verifiedReviewSql.slice(
+    verifiedReviewSql.indexOf("create or replace function public.submit_verified_listing_review("),
+    verifiedReviewSql.indexOf("revoke all on function public.submit_verified_listing_review")
+  );
+  assert.match(fn, /insert into public\.listing_reviews/i);
+  assert.match(fn, /update private\.review_purchase_eligibility\s*set consumed_at=now\(\)\s*where id=v_eligibility\.id/i);
+});
+
+test("Order completion creates a private review eligibility grant only after the Buyer completes receipt", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.transition_commerce_order("),
+    inventoryOrderSql.indexOf("revoke all on function private.create_commerce_order")
+  );
+  assert.match(fn, /if v_next='completed' then[\s\S]*?insert into private\.review_purchase_eligibility/i);
+  assert.match(fn, /v_order\.buyer_id,v_order\.order_code,v_order\.quantity,now\(\)/i);
+  assert.match(fn, /on conflict\(listing_type,listing_id,buyer_id,purchase_reference\) do nothing/i);
+});
+
+test("Product and Service review UI requests eligibility and submits only through the verified-review RPC", () => {
+  const ui = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadListingReviews("),
+    marketplaceUi.indexOf("function renderProducts()")
+  );
+  assert.match(ui, /get_my_review_eligibility/);
+  assert.match(ui, /eligibility\.can_review/);
+  assert.match(ui, /submit_verified_listing_review/);
+  assert.match(ui, /only NEXORA|completed|Verified Review/i);
+});
