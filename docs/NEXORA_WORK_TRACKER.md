@@ -951,3 +951,5 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Remaining critical gates are unchanged: trusted Foundation/schema and migration-history reconciliation; isolated full-chain rehearsal; real Supabase Auth/JWT/PostgREST/RLS verification; two-session concurrency; Buyer browser/mobile acceptance tests; order delivery tracking integration; support/complaint path; and verified-review E2E.
 - Do not claim Buyer Module complete. The current action is a source-level accuracy fix; no runtime test was run in this step.
 - No SQL or migration was generated or executed; NEXORA-TEST remains empty; no Live/Production, main, DNS, paid service or deployment was changed.
+
+- Follow-up Buyer gap audit added to docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md (commit 4618133a6888b9e728268bb3bd08d6ae98d1defc): Buyer profile editing/request flow is absent; Buyer order delivery tracking is not yet proven; wallet/payment remains unavailable and is now disclosed honestly. These gaps are explicitly open, not marked complete.
