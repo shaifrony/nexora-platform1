@@ -314,3 +314,12 @@ Required tests: six operational departments accept valid officers; Logistics per
 - Replay failed at migration #1 (`20261112045441_revoke_public_rls_auto_enable_execute.sql`) because `public.rls_auto_enable()` is absent (PostgreSQL 42883). No later migration was tested. The local stack was destroyed and verified absent; no applied-count assertion is made.
 - This is direct runtime confirmation of the Foundation prerequisite already identified in §§3, 7 and 14.2. Do not stub the helper or alter historical migration #1. Author a recovery-only implementation from §14.2, test it in a fresh local stack, then continue to the next dependency failure.
 - No active SQL, repo source, hosted DB, NEXORA-TEST, Live/Production, `main`, DNS or deployment changed. No successful replay/security test is claimed.
+
+
+## 20. Runtime verification — RLS bootstrap dependency and Foundation stop point (2026-11-14)
+
+- Recovery-only helper candidate: `supabase/recovery-not-for-deployment/local-setup/12_rls_auto_enable_recovery_candidate.sql`.
+- 12/12 local PostgreSQL 17 assertions passed for public ordinary/partitioned tables, CTAS, SELECT INTO, non-public exclusion, trusted ownership, enabled trigger, function ACL, no-policy API denial and non-recursive trigger behavior. Extension-owned table behavior remains untested.
+- Fresh disposable replay: candidate installed before replay; migration `20261112045441_revoke_public_rls_auto_enable_execute.sql` passed. Migration `20261112050241_secure_public_profile_identity_projection.sql` failed at its first statement because `public.profiles` is absent. Exact applied count before teardown: 1/38.
+- Disposable stack destroyed and stack list verified empty. No hosted project, active migration, `main`, Live/Production or deployment changed.
+- Gate status: RLS helper candidate has a successful narrow local preflight; Foundation schema/Auth/Admin resolver and full replay remain blocked. Do not apply this candidate to NEXORA-TEST or Live/Production.
