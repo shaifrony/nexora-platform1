@@ -1067,3 +1067,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Expanded compatibility matrix §10 with the same evidence. Commit: `1571e45045aac6c3d492592e213332e5d7c92881`.
 - No app JS/HTML, SQL migration, NEXORA-TEST schema/data, Live/Production, `main`, DNS, paid service or deployment changed. No runtime tests were claimed.
 - Next: source-audit the remaining Admin user-management actions/permission seeds against every active migration, then build a local-only Foundation candidate only after the complete contract is closed. Do not touch NEXORA-TEST until disposable local Supabase Auth/RLS tests pass and explicit approval is given.
+
+
+## 2026-11-14 — Admin permission inventory follow-up
+
+- Inspected current Admin UI grant checks and Logistics / listing-edit migration sources. Recorded the current UI permission keys (`users.*`, `products.suspend|restore|cancel`, `businesses.suspend`), listing edit keys (`products.edit`, `services.edit`), Logistics keys (`logistics.view|assign`) and #34 Marketing/Transport/Finance seed keys in Foundation spec §11.6.
+- Added compatibility matrix §11. Exact permission requirements for legacy `manage_nexora_user`, newer `admin_manage_user`, and `manage_marketplace_listing` remain unresolved; do not enable them or add aliases until the server-side contract is reconciled. Client-side grant lookups are presentation only.
+- Foundation spec commit: `a760d5ff8e56849aed809584da4ee00979c840a2`; compatibility matrix commit: `543329a1a10a6e4fc39cdf8858e7e06be7767757`.
+- No app code or SQL changed; no database, deployment, production or DNS mutation. All work remains docs-only and source-level.
