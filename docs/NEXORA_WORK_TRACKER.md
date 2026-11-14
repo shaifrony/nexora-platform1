@@ -1672,3 +1672,8 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added authenticated-role RLS checks proving the owning Buyer can read its quotation negotiation history while an unrelated Buyer cannot; also verified negotiation table INSERT is not granted and the public negotiation RPC is executable by authenticated but not anon.
 - GitHub Actions Development CI run [#43650037123](https://github.com/shaifrony/nexora-platform1/actions/runs/43650037123) for commit `821afc4dbfb67484bbc4364e05221ef273a62109` completed successfully: 105/105 dependency-free tests, PostgreSQL 17 migration execution and all focused integration assertions passed, followed by the migration filename/order guard.
 - These PostgreSQL tests run on a minimal disposable fixture. They do not establish full Supabase Auth/PostgREST/Storage/Realtime, actual hosted RLS policy behavior across all platform roles, or a complete migration-chain replay.
+
+
+## 2026-11-15 — Buyer Demand lifecycle-only RLS integration
+- Extended the disposable PostgreSQL 17 harness to execute the Buyer Demand update permissions as the `authenticated` role under RLS, not merely inspect grants: the owning Buyer can close their own open Demand, while direct currency changes are rejected.
+- GitHub Actions Development CI run [#43650116697](https://github.com/shaifrony/nexora-platform1/actions/runs/43650116697) for commit `40b7ae1d9ade147a08cb306dd1afd102c6e114ab` completed successfully. JavaScript syntax, all 105 dependency-free tests, PostgreSQL 17 migration + integration tests, and migration filename/order guard passed.
