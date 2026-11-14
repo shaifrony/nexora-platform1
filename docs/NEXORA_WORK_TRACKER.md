@@ -1360,3 +1360,8 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Defined a safe compatibility approach: existing records must not be guessed into Wholesale or Retail; retain a temporary legacy_unclassified state until confirmed. Published sale_type is identity-defining and cannot be changed in-place; a second sale type requires a separate Listing.
 - Buyer Demand matching remains taxonomy + approved Seller/Business eligibility; no account-category or sale-type visibility gate is permitted.
 - This was documentation/source reconciliation only. No frontend behavior, SQL migration, database or deployment was changed.
+
+
+### Regression test run instructions — 2026-11-14
+- Added README instructions to run the dependency-free unit suite with node --test tests/*.test.js (Node.js 20+).
+- The README explicitly distinguishes unit tests from Supabase migration replay, Auth/JWT/PostgREST/RLS, Storage/Realtime and browser E2E acceptance.
