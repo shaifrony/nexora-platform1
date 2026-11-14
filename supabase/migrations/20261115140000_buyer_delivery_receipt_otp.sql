@@ -162,6 +162,15 @@ as $$ select private.verify_delivery_receipt_code($1,$2,$3,$4); $$;
 revoke all on function public.verify_delivery_receipt_code(uuid,text,text,text) from public,anon;
 grant execute on function public.verify_delivery_receipt_code(uuid,text,text,text) to authenticated;
 
+-- Rebind the public RPC after the private function rename; PostgreSQL dependencies
+-- otherwise keep the pre-existing wrapper attached to the renamed legacy function.
+create or replace function public.update_delivery_network_job_status(
+ p_job_id uuid,p_next_status text,p_location_description text default null,p_note text default null,p_external_tracking_code text default null
+) returns jsonb language sql security invoker set search_path=''
+as $ select private.update_delivery_network_job_status($1,$2,$3,$4,$5); $;
+revoke all on function public.update_delivery_network_job_status(uuid,text,text,text,text) from public,anon;
+grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
+
 comment on table private.delivery_receipt_challenges is
  'Private one-time Buyer receipt challenges. Only a salted digest is stored; raw OTP is returned only to the owning Buyer at request time.';
 comment on function public.verify_delivery_receipt_code(uuid,text,text,text) is
