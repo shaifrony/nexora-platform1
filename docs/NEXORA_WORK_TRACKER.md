@@ -1373,3 +1373,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Ran node --check over every tracked/untracked JavaScript source outside .git and node_modules — all passed.
 - Removed only the generated untracked supabase/.temp/cli-latest file created by CLI help/version probing. Final local Git worktree is clean.
 - This remains unit/static verification. No local Supabase container could start in this sandbox: Podman is installed, but the Vercel sandbox denies /dev/net/tun and container proc mounts. No remote DB or deployment was touched.
+
+
+### Listing field naming compatibility — 2026-11-14
+- Chose the existing product-schema contract name market_category for the restored per-listing Wholesale/Retail field, rather than introducing a second database column named sale_type. The financial calculator's internal sale_type input will be normalized from market_category.
+- This reuses the prior product_market_category contract and local visibility fixture while preserving the newly approved separate Listing IDs/URLs. It does not restore Buyer/Seller account categories.
+- No schema or frontend behavior changed in this naming reconciliation.
