@@ -416,7 +416,7 @@ BEGIN
   WHERE source_offer_id='25400000-0000-4000-8000-000000000005';
   BEGIN
     PERFORM private.transition_buyer_demand_order(v_order,'accept','Inactive Seller attempt');
-  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: inactive Seller accepted a Buyer Demand order'; END IF;
   RAISE NOTICE 'PASS: inactive Seller cannot accept an order';
