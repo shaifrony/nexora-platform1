@@ -714,3 +714,27 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 - **Not yet covered:** an extension-owned table creation test, full Foundation/Auth/AAL2 behavior, complete 38-migration replay, and end-to-end security tests. The candidate must not be called production-ready or deployed until these gates pass.
 - No active migration was edited or created; migration #1 remains unchanged. `main`, NEXORA-TEST, Live/Production, DNS and deployments were not changed.
 - Next: implement the missing Foundation baseline from approved spec contracts in a disposable local stack, then rerun all 38 migrations from a fresh database and complete synthetic security tests.
+
+
+## 21. Recovery-only Foundation candidate — fresh replay and synthetic security verification (2026-11-14)
+
+**Status: RECOVERY-ONLY CANDIDATE / NOT HISTORICAL SQL / NOT DEPLOYABLE / NOT APPLIED TO HOSTED PROJECTS.**
+
+- Candidate: `13_foundation_bootstrap_recovery_candidate.sql`. Built from the owner-approved Foundation baseline and active migration/frontend contracts. It supplies the missing profiles, seven approved departments, role/profile-change request tables, admin staff/catalog/grants/audit structures, Porter review row, protected Director/AAL2 resolvers, strict department permission resolver, Auth signup trigger and the frontend-contract `review_role_request(uuid,text)` RPC.
+- The candidate includes both `public.is_nexora_admin()` and the public compatibility wrapper `public.is_nexora_super_admin()`; the latter was discovered as a direct dependency of active migration `20261112151344_enforce_aal2_on_admin_metadata_reads.sql`. Both resolve only the protected active Director with AAL2.
+- Installed RLS helper candidate #12 and Foundation candidate #13 into a **fresh disposable native PostgreSQL 17 stack**, then replayed all 38 active migrations. Exact migration history: **38/38**, first `20261112045441`, last `20261115120000`. No active migration was edited.
+- Synthetic Foundation suite: **15/15 assertions passed** for Buyer/Seller/Porter Auth trigger provisioning, Porter pending review, rejection of public Admin signup, Director AAL1 denial/AAL2 acceptance, permission resolution, cross-department denial, same-department grant, explicit deny, Buyer own-profile RLS, duplicate pending Seller request, protected role field, atomic Director Seller approval and audit record.
+- Schema verification: Supabase CLI `db lint` reported **no schema errors**. All **41/41 public tables** had RLS enabled. All **46/46 SECURITY DEFINER functions** in public/private had an explicit `search_path`. Exactly one `auth.users` trigger invoked `public.handle_new_user()`. Internal `handle_new_user` and `rls_auto_enable` functions had no EXECUTE for anon/authenticated.
+- The fresh disposable stack was destroyed after verification and stack list was confirmed empty.
+
+## 22. Admin Governance migration #34 compatibility repair — local-only validation (2026-11-14)
+
+**Status: RECOVERY-ONLY PATCH / NOT HISTORICAL SQL / NOT AN ACTIVE MIGRATION / NOT DEPLOYABLE.**
+
+- Candidate: `14_admin_governance_compatibility_repair_candidate.sql`. It preserves the existing `manage_nexora_officer` RPC signature while correcting the old #34 allowlist to six operational departments (Marketing, Transport, Logistics, Product & Business, Trust & Safety, Accounts), with Managing Director Office reserved for the MD position.
+- The repair validates that each permission is active and belongs to the selected department (except MD's specifically approved cross-department permissions), accumulates sensitivity across the full permission set, requires a reason for sensitive grants, preserves the supplied audit reason, and keeps Director AAL2, active Buyer prerequisite, row locking, atomic role/staff/grant writes, and reversible deactivation.
+- Local Governance suite: **16/16 assertions passed** for appointment in all six operational departments, correct permission assignment, rejection and rollback of cross-department grants, rejection of inactive Trust & Safety permissions, audit reason retention and reversible deactivation. Additional update/AAL1/sensitive-reason suite: **3/3 assertions passed**.
+- Re-ran `db lint` after the patch: no schema errors. RLS remained **41/41**; SECURITY DEFINER search_path check remained **46/46**. The final disposable stack was destroyed and stack list returned empty.
+- Combined runtime assertions across RLS helper (12), Foundation (15), Governance (16) and update/security (3): **46 passed**.
+- Remaining gates: extension-owned-table event-trigger test; protected initial Director bootstrap procedure (tests used a synthetic Director inserted only by local postgres); non-Director cross-department exception model remains fail-closed/not implemented; full Admin RPC coverage (`manage_nexora_user`, `manage_marketplace_listing`, `admin_manage_user`) is still missing; full Buyer browser journey is not yet validated.
+- No hosted NEXORA-TEST, Live/Production, `main`, DNS, Vercel deployment or paid service was changed. These candidates must not be applied to hosted environments.
