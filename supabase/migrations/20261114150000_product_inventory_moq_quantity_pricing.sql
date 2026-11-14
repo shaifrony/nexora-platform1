@@ -253,6 +253,14 @@ begin
   if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
   select * into v_order from public.commerce_orders where id=p_order_id for update;
   if not found then raise exception 'Order not found'; end if;
+  if not exists(
+    select 1 from public.profiles p
+    where p.id=v_actor and p.account_status='active'
+      and ((p.role='buyer' and p.id=v_order.buyer_id)
+        or (p.role='seller' and p.id=v_order.seller_id))
+  ) then
+    raise exception 'An active Buyer or assigned Seller account is required' using errcode='42501';
+  end if;
   if length(coalesce(p_note,'')) > 1500 then raise exception 'Note is too long'; end if;
 
   if p_action='accept' then
