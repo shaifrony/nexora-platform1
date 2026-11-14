@@ -29,48 +29,44 @@ INSERT INTO auth.users(id,email,raw_app_meta_data,raw_user_meta_data) VALUES
  '{"provider":"email"}','{"role":"buyer","full_name":"B03 Buyer One"}'),
 ('25000000-0000-4000-8000-000000000002','b03-buyer-two@nexora.invalid',
  '{"provider":"email"}','{"role":"buyer","full_name":"B03 Buyer Two"}'),
-('25000000-0000-4000-8000-000000000011','b03-seller-wholesale@nexora.invalid',
- '{"provider":"email"}','{"role":"seller","full_name":"B03 Wholesale Seller"}'),
-('25000000-0000-4000-8000-000000000012','b03-seller-retail@nexora.invalid',
- '{"provider":"email"}','{"role":"seller","full_name":"B03 Retail Seller"}'),
+('25000000-0000-4000-8000-000000000011','b03-seller-a@nexora.invalid',
+ '{"provider":"email"}','{"role":"seller","full_name":"B03 Seller A"}'),
+('25000000-0000-4000-8000-000000000012','b03-seller-b@nexora.invalid',
+ '{"provider":"email"}','{"role":"seller","full_name":"B03 Seller B"}'),
 ('25000000-0000-4000-8000-000000000013','b03-seller-late-match@nexora.invalid',
  '{"provider":"email"}','{"role":"seller","full_name":"B03 Late Match Seller"}'),
 ('25000000-0000-4000-8000-000000000014','b03-seller-no-match@nexora.invalid',
  '{"provider":"email"}','{"role":"seller","full_name":"B03 Unmatched Seller"}');
 
 INSERT INTO public.business_profiles(
-  business_id,seller_id,display_name,country,city,sales_center_address,approval_status
+  id,seller_id,display_name,country,city,sales_center_address,approval_status
 ) VALUES
-('25100000-0000-4000-8000-000000000011','25000000-0000-4000-8000-000000000011','B03 Wholesale Business','Bangladesh','Dhaka','Local test address','approved'),
-('25100000-0000-4000-8000-000000000012','25000000-0000-4000-8000-000000000012','B03 Retail Business','Bangladesh','Dhaka','Local test address','approved'),
+('25100000-0000-4000-8000-000000000011','25000000-0000-4000-8000-000000000011','B03 Seller A Business','Bangladesh','Dhaka','Local test address','approved'),
+('25100000-0000-4000-8000-000000000012','25000000-0000-4000-8000-000000000012','B03 Seller B Business','Bangladesh','Dhaka','Local test address','approved'),
 ('25100000-0000-4000-8000-000000000013','25000000-0000-4000-8000-000000000013','B03 Late Match Business','Bangladesh','Dhaka','Local test address','approved'),
 ('25100000-0000-4000-8000-000000000014','25000000-0000-4000-8000-000000000014','B03 Unmatched Business','Bangladesh','Dhaka','Local test address','approved');
 
-INSERT INTO public.public_businesses(business_id,seller_id,display_name,country,city) VALUES
-('25100000-0000-4000-8000-000000000011','25000000-0000-4000-8000-000000000011','B03 Wholesale Business','Bangladesh','Dhaka'),
-('25100000-0000-4000-8000-000000000012','25000000-0000-4000-8000-000000000012','B03 Retail Business','Bangladesh','Dhaka'),
-('25100000-0000-4000-8000-000000000013','25000000-0000-4000-8000-000000000013','B03 Late Match Business','Bangladesh','Dhaka'),
-('25100000-0000-4000-8000-000000000014','25000000-0000-4000-8000-000000000014','B03 Unmatched Business','Bangladesh','Dhaka');
+
 
 INSERT INTO public.products(
-  id,slug,seller_id,business_id,product_name,category,subcategory,market_category,
+  id,slug,seller_id,business_id,product_name,category,subcategory,
   image_urls,description,origin,specifications_quality,price,currency,listing_status
 ) VALUES
 ('25200000-0000-4000-8000-000000000011','b03-wholesale-phone',
  '25000000-0000-4000-8000-000000000011','25100000-0000-4000-8000-000000000011',
- 'B03 Wholesale Phone','Electronics','Mobile Phones','wholesale',
+ 'B03 Phone A','Electronics','Mobile Phones',
  '{}','Local test product','Bangladesh','Test specification',10000,'BDT','approved'),
 ('25200000-0000-4000-8000-000000000012','b03-retail-phone',
  '25000000-0000-4000-8000-000000000012','25100000-0000-4000-8000-000000000012',
- 'B03 Retail Phone','Electronics','Mobile Phones','retail',
+ 'B03 Phone B','Electronics','Mobile Phones',
  '{}','Local test product','Bangladesh','Test specification',11000,'BDT','approved'),
 ('25200000-0000-4000-8000-000000000013','b03-late-sofa',
  '25000000-0000-4000-8000-000000000013','25100000-0000-4000-8000-000000000013',
- 'B03 Sofa','Furniture','Sofas','wholesale',
+ 'B03 Sofa','Furniture','Sofas',
  '{}','Local test product','Bangladesh','Test specification',20000,'BDT','approved'),
 ('25200000-0000-4000-8000-000000000014','b03-no-match-shirt',
  '25000000-0000-4000-8000-000000000014','25100000-0000-4000-8000-000000000014',
- 'B03 Shirt','Apparel','Shirts','retail',
+ 'B03 Shirt','Apparel','Shirts',
  '{}','Local test product','Bangladesh','Test specification',500,'BDT','approved');
 
 -- Creating an open Demand should route it to existing approved taxonomy matches.
@@ -95,14 +91,14 @@ BEGIN
   SELECT count(*) INTO v_count FROM public.buyer_demand_inbox
   WHERE demand_id='25300000-0000-4000-8000-000000000001';
   IF v_count<>3 THEN
-    RAISE EXCEPTION 'FAIL: expected exactly 3 matching Sellers (including Wholesale and Retail); got %',v_count;
+    RAISE EXCEPTION 'FAIL: expected exactly 3 matching Sellers (regardless of product sale channel); got %',v_count;
   END IF;
   IF EXISTS(SELECT 1 FROM public.buyer_demand_inbox
     WHERE demand_id='25300000-0000-4000-8000-000000000001'
       AND seller_id='25000000-0000-4000-8000-000000000014') THEN
     RAISE EXCEPTION 'FAIL: category-mismatched Seller was routed';
   END IF;
-  RAISE NOTICE 'PASS: Demand trigger routes by category/subcategory, independent of Wholesale/Retail, and product approval/update routing works';
+  RAISE NOTICE 'PASS: Demand trigger routes by category/subcategory, without sale-type gating, and product approval/update routing works';
 END
 $seed_checks$;
 
@@ -119,18 +115,12 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: anon can read buyer_id'; END IF;
-  v_denied:=false;
-  BEGIN
-    EXECUTE 'SELECT count(*) FROM public.buyer_demand_inbox';
-  EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
-  END;
-  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: anon can read Seller inbox'; END IF;
-  v_denied:=false;
-  BEGIN
-    EXECUTE 'SELECT count(*) FROM public.seller_offers';
-  EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
-  END;
-  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: anon can read Seller offers'; END IF;
+  IF has_table_privilege('anon','public.buyer_demand_inbox','SELECT') THEN
+    RAISE EXCEPTION 'FAIL: anon has SELECT privilege on Seller inbox';
+  END IF;
+  IF has_table_privilege('anon','public.seller_offers','SELECT') THEN
+    RAISE EXCEPTION 'FAIL: anon has SELECT privilege on Seller offers';
+  END IF;
   RAISE NOTICE 'PASS: anon sees only safe open Demand projection; Buyer ID, inbox and quotations are denied';
 END
 $anon_checks$;
@@ -157,13 +147,13 @@ BEGIN
 END
 $buyer_two$;
 
--- Seller inbox isolation: Wholesale and Retail Seller both receive the same Demand.
+-- Seller inbox isolation: both matching Sellers receive the same Demand.
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000011',true);
 DO $seller_wholesale$
 DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.buyer_demands;
-  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Wholesale Seller should see Demand'; END IF;
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Seller A should see Demand'; END IF;
   SELECT count(*) INTO v_count FROM public.buyer_demand_inbox;
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Seller should see only own Inbox row'; END IF;
   RAISE NOTICE 'PASS: routed Wholesale Seller sees Demand and own Inbox';
@@ -174,7 +164,7 @@ DO $seller_retail$
 DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.buyer_demands;
-  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Retail Seller should see same Demand'; END IF;
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: routed Seller B should see same Demand'; END IF;
   RAISE NOTICE 'PASS: Retail Seller also receives same Demand; no sale-type gate';
 END
 $seller_retail$;
@@ -187,7 +177,7 @@ INSERT INTO public.seller_offers(
 ) VALUES (
   '25300000-0000-4000-8000-000000000001',
   '25000000-0000-4000-8000-000000000011',
-  9800,'BDT','100 units','B03 quotation','Nexora Test','Model A','new','per_unit',0
+  9800,'BDT','100','B03 quotation','Nexora Test','Model A','new','per_unit',0
 );
 
 DO $negative_seller_tests$
@@ -196,7 +186,7 @@ BEGIN
   BEGIN
     INSERT INTO public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
     VALUES('25300000-0000-4000-8000-000000000001',
-      '25000000-0000-4000-8000-000000000014',9000,'BDT','10 units');
+      '25000000-0000-4000-8000-000000000014',9000,'BDT','10');
   EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: unmatched Seller submitted quotation'; END IF;
@@ -214,7 +204,7 @@ BEGIN
   BEGIN
     INSERT INTO public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
     VALUES('25300000-0000-4000-8000-000000000001',
-      '25000000-0000-4000-8000-000000000011',9700,'BDT','10 units');
+      '25000000-0000-4000-8000-000000000011',9700,'BDT','10');
   EXCEPTION WHEN unique_violation THEN v_denied:=true;
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: duplicate Seller quotation was accepted'; END IF;
@@ -291,8 +281,15 @@ BEGIN
      OR NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.buyer_demand_inbox'::regclass) THEN
     RAISE EXCEPTION 'FAIL: Demand RLS missing';
   END IF;
-  IF has_column_privilege('anon','public.buyer_demands','buyer_id','SELECT') THEN
-    RAISE EXCEPTION 'FAIL: anon has buyer_id SELECT';
+  IF has_column_privilege('anon','public.buyer_demands','buyer_id','SELECT')
+     OR has_column_privilege('authenticated','public.buyer_demands','buyer_id','SELECT') THEN
+    RAISE EXCEPTION 'FAIL: Buyer ID is exposed to an API role';
+  END IF;
+  IF has_function_privilege('anon','private.is_buyer_demand_owner(uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: anon can execute the private Buyer ownership helper';
+  END IF;
+  IF NOT has_function_privilege('authenticated','private.is_buyer_demand_owner(uuid)','EXECUTE') THEN
+    RAISE EXCEPTION 'FAIL: authenticated cannot execute the private Buyer ownership helper';
   END IF;
   IF has_any_column_privilege('authenticated','public.buyer_demand_inbox','INSERT')
      OR has_any_column_privilege('authenticated','public.buyer_demand_inbox','UPDATE')
