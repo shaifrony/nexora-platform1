@@ -1502,3 +1502,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - GitHub Actions run [#43644290449](https://github.com/shaifrony/nexora-platform1/actions/runs/43644290449) completed with conclusion `success` for commit `e0798d92c48d9f77715d9c64c55b4f0e83c8b7e7`.
 - Both configured steps (JavaScript syntax checks and dependency-free Node regression tests) completed successfully.
 - CI is now verified for the current Development branch snapshot. This does not verify browser E2E, Supabase runtime, migrations, or production readiness.
+
+
+## 2026-11-15 — Buyer Demand regression coverage
+- Extended the existing marketplace test file (no extra test file) with checks that Buyer Demand requires a required-by date, rejects dates earlier than the local current date, and persists `required_date`.
+- Added a public-projection privacy regression check: the public Buyer Demand query must use an explicit column allowlist, include `required_date`, and exclude buyer identity/contact fields such as buyer_id, full_name, email, phone, contact_number and address.
+- These are source-level regression assertions. They do not prove database-view grants/RLS or live API privacy; those still require hosted/local Supabase runtime verification.
+- Commit: `de98234224c85f8f85c7e45680b62a706d993a90`; GitHub Actions validation is expected to run automatically and must be checked before treating this change as verified.
