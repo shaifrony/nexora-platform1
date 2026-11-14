@@ -1,69 +1,90 @@
 # NEXORA — Buyer Order Identity Snapshot Design
 
-Updated: 2026-11-14  
-Branch: `nexora-development`  
-Status: **Design only — not SQL, not deployable, not applied**
+Updated: 2026-11-14
+Branch: `nexora-development`
+Status: **Verified source contract; implementation blocked by Foundation/migration-history gate. This document is not SQL and is not deployable.**
 
 ## Goal
 
-Buyer Order History should show the ordered item's name and the Seller's approved public Business Display Name without exposing private profile data. The names must represent what the Buyer ordered at the time the order was created, not whatever a listing or business is renamed to later.
+Buyer Order History must show the exact item name and the Seller's approved public Business Display Name captured when the order was created. Later listing or Business Profile edits must not rewrite the historical order identity.
 
-## Verified current source facts
+## Verified source schema
 
-- `public.commerce_orders` currently stores `listing_type`, polymorphic `listing_id`, Buyer/Seller IDs, quantity, unit price, currency and order lifecycle fields. The base order table does not define an item-name or Seller-display-name snapshot column.
-- The current Buyer order query selects order and price/status fields only. It does not join a listing or Seller profile to invent a historical label.
-- The direct Product/Service order creation function is `private.create_commerce_order`; its latest staged definition inserts into `commerce_orders` using validated listing data. It is the correct server-side place to capture snapshots for direct Product/Service orders.
-- Buyer Demand quotation conversion also creates Commerce Orders through a separate quotation-response workflow. Its final effective function definition and exact source migration still need to be located and reviewed before a schema change is designed for that path.
-- Seller public identity must come from the approved public Business projection (`public.public_businesses`), never from a direct Buyer-facing read of `profiles.full_name`, email, phone, private address or the full Seller profile.
-- Existing Commerce Order listing IDs are polymorphic. A client-side lookup against a guessed table or an unverified join is not safe.
+### Commerce Orders
+
+`public.commerce_orders` is created in `20261114140000_commerce_orders_and_review_completion.sql`. It has a polymorphic `listing_type/listing_id`, Buyer/Seller IDs, quantity, unit price, currency, fulfilment and lifecycle fields. It has no item-name or Seller-display-name snapshot columns.
+
+The later `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` extends it for `listing_type='buyer_demand'`, with `source_demand_id`, `source_offer_id`, `delivery_charge`, `source_offer_total` and generated `grand_total`.
+
+### Trusted name sources
+
+- Product: `public.products.product_name`; Product has `business_id` and `seller_id`.
+- Service: `public.service_listings.service_name`; Service has `business_id` and `seller_id`.
+- Buyer Demand conversion: `public.buyer_demands.product_name`; Demand has the Buyer identity, while the responding Seller comes from `public.seller_offers.seller_id`.
+- Approved public Seller name: `public.public_businesses.display_name`, matched by BOTH `business_id` and `seller_id`. The public projection is synchronized only for approved Business Profiles. It exposes only public Business display name and location fields; do not query `profiles.full_name`, email, phone or private addresses for Buyer presentation.
+
+### Effective order-creation functions
+
+1. Direct Product/Service: the latest staged `private.create_commerce_order(text,uuid,numeric,text,text)` definition is replaced in `20261114150000_product_inventory_moq_quantity_pricing.sql`. It validates the approved listing, active Seller, public Business projection, MOQ, stock and tier price, then inserts the order. This is the correct place to capture Product/Service snapshots in the same transaction.
+2. Buyer Demand quotation conversion: `private.respond_to_demand_offer(uuid,text,numeric,numeric,text)` in `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` locks the offer and Demand, validates Buyer/Seller role and turn-taking, computes agreed quantity/price/total, then inserts a `buyer_demand` Commerce Order. It is the correct place to capture the Demand product name and responding Seller's public Business Display Name.
+3. Service title is verified as `service_listings.service_name` in `20261114090000_services_marketplace.sql`.
+
+The final Demand conversion function and all three name-source schemas have now been located and reviewed. This removes the previous source-discovery blocker.
 
 ## Proposed additive data contract
 
-Add nullable, immutable snapshots to `public.commerce_orders`:
+Add nullable fields to `public.commerce_orders`:
 
 | Column | Purpose |
 |---|---|
-| `item_name_snapshot` | Product, Service or Demand-derived item name captured at order creation |
-| `seller_display_name_snapshot` | Approved public Business Display Name captured at order creation |
-| `identity_snapshot_at` | Timestamp when the server captured both names |
+| `item_name_snapshot` | Product, Service or Demand product name at order creation |
+| `seller_display_name_snapshot` | Approved Seller Business Display Name at order creation |
+| `identity_snapshot_at` | Server timestamp for the paired snapshot |
 
-The exact SQL types, constraints, index needs and migration dependency must be validated against the reconciled Foundation and current migration chain before generating a migration.
+Nullable fields preserve historical orders created before this feature. Never backfill the current listing or Business name into an old order and represent it as the original name.
 
-## Server-side snapshot rules
+## Required migration behavior
 
-1. Only the trusted order-creation RPC sets these fields. Never accept either snapshot value from browser parameters.
-2. For direct Product orders, load the approved Product row under the same transaction/locking and use its current `product_name`.
-3. For Service orders, use the validated public Service listing title only after the Service schema is confirmed.
-4. For Buyer Demand quotation conversions, use the original Demand's product name and the responding Seller's approved public Business Display Name; verify the exact conversion RPC and source relationship first.
-5. Resolve the Seller name through the approved public Business projection with matching Seller/business ownership. Do not use `profiles.full_name` as a fallback.
-6. Store both names once. Later Product/Service/Demand edits or Business Display Name changes must not update historical order snapshots.
-7. Protect snapshots from browser INSERT/UPDATE. Keep order creation and transition under the existing guarded RPC model; add explicit column privileges/trigger protection as appropriate after reviewing all existing grants and RPCs.
-8. For historical orders where the true creation-time name was never stored, do not backfill the current listing/business name and pretend it is historical. Keep the snapshot NULL and display a neutral fallback such as “পুরোনো অর্ডার — নাম সংরক্ষিত হয়নি”.
-9. A missing/unapproved public Business projection must fail order creation rather than leak private profile identity or write a guessed Seller name.
+The future additive migration must:
+
+1. Be generated with `supabase migration new` only after Foundation and active migration history are reconciled. Do not invent a timestamp or add a file to the active migration chain before that gate.
+2. Add the three nullable snapshot fields. No browser RPC parameter may accept either name.
+3. Replace the latest effective `private.create_commerce_order` body while preserving its current validations and stock/tier logic:
+   - Product path: lock/read the approved Product; capture `product_name`; resolve `public_businesses.display_name` by the Product's exact `business_id + seller_id`.
+   - Service path: read the approved Service; capture `service_name`; resolve the matching public Business display name by exact `business_id + seller_id`.
+   - If the approved public Business row is absent or does not match the listing Seller, fail closed. Never fall back to private profile identity.
+4. Replace the latest effective `private.respond_to_demand_offer` body while preserving offer locking, expiry, role checks, negotiation turn-taking, price calculations, order/event inserts and offer updates:
+   - Capture `buyer_demands.product_name`.
+   - Resolve `public_businesses.display_name` by the responding `seller_offers.seller_id`; ensure the public Business projection belongs to that Seller.
+   - Store the snapshots in the same Commerce Order INSERT.
+5. Ensure snapshots are insert-only server values. Browser roles must not gain INSERT/UPDATE on Commerce Orders. Review all existing column grants and add a narrowly scoped immutable-field guard if any trusted update path could otherwise alter snapshots. Do not break the existing transition RPCs.
+6. Do not modify historical rows except leaving the new fields NULL.
+7. Preserve current RLS ownership: Buyer/Seller participants may read their order row under existing policies; no additional profile or listing join is needed by the Buyer UI.
 
 ## Buyer UI contract
 
-- Select only the new snapshot fields after the migration is safely staged and the schema is available.
-- Render values through the existing `esc()` HTML-escaping helper.
-- Show item name and public Seller display name above the order totals.
-- For legacy NULL snapshots, show the explicit neutral fallback; do not query the live listing name and imply it is historical.
-- Preserve order filters, status timeline, delivery/total breakdown, Seller update, and “order request is not payment/delivery booking” disclosure.
+After the schema is safely staged and verified, extend `loadBuyerOrders()` to select only the three snapshot fields and render them using the existing `esc()` helper:
 
-## Required validation before calling it complete
+- Show the item snapshot and Seller public display-name snapshot in each order card.
+- For NULL legacy snapshots, show `পুরোনো অর্ডার — নাম সংরক্ষিত হয়নি` (or separate neutral item/Seller fallback labels).
+- Never join the live Product, Service, Demand or Seller profile to fill missing historical values.
+- Preserve latest-50 ordering, status filters/timeline, amount breakdown, Seller update, delivery disclosure and the statement that an order request is not payment or a delivery booking.
 
-- Direct Product order captures Product name + approved Business Display Name.
-- Service order captures the correct Service title + approved Business Display Name.
-- Buyer Demand accepted quotation captures Demand product name + responding Seller public Business Display Name.
-- Product rename and Business Display Name change after order creation do not alter existing order cards.
-- Client-supplied snapshot values are rejected/ignored.
-- Buyer A cannot read Buyer B's orders or snapshots; Seller cannot alter Buyer-facing snapshots.
-- Anonymous users cannot read Commerce Orders.
-- No Seller email, phone, legal name, private address, profile fields or internal notes are exposed.
-- Existing status transitions, inventory reservation, totals, review eligibility and Demand quotation turn-taking remain unchanged.
-- Run isolated SQL tests, authenticated PostgREST/RLS tests and browser/mobile E2E after the migration history and Foundation are reconciled.
+## Required synthetic acceptance/security tests
 
-## Current blocker / safe next action
+- Product order captures exact Product name and approved public Business name.
+- Service order captures exact Service name and approved public Business name.
+- Buyer Demand quotation order captures original Demand product name and the responding Seller's approved public Business name.
+- Renaming Product, Service, Demand text or Business display name after order creation does not change existing order snapshots.
+- Client-supplied snapshot fields cannot be written or changed.
+- Buyer A cannot read Buyer B's order or snapshots; Seller cannot alter snapshots.
+- Anonymous access remains denied.
+- No Seller legal name, personal phone, email, private address, profile fields or internal notes are exposed.
+- Existing stock reservation, MOQ/tier price, Demand negotiation turn-taking, order totals, status transitions and review eligibility remain unchanged.
+- Run isolated SQL, PostgREST/JWT/RLS and browser/mobile E2E using synthetic accounts only.
 
-The staged order table demonstrably lacks snapshot columns, and the final Buyer Demand conversion RPC plus exact public projection schema still require source-level verification. Therefore no frontend query, guessed join, SQL migration, or NEXORA-TEST mutation is made in this pass. First reconcile and inspect the final effective Demand conversion function and public projection, then create a natural-timestamp migration with the Supabase CLI only after the Foundation/migration-chain gate is cleared.
+## Current status and blocker
 
-No hosted database, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment was changed.
+**Source contract verified.** The three order-creation paths, name-source columns and approved public Business projection are now identified. The remaining blocker is not source discovery: the repository still lacks a reconciled Foundation baseline and safe complete migration history. NEXORA-TEST remains empty and must not receive partial feature migrations. Therefore this pass does not add a guessed frontend select, SQL migration, or database change. Once the Foundation/migration gate is cleared, implement the additive migration, then update the Buyer order card and run the synthetic acceptance suite.
+
+No NEXORA-TEST, hosted database, Live/Production, `main`, DNS, paid service or deployment was changed.
