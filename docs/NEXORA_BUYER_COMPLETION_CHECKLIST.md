@@ -370,3 +370,14 @@ Implementation rules:
 - Static validation: marketplace.js compiles with `new Function`; the query uses only columns present in the Commerce Order table plus the later staged delivery-charge/total extension; state actions remain the existing server-validated cancel/complete RPCs. No browser, Auth, PostgREST, RLS or DB runtime test was performed.
 - Source commit: fc7e9d0a6d2f2d440110f8b6198bb70f1d6c4dc0.
 - No SQL/migration, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment changed. Buyer Module remains incomplete and not acceptance-tested.
+
+
+## 2026-11-14 — Buyer Order History filters & safe Delivery Tracking design
+
+- Buyer Order panel now shows a compact summary and filters for all, pending, accepted, ready for Buyer confirmation, completed, cancelled and rejected orders. The UI explicitly labels the result set as the latest 50 orders, newest first; it does not imply the summary is a lifetime count. Empty filter results are handled.
+- Existing real order timestamps and Seller update remain visible. No product title, Seller identity or delivery state is fabricated; the polymorphic listing schema does not currently provide a safe product-title snapshot on the order row.
+- Added `docs/NEXORA_BUYER_DELIVERY_TRACKING_ACCESS_DESIGN.md` defining a customer-safe, append-only tracking projection, narrow Buyer-owned-order RPC, split-shipment handling, no raw contact/address/internal-note exposure, and synthetic negative authorization tests.
+- Tracking is intentionally not enabled in UI or SQL: current raw tracking policies are Admin/Provider only and raw operational tables contain private contact/address fields. The design does not weaken those policies.
+- Static verification: `marketplace.js` compiles with `new Function`; latest-50 label/limit, seven filter states, real status filtering, empty state, timeline fields, Seller update and no raw delivery table query verified. No browser, PostgREST, RLS, Auth or database runtime tests performed.
+- Buyer source commit: cce44c4359ad6429192198dcd429aac8c7f2a793. Tracking design commit: 825e1390b180de253bec5ab949a54e75add22672.
+- No SQL/migration, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed. Foundation/migration-history blockers remain.
