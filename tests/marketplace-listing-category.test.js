@@ -918,3 +918,29 @@ test("Seller Service dashboard loads private Admin notes only through the owner-
   assert.match(ui, /admin_note:noteMap\.get\(s\.id\)/);
   assert.doesNotMatch(ui, /\.select\("[^"]*admin_note/);
 });
+
+
+test("Product review notes are returned only to the owning active Seller or MFA-protected Admin", () => {
+  const fn = dualMarketGrantSql.slice(
+    dualMarketGrantSql.indexOf("create or replace function public.get_my_product_listing_review_notes()"),
+    dualMarketGrantSql.indexOf("revoke all on function public.get_my_product_listing_review_notes()")
+  );
+  assert.match(fn, /security definer[\s\S]*?set search_path=''/i);
+  assert.match(fn, /p\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(fn, /pr\.role='seller' and pr\.account_status='active'/i);
+  assert.match(fn, /public\.is_nexora_admin\(\) and \(select auth\.jwt\(\)->>'aal'\)='aal2'/i);
+  assert.match(dualMarketGrantSql, /revoke all on function public\.get_my_product_listing_review_notes\(\) from public,anon/i);
+  assert.match(dualMarketGrantSql, /grant execute on function public\.get_my_product_listing_review_notes\(\) to authenticated/i);
+});
+
+test("Seller Product dashboard loads and displays review notes through the scoped RPC", () => {
+  const ui = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerDashboard()"),
+    marketplaceUi.indexOf("async function loadBuyerDashboard(")
+  );
+  assert.match(ui, /get_my_product_listing_review_notes/);
+  assert.match(ui, /reviewNotes\.get\(p\.id\)/);
+  assert.match(ui, /admin_note: reviewNotes/);
+  assert.match(ui, /Admin Note:/);
+  assert.doesNotMatch(ui, /\.select\("[^"]*admin_note/);
+});
