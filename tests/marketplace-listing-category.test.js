@@ -962,3 +962,13 @@ test("Buyer Demand requested quantity parser accepts numeric amounts followed by
   assert.match(demandOrderSql, /v_demand_qty:=nullif\(substring\(regexp_replace\(btrim\(v_demand\.required_quantity\),',','','g'\) from '\^\[0-9\]\+\(\[\.\]\[0-9\]\+\)\?'\),' '\)::numeric/i);
   assert.match(demandOrderSql, /if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid'/i);
 });
+
+
+test("Seller Demand quotations must use the Buyer Demand's selected currency", () => {
+  const trigger = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.initialise_seller_offer_negotiation()"),
+    demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
+  );
+  assert.match(trigger, /upper\(new\.currency\)<>upper\(v_demand\.currency\)/i);
+  assert.match(trigger, /Quotation currency must match the Buyer Demand currency/i);
+});
