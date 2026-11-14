@@ -845,6 +845,23 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
       <p id="nxMessage" class="muted" role="status" aria-live="polite"></p>
       <div id="nxLogged" class="hidden">
         <p id="nxProfile" class="muted"></p>
+        <section id="nxBuyerAccountSettings" class="card" aria-labelledby="nxBuyerAccountSettingsTitle">
+          <h4 id="nxBuyerAccountSettingsTitle">Account Security &amp; Contact</h4>
+          <p class="muted">আপনার লগইন ইমেইল ও পাসওয়ার্ড এখানে পরিবর্তন করতে পারবেন। ইমেইল পরিবর্তনে নতুন ঠিকানায় confirmation লাগবে।</p>
+          <form id="nxBuyerEmailForm">
+            <label for="nxBuyerNewEmail">নতুন Login Email</label>
+            <input id="nxBuyerNewEmail" name="email" type="email" autocomplete="email" required maxlength="254">
+            <div class="form-actions"><button class="secondary" type="submit">ইমেইল পরিবর্তনের অনুরোধ</button></div>
+          </form>
+          <form id="nxBuyerPasswordForm">
+            <label for="nxBuyerNewPassword">নতুন Password</label>
+            <input id="nxBuyerNewPassword" name="password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required>
+            <label for="nxBuyerConfirmPassword">নতুন Password নিশ্চিত করুন</label>
+            <input id="nxBuyerConfirmPassword" name="confirm_password" type="password" minlength="10" maxlength="128" autocomplete="new-password" required>
+            <div class="form-actions"><button class="secondary" type="submit">Password পরিবর্তন</button></div>
+          </form>
+          <p id="nxBuyerAccountSettingsStatus" class="muted" role="status" aria-live="polite"></p>
+        </section>
         <form id="nxRoleRequest">
           <label>Seller হিসেবে কাজ করতে আবেদন করুন</label>
           <select name="requested_role" required>
