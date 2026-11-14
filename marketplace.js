@@ -488,28 +488,9 @@
     await loadDemands();
   }
 
-  async function startProductChat(product) {
-    if (!activeBuyer() || !signedIn()) return;
-    if (!product || product.listing_status !== "approved") return say("এই পণ্যটি বর্তমানে যোগাযোগের অনুরোধ গ্রহণ করছে না।");
-    const button = $("productContactSeller");
-    const status = $("productInquiryStatus");
-    if (button) { button.disabled = true; button.textContent = "Chat প্রস্তুত হচ্ছে…"; }
-    try {
-      const { data, error } = await client().rpc("create_product_inquiry", {
-        p_product_id: product.id,
-        p_message: String($("productInquiryMessage")?.value || "").trim() || null
-      });
-      if (error) throw error;
-      const conversationId = typeof data === "string" ? data : data?.conversation_id || data?.id;
-      if (!conversationId) throw new Error("Chat conversation ID পাওয়া যায়নি।");
-      if (typeof window.NEXORA_OPEN_CONVERSATION !== "function") throw new Error("Chat এখন প্রস্তুত নয়।");
-      await window.NEXORA_OPEN_CONVERSATION(conversationId);
-    } catch (err) {
-      if (status) status.textContent = "Chat খোলা যায়নি: " + (err.message || "অজানা সমস্যা");
-      say("Chat খোলা যায়নি: " + (err.message || "অজানা সমস্যা"));
-      if (button) { button.disabled = false; button.innerHTML = '<span aria-hidden="true">▣</span> Chat with Seller'; }
-    }
-  }
+  // Direct product inquiry is intentionally not enabled until the database-side
+  // Seller-consent / invitation contract is verified. Buyers can initiate contact
+  // through an explicit price negotiation or order request below.
   const orderStatusLabels={pending:"Seller-এর অপেক্ষায়",accepted:"Seller গ্রহণ করেছেন",ready_for_confirmation:"সম্পন্ন নিশ্চিত করুন",completed:"সম্পন্ন",cancelled:"বাতিল",rejected:"Seller গ্রহণ করেননি"};
   async function submitCommerceOrder(listingType,listingId,quantity,location,note,statusNode,button){
     if(!activeBuyer()||!signedIn())return say("অর্ডার করতে Active Buyer হিসেবে লগইন করুন।");
@@ -728,18 +709,14 @@
         <p><strong>Product ID:</strong> ${esc(selected.product_code)}</p>
         
         ${activeBuyer()&&signedIn()?`<form id="nxProductNegotiationForm" class="card nx-order-form"><h3>দরদাম করুন</h3><p class="muted">Seller-এর নির্ধারিত মূল্য ${esc(selected.price)} ${esc(selected.currency)} / ইউনিট। আপনার প্রস্তাবিত মূল্য দিন।</p><label>কত ইউনিট কিনবেন? *<input name="quantity" type="number" min="${esc(selected.minimum_order_quantity||1)}" step="0.001" value="${esc(selected.minimum_order_quantity||1)}" required></label><label>আপনার প্রস্তাবিত প্রতি ইউনিট দাম *<input name="unit_price" type="number" min="0.01" step="0.01" max="${esc(selected.price)}" required placeholder="যেমন: 90"></label><label>ডেলিভারি ঠিকানা *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>Seller-এর জন্য বার্তা (ঐচ্ছিক)<textarea name="note" maxlength="1000" placeholder="যেমন: ১০০ টাকার বদলে ৯০ টাকা দিতে চাই"></textarea></label><button class="primary" type="submit">দরদামের প্রস্তাব পাঠান</button><p data-negotiation-status aria-live="polite"></p><small class="muted">Seller গ্রহণ করলে অর্ডার তৈরি হবে। Seller পাল্টা দাম দিলে আপনি গ্রহণ বা নতুন প্রস্তাব দিতে পারবেন।</small></form>`:""}
-        <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><div id="productInquiryControls"></div><p id="productInquiryStatus" class="muted" aria-live="polite"></p></div>
+        <div id="productInquiryArea" class="card nx-product-contact"><h3>Seller-এর সঙ্গে যোগাযোগ</h3><p class="muted">দরদাম বা অর্ডার অনুরোধ পাঠালে Seller আপনার অনুরোধ পাবেন। আপনার অনুরোধের ভিত্তিতে প্রয়োজনীয় আলোচনা শুরু হবে। সরাসরি Chat invitation আপাতত বন্ধ রাখা হয়েছে—Seller-এর সম্মতি গ্রহণের Database flow যাচাই সম্পন্ন না হওয়া পর্যন্ত।</p></div>
         ${activeBuyer()&&signedIn()?`<form id="nxProductOrderForm" class="card nx-order-form"><h3>অর্ডার অনুরোধ</h3><label>পরিমাণ *<input name="quantity" type="number" min="${esc(selected.minimum_order_quantity||1)}" step="0.001" value="${esc(selected.minimum_order_quantity||1)}" required></label><label>ডেলিভারি ঠিকানা/গন্তব্য *<textarea name="location" minlength="5" maxlength="500" required placeholder="সম্পূর্ণ ডেলিভারি ঠিকানা লিখুন"></textarea></label><label>অতিরিক্ত নির্দেশনা (ঐচ্ছিক)<textarea name="note" maxlength="1500"></textarea></label><button class="primary" type="submit">অর্ডার অনুরোধ পাঠান</button><p data-order-status aria-live="polite"></p><small class="muted">এটি অর্ডার অনুরোধ; পেমেন্ট বা ডেলিভারি বুকিং এখনো অন্তর্ভুক্ত নয়।</small></form>`:""}
         <section id="nxProductReviews" class="nx-listing-reviews" aria-live="polite"></section>
       `;
       loadListingReviews("product",selected.id,"nxProductReviews");
       const contactArea = $("productInquiryArea");
       if (contactArea) contactArea.classList.toggle("hidden", !(activeBuyer() && signedIn()));
-      const controls = $("productInquiryControls");
-      if (controls && activeBuyer() && signedIn()) {
-        controls.innerHTML = '<label for="productInquiryMessage">প্রাথমিক বার্তা (ঐচ্ছিক)</label><textarea id="productInquiryMessage" maxlength="500" placeholder="পণ্যের পরিমাণ, মান বা দাম সম্পর্কে জানতে লিখুন"></textarea><button class="primary nx-contact-seller-button" type="button" id="productContactSeller"><span aria-hidden="true">▣</span> Chat with Seller</button>';
-      }
-      $("productContactSeller")?.addEventListener("click", () => startProductChat(selected));
+      // Direct Chat remains disabled pending verified Seller-consent workflow.
       $("nxProductOrderForm")?.addEventListener("submit",e=>{e.preventDefault();const v=new FormData(e.currentTarget);submitCommerceOrder("product",selected.id,v.get("quantity"),v.get("location"),v.get("note"),e.currentTarget.querySelector("[data-order-status]"),e.currentTarget.querySelector("button[type=submit]"));});
       $("nxProductNegotiationForm")?.addEventListener("submit",async e=>{
         e.preventDefault();const form=e.currentTarget,v=new FormData(form),status=form.querySelector("[data-negotiation-status]"),button=form.querySelector("button[type=submit]");
