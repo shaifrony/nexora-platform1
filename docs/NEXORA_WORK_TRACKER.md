@@ -955,3 +955,10 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Follow-up Buyer gap audit added to docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md (commit 4618133a6888b9e728268bb3bd08d6ae98d1defc): Buyer profile editing/request flow is absent; Buyer order delivery tracking is not yet proven; wallet/payment remains unavailable and is now disclosed honestly. These gaps are explicitly open, not marked complete.
 
 - Buyer account settings implementation: Buyer-only login email change (confirmation required) and password change forms/handlers added. Commits: index.html e48a5da4409ee388fcfaeb3fad62f2bc8011cc02; auth.js b7d81c66c769c4a96f2d3154344500240fd589c1. JavaScript syntax and static guards verified; Supabase Auth runtime/E2E still pending. Legal/display name change request remains blocked by missing Foundation table/RPC contract; no direct profiles update added. Checklist update commit 1e94ddef8798eb630e52a9646f6df8865a19466c.
+
+
+### 2026-11-14 — Buyer password rule adjusted
+- User-selected minimum password length is **6 characters**, not 10.
+- Updated Buyer password form HTML minimum and client validation to 6; mismatch blocks update and status feedback remains. Password recovery/reset validation also uses 6 for consistent password-setting behavior.
+- Static source checks passed for both forms, minimums, mismatch guard and result feedback. Supabase Auth runtime test remains pending.
+- Commits: `460dffab7fad5828fbbd424560347d8b236fab2b` (`auth.js`), `17aad13356b613e1f56c4d90f77464c7502019ee` (`index.html`), checklist update recorded separately.
