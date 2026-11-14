@@ -727,5 +727,5 @@ test("Commerce orders cannot be inserted directly by clients and are visible onl
   assert.match(commerceOrderSql, /grant select on public\.commerce_orders,public\.commerce_order_events to authenticated/i);
   assert.match(commerceOrderSql, /commerce_orders_buyer_seller_read[\s\S]*?buyer_id=\(select auth\.uid\(\)\) or seller_id=\(select auth\.uid\(\)\)/i);
   assert.match(commerceOrderSql, /commerce_order_events_participant_read[\s\S]*?o\.buyer_id=\(select auth\.uid\(\)\) or o\.seller_id=\(select auth\.uid\(\)\)/i);
-  assert.match(inventoryOrderSql, /revoke all on function public\.create_commerce_order\(text,uuid,numeric,text,text\) from public,anon/i);
+  assert.match(commerceOrderSql, /revoke all on function public\.create_commerce_order\(text,uuid,numeric,text,text\) from public,anon/i);
 });
