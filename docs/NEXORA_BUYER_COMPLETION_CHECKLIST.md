@@ -1,6 +1,6 @@
 # NEXORA — Buyer বিভাগ সম্পূর্ণকরণ তালিকা
 
-Updated: 2026-11-14  
+Updated: 2026-11-15  
 Branch: `nexora-development`  
 Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion blocked by integration/security/E2E tests**
 
@@ -97,6 +97,9 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Real local Supabase Auth signup/password JWT + PostgREST integration passed: Buyer Demand create/read/update; anonymous safe public projection; unrelated Buyer isolation; Buyer ID column denied (403); approved Seller Inbox routing and quotation insert; Buyer quotation/history visibility through private ownership helper; unrelated Buyer quote/order isolation; Buyer counter + Seller acceptance RPC; Seller ready + Buyer completion RPC; repeat completion denied (403); Seller direct Inbox insert denied (403).
 - [x] Local SQL security audit after full 38-migration replay: 41/41 public tables have RLS; 0 SECURITY DEFINER functions without explicit search_path; Buyer ID SELECT denied to anon/authenticated; anon cannot execute private ownership helper; authenticated cannot directly INSERT/DELETE Demand Inbox; public Demand view is SECURITY INVOKER.
 - [ ] Browser/mobile UI E2E remains pending; local JWT/PostgREST integration is not a browser test.
+- [x] Added source-level regression coverage for quotation INSERT state hardening: client-supplied negotiation status/current terms/accepted terms/order linkage are overwritten by a BEFORE INSERT trigger; initial quote actor/status/terms are derived from the Seller's quote.
+- [x] Added server-side Buyer Demand quantity ceilings: every Buyer/Seller counter-offer and final accepted order is capped at the lower of Seller availability and the Buyer's posted required quantity. Buyer and Seller dashboard controls apply the same ceiling.
+- [x] Final Development CI [#43646918669](https://github.com/shaifrony/nexora-platform1/actions/runs/43646918669) passed 70/70 dependency-free source regression tests, JavaScript syntax and migration filename/order guard. This does not replace database execution, JWT/RLS/PostgREST or browser E2E.
 
 ### B-04 — Orders, stock ও pricing
 - [x] Buyer Demand quotation conversion and Buyer/Seller order status source paths are staged; Buyer order card shows delivery-inclusive `grand_total` with charge breakdown when non-zero.
