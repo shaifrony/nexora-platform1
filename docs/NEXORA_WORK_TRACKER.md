@@ -1283,3 +1283,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Existing Delivery Network foundations do not establish that Agent collection, packaging, Drop Point custody, seller payout delivery or payout reconciliation are implemented. This is a new requirement; implementation remains pending.
 - Open decisions include payout method and trigger, Agent compensation and packaging cost, Drop Point ownership/operation/liability, Upazila coverage, whether Buyer Demand orders are included, and direct-seller handover route.
 - No role, SQL/schema/RPC/migration, payment or payout integration, database, frontend, deployment, Production, `main`, DNS or paid service was changed. This commit records requirements/design only.
+
+## 2026-11-14 — Upazila Agent assisted-selling and commission model expanded
+
+- Updated `docs/NEXORA_UPAZILA_AGENT_NETWORK_DESIGN.md` to distinguish two seller operating models:
+  1. **Agent-represented selling:** for low-literacy farmers/businesses, an authorized Upazila Agent performs the NEXORA selling workflow on the actual farmer/business's behalf, including sales-centre/listing support, order coordination, collection, quantity/condition records, packaging and Drop Point/transport handover. The underlying goods owner/source and Seller consent remain traceable.
+  2. **Independent/direct Seller:** capable farmers/businesses manage their own Seller account, listings, prices, negotiation and orders; the NEXORA Agent is still responsible for collection, packaging, Drop Point handover and transport coordination.
+- Added the approved commercial principle that NEXORA receives a defined platform charge from each sale and the Agent receives a defined commission/service share for the applicable assisted-selling and/or logistics work. Seller net proceeds and every deduction must be transparently itemized before order acceptance.
+- Explicitly separated gross sale value, NEXORA charge, Agent commission, delivery/packaging costs, adjustments/refunds and Seller net payout. Fee rates, calculation base and the two models' commission schedules remain undecided.
+- Clarified that the Agent is not automatically the legal merchant of record, goods owner, Porter/Transport Provider, or Admin. The real farmer/business identity, Agent representation/consent and audit actor must remain distinct; legal/payment/tax review is required before money handling.
+- Added effective-dated fee schedule, maker-checker, payout reconciliation, custody/quantity exceptions, Seller acknowledgement and territory-scoped Agent controls. No payment gateway, fee engine, payout ledger, role, SQL/schema/RPC/migration or frontend has been implemented.
+- Open decisions include commission percentages/basis, payout trigger/method, legal agency status, packaging/transport cost allocation, Drop Point liability, Upazila coverage, Buyer Demand applicability and whether direct Sellers have any exception to mandatory Agent collection.
+- Documentation only on `nexora-development`; no NEXORA-TEST, Live/Production, `main`, DNS, deployment or paid service changed.
