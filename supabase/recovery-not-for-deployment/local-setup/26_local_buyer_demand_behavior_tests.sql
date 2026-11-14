@@ -172,9 +172,10 @@ $seller_retail$;
 -- Seller quotation is allowed only when the Seller owns a routed inbox row.
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000011',true);
 INSERT INTO public.seller_offers(
-  demand_id,seller_id,offer_price,currency,available_quantity,message,
+  id,demand_id,seller_id,offer_price,currency,available_quantity,message,
   product_brand,product_model,product_condition,price_basis,delivery_charge
 ) VALUES (
+  '25400000-0000-4000-8000-000000000001',
   '25300000-0000-4000-8000-000000000001',
   '25000000-0000-4000-8000-000000000011',
   9800,'BDT','100','B03 quotation','Nexora Test','Model A','new','per_unit',0
@@ -219,7 +220,10 @@ DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.seller_offers;
   IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Buyer owner should see received quotation'; END IF;
-  RAISE NOTICE 'PASS: Buyer owner sees received Seller quotation';
+  SELECT count(*) INTO v_count FROM public.seller_offer_negotiations
+  WHERE offer_id='25400000-0000-4000-8000-000000000001';
+  IF v_count<>1 THEN RAISE EXCEPTION 'FAIL: Buyer owner should see own quotation history'; END IF;
+  RAISE NOTICE 'PASS: Buyer owner sees received Seller quotation and negotiation history';
 END
 $buyer_offer_read$;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000002',true);
@@ -228,9 +232,139 @@ DECLARE v_count integer;
 BEGIN
   SELECT count(*) INTO v_count FROM public.seller_offers;
   IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: unrelated Buyer saw another Buyer quotation'; END IF;
-  RAISE NOTICE 'PASS: unrelated Buyer cannot see another Buyer quotation';
+  SELECT count(*) INTO v_count FROM public.seller_offer_negotiations;
+  IF v_count<>0 THEN RAISE EXCEPTION 'FAIL: unrelated Buyer saw another Buyer negotiation history'; END IF;
+  RAISE NOTICE 'PASS: unrelated Buyer cannot see another Buyer quotation or negotiation history';
 END
 $other_buyer_offer_read$;
+
+-- Negotiation turn-taking and both Buyer Demand order conversion paths.
+-- The rollback test bumps created_at between simulated API calls to model separate RPC transactions.
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_counter_first$
+BEGIN
+  PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000001','counter',80,9500,'Buyer counter A');
+  RAISE NOTICE 'PASS: Buyer counter is accepted as a new negotiation turn';
+END
+$buyer_counter_first$;
+RESET ROLE;
+UPDATE public.seller_offer_negotiations SET created_at=clock_timestamp()
+WHERE offer_id='25400000-0000-4000-8000-000000000001' AND actor_id='25000000-0000-4000-8000-000000000001' AND action='counter';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_repeat_counter_denied$
+DECLARE v_denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000001','counter',70,9400,'Second Buyer counter');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: same Buyer countered twice without Seller response'; END IF;
+  RAISE NOTICE 'PASS: same-side repeat counter is blocked';
+END
+$buyer_repeat_counter_denied$;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000011',true);
+DO $seller_accepts_buyer_counter$
+DECLARE v_order uuid; v_status text; v_accepted timestamptz; v_total numeric;
+BEGIN
+  v_order:=private.respond_to_demand_offer('25400000-0000-4000-8000-000000000001','accept',null,null,'Seller accepts Buyer counter');
+  SELECT order_status,accepted_at,source_offer_total INTO v_status,v_accepted,v_total FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'accepted' OR v_accepted IS NULL OR v_total<>760000 THEN RAISE EXCEPTION 'FAIL: Seller acceptance did not create correct accepted order'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM public.commerce_order_events WHERE order_id=v_order AND event_type='accepted') THEN RAISE EXCEPTION 'FAIL: accepted order event missing'; END IF;
+  RAISE NOTICE 'PASS: Seller acceptance of Buyer counter creates accepted order and event';
+END
+$seller_accepts_buyer_counter$;
+
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
+VALUES('25400000-0000-4000-8000-000000000002','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000012',12000,'BDT','100','Seller B initial quote');
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_counter_second$
+BEGIN
+  PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000002','counter',60,11500,'Buyer counter B');
+END
+$buyer_counter_second$;
+RESET ROLE;
+UPDATE public.seller_offer_negotiations SET created_at=clock_timestamp()
+WHERE offer_id='25400000-0000-4000-8000-000000000002' AND actor_id='25000000-0000-4000-8000-000000000001' AND action='counter';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_repeat_counter_second_denied$
+DECLARE v_denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000002','counter',50,11400,'Repeated Buyer counter');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: Buyer sent a second counter before Seller response'; END IF;
+END
+$buyer_repeat_counter_second_denied$;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
+DO $seller_counter_second$
+BEGIN
+  PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000002','counter',55,11000,'Seller counter B');
+END
+$seller_counter_second$;
+RESET ROLE;
+UPDATE public.seller_offer_negotiations SET created_at=clock_timestamp()
+WHERE offer_id='25400000-0000-4000-8000-000000000002' AND actor_id='25000000-0000-4000-8000-000000000012' AND action='counter';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
+DO $seller_repeat_counter_denied$
+DECLARE v_denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000002','counter',50,10900,'Repeated Seller counter');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: same Seller countered twice without Buyer response'; END IF;
+END
+$seller_repeat_counter_denied$;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_accepts_seller_counter$
+DECLARE v_order uuid; v_status text; v_accepted timestamptz;
+BEGIN
+  v_order:=private.respond_to_demand_offer('25400000-0000-4000-8000-000000000002','accept',null,null,'Buyer accepts Seller counter');
+  SELECT order_status,accepted_at INTO v_status,v_accepted FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'pending' OR v_accepted IS NOT NULL THEN RAISE EXCEPTION 'FAIL: Buyer acceptance must await Seller confirmation'; END IF;
+  PERFORM set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
+  PERFORM private.transition_buyer_demand_order(v_order,'accept','Seller confirms Buyer order');
+  SELECT order_status,accepted_at INTO v_status,v_accepted FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'accepted' OR v_accepted IS NULL THEN RAISE EXCEPTION 'FAIL: Seller confirmation did not accept pending order'; END IF;
+  RAISE NOTICE 'PASS: Buyer/Seller counter turn-taking and pending-to-accepted order confirmation';
+END
+$buyer_accepts_seller_counter$;
+
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
+VALUES('25400000-0000-4000-8000-000000000003','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000013',13000,'BDT','50','Seller C initial quote');
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_rejects$
+BEGIN
+  PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000003','reject',null,null,'Price not suitable');
+  IF NOT EXISTS(SELECT 1 FROM public.seller_offers WHERE id='25400000-0000-4000-8000-000000000003' AND offer_status='rejected' AND negotiation_status='declined') THEN RAISE EXCEPTION 'FAIL: rejected quotation status not updated'; END IF;
+  RAISE NOTICE 'PASS: Buyer can reject the Seller latest quotation';
+END
+$buyer_rejects$;
+
+INSERT INTO public.buyer_demands(id,buyer_id,product_name,category,subcategory,description,required_quantity,currency,destination_country,destination_city,required_date)
+VALUES('25300000-0000-4000-8000-000000000002','25000000-0000-4000-8000-000000000001','B03 Expired Quote Demand','Electronics','Mobile Phones','Expired quote test','10 units','BDT','Bangladesh','Dhaka',current_date+7);
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,offer_valid_until,message)
+VALUES('25400000-0000-4000-8000-000000000004','25300000-0000-4000-8000-000000000002','25000000-0000-4000-8000-000000000013',13000,'BDT','20',current_date-1,'Expired quote');
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $expired_offer$
+DECLARE v_denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000004','accept',null,null,'Attempt expired offer');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: expired quotation was accepted'; END IF;
+  IF EXISTS(SELECT 1 FROM public.commerce_orders WHERE source_offer_id='25400000-0000-4000-8000-000000000004') THEN RAISE EXCEPTION 'FAIL: expired quotation created an order'; END IF;
+  RAISE NOTICE 'PASS: expired quotation cannot create an order';
+END
+$expired_offer$;
 
 -- Buyer spoofing another owner ID must fail the INSERT policy.
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
