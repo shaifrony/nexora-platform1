@@ -1323,3 +1323,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Loaded the module before `marketplace.js` so later integration can use `window.NEXORA_FINANCE`.
 - Verified locally with Node: valid schedule, Wholesale/Retail fee calculation, Buyer Agent fee on/off behavior, exact transport-share validation, and order snapshot checks passed.
 - This is domain logic only: no persistent configuration UI/API, Database table, RLS, RPC, migration, payment, wallet, escrow, payout or settlement integration has been implemented. Existing migration-history/Foundation blockers remain. No Live/Production, `main`, DNS, deployment or paid service changed.
+
+## 2026-11-14 — Financial core hardening and latest business decisions
+
+- Made Wholesale, Retail and Buyer Agent fee calculation bases configuration-driven rather than fixing a commission base in code.
+- Rejects overlapping approved fee schedules instead of silently choosing one.
+- Ensures rounded transport allocations reconcile exactly to the transport charge by assigning the minor-unit rounding remainder deterministically.
+- Updated the Agent Network design with the user's latest superseding decisions: Seller Agent resells as own NEXORA Seller (no unregistered Seller record/profile); separate Wholesale/Retail listings; mandatory Buyer Agent fee only when that service is used; Seller Agent pays onward transport; NEXORA assigns receiving-area Local Distribution Agent; `buyer_received` settlement trigger; Buyer Demand orders use the same fulfilment path.
+- Financial rates and calculation bases remain unapproved and must be supplied through versioned, effective-dated configuration; no default rates are embedded in the financial module.
+- Local Node checks passed for configurable bases, Wholesale/Retail calculation, Buyer Agent fee on/off, exact transport allocation reconciliation, overlapping schedule rejection and invalid split rejection.
