@@ -133,7 +133,6 @@
       marketplace_commission_basis: commissionBasis,
       marketplace_commission_base_minor: commissionBase,
       buyer_agent_fee_basis: input.buyer_agent_used ? buyerFeeBasis : null,
-      buyer_agent_fee_minor: buyerAgentFee,
       marketplace_commission_minor: marketplaceCommission,
       buyer_agent_fee_minor: buyerAgentFee,
       transport_charge_minor: transport,
