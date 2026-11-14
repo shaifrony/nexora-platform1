@@ -238,3 +238,27 @@ The UI's client-side grant lookup is not an authorization boundary. The exact se
 - Supabase platform change: new `public` tables are no longer automatically exposed to Data/GraphQL API; enforcement date 2026-10-30. Explicitly grant only needed table/sequence/function privileges and pair them with RLS. Check frontend REST/RPC calls against actual grants/exposure. Reference: https://supabase.com/changelog/breaking-change-data-api-tables-not-exposed-by-default
 - Replay constraint: a newly timestamped Foundation migration after latest feature migration cannot satisfy earlier timestamp-ordered dependencies. Do not fabricate an earlier timestamp. If historical source cannot be recovered, use a clearly marked recovery-only bootstrap in disposable local DB before replaying all 38 feature migrations; only later design a genuine forward reconciliation migration.
 - Verification gates: trigger catalog cardinality/ownership; signup and rollback matrix; RLS table/policy/grant matrix; Admin AAL1/AAL2/department/deny matrix; fresh-project Data API exposure; full local replay and synthetic E2E. No SQL/code/trigger/database/hosted change occurred in this design pass.
+
+## 15. Permission catalog and frontend RPC mismatch audit
+
+**Source audit only; no SQL/RPC/seed changed.**
+
+### Seeded permission keys
+- #19: `logistics.view`, `logistics.assign` (inserted under department `logistics`).
+- #25: `services.edit` (inserted under `product_business`).
+- #34: `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `logistics.view`, `logistics.assign`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
+- Critical: #34's Logistics key inserts use `ON CONFLICT DO NOTHING`; they do not move #19's existing keys from `logistics` to `transport`. #34 officer assignment requires department match, so Transport staff cannot receive those permissions. #25's `product_business` department is not in #34's department seed. #25 references `products.edit` but only seeds `services.edit`.
+
+### Frontend keys with no active migration seed found
+`users.view`, `users.suspend`, `users.restore`, `users.cancel`, `businesses.view`, `businesses.suspend`, `products.view`, `products.suspend`, `products.restore`, `products.cancel`, `products.edit`, `security.audit_logs.view`.
+Missing keys deny by default; do not grant or bypass.
+
+### RPC contracts
+- `review_role_request(request_id uuid, decision text)` with `approved|rejected`; owner table contract expects `role_requests(user_id,requested_role,status,created_at)` and partial unique `one_pending_role_request_per_user`. Missing from active migrations. Foundation must add row lock, pending-only transition, active Buyer precondition, atomic Buyer→Seller approval, rejection preserving Buyer, Director/AAL2 enforcement and audit.
+- Frontend calls `manage_nexora_user(p_user_id,p_action,p_reason)`; no active definition.
+- Alternate `admin_manage_user` was observed but also has no active definition. Do not add aliases.
+- Frontend calls `manage_marketplace_listing(p_target_type,p_target_id,p_action,p_reason)`; no active definition. Do not invent generic mutation.
+- #34 `manage_nexora_officer` exists but depends on unresolved catalog department mapping.
+
+### Next blocker
+Choose canonical departments for Logistics/Transport, Product/Business, user governance, listing moderation and audit; map each UI action to one seeded key and one server-side RPC/policy. Then reconcile stale RPC callers and test missing/deny, cross-department and Director/AAL2 cases. No database or runtime changes in this audit.
