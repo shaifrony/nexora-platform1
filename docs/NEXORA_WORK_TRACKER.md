@@ -1255,3 +1255,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Latest active migration remains `20261115120000_multilingual_chat_foundation.sql`; natural CLI timestamp is not yet later, so no migration file was generated or manually renamed.
 - Next: when timestamp is naturally later, implement a forward migration only after Foundation/history reconciliation; run clean disposable replay, concurrency, Auth JWT/PostgREST column-grant tests, then Business detail UI tests. Browser/mobile E2E remains open.
 - Prepared recovery-only review privacy patch `31_listing_reviews_column_grants_recovery_candidate.sql` and read-only grant test `32_listing_reviews_column_grants_recovery_test.sql`. Not executed: full Foundation/migration replay is not yet certified. These files are not active migrations and do not mean the privacy issue is fixed.
+
+
+## 2026-11-14 — Review privacy recovery candidate tightened
+
+- Re-reviewed the active staged review schema and frontend query. The public review UI selects only `id`, `rating`, `review_title`, `review_body`, `reviewer_label`, `purchased_quantity`, and `created_at`, while filtering on `listing_type`, `listing_id`, and `review_status`; the column allowlist includes those required fields plus the summary RPC's required `rating`/filter columns.
+- Tightened recovery-only candidate #31: revoke all table-level privileges from `PUBLIC`, `anon`, and `authenticated`; explicitly revoke separate column-level SELECT on every current private/internal column (`buyer_id`, `reviewed_by`, `reviewed_at`, `moderation_note`, `updated_at`); then grant only the ten public columns.
+- Expanded recovery test #32 to assert that all five withheld columns are inaccessible to both API roles, all ten allowlisted columns remain readable, table-level SELECT is absent, and the SECURITY INVOKER summary RPC still executes under `anon`.
+- Updated the Business review design gate to document why table-level REVOKE alone is insufficient when independent column grants exist.
+- `git diff --check` passed. No SQL execution or database verification was attempted because the Foundation/migration replay gate remains unresolved. Candidate/test remain recovery-only; no active migration, hosted database, Live/Production, `main`, DNS or deployment changed.
