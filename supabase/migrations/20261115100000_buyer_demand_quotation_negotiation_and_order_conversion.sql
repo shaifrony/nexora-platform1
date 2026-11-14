@@ -177,7 +177,7 @@ begin
   if not found then raise exception 'Buyer Demand not found'; end if;
   select * into v_offer from public.seller_offers where id=p_offer_id for update;
   if not found or v_offer.demand_id<>v_demand.id then raise exception 'Quotation changed while locking'; end if;
-  v_demand_qty:=nullif(btrim(v_demand.required_quantity),'')::numeric;
+  v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric;
   if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid' using errcode='22023'; end if;
   if v_demand.demand_status<>'open' then raise exception 'This Buyer Demand is no longer open'; end if;
   if v_offer.offer_status not in ('pending','accepted') or v_offer.negotiation_status in ('declined','ordered','agreed') then
