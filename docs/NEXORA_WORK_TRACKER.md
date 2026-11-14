@@ -1352,3 +1352,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Coverage: exact approved development host routes to NEXORA-TEST; exact production host is labelled production; unknown hosts fail closed; lookalike suffix domains are blocked; hostname matching is case-insensitive.
 - Combined local unit run: 20 tests passed, 0 failed (15 financial configuration + 5 environment-routing tests). The tests were run against local verification copies of the branch source; the repository test files reference the actual source paths when run from a checkout.
 - This does not establish Vercel Preview deployment correctness or Supabase Auth/PostgREST/RLS runtime behavior. No deployment or database mutation was performed.
+
+
+### Separate Wholesale/Retail Listing model reconciliation — 2026-11-14
+- Reconciled the latest approved product decision in docs/NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md: one unified Marketplace audience, but separate Wholesale and Retail Listing records with independent IDs/URLs/prices/terms and histories.
+- Confirmed the active migration 20261113235900_product_market_category.sql explicitly removes the per-product sale-channel field. Current public.products therefore cannot yet satisfy the latest separate-listing contract.
+- Defined a safe compatibility approach: existing records must not be guessed into Wholesale or Retail; retain a temporary legacy_unclassified state until confirmed. Published sale_type is identity-defining and cannot be changed in-place; a second sale type requires a separate Listing.
+- Buyer Demand matching remains taxonomy + approved Seller/Business eligibility; no account-category or sale-type visibility gate is permitted.
+- This was documentation/source reconciliation only. No frontend behavior, SQL migration, database or deployment was changed.
