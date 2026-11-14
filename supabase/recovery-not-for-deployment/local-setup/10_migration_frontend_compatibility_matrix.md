@@ -286,3 +286,23 @@ Choose canonical departments for Logistics/Transport, Product/Business, user gov
 - Other blockers: missing role-request historical SQL (must implement confirmed frontend contract as new recovery baseline); stale/missing user/listing moderation RPCs; no local Supabase CLI/Docker/psql runtime in current environment.
 - Bootstrap order documented in Foundation spec §18.4: platform preflight → schemas/least privilege → profiles → departments/staff/catalog/grants → audit/lifecycle tables → canonical resolver → Auth function/trigger → RLS event trigger + table RLS → explicit grants/policies → assertions → all 38 migration replay → synthetic security/E2E.
 - No SQL candidate is labelled deployable; no hosted project was changed. Next step is source correction plan for #34 and a suitable disposable local Supabase runtime, then generate a recovery-only candidate outside `supabase/migrations/`.
+
+## 19. Migration #34 Governance compatibility repair — source contract
+
+**Status: reviewed repair contract only; no migration/source SQL changed.** The owner-approved department catalogue is in Foundation spec §18. The #34 source currently inserts the Logistics keys under Transport and permits non-MD officers only in Marketing, Transport and Accounts.
+
+Required compatibility correction:
+- Ensure all seven approved department rows exist.
+- Keep Marketing / Transport / Accounts seeds in their approved departments.
+- Correct `logistics.view` and `logistics.assign` to `logistics` deterministically (not `ON CONFLICT DO NOTHING`).
+- Add `logistics`, `product_business`, and `trust_safety` to the non-MD department allowlist; do not make `managing_director` an ordinary department.
+- Keep `services.edit` in Product & Business. `products.edit` remains blocked pending exact action/RPC reconciliation.
+- Add Trust & Safety catalogue keys, but leave mutation keys inactive/ungrantable until their narrow audited server RPCs exist and pass tests.
+- Officer grant validation must require active catalog entries and exact department scope. Client-side checks are not authorization.
+- Preserve Director AAL2/protected appointment, active Buyer provisioning prerequisite, no self-promotion, transaction atomicity, row locking and audit integrity.
+
+Do not edit historical migration #34 in place or invent a timestamp. Prepare a recovery-only post-#34 patch and test it after actual timestamp-ordered replay in a disposable local Supabase environment. Any forward migration for an already-existing environment is a separate, later decision.
+
+Required tests: six operational departments accept valid officers; Logistics permissions never grant to Transport; cross-department and inactive permissions reject; Trust & Safety mutation grants remain blocked until RPC readiness; Director-only operations reject all staff; AAL1/inactive/suspended/self-target/invalid target/missing sensitive reason fail closed; transaction and audit consistency hold.
+
+**Environment stop:** no Supabase CLI, Docker, psql or local checkout is available in this session. NEXORA-TEST is empty and must not be used as a substitute. No SQL, migration, database or deployment was changed or runtime-tested.
