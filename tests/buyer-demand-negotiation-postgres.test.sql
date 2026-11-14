@@ -128,7 +128,9 @@ values
   ('20000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000001','5,000 KG','BDT','Dhaka','Bangladesh'),
   ('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001','100 units','BDT','Dhaka','Bangladesh'),
   ('20000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000001','KG only','BDT','Dhaka','Bangladesh'),
-  ('20000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','80 units','BDT','Dhaka','Bangladesh');
+  ('20000000-0000-4000-8000-000000000004','10000000-0000-4000-8000-000000000001','80 units','BDT','Dhaka','Bangladesh'),
+  ('20000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000001','50 units','BDT','Dhaka','Bangladesh'),
+  ('20000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000001','30 units','BDT','Dhaka','Bangladesh');
 
 do $test$
 declare
@@ -232,6 +234,38 @@ begin
   perform public.transition_buyer_demand_order(v_order,'ready','Seller dispatches counter order');
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
   perform public.transition_buyer_demand_order(v_order,'complete','Buyer received counter order');
+
+  -- An unrelated Buyer cannot accept another Buyer's quotation.
+  insert into public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
+  values('20000000-0000-4000-8000-000000000005','10000000-0000-4000-8000-000000000011',20,'BDT','50')
+  returning id into v_offer;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',true);
+  v_denied:=false;
+  begin
+    perform public.respond_to_demand_offer(v_offer,'accept',50,null,null);
+  exception when insufficient_privilege then
+    v_denied:=true;
+  end;
+  if not v_denied then raise exception 'FAIL: unrelated Buyer accepted another Buyer's quotation'; end if;
+
+  -- Buyer cancellation is allowed only while the generated order is pending.
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  v_order:=public.respond_to_demand_offer(v_offer,'accept',50,null,null);
+  perform public.transition_buyer_demand_order(v_order,'cancel','Buyer cancelled before dispatch');
+  if (select order_status from public.commerce_orders where id=v_order)<>'cancelled' then
+    raise exception 'FAIL: Buyer could not cancel own pending Demand order';
+  end if;
+
+  -- Seller rejection requires a reason and applies only to a pending order.
+  insert into public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
+  values('20000000-0000-4000-8000-000000000006','10000000-0000-4000-8000-000000000011',30,'BDT','30')
+  returning id into v_offer;
+  v_order:=public.respond_to_demand_offer(v_offer,'accept',30,null,null);
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000011',true);
+  perform public.transition_buyer_demand_order(v_order,'reject','Out of stock');
+  if (select order_status from public.commerce_orders where id=v_order)<>'rejected' then
+    raise exception 'FAIL: assigned Seller could not reject pending Demand order';
+  end if;
 
   -- Currency must match the Buyer Demand currency.
   v_denied:=false;
