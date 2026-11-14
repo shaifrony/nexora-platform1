@@ -24,7 +24,7 @@ begin
       end if;
     end loop;
 
-    foreach v_private_column in array array['buyer_id','reviewed_by','moderation_note'] loop
+    foreach v_private_column in array array['buyer_id','reviewed_by','reviewed_at','moderation_note','updated_at'] loop
       if has_column_privilege(v_role, 'public.listing_reviews', v_private_column, 'SELECT') then
         raise exception '% can still SELECT private review column %', v_role, v_private_column;
       end if;
