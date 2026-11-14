@@ -992,8 +992,8 @@ test("Buyer and Seller Demand dashboards parse numeric quantities followed by un
     marketplaceUi.indexOf("async function loadSellerDemandInbox()"),
     marketplaceUi.indexOf("const serviceCategoryLabels")
   );
-  assert.match(buyer, /Number\.parseFloat\(String\(d\.required_quantity\|\|""\)\.replace\(\/,/g,""\)\)/);
+  assert.ok(buyer.includes('Number.parseFloat(String(d.required_quantity||"").replace(/,/g,""))'));
   assert.match(buyer, /Number\.isFinite\(demandQuantity\)&&demandQuantity>0/);
-  assert.match(seller, /Number\.parseFloat\(String\(d\.required_quantity\|\|""\)\.replace\(\/,/g,""\)\)/);
+  assert.ok(seller.includes('Number.parseFloat(String(d.required_quantity||"").replace(/,/g,""))'));
   assert.match(seller, /maxNegotiableQuantity>0/);
 });
