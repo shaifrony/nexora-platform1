@@ -925,3 +925,17 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - No database schema/data, SQL migrations, Test project, Live/Production data, `main`, DNS or paid service was changed. No login or real-user testing was attempted.
 - **Validation still required:** browser/runtime test of script loading and explicit host routing; Test-host deployment is currently constrained by Vercel deployment quota/protection and NEXORA-TEST remains empty. Do not ask the user to log in on an unverified preview.
 - **Next Buyer gate:** complete a focused Buyer acceptance checklist and identify any remaining Buyer UX/security gaps across Marketplace browse/search/detail, Buyer Demand, Seller inquiry, quotation negotiation, orders, Buyer profile and chat. Use only synthetic identities/data in the disposable local test environment; do not apply migrations to empty NEXORA-TEST until the Foundation baseline is reconciled and separately authorized.
+
+
+### Buyer workflow source inventory — follow-up
+- Static HTML check after the repair confirms balanced script tags: public app `index.html` has 7 opening / 7 closing script tags; Admin page has 3 / 3. This confirms tag balance only, not browser execution or JavaScript syntax/runtime.
+- Buyer-facing paths currently present in source:
+  - Email/password Buyer signup and login; Google/Facebook OAuth is limited to Buyer in the current UI.
+  - Buyer profile summary and Buyer Center entry.
+  - Public approved-product grid, search/filter, permanent product detail URL, price/MOQ/price tiers/stock display.
+  - Product detail Seller inquiry via `create_product_inquiry`, private Chat handoff, price negotiation and separate order request.
+  - Buyer Demand form includes required-by date; client validates today/future date and persists it as `required_date`.
+  - Public open-Demand board reads the safe `public_buyer_demands` projection and displays required date without Buyer identity/contact fields.
+  - Buyer Dashboard reads own Demands and associated Seller offers, supports accept/counter/reject and close/cancel; separate product negotiation and order history/status actions are present.
+- UI caveat: Buyer Center currently displays a Wallet Balance placeholder (`৳ —`) without a verified live balance source in the reviewed Buyer code. Do not treat this as a working wallet or enable payment claims; defer/label clearly until an approved wallet/payment implementation exists.
+- This inventory is source-only. It does not prove signup/Auth trigger behavior, API permissions, RLS, Realtime, Storage, or browser UX after the script repair.
