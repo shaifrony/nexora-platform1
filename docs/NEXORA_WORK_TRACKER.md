@@ -771,7 +771,7 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Fixed `marketplace.js`: before issuing the `service_listings` query, the loader now checks `signedIn()`. Anonymous visitors receive a clear "লগইন করুন" notice and the function returns without making a Data API request; authenticated users continue to use the existing RLS-protected query. No database grants or RLS policies were broadened.
 - Commit on `nexora-development`: `2d251e42043ccdf06712e78c49e29c1a84a4f2dd` (`Avoid anonymous service listing API request`).
 - Verified in a fresh Vercel Hobby Sandbox clone: `node --check marketplace.js` passed; `git diff --check` passed; reviewed the resulting loader guard in the checked-out source. A full authenticated/anonymous browser regression against the disposable Supabase stack has not yet been run for this particular change.
-- No SQL migration, Data API grant, RLS policy, Live/Production database, `main`, DNS, or paid service was changed. Android/physical-device E2E remains pending.
+- No SQL migration, Data API grant, RLS policy, Live/Production database, `main`, DNS, or paid service was changed. Android viewport E2E has since been completed in emulation; physical Android device E2E remains pending.
 
 ## 2026-11-14 — Android viewport E2E (device emulation)
 
