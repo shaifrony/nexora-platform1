@@ -204,11 +204,28 @@
     host.querySelectorAll("[data-assign-job]").forEach(btn=>btn.addEventListener("click",()=>assignJob(btn,approvedProviders,availableVehicles,approvedPartners,activeStaff)));
     const transitions={assigned:["accepted","delivery_failed"],accepted:["picked_up","delivery_failed"],picked_up:["in_transit","partially_delivered","delivery_failed"],in_transit:["out_for_delivery","partially_delivered","delivery_failed"],out_for_delivery:["delivered","partially_delivered","delivery_failed"],partially_delivered:["in_transit","out_for_delivery","delivered","disputed"],delivered:["disputed"],delivery_failed:["returned"],disputed:["delivered","returned"]};
     host.querySelectorAll("[data-network-job]").forEach(card=>{
+      if(["out_for_delivery","partially_delivered"].includes(card.dataset.jobStatus)){
+        card.insertAdjacentHTML("beforeend",'<form class="nxAdminReceiptForm card"><h5>Buyer Receipt OTP Verification (Admin MFA)</h5><label>Buyer-এর দেওয়া ১৬ অক্ষরের OTP<input name="code" minlength="16" maxlength="16" pattern="[0-9A-Fa-f]{16}" autocomplete="one-time-code" required></label><label>Delivery note (ঐচ্ছিক)<input name="note" maxlength="1500"></label><button class="primary" type="submit">OTP যাচাই করে Delivered করুন</button><p class="muted" role="status" aria-live="polite"></p></form>');
+        card.querySelector(".nxAdminReceiptForm").addEventListener("submit",verifyAdminReceipt);
+      }
       const choices=transitions[card.dataset.jobStatus]||[];
       if(!choices.length)return;
       card.insertAdjacentHTML("beforeend",'<form class="nxNetworkTrackingForm card"><h5>Tracking Status Update</h5><label>নতুন Status<select name="next_status">'+choices.map(x=>'<option value="'+x+'">'+x+'</option>').join("")+'</select></label><label>বর্তমান অবস্থান<input name="location" maxlength="500"></label><label>Tracking Number (ঐচ্ছিক)<input name="tracking_code" maxlength="160"></label><label>নোট<textarea name="note" maxlength="1500"></textarea></label><button class="secondary" type="submit">Status Update সংরক্ষণ করুন</button></form>');
       card.querySelector(".nxNetworkTrackingForm").addEventListener("submit",updateJobStatus);
     });
+  }
+
+  async function verifyAdminReceipt(event){
+    event.preventDefault();if(!isAdmin())return message("Admin account প্রয়োজন।");
+    const form=event.currentTarget,card=form.closest("[data-network-job]"),f=new FormData(form),button=form.querySelector("button[type=submit]"),status=form.querySelector('[role="status"]');
+    button.disabled=true;status.textContent="MFA ও OTP যাচাই হচ্ছে…";
+    try{
+      const {data,error}=await db().rpc("verify_delivery_receipt_code",{p_job_id:card.dataset.networkJob,p_code:String(f.get("code")||"").trim(),p_location_description:null,p_note:String(f.get("note")||"").trim()||null});
+      if(error)throw error;
+      if(data?.verified){message("Admin MFA-সহ Buyer Receipt OTP যাচাই হয়েছে।",true);await loadJobs();}
+      else status.textContent="OTP যাচাই হয়নি: "+(data?.reason||"কোড সঠিক নয়");
+    }catch(err){status.textContent="যাচাই হয়নি: "+err.message;}
+    finally{button.disabled=false;}
   }
 
   async function updateJobStatus(event) {
