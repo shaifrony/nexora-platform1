@@ -976,3 +976,10 @@ User-defined governing principle: NEXORA earns revenue from Sellers, but Sellers
 - Seller monetization should be transparent and value-linked, without interrupting Buyer journeys.
 
 Source audit surfaced UX friction to address next: multiple competing CTAs on Product Detail; many required Buyer Demand fields; and browser prompt/confirm dialogs for quotation acceptance/counter-offers. No flow changes were made yet because schema constraints and runtime behavior must be verified first. Detailed notes added to Buyer completion checklist.
+
+
+### Buyer Demand form friction reduction — 2026-11-14
+- Made Subcategory, Description and Specifications optional, preserving required product name, category, quantity, currency, destination and required-by date. Budget remains optional.
+- Confirmed active source schema permits empty description, nullable specifications and nullable/blank subcategory; the Seller routing function treats blank subcategory as category-wide matching. No DB/schema change.
+- Static checks passed: marketplace.js syntax, form constraints, script tag balance. Browser/runtime remains pending.
+- Commit: `7f9249e406a87dc1c5b583e224375ffda48212fc`.
