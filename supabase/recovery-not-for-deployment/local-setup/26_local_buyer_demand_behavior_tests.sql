@@ -491,7 +491,7 @@ BEGIN
   WHERE source_offer_id='25400000-0000-4000-8000-000000000007';
   BEGIN
     PERFORM private.transition_buyer_demand_order(v_order,'reject','');
-  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  EXCEPTION WHEN insufficient_privilege THEN v_denied:=true;
   END;
   IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: Seller rejection without reason was accepted'; END IF;
   PERFORM private.transition_buyer_demand_order(v_order,'reject','Supply unavailable');
