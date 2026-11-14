@@ -101,6 +101,9 @@ begin
   if not found or v_demand.demand_status<>'open' then
     raise exception 'Buyer Demand is not open for quotations' using errcode='22023';
   end if;
+  if upper(new.currency)<>upper(v_demand.currency) then
+    raise exception 'Quotation currency must match the Buyer Demand currency' using errcode='22023';
+  end if;
   v_qty:=nullif(new.available_quantity,'')::numeric;
   if v_qty is null or v_qty<=0 then
     raise exception 'Seller quotation availability must be a positive number' using errcode='22023';
