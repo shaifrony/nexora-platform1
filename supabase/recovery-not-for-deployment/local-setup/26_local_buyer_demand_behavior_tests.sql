@@ -473,9 +473,9 @@ $buyer_cancels_pending$;
 
 -- Seller rejection requires a reason and applies only to pending orders.
 RESET ROLE;
-SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000011',true);
 INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
-VALUES('25400000-0000-4000-8000-000000000007','25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000013',12700,'BDT','30','Rejection quote');
+VALUES('25400000-0000-4000-8000-000000000007','25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000011',12700,'BDT','30','Rejection quote');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
 DO $buyer_accepts_rejection_quote$
@@ -483,7 +483,7 @@ BEGIN
   PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000007','accept',null,null,'Buyer accepts pending rejection test');
 END
 $buyer_accepts_rejection_quote$;
-SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000011',true);
 DO $seller_rejects_pending$
 DECLARE v_order uuid; v_denied boolean:=false; v_status text;
 BEGIN
