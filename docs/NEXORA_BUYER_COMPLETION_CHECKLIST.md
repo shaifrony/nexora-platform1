@@ -119,6 +119,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Source regression checks verify accepted-participant-only Chat membership, creator-only invitations, accepted-only message/file/call-signal access, Product inquiry Buyer/approved Seller eligibility, and hidden composer/call controls while an invitation is pending. Full runtime verification remains pending.
 - [ ] Audio/video/file sharing এবং history শুধু conversation participants দেখতে পারে।
 - [ ] Admin ব্যক্তিগত chat-এর content দেখতে পারে না—পূর্বের privacy decision অনুযায়ী।
+- [x] Verified Review source tests cover completion-only purchase eligibility, active Buyer/approved listing checks, one-review uniqueness and consumed eligibility. Public review SELECT is now column-allowlisted so Buyer ID and moderation metadata are not exposed. Development CI [#43647560156](https://github.com/shaifrony/nexora-platform1/actions/runs/43647560156) passed 90/90 source tests; hosted role/RLS and browser E2E remain pending.
 - [ ] Verified review কেবল completed purchase-এর পর; একজন Buyer এক listing-এ একবার।
 - [ ] Complaint/support escalation এবং Buyer-এর support status দেখা।
 
