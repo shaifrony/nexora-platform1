@@ -177,3 +177,18 @@ Sources:
 ## 8. Final audit conclusion
 
 **Do not generate or apply Foundation SQL yet.** The static audit has surfaced concrete missing Foundation prerequisites and frontend/database mismatches that need product and security decisions. The safe next implementation is to resolve the legacy Porter frontend paths and document exact Admin/role-request RPC contracts, then prepare the Foundation SQL design. No hosted SQL or application data was changed during this audit.
+
+
+## 9. Follow-up source verification — legacy Porter Admin panel (2026-11-14)
+
+The previous finding in §4.1–4.2 is now narrowed with direct source inspection:
+
+- `supabase/migrations/20261113220000_delivery_assignment_system.sql` creates `public.delivery_jobs` and `public.delivery_job_events`, backed by approved `transport_providers`/`transport_vehicles`. It does not create `porter_delivery_jobs` or `porter_delivery_job_events` and does not expose the old Porter-user assignment RPC contract.
+- `supabase/migrations/20261114170000_delivery_network_management.sql` introduces `delivery_network_partners` and `delivery_network_staff`.
+- `supabase/migrations/20261114180000_unified_delivery_jobs_assignment.sql` extends the same `delivery_jobs` model with network partner/staff assignment, delivery mode and Commerce Order linkage. It records assignment history in `delivery_job_assignment_history` and uses the new network assignment functions.
+- In `marketplace.js`, the Porter workspace itself already states that the old Porter job-table is not used and directs to Transport Provider Center. However, the Admin Logistics monitor still queries `porter_delivery_jobs` and `porter_delivery_job_events`, reads assigned Porter names directly from `profiles.full_name`, and calls the absent legacy RPCs `admin_assign_porter_delivery_job`, `admin_cancel_porter_delivery_job`, `admin_reassign_porter_delivery_job`, `list_active_nexora_porters_for_logistics`.
+- The Admin Logistics monitor is therefore a confirmed stale frontend path, not an unresolved database requirement. Do **not** create legacy Porter tables or RPCs. The correct replacement must use `delivery_jobs`, `delivery_job_events`, `delivery_job_assignment_history`, approved transport provider/vehicle and delivery-network partner/staff records, and the existing narrowly authorized network assignment RPCs.
+- Replacement UI must avoid displaying private `profiles.full_name` or raw pickup/delivery contact/address details outside the Logistics permission boundary. Keep the current RLS and AAL2/permission checks; do not make direct client writes to operational tables.
+- Until the Admin panel is migrated and tested against the unified schema, keep its old panel explicitly blocked/hidden rather than allowing it to issue failing legacy queries. This is separate from Buyer Department priority; do not divert Buyer delivery tracking into the Admin panel.
+
+No application code or database was changed in this source-verification step. The exact Admin UI replacement is a follow-up implementation item after Buyer-critical work and Foundation runtime gates.
