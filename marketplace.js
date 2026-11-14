@@ -153,7 +153,7 @@
     }
     if (productActions) {
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,listing_status")
+        .select("id,product_code,product_name,market_category,listing_status")
         .in("listing_status", ["approved","pending","suspended"]).order("created_at",{ascending:false}).limit(50);
       if (error) productHost.textContent = "পণ্য লোড হয়নি: " + error.message;
       else productHost.innerHTML = '<h4>পণ্য Listing</h4>' + ((data||[]).map(p => {
@@ -161,7 +161,7 @@
         if (allowed.has("products.suspend") && ["approved","pending"].includes(p.listing_status)) buttons.push('<button class="danger" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="suspend">Suspend</button>');
         if (allowed.has("products.restore") && p.listing_status==="suspended") buttons.push('<button class="primary" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="restore">Restore</button>');
         if (allowed.has("products.cancel") && !["cancelled","rejected"].includes(p.listing_status)) buttons.push('<button class="danger" data-mod-type="product" data-mod-id="'+esc(p.id)+'" data-mod-action="cancel">Cancel</button>');
-        return '<div class="offer"><b>'+esc(p.product_name)+'</b><p class="muted">'+esc(p.product_code)+' | '+esc(p.listing_status)+'</p><div class="form-actions">'+buttons.join("")+'</div></div>';
+        return '<div class="offer"><b>'+esc(p.product_name)+'</b><p class="muted">'+esc(p.product_code)+' | '+esc(p.market_category==="wholesale"?"পাইকারি":p.market_category==="retail"?"খুচরা":"ধরন নির্ধারিত হয়নি")+' | '+esc(p.listing_status)+'</p><div class="form-actions">'+buttons.join("")+'</div></div>';
       }).join("") || "কোনো পরিচালনাযোগ্য পণ্য নেই।");
     } else productHost.textContent = "";
     if (businessActions) {
@@ -234,7 +234,7 @@
         .select("id,display_name,country,city,seller_id,created_at")
         .eq("approval_status", "pending").order("created_at"),
       client().from("products")
-        .select("id,product_code,product_name,category,price,currency,seller_id,created_at")
+        .select("id,product_code,product_name,category,market_category,price,currency,seller_id,created_at")
         .eq("listing_status", "pending").order("created_at")
     ]);
     if (businesses.error) businessHost.textContent = "Business queue error: " + businesses.error.message;
@@ -247,7 +247,7 @@
       </div></div>`).join("") || "কোনো Pending Business Profile নেই।";
     if (products.error) productHost.textContent = "Product queue error: " + products.error.message;
     else productHost.innerHTML = (products.data || []).map(p => `
-      <div class="offer"><strong>${esc(p.product_name)}</strong>
+      <div class="offer"><strong>${esc(p.product_name)}</strong><p class="muted">${esc(p.market_category === "wholesale" ? "পাইকারি" : p.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")}</p>
       <div class="form-actions">
         <button class="primary" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="approved">Approve</button>
         <button class="danger" data-review-type="product" data-review-id="${esc(p.id)}" data-decision="rejected">Reject</button>
@@ -470,7 +470,7 @@
       return;
     }
     let productQuery = client().from("products")
-      .select("id,product_code,slug,product_name,category,subcategory,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+      .select("id,product_code,slug,product_name,category,subcategory,market_category,image_urls,description,origin,specifications_quality,price,currency,listing_status,business_id,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
       .eq("listing_status", "approved");
     const { data, error } = await productQuery.order("created_at", { ascending: false });
     if (error) {
@@ -762,6 +762,7 @@
       detailPanel.innerHTML = `
         <p><a href="${esc(window.location.pathname)}">← Marketplace-এ ফিরে যান</a></p>
         <span class="tag">${esc(selected.category)}</span>
+        <span class="tag">${esc(selected.market_category === "wholesale" ? "পাইকারি" : selected.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")}</span>
         <h2>${esc(selected.product_name)}</h2>
         ${images.length ? `<div class="grid">${images.map((src,i) => `<img class="product-image" src="${esc(src)}" alt="${esc(selected.product_name)} image ${i+1}" loading="lazy" onerror="this.style.display='none'">`).join("")}</div>` : ""}
         <p>${esc(selected.description)}</p>
@@ -807,6 +808,7 @@
     $("publicDemandBoard")?.classList.remove("hidden");
     const search = ($("productSearch")?.value || "").trim().toLowerCase();
     const category = $("categoryFilter")?.value || "";
+    const marketCategory = $("marketCategoryFilter")?.value || "";
     const minRaw = $("priceMin")?.value || "";
     const maxRaw = $("priceMax")?.value || "";
     const currency = $("priceCurrency")?.value || "";
@@ -816,7 +818,7 @@
     const min = minRaw === "" ? null : Number(minRaw);
     const max = maxRaw === "" ? null : Number(maxRaw);
     const rows = state.products.filter(p => {
-      const searchable = [p.product_name,p.description,p.origin,p.specifications_quality].join(" ").toLowerCase();
+      const searchable = [p.product_name,p.market_category,p.description,p.origin,p.specifications_quality].join(" ").toLowerCase();
       const productPrice = Number(p.price);
       const productCurrency = String(p.currency || "").toUpperCase();
       const matchesPrice = (min === null || (Number.isFinite(productPrice) && productPrice >= min)) &&
@@ -824,6 +826,7 @@
         (!currency || productCurrency === currency);
       return searchable.includes(search) &&
         (!category || p.category === category) &&
+        (!marketCategory || p.market_category === marketCategory) &&
         matchesPrice &&
         (!quality || String(p.specifications_quality || "").toLowerCase().includes(quality)) &&
         (!origin || String(p.origin || "").toLowerCase().includes(origin)) &&
@@ -863,6 +866,7 @@
         </a>
         <div class="nx-product-card-body">
           <span class="tag">${esc(p.category)}</span>
+          <span class="tag">${esc(p.market_category === "wholesale" ? "পাইকারি" : p.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")}</span>
           <h3><a href="?product=${encodeURIComponent(p.slug)}">${esc(p.product_name)}</a></h3>
           <p class="muted nx-product-description">${esc(p.description || "বিস্তারিত জানতে পণ্যটি দেখুন।")}</p>
           <p class="muted nx-product-origin">📍 ${esc(p.origin || "উৎপত্তি উল্লেখ নেই")}</p>
@@ -879,7 +883,7 @@
     if (!activeBuyer() || !signedIn()) { host.textContent = "সক্রিয় Buyer অ্যাকাউন্ট প্রয়োজন।"; return; }
     host.textContent = "অনুমোদিত পণ্য লোড হচ্ছে…";
     try {
-      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,subcategory,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
+      const { data, error } = await client().from("products").select("id,slug,product_code,product_name,category,subcategory,market_category,image_urls,description,price,currency,origin,listing_status").eq("listing_status", "approved").order("created_at", { ascending: false }).limit(100);
       if (error) throw error;
       state.buyerProducts = data || [];
       renderBuyerDashboardProducts();
@@ -889,13 +893,13 @@
     const host = $("buyerProductList");
     if (!host) return;
     const term = ($("buyerProductSearch")?.value || "").trim().toLowerCase();
-    const rows = (state.buyerProducts || []).filter(p => [p.product_name,p.category,p.description,p.origin].join(" ").toLowerCase().includes(term));
+    const rows = (state.buyerProducts || []).filter(p => [p.product_name,p.category,p.market_category,p.description,p.origin].join(" ").toLowerCase().includes(term));
     if ($("buyerProductCount")) $("buyerProductCount").textContent = rows.length + " Products";
     if (!rows.length) { host.innerHTML = '<div class="card muted">এখনো কোনো Admin অনুমোদিত পণ্য নেই অথবা অনুসন্ধানের সঙ্গে মেলে এমন পণ্য পাওয়া যায়নি।</div>'; return; }
     host.innerHTML = rows.map(p => {
       const image = (p.image_urls || []).find(Boolean);
       return '<article class="card">' + (image ? '<img class="product-image" src="' + esc(image) + '" alt="' + esc(p.product_name) + '" loading="lazy" onerror="this.style.display=\'none\'">' : '') +
-        '<span class="tag">' + esc(p.category) + '</span><h3>' + esc(p.product_name) + '</h3><p class="price">' + esc(p.price) + ' ' + esc(p.currency) + '</p><p class="muted">' + esc(p.origin || '') + '</p>' +
+        '<span class="tag">' + esc(p.category) + '</span><span class="tag">' + esc(p.market_category === "wholesale" ? "পাইকারি" : p.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি") + '</span><h3>' + esc(p.product_name) + '</h3><p class="price">' + esc(p.price) + ' ' + esc(p.currency) + '</p><p class="muted">' + esc(p.origin || '') + '</p>' +
         '<p class="muted">' + esc(p.description || '') + '</p>' + (p.slug ? '<a href="' + esc(window.location.pathname) + '?product=' + encodeURIComponent(p.slug) + '">পণ্য বিস্তারিত দেখুন</a>' : '<span class="muted">Product ID: ' + esc(p.product_code) + '</span>') + '</article>';
     }).join("");
   }
@@ -1340,7 +1344,7 @@
       await loadSellerOrders();
       await loadSellerPriceNegotiations();
       const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,subcategory,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+        .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
         .eq("seller_id", user().id).order("created_at", { ascending: false });
       if (error) throw error;
       const products = data || [];
@@ -1360,8 +1364,8 @@
       window.NEXORA_SELLER_PRODUCTS=products;
       const productHost = $("sellerProducts");
       productHost.innerHTML = products.length ? products.map(p => `
-        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.subcategory,p.product_code,p.origin].join(" ").toLowerCase())}">
-          <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
+        <article class="nx-seller-product-item" data-seller-product data-status="${esc(p.listing_status)}" data-search="${esc([p.product_name,p.category,p.market_category,p.subcategory,p.product_code,p.origin].join(" ").toLowerCase())}">
+          <div class="section-head"><strong>${esc(p.product_name)}</strong><span class="tag">${esc(p.market_category === "wholesale" ? "পাইকারি" : p.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")}</span><span class="tag">${esc(({approved:"অনুমোদিত",pending:"পর্যালোচনাধীন",rejected:"প্রত্যাখ্যাত"})[p.listing_status] || "অবস্থা অজানা")}</span></div>
           ${p.image_urls?.[0]?'<img class="product-image" src="'+esc(p.image_urls[0])+'" alt="'+esc(p.product_name)+'" loading="lazy">':''}
           <p class="muted">${esc(p.category)} · ${esc(p.subcategory||"")} | ${esc(p.origin)}</p>
           <p class="price">${esc(p.price)} ${esc(p.currency)} / ইউনিট · MOQ ${esc(p.minimum_order_quantity||1)}</p>
@@ -1922,6 +1926,7 @@ service_category:"সেবার বিভাগ",description:"বিবরণ"
     if (externalImages.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
     const imageFiles=Array.from(form.querySelector('[name="image_files"]')?.files||[]);
     if(imageFiles.length>5)return say("সর্বোচ্চ ৫টি Product Image আপলোড করুন।");
+    if (!["wholesale", "retail"].includes(v.market_category)) return say("বিক্রির ধরন নির্বাচন করুন।");
     if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     setBusy(form, true);
     let uploadedPaths=[];
@@ -1931,6 +1936,7 @@ service_category:"সেবার বিভাগ",description:"বিবরণ"
       const images=[...uploaded.urls,...externalImages];
       const { error } = await client().from("products").insert({
         business_id: state.business.id, seller_id: user().id,
+        market_category: v.market_category,
         product_name: v.name.trim(), category: v.category, subcategory: null,  image_urls: images,
         description: v.description.trim(), origin: v.origin.trim(),
         specifications_quality: v.specifications.trim(),
@@ -1988,14 +1994,14 @@ service_category:"সেবার বিভাগ",description:"বিবরণ"
     });
   });
 
-  ["productSearch","categoryFilter","priceMin","priceMax","priceCurrency","qualityFilter","originFilter","specFilter"].forEach(id => {
+  ["productSearch","categoryFilter","marketCategoryFilter","priceMin","priceMax","priceCurrency","qualityFilter","originFilter","specFilter"].forEach(id => {
     const el = $(id);
     if (!el) return;
     el.addEventListener(el.tagName === "SELECT" ? "change" : "input", () => renderProducts());
   });
   $("resetProductFilters")?.addEventListener("click", () => {
     ["productSearch","priceMin","priceMax","qualityFilter","originFilter","specFilter"].forEach(id => { if ($(id)) $(id).value = ""; });
-    ["categoryFilter","priceCurrency"].forEach(id => { if ($(id)) $(id).value = ""; });
+    ["categoryFilter","marketCategoryFilter","priceCurrency"].forEach(id => { if ($(id)) $(id).value = ""; });
     if ($("filterHint")) $("filterHint").textContent = "সব ফিল্টার মুছে ফেলা হয়েছে।";
     renderProducts();
   });
