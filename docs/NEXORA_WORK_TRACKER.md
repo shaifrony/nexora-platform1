@@ -1509,3 +1509,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added a public-projection privacy regression check: the public Buyer Demand query must use an explicit column allowlist, include `required_date`, and exclude buyer identity/contact fields such as buyer_id, full_name, email, phone, contact_number and address.
 - These are source-level regression assertions. They do not prove database-view grants/RLS or live API privacy; those still require hosted/local Supabase runtime verification.
 - Commit: `de98234224c85f8f85c7e45680b62a706d993a90`; GitHub Actions validation is expected to run automatically and must be checked before treating this change as verified.
+
+
+## 2026-11-15 — Migration layout CI guard
+- Extended the Development-only CI workflow with a dependency-free check for active migration filename format, unique 14-digit timestamps and timestamp ordering.
+- Read-only audit at implementation time found 39 active migration SQL files; all names matched the required format and timestamps were unique.
+- The guard scans only `supabase/migrations/`; recovery-only SQL outside that directory is not treated as deployable migration input.
+- Workflow change commit: `549bd4584544154084f64edd16d81e4237a429c9`.
+- CI run: pending at tracker update time; do not call this guard verified until the matching run completes successfully.
+- No SQL migration content, hosted database, Production/Live, DNS or `main` branch was changed.
