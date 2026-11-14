@@ -763,3 +763,12 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - **Remaining limits:** test used desktop headless Chromium, not a physical Android/mobile browser. Realtime message delivery was verified after subscription establishment; immediate-send-before-subscription-readiness was not exhaustively load-tested. Pending-invite UI, concurrent users, mobile upload picker behavior, Realtime reconnect, and full cross-browser compatibility remain untested.
 - No Live/hosted database, real user rows, private messages, real attachments, calls, `main`, Production, DNS or paid services were accessed or changed. Browser identities, messages and files were synthetic and confined to the disposable sandbox.
 - Audio/Video Calling remains paused and untouched.
+
+## 2026-11-14 — Prevent anonymous service_listings request
+
+- Investigated the HTTP 401 observed during the previous Chat browser test. The `20261114090000_services_marketplace.sql` migration explicitly revokes all privileges from `anon,authenticated`, then grants Data API table access to `authenticated` only. The `service_listings_owner_or_public_read` policy is also `TO authenticated`; it intentionally does not permit anonymous reads. Thus an anonymous homepage request to this table is not authorized by the current schema design.
+- Root cause in the frontend: `loadServicesMarketplace()` was invoked on initial page load even when no user session existed, although the SQL policy requires authentication. This caused a predictable unauthorized request and a misleading "marketplace unavailable" message.
+- Fixed `marketplace.js`: before issuing the `service_listings` query, the loader now checks `signedIn()`. Anonymous visitors receive a clear "লগইন করুন" notice and the function returns without making a Data API request; authenticated users continue to use the existing RLS-protected query. No database grants or RLS policies were broadened.
+- Commit on `nexora-development`: `2d251e42043ccdf06712e78c49e29c1a84a4f2dd` (`Avoid anonymous service listing API request`).
+- Verified in a fresh Vercel Hobby Sandbox clone: `node --check marketplace.js` passed; `git diff --check` passed; reviewed the resulting loader guard in the checked-out source. A full authenticated/anonymous browser regression against the disposable Supabase stack has not yet been run for this particular change.
+- No SQL migration, Data API grant, RLS policy, Live/Production database, `main`, DNS, or paid service was changed. Android/physical-device E2E remains pending.
