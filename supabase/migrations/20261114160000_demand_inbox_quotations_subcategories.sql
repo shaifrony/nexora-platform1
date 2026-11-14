@@ -560,4 +560,32 @@ begin
 end;
 $$;
 
+
+-- Service listing clients receive only marketplace fields. Review metadata is
+-- available to the owning Seller through a narrowly scoped RPC below.
+revoke select on public.service_listings from authenticated;
+grant select (
+  id, service_code, seller_id, service_name, service_category, description,
+  country, city, service_area, price_basis, price_amount, currency, availability,
+  listing_status, created_at, updated_at, image_urls
+) on public.service_listings to authenticated;
+
+create or replace function public.get_my_service_listing_review_notes()
+returns table(service_listing_id uuid, admin_note text, reviewed_at timestamptz)
+language sql
+security definer
+set search_path=''
+as $
+  select s.id,s.admin_note,s.reviewed_at
+  from public.service_listings s
+  where s.seller_id=(select auth.uid())
+    and exists(
+      select 1 from public.profiles p
+      where p.id=(select auth.uid()) and p.role='seller' and p.account_status='active'
+    )
+  order by s.updated_at desc;
+$;
+revoke all on function public.get_my_service_listing_review_notes() from public,anon;
+grant execute on function public.get_my_service_listing_review_notes() to authenticated;
+
 commit;
