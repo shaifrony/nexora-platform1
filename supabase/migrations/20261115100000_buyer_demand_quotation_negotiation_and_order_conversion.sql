@@ -129,7 +129,7 @@ begin
   if v_unit<=0 then raise exception 'Seller quotation unit price must be positive' using errcode='22023'; end if;
   -- Treat every direct Seller INSERT as a fresh quote. Never trust client-supplied
   -- negotiation state, counter terms, accepted terms, actor identity or order linkage.
-  new.current_quantity:=v_qty;
+  new.current_quantity:=least(v_qty,v_demand_qty);
   new.current_unit_price:=v_unit;
   new.negotiation_status:='open';
   new.last_negotiator_id:=new.seller_id;
