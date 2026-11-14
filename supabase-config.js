@@ -1,9 +1,9 @@
-/* NEXORA environment routing: allow one explicitly approved Development Preview only. */
+/* NEXORA environment routing: explicit host allowlist; unknown hosts fail closed. */
 (() => {
   "use strict";
   const host = String(window.location.hostname || "").toLowerCase();
   const approvedTestHost = "nexora-platform1-git-nexora-development-shaifrony-7200.vercel.app";
-  const isVercelHost = host === "vercel.app" || host.endsWith(".vercel.app");
+  const approvedProductionHost = "nexora-platform1-mu.vercel.app";
 
   if (host === approvedTestHost) {
     window.NEXORA_SUPABASE_CONFIG = {
@@ -15,12 +15,12 @@
     return;
   }
 
-  if (isVercelHost) {
-    window.NEXORA_SUPABASE_CONFIG = { environment: "blocked", blocked: true };
-    document.documentElement.dataset.nexoraBackend = "blocked";
+  if (host === approvedProductionHost) {
+    window.NEXORA_SUPABASE_CONFIG = { environment: "production" };
+    document.documentElement.dataset.nexoraBackend = "production";
     return;
   }
 
-  window.NEXORA_SUPABASE_CONFIG = { environment: "production" };
-  document.documentElement.dataset.nexoraBackend = "production";
+  window.NEXORA_SUPABASE_CONFIG = { environment: "blocked", blocked: true };
+  document.documentElement.dataset.nexoraBackend = "blocked";
 })();
