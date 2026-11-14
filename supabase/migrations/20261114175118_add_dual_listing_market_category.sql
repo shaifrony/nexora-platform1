@@ -25,6 +25,16 @@ CREATE INDEX products_market_category_status_created_idx
 
 -- anon has column-scoped SELECT on products; authenticated has table SELECT.
 GRANT SELECT (market_category) ON public.products TO anon, authenticated;
+
+-- Authenticated Marketplace clients need listing data, not Admin review metadata.
+REVOKE SELECT ON public.products FROM authenticated;
+GRANT SELECT (
+  id, business_id, seller_id, product_code, slug, product_name, category,
+  subcategory, market_category, image_urls, description, origin, specifications_quality,
+  price, currency, listing_status, created_at, updated_at,
+  minimum_order_quantity, stock_tracking, stock_quantity, reserved_quantity, price_tiers
+) ON public.products TO authenticated;
+
 -- Existing products_owner_pending_update RLS policy restricts Seller updates to pending listings.
 GRANT UPDATE (market_category) ON public.products TO authenticated;
 
