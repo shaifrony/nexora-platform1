@@ -298,6 +298,7 @@
       }
     }
     const p = profile || {};
+    document.getElementById("nxBuyerAccountSettings")?.classList.toggle("hidden", p.role !== "buyer");
     current.textContent = "লগইন: " + currentUser.email;
     document.getElementById("nxProfile").textContent =
       "নাম: " + (p.full_name || "—") + " | Role: " + (p.role || "অজানা") +
@@ -444,6 +445,58 @@
       say("যদি এই ইমেইলে NEXORA অ্যাকাউন্ট থাকে, পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। ইমেইলের লিংক খুলে নতুন পাসওয়ার্ড সেট করুন।", true);
     } catch (err) {
       say("রিসেট লিংক পাঠানো যায়নি: " + err.message);
+    } finally { setBusy(form, false); }
+  });
+
+  const buyerAccountStatus = document.getElementById("nxBuyerAccountSettingsStatus");
+  function setBuyerAccountStatus(message, ok = false) {
+    if (!buyerAccountStatus) return;
+    buyerAccountStatus.textContent = message;
+    buyerAccountStatus.style.color = ok ? "#087b5f" : "#b42318";
+  }
+
+  document.getElementById("nxBuyerEmailForm")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (profile?.role !== "buyer" || profile?.account_status !== "active" || !currentUser) {
+      return setBuyerAccountStatus("শুধু সক্রিয় Buyer নিজের Login Email পরিবর্তন করতে পারবেন।");
+    }
+    const form = e.currentTarget;
+    const email = String(new FormData(form).get("email") || "").trim().toLowerCase();
+    if (!email || email === String(currentUser.email || "").toLowerCase()) {
+      return setBuyerAccountStatus("বর্তমান ইমেইল থেকে আলাদা একটি বৈধ ইমেইল দিন।");
+    }
+    setBusy(form, true);
+    setBuyerAccountStatus("");
+    try {
+      const { error } = await db.auth.updateUser({ email });
+      if (error) throw error;
+      setBuyerAccountStatus("ইমেইল পরিবর্তনের অনুরোধ হয়েছে। নতুন ইমেইলে পাঠানো confirmation সম্পন্ন না হওয়া পর্যন্ত বর্তমান ইমেইল কার্যকর থাকবে।", true);
+      form.reset();
+    } catch (err) {
+      setBuyerAccountStatus("ইমেইল পরিবর্তন করা যায়নি: " + (err.message || "অজানা সমস্যা"));
+    } finally { setBusy(form, false); }
+  });
+
+  document.getElementById("nxBuyerPasswordForm")?.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (profile?.role !== "buyer" || profile?.account_status !== "active" || !currentUser) {
+      return setBuyerAccountStatus("শুধু সক্রিয় Buyer নিজের Password পরিবর্তন করতে পারবেন।");
+    }
+    const form = e.currentTarget;
+    const values = new FormData(form);
+    const password = String(values.get("password") || "");
+    const confirmation = String(values.get("confirm_password") || "");
+    if (password.length < 10) return setBuyerAccountStatus("নতুন Password কমপক্ষে ১০ অক্ষরের হতে হবে।");
+    if (password !== confirmation) return setBuyerAccountStatus("দুটি Password মিলছে না।");
+    setBusy(form, true);
+    setBuyerAccountStatus("");
+    try {
+      const { error } = await db.auth.updateUser({ password });
+      if (error) throw error;
+      setBuyerAccountStatus("Password সফলভাবে পরিবর্তন হয়েছে। নিরাপত্তার জন্য অন্য ডিভাইসের Session-ও পর্যালোচনা করুন।", true);
+      form.reset();
+    } catch (err) {
+      setBuyerAccountStatus("Password পরিবর্তন করা যায়নি: " + (err.message || "অজানা সমস্যা"));
     } finally { setBusy(form, false); }
   });
 
