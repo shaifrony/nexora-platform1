@@ -491,7 +491,20 @@
   // Direct product inquiry is intentionally not enabled until the database-side
   // Seller-consent / invitation contract is verified. Buyers can initiate contact
   // through an explicit price negotiation or order request below.
-  const orderStatusLabels={pending:"Seller-এর অপেক্ষায়",accepted:"Seller গ্রহণ করেছেন",ready_for_confirmation:"সম্পন্ন নিশ্চিত করুন",completed:"সম্পন্ন",cancelled:"বাতিল",rejected:"Seller গ্রহণ করেননি"};
+  const orderStatusLabels={pending:"Seller-এর জবাবের অপেক্ষায়",accepted:"Seller অর্ডার গ্রহণ করেছেন",ready_for_confirmation:"আপনার গ্রহণ নিশ্চিতকরণ প্রয়োজন",completed:"অর্ডার সম্পন্ন",cancelled:"Buyer বাতিল করেছেন",rejected:"Seller অর্ডার গ্রহণ করেননি"};
+  const orderStatusGuidance={
+    pending:"Seller এখনো অর্ডার গ্রহণ বা প্রত্যাখ্যান করেননি। এই অবস্থায় আপনি অর্ডার বাতিল করতে পারবেন।",
+    accepted:"Seller অর্ডার গ্রহণ করেছেন। পণ্য পাঠানো বা সেবা সম্পন্নের আপডেটের অপেক্ষা করুন।",
+    ready_for_confirmation:"Seller পণ্য পাঠানো/সেবা সম্পন্নের কথা জানিয়েছেন। পণ্য বা সেবা বাস্তবে পাওয়ার পরই সম্পন্ন নিশ্চিত করুন।",
+    completed:"আপনি অর্ডার সম্পন্ন হওয়ার বিষয়টি নিশ্চিত করেছেন।",
+    cancelled:"এই অর্ডারটি বাতিল হয়েছে।",
+    rejected:"Seller অর্ডারটি গ্রহণ করেননি। Seller-এর দেওয়া কারণ নিচে থাকলে দেখে নিন।"
+  };
+  function formatOrderDate(value){
+    if(!value)return "";
+    const date=new Date(value);
+    return Number.isNaN(date.getTime())?"":date.toLocaleString("bn-BD",{dateStyle:"medium",timeStyle:"short"});
+  }
   async function submitCommerceOrder(listingType,listingId,quantity,location,note,statusNode,button){
     if(!activeBuyer()||!signedIn())return say("অর্ডার করতে Active Buyer হিসেবে লগইন করুন।");
     if(button)button.disabled=true;
@@ -535,11 +548,51 @@
     if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
     try{
       const {data,error}=await client().from("commerce_orders")
-        .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,source_offer_total,delivery_charge,grand_total,currency,order_status,created_at,seller_note")
+        .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,source_offer_total,delivery_charge,grand_total,currency,order_status,created_at,accepted_at,ready_at,completed_at,cancelled_at,seller_note")
         .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML=rows.map(o=>'<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"Buyer Demand অর্ডার":"সেবা বুকিং")+' · '+(o.source_offer_total!==null&&o.source_offer_total!==undefined?'পরিমাণ '+esc(o.quantity)+' · সম্মত পণ্যমূল্য '+esc(o.source_offer_total)+' '+esc(o.currency):esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency))+'</p><strong>'+esc(o.grand_total??o.total_price)+' '+esc(o.currency)+'</strong>'+(Number(o.delivery_charge||0)>0?'<p class="muted">পণ্যের মূল্য: '+esc(o.source_offer_total??o.total_price)+' '+esc(o.currency)+' · ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>':'')+(o.seller_note?'<p class="muted">'+esc(o.seller_note)+'</p>':'')+(o.order_status==="ready_for_confirmation"?'<button class="primary" type="button" data-order-action="complete" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">আমি পণ্য/সেবা পেয়েছি — সম্পন্ন করুন</button>':'')+(o.order_status==="pending"?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার বাতিল</button>':'')+'</article>').join("")||'<p class="muted">আপনার কোনো অর্ডার নেই।</p>';
+      host.innerHTML=rows.map(o=>{
+        const itemType=o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"আপনার চাহিদার অর্ডার":"সেবা বুকিং";
+        const itemSubtotal=o.source_offer_total!==null&&o.source_offer_total!==undefined
+          ?Number(o.source_offer_total):Number(o.total_price??(Number(o.quantity)*Number(o.unit_price)));
+        const total=Number(o.grand_total??o.total_price);
+        const delivery=Number(o.delivery_charge??0);
+        const priceLine=o.source_offer_total!==null&&o.source_offer_total!==undefined
+          ?'<p>সম্মত পণ্যমূল্য: '+esc(o.source_offer_total)+' '+esc(o.currency)+'</p>'
+          :'<p>পরিমাণ: '+esc(o.quantity)+' × একক মূল্য: '+esc(o.unit_price)+' '+esc(o.currency)+'</p>';
+        const timeline=[
+          ["অর্ডার অনুরোধ",o.created_at],
+          ["Seller গ্রহণ করেছেন",o.accepted_at],
+          ["Seller পাঠানো/সেবা সম্পন্ন জানিয়েছেন",o.ready_at],
+          ["Buyer সম্পন্ন নিশ্চিত করেছেন",o.completed_at],
+          ["বাতিল হয়েছে",o.cancelled_at]
+        ].filter(([,date])=>date);
+        const history=timeline.length
+          ?'<div class="nx-order-timeline"><b>অগ্রগতি</b><ol>'+timeline.map(([label,date])=>'<li>'+esc(label)+' <span class="muted">· '+esc(formatOrderDate(date))+'</span></li>').join("")+'</ol></div>'
+          :'';
+        const nextAction=o.order_status==="pending"
+          ?'<p class="muted">পরবর্তী ধাপ: Seller-এর উত্তর অপেক্ষা করুন। চাইলে এখনই অর্ডার বাতিল করতে পারেন।</p>'
+          :o.order_status==="accepted"
+            ?'<p class="muted">পরবর্তী ধাপ: Seller পণ্য পাঠানো বা সেবা সম্পন্নের আপডেট দেবেন।</p>'
+            :o.order_status==="ready_for_confirmation"
+              ?'<p class="muted">পরবর্তী ধাপ: পণ্য/সেবা হাতে পাওয়ার পর যাচাই করে সম্পন্ন নিশ্চিত করুন। শুধু Seller-এর আপডেট দেখে নিশ্চিত করবেন না।</p>'
+              :'<p class="muted">'+esc(orderStatusGuidance[o.order_status]||"অর্ডারের অবস্থা আপডেট হয়েছে।")+'</p>';
+        const action=o.order_status==="ready_for_confirmation"
+          ?'<button class="primary" type="button" data-order-action="complete" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">পণ্য/সেবা পেয়েছি — সম্পন্ন নিশ্চিত করুন</button>'
+          :o.order_status==="pending"
+            ?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার বাতিল</button>'
+            :'';
+        return '<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div>'+
+          '<p><b>'+itemType+'</b></p>'+priceLine+
+          '<p>পণ্যের মূল্য: '+esc(Number.isFinite(itemSubtotal)?itemSubtotal.toFixed(2):"—")+' '+esc(o.currency)+'</p>'+
+          '<p>ডেলিভারি চার্জ: '+esc(delivery.toFixed(2))+' '+esc(o.currency)+'</p>'+
+          '<strong>সর্বমোট: '+esc(Number.isFinite(total)?total.toFixed(2):"—")+' '+esc(o.currency)+'</strong>'+
+          nextAction+history+
+          (o.seller_note?'<p class="muted"><b>Seller-এর আপডেট:</b> '+esc(o.seller_note)+'</p>':'')+
+          '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়। এই পৃষ্ঠায় আলাদা Delivery Tracking এখনো দেখানো হচ্ছে না।</p>'+
+          action+'</article>';
+      }).join("")||'<p class="muted">আপনার কোনো অর্ডার নেই। অর্ডার করলে এখানে Seller-এর উত্তর ও অগ্রগতি দেখতে পাবেন।</p>';
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction,b.dataset.orderType)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
