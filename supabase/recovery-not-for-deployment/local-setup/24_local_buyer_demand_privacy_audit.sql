@@ -100,7 +100,7 @@ BEGIN
 
   SELECT with_check INTO v_policy FROM pg_policies
   WHERE schemaname='public' AND tablename='buyer_demands'
-    AND policyname='demands_active_buyer_insert';
+    AND policyname='demands_insert_buyer_or_admin';
   IF v_policy IS NULL OR v_policy NOT ILIKE '%buyer_id%' OR v_policy NOT ILIKE '%auth.uid%'
      OR v_policy NOT ILIKE '%buyer%' OR v_policy NOT ILIKE '%active%' THEN
     RAISE EXCEPTION 'FAIL: Demand INSERT policy does not require the active Buyer to own the row';
@@ -108,7 +108,7 @@ BEGIN
 
   SELECT qual INTO v_policy FROM pg_policies
   WHERE schemaname='public' AND tablename='buyer_demands'
-    AND policyname='demands_owner_open_update';
+    AND policyname='demands_update_owner_or_admin';
   IF v_policy IS NULL OR v_policy NOT ILIKE '%buyer_id%' OR v_policy NOT ILIKE '%auth.uid%'
      OR v_policy NOT ILIKE '%demand_status%' OR v_policy NOT ILIKE '%open%' THEN
     RAISE EXCEPTION 'FAIL: Demand UPDATE policy does not restrict edits to the owning Buyer while open';
