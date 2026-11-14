@@ -840,7 +840,7 @@ test("Public profile projection exposes only identity ID and full name to authen
 
 test("Public Business projection excludes private Business Profile fields and publishes approved records only", () => {
   const table = marketplaceCorePrivacySql.slice(
-    marketplaceCorePrivacySql.indexOf("create table if not exists public.public_businesses"),
+    marketplaceCorePrivacySql.indexOf("create table public.public_businesses"),
     marketplaceCorePrivacySql.indexOf("create table public.products")
   );
   const sync = marketplaceCorePrivacySql.slice(
