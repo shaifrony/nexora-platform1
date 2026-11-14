@@ -1007,3 +1007,10 @@ test("Seller quotation insert rejects a Buyer Demand with invalid or non-positiv
   assert.ok(trigger.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
   assert.ok(trigger.includes("if v_demand_qty is null or v_demand_qty<=0 then\n    raise exception 'Buyer Demand quantity must start with a positive numeric amount'"));
 });
+
+
+test("Buyer Demand owners can update only demand status, not posted commercial terms", () => {
+  assert.match(demandOrderSql, /revoke update on public\.buyer_demands from authenticated/i);
+  assert.match(demandOrderSql, /revoke update \(subcategory\) on public\.buyer_demands from authenticated/i);
+  assert.match(demandOrderSql, /grant update \(demand_status\) on public\.buyer_demands to authenticated/i);
+});
