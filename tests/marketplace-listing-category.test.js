@@ -527,10 +527,10 @@ test("Buyer Demand negotiation caps every counter-offer and accepted order at th
     demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
     demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order(")
   );
-  assert.match(fn, /v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),'\)'::numeric/i);
-  assert.match(fn, /p_quantity>least\(coalesce\(nullif\(v_offer\.available_quantity,'\)'::numeric,0\),v_demand_qty\)/i);
-  assert.match(fn, /least\(v_latest\.proposed_quantity,v_demand_qty\)/i);
-  assert.match(fn, /least\(nullif\(v_offer\.available_quantity,'\)'::numeric,v_demand_qty\)/i);
+  assert.ok(fn.includes("v_demand_qty:=nullif(btrim(v_demand.required_quantity),'')::numeric"));
+  assert.ok(fn.includes("p_quantity>least(coalesce(nullif(v_offer.available_quantity,'')::numeric,0),v_demand_qty)"));
+  assert.ok(fn.includes("least(v_latest.proposed_quantity,v_demand_qty)"));
+  assert.ok(fn.includes("least(nullif(v_offer.available_quantity,'')::numeric,v_demand_qty)"));
   assert.match(fn, /v_qty>v_demand_qty/i);
 });
 
