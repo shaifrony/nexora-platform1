@@ -88,6 +88,12 @@ where not exists(select 1 from public.seller_offer_negotiations n where n.offer_
 create unique index if not exists commerce_orders_source_offer_unique_idx
   on public.commerce_orders(source_offer_id) where source_offer_id is not null;
 
+-- Buyer Demand owner UI may change only its lifecycle status. Protect the posted
+-- quantity, currency, product and destination once quotations are in circulation.
+revoke update on public.buyer_demands from authenticated;
+revoke update (subcategory) on public.buyer_demands from authenticated;
+grant update (demand_status) on public.buyer_demands to authenticated;
+
 create or replace function private.initialise_seller_offer_negotiation()
 returns trigger language plpgsql security definer set search_path=''
 as $
