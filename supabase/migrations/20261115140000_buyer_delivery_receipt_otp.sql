@@ -94,7 +94,7 @@ begin
  end if;
  update private.delivery_receipt_challenges set consumed_at=coalesce(consumed_at,now())
  where job_id=p_job_id and buyer_id=v_actor and consumed_at is null;
- v_code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,10));
+ v_code:=upper(substr(replace(gen_random_uuid()::text,'-',''),1,16));
  insert into private.delivery_receipt_challenges(job_id,commerce_order_id,buyer_id,code_hash,expires_at)
  values(p_job_id,v_order_id,v_actor,md5(v_code||p_job_id::text||v_actor::text||'NEXORA-RECEIPT-V1'),now()+interval '10 minutes')
  returning id into v_challenge_id;
@@ -121,7 +121,7 @@ declare
  v_actor_type text;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
- if length(coalesce(p_code,''))<>10 or p_code !~ '^[0-9A-Fa-f]{10}$'
+ if length(coalesce(p_code,''))<>16 or p_code !~ '^[0-9A-Fa-f]{10}$'
     or length(coalesce(p_location_description,''))>500 or length(coalesce(p_note,''))>1500 then
    raise exception 'Invalid receipt verification input' using errcode='22023';
  end if;
