@@ -39,3 +39,27 @@ jobs:
 
       - name: Run dependency-free regression tests
         run: node --test tests/*.test.js
+
+      - name: Validate active migration filenames and ordering
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const dir = path.join(process.cwd(), "supabase", "migrations");
+          const files = fs.readdirSync(dir).filter(name => name.endsWith(".sql")).sort();
+          if (files.length === 0) throw new Error("No active migrations found");
+          const timestamps = [];
+          for (const name of files) {
+            const match = name.match(/^(\\d{14})_[a-z0-9_]+\\.sql$/);
+            if (!match) throw new Error("Invalid active migration filename: " + name);
+            timestamps.push(match[1]);
+          }
+          if (new Set(timestamps).size !== timestamps.length) {
+            throw new Error("Duplicate active migration timestamp detected");
+          }
+          if (timestamps.some((value, index) => index > 0 && value < timestamps[index - 1])) {
+            throw new Error("Active migrations are not timestamp ordered");
+          }
+          console.log("Validated " + files.length + " active migration filenames.");
+          NODE
