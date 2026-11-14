@@ -1026,3 +1026,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added `docs/NEXORA_BUYER_ORDER_IDENTITY_SNAPSHOT_DESIGN.md` (design only). It specifies server-captured immutable names, safe public Business projection only, NULL legacy fallback, and required Product/Service/Demand conversion + privacy tests.
 - Frontend remains unchanged until the snapshot schema and final Demand conversion RPC are verified. No guessed query or private `profiles` lookup was introduced.
 - Status: **Design documented; implementation blocked** by Foundation/migration reconciliation and final Demand conversion/public projection source verification. No SQL or database mutation performed.
+
+
+## Buyer Department progress snapshot — 2026-11-14
+- B-01 to B-06 checklist: **29/51 = 57% staged-source checklist completion**. This is not production acceptance or test-pass percentage.
+- 22 checks remain open, including migration/Foundation reconciliation, integration/security/E2E, orders/inventory, communications/reviews/support, payments/wallet and delivery integration.
+- Latest Buyer Order identity snapshot: design documented; code/schema implementation remains blocked pending exact final Demand conversion RPC and public Business projection verification plus the migration/Foundation gate.
