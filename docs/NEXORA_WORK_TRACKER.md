@@ -962,3 +962,17 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Updated Buyer password form HTML minimum and client validation to 6; mismatch blocks update and status feedback remains. Password recovery/reset validation also uses 6 for consistent password-setting behavior.
 - Static source checks passed for both forms, minimums, mismatch guard and result feedback. Supabase Auth runtime test remains pending.
 - Commits: `460dffab7fad5828fbbd424560347d8b236fab2b` (`auth.js`), `17aad13356b613e1f56c4d90f77464c7502019ee` (`index.html`), checklist update recorded separately.
+
+
+## 2026-11-14 — Buyer-first / Seller-funded product principle
+
+User-defined governing principle: NEXORA earns revenue from Sellers, but Sellers need Buyers; therefore Buyer acquisition, trust, repeat use and ease of use take priority. This is now a product-wide decision rule for architecture, UX, feature order, QA and monetization.
+
+- Keep Buyer browsing/discovery low-friction and free; do not force account creation merely to browse where safe.
+- Do not charge Buyers for platform access, posting Demands or receiving/responding to quotations unless a separately approved model changes this.
+- Minimize mandatory fields/steps; explain why necessary data is requested; use mobile-first Bengali-friendly UX, clear validation/status and duplicate-submit protection.
+- Show full price context, currency, quantity, delivery charge, required date and order status clearly. Never imply wallet/payment/delivery booking exists when it does not.
+- Protect Buyer identity/contact and preserve consent-based Seller communication. Ease cannot weaken privacy, security or transaction correctness.
+- Seller monetization should be transparent and value-linked, without interrupting Buyer journeys.
+
+Source audit surfaced UX friction to address next: multiple competing CTAs on Product Detail; many required Buyer Demand fields; and browser prompt/confirm dialogs for quotation acceptance/counter-offers. No flow changes were made yet because schema constraints and runtime behavior must be verified first. Detailed notes added to Buyer completion checklist.
