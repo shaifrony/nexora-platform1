@@ -391,3 +391,11 @@ Implementation rules:
 - No frontend query or UI was changed because the snapshot columns do not exist yet. No current listing/business name is backfilled into historical orders as if it were the original value.
 - Static source review only; no runtime/DB tests. Migration history/Foundation blockers remain. No SQL, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed.
 - Design document commit: `b64b02b3f50e0e0cf0d68635acf66a526986cafe`.
+
+
+## Buyer Department progress snapshot — 2026-11-14
+
+- B-01 to B-06 checklist: **29 of 51 checks marked complete (57%)**. This is a staged-source/checklist progress measure, not a claim that 57% has passed production acceptance.
+- The remaining 22 checks include migration reconciliation, full schema/runtime authorization tests, order/inventory behavior, Buyer communications/reviews/support, payment/wallet, delivery integration and browser/mobile E2E.
+- The latest Order identity snapshot task is **design documented, implementation pending**; the current Commerce Order schema has no historical item/Seller display-name snapshot columns.
+- Release/acceptance status remains **not complete** until the completion gates in Section 6 are met.
