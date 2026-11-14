@@ -552,7 +552,11 @@
         .eq("buyer_id",user().id).order("created_at",{ascending:false}).limit(50);
       if(error)throw error;
       const rows=data||[];
-      host.innerHTML=rows.map(o=>{
+      const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
+      rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
+      const summary='<div class="nx-order-summary"><span>মোট '+rows.length+'টি</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div>';
+      const filter='<label>অর্ডার দেখুন <select id="nxBuyerOrderStatusFilter"><option value="all">সব অর্ডার</option><option value="pending">Seller-এর অপেক্ষায়</option><option value="accepted">গ্রহণ করা</option><option value="ready_for_confirmation">আপনার নিশ্চিতকরণ বাকি</option><option value="completed">সম্পন্ন</option><option value="cancelled">বাতিল</option><option value="rejected">প্রত্যাখ্যাত</option></select></label>';
+      host.innerHTML=summary+filter+'<div id="nxBuyerOrderRows">'+rows.map(o=>{
         const itemType=o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"আপনার চাহিদার অর্ডার":"সেবা বুকিং";
         const itemSubtotal=o.source_offer_total!==null&&o.source_offer_total!==undefined
           ?Number(o.source_offer_total):Number(o.total_price??(Number(o.quantity)*Number(o.unit_price)));
@@ -583,7 +587,7 @@
           :o.order_status==="pending"
             ?'<button class="light" type="button" data-order-action="cancel" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার বাতিল</button>'
             :'';
-        return '<article class="card nx-order-card"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div>'+
+        return '<article class="card nx-order-card" data-buyer-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div>'+
           '<p><b>'+itemType+'</b></p>'+priceLine+
           '<p>পণ্যের মূল্য: '+esc(Number.isFinite(itemSubtotal)?itemSubtotal.toFixed(2):"—")+' '+esc(o.currency)+'</p>'+
           '<p>ডেলিভারি চার্জ: '+esc(delivery.toFixed(2))+' '+esc(o.currency)+'</p>'+
@@ -592,7 +596,18 @@
           (o.seller_note?'<p class="muted"><b>Seller-এর আপডেট:</b> '+esc(o.seller_note)+'</p>':'')+
           '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়। এই পৃষ্ঠায় আলাদা Delivery Tracking এখনো দেখানো হচ্ছে না।</p>'+
           action+'</article>';
-      }).join("")||'<p class="muted">আপনার কোনো অর্ডার নেই। অর্ডার করলে এখানে Seller-এর উত্তর ও অগ্রগতি দেখতে পাবেন।</p>';
+      }).join("")+'</div><p class="muted" data-buyer-order-empty hidden>এই অবস্থায় কোনো অর্ডার নেই।</p>';
+      const filterSelect=$("nxBuyerOrderStatusFilter");
+      if(filterSelect)filterSelect.addEventListener("change",()=>{
+        const cards=[...host.querySelectorAll("[data-buyer-order-card]")];
+        let visible=0;
+        cards.forEach(card=>{const show=filterSelect.value==="all"||card.dataset.status===filterSelect.value;card.hidden=!show;if(show)visible++;});
+        const empty=host.querySelector("[data-buyer-order-empty]");
+        if(empty)empty.hidden=visible>0;
+      });
+      const empty=host.querySelector("[data-buyer-order-empty]");
+      if(empty)empty.hidden=rows.length>0;
+      if(!rows.length)host.innerHTML=summary+'<p class="muted">আপনার কোনো অর্ডার নেই। অর্ডার করলে এখানে Seller-এর উত্তর ও অগ্রগতি দেখতে পাবেন।</p>';
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction,b.dataset.orderType)));
     }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
   }
