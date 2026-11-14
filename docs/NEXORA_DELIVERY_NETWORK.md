@@ -120,7 +120,7 @@ Before any real buyer delivery is enabled:
 
 ## 2026-11-15 — Buyer receipt OTP security foundation (staged)
 
-- Added staged migration `20261115140000_buyer_delivery_receipt_otp.sql` with a private receipt-challenge table. The Buyer can request a 10-character one-time code only for their own shipment while its status is `out_for_delivery`.
+- Added staged migration `20261115140000_buyer_delivery_receipt_otp.sql` with a private receipt-challenge table. The Buyer can request a 16-character one-time code only for their own shipment while its status is `out_for_delivery`.
 - The raw code is returned only in the authenticated Buyer request response; only an MD5 digest bound to the code, shipment, Buyer and a fixed domain-separation string is stored. Codes expire after 10 minutes, requests are rate-limited to one per 60 seconds per shipment, and each challenge allows at most five verification attempts.
 - Only the assigned independent Provider owner or an Admin with active membership, `logistics.assign` permission and AAL2 may verify a code. A successful verification appends the operational delivered event; Buyer Order completion remains a separate action.
 - Hardened the old status RPC: its legacy implementation is renamed and revoked, the public wrapper is rebound to a guard that rejects `delivered`, and a database trigger blocks direct `delivery_jobs` updates to `delivered` unless the receipt-verification function has established a one-transaction proof marker.
