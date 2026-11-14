@@ -670,7 +670,6 @@ test("Product order creation locks the approved listing and enforces MOQ and ava
   assert.match(fn, /update public\.products set reserved_quantity=reserved_quantity\+p_quantity/i);
   assert.match(fn, /v_seller=v_buyer/i);
   assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
-  assert.match(fn, /public\.is_nexora_admin\(\) and \(select auth\.jwt\(\)->>'aal'\)='aal2'/i);
 });
 
 test("Product order snapshots the highest qualifying quantity-tier unit price", () => {
@@ -904,6 +903,7 @@ test("Authenticated Service listing reads omit review metadata and Seller notes 
   assert.match(fn, /security definer[\s\S]*?set search_path=''/i);
   assert.match(fn, /s\.seller_id=\(select auth\.uid\(\)\)/i);
   assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
+  assert.match(fn, /public\.is_nexora_admin\(\) and \(select auth\.jwt\(\)->>'aal'\)='aal2'/i);
   assert.match(serviceListingPrivacySql, /revoke all on function public\.get_my_service_listing_review_notes\(\) from public,anon/i);
   assert.match(serviceListingPrivacySql, /grant execute on function public\.get_my_service_listing_review_notes\(\) to authenticated/i);
 });
