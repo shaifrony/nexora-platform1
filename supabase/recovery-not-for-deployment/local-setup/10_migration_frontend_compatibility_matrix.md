@@ -323,3 +323,20 @@ Required tests: six operational departments accept valid officers; Logistics per
 - Fresh disposable replay: candidate installed before replay; migration `20261112045441_revoke_public_rls_auto_enable_execute.sql` passed. Migration `20261112050241_secure_public_profile_identity_projection.sql` failed at its first statement because `public.profiles` is absent. Exact applied count before teardown: 1/38.
 - Disposable stack destroyed and stack list verified empty. No hosted project, active migration, `main`, Live/Production or deployment changed.
 - Gate status: RLS helper candidate has a successful narrow local preflight; Foundation schema/Auth/Admin resolver and full replay remain blocked. Do not apply this candidate to NEXORA-TEST or Live/Production.
+
+
+## 21. Foundation bootstrap recovery candidate — fresh replay result (2026-11-14)
+
+- Applied only in a disposable local PostgreSQL 17/Supabase CLI v3.1.0 stack: RLS helper candidate #12 followed by Foundation candidate #13.
+- All **38/38 active migrations** replayed successfully, from `20261112045441` through `20261115120000`. The Foundation candidate supplies `public.is_nexora_super_admin()` as required by active migration #10/#12 in addition to the private resolver.
+- 15/15 synthetic Foundation assertions passed, covering Auth signup roles, Porter pending state, no public Admin signup, Director MFA, department permissions, Buyer profile RLS, duplicate pending role request and atomic Buyer→Seller review/audit.
+- Supabase `db lint`: no schema errors. Public table RLS audit: 41/41 enabled. SECURITY DEFINER search_path audit: 46/46 explicit. One Auth signup trigger. Internal trigger functions are not executable by API roles.
+- The local stack was destroyed; stack list empty. These are recovery-only candidates, not deployable SQL.
+
+## 22. Migration #34 Governance compatibility patch — verification (2026-11-14)
+
+- Candidate #14 repairs the existing `private.manage_nexora_officer` function after the 38-migration replay without editing historical migration #34.
+- Six operational departments accepted; Managing Director Office remains position-specific. Active permission catalog and exact department validation enforced. Trust & Safety moderation permissions remain inactive/ungrantable pending narrow audited RPCs.
+- 16/16 create/deactivate/department/permission/audit assertions and 3/3 update/AAL1/sensitive-reason assertions passed locally.
+- Combined local test suites: 46 assertions passed. Extension-owned table event-trigger behavior, protected initial Director bootstrap, remaining Admin RPC contracts and end-to-end Buyer browser validation remain open.
+- No hosted database or production surface was changed.
