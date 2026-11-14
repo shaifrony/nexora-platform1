@@ -1174,3 +1174,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Fresh replay with the candidate preinstalled: migration `20261112045441` passed; migration `20261112050241` then failed because `public.profiles` is missing. Verified exact local migration history count = 1. This is progress past the first blocker, not a full replay.
 - Destroyed the disposable replay stack and verified `stack list` is empty. No active migration was changed; no NEXORA-TEST, Live/Production, `main`, DNS or deployment mutation occurred.
 - Next: build the approved Foundation baseline in the disposable local environment, including profiles, governance/auth prerequisites and fail-closed security contracts; then rerun all 38 migrations and synthetic security tests. Do not use hosted NEXORA-TEST as a substitute for local validation.
+
+
+## 2026-11-14 — Foundation replay and Admin Governance local validation
+
+- Added recovery-only candidate #13 for Foundation baseline; it is not historical SQL, not an active migration and not deployable. Added public `is_nexora_super_admin()` wrapper after fresh replay identified active migration #12's direct dependency.
+- On a fresh disposable native PostgreSQL 17 stack, installed RLS helper #12 and Foundation #13, then replayed **38/38 active migrations** successfully (first `20261112045441`, last `20261115120000`).
+- Foundation synthetic suite: 15/15 assertions passed (Auth role provisioning, Porter pending approval, no public Admin signup, Director AAL2, permission scope, Buyer privacy, Seller role request uniqueness, protected role, atomic approval and audit).
+- Added recovery-only candidate #14 for migration #34 Governance compatibility. It allows the six approved operational departments, checks active catalog/exact department, keeps Trust & Safety mutation keys inactive, accumulates sensitive-permission requirements and preserves audit reasons.
+- Governance suite: 16/16 assertions passed (six department appointments, correct grants, cross-department rejection/rollback, inactive permission rejection, audit reason, reversible deactivation). Update/AAL1/sensitive-reason suite: 3/3 passed.
+- Supabase `db lint`: no schema errors. Public tables: 41/41 RLS enabled. SECURITY DEFINER functions: 46/46 explicit search_path. Exactly one Auth signup trigger; no API EXECUTE on internal trigger functions.
+- Total local assertions across RLS helper, Foundation and Governance suites: 46 passed. Final local stack destroyed; stack list empty.
+- Remaining: extension-owned DDL test; protected first Director bootstrap; non-Director cross-department exception (currently fail-closed); missing Admin RPC contracts; complete Buyer browser journey. No hosted DB, `main`, Live/Production, DNS or deployments changed.
