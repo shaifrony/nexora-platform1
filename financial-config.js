@@ -88,6 +88,32 @@
     return Number(rounded);
   }
 
+  function allocateTransportMinorUnits(amountMinor, split) {
+    assertMinorUnits(amountMinor, "Transport charge");
+    const entries = [
+      ["carrier", split.carrier_bps],
+      ["local_distribution", split.local_distribution_bps],
+      ["nexora", split.nexora_bps]
+    ];
+    const amount = BigInt(amountMinor);
+    const allocations = entries.map(([key, bps], index) => {
+      const numerator = amount * BigInt(bps);
+      return { key, index, amount: numerator / 10000n, remainder: numerator % 10000n };
+    });
+    const allocated = allocations.reduce((sum, item) => sum + item.amount, 0n);
+    const remaining = Number(amount - allocated);
+    allocations.slice().sort((a, b) => {
+      if (a.remainder === b.remainder) return a.index - b.index;
+      return a.remainder > b.remainder ? -1 : 1;
+    }).slice(0, remaining).forEach((item) => { item.amount += 1n; });
+    const result = {};
+    allocations.forEach((item) => {
+      assert(item.amount <= BigInt(Number.MAX_SAFE_INTEGER), "Transport allocation exceeds the safe integer range.");
+      result[item.key] = Number(item.amount);
+    });
+    return result;
+  }
+
   function calculateOrderFees(input) {
     assert(isPlainObject(input), "Order fee input is required.");
     const schedule = input.schedule;
@@ -123,11 +149,10 @@
       : 0;
     const transport = input.transport_charge_minor;
     const split = schedule.fees.transport_split;
-    const carrierShare = calculateBasisPoints(transport, split.carrier_bps);
-    const localDistributionShare = calculateBasisPoints(transport, split.local_distribution_bps);
-    // Assign rounding remainder to NEXORA so the three allocations always equal the charge exactly.
-    const nexoraShare = transport - carrierShare - localDistributionShare;
-    assert(nexoraShare >= 0, "Rounded transport allocations exceed the transport charge.");
+    const transportShares = allocateTransportMinorUnits(transport, split);
+    const carrierShare = transportShares.carrier;
+    const localDistributionShare = transportShares.local_distribution;
+    const nexoraShare = transportShares.nexora;
 
     return Object.freeze({
       currency: schedule.currency,
