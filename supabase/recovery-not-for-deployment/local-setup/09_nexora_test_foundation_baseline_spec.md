@@ -288,3 +288,38 @@ Additional source inspection of `marketplace.js` and Admin/Logistics migrations 
 - #34 adds `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
 
 The Foundation seed audit must account for every key above and every additional key found in the remaining active migrations. The UI's grant lookup is presentation-only. Each RPC must enforce its own server-side key; never treat a visible button or a row in `admin_permission_grants` as sufficient by itself. In particular, the exact permissions for the older `manage_nexora_user` / newer `admin_manage_user` and `manage_marketplace_listing` calls remain unverified and must be reconciled before those operations are enabled.
+
+
+## 12. Follow-up source audit — Auth trigger, RLS bootstrap and complete permission seed gaps (2026-11-14)
+
+A source scan of all 38 active SQL migration files on `nexora-development`, followed by direct inspection of the relevant definitions, confirms:
+
+### 12.1 Auth signup function evolution
+
+- Migration `20261113230000_buyer_seller_market_categories.sql` defines `public.handle_new_user()` for Buyer/Seller signup. It reads a client-supplied role only from the restricted allowlist `buyer|seller`; invalid roles, including Admin/Porter, are rejected.
+- Migration `20261114210000_porter_public_registration_and_review.sql` replaces that function. Email/phone signup can request Buyer, Seller or Porter; OAuth providers default to Buyer. Porter is created with `account_status='pending'` and a pending `porter_account_reviews` row. Admin remains prohibited from public signup.
+- Both versions are SECURITY DEFINER with empty search_path and revoke direct EXECUTE from PUBLIC/anon/authenticated. The role value is user metadata, so it must remain limited to this explicit allowlist and must never be treated as proof of Admin authority.
+- These migrations define/replace the trigger function; they do not by themselves prove that the Auth trigger is installed exactly once on `auth.users`. The Foundation replay must create/verify the trigger binding, its owner, and safe failure behavior before signup can be considered tested.
+
+### 12.2 RLS bootstrap dependency
+
+- The active migration set contains no definition of `public.rls_auto_enable()`; the only occurrence is migration `20261112045441_revoke_public_rls_auto_enable_execute.sql`, which revokes EXECUTE from that function.
+- Therefore the active migration chain has an unresolved dependency on an external/historical Foundation object and likely its event-trigger binding. Do not invent a no-op function or silently remove the revoke. Recover authoritative source or explicitly design and test a replacement event-trigger mechanism in the local Foundation baseline.
+
+### 12.3 Permission catalog seed inventory from active migrations
+
+The active migration sources explicitly seed:
+- `logistics.view`, `logistics.assign` in migration `20261113220000_delivery_assignment_system.sql` under the `logistics` department.
+- `services.edit` in migration `20261114120000_listing_edit_review_workflow.sql` under `product_business`.
+- Marketing, Transport and Finance keys in migration `20261114200000_centralized_officer_account_management.sql`: `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
+- #34 also lists `logistics.view|assign` under `transport` but uses `ON CONFLICT DO NOTHING`; because #19 already seeds those keys under `logistics`, the original department mapping remains `logistics`. Do not assume the duplicate statement moves the keys to `transport`.
+
+The current frontend additionally checks `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit`. These keys are not explicitly seeded by the 38 active migration files inspected. They remain unresolved Foundation/catalog requirements, not existing seed data. The active sources do not establish a complete, consistent mapping for these permissions. Reconcile each key's owning department, sensitivity and server-side RPC enforcement before creating the canonical seed set.
+
+### 12.4 Canonical resolver and authorization compatibility
+
+- Multiple active migrations call `public.is_nexora_admin()` and `public.is_nexora_super_admin()`; logistics, listing-edit and delivery workflows call `private.has_nexora_permission(text)`. Their definitions are not supplied by the active feature migrations and remain Foundation dependencies.
+- The Foundation must implement the canonical resolver once, then provide only narrowly compatible wrappers with the same fail-closed semantics. It must require active Admin profile + active staff appointment + AAL2; Director authority must come from a protected appointment. Non-Director grants must require an active catalog key, department scope and explicit allow; deny/missing/inactive states fail closed.
+- No active migration defines the frontend's Seller role-review RPC `review_role_request(uuid,text)`, or the stale Admin aliases `manage_nexora_user` / `admin_manage_user`. Do not create speculative aliases.
+
+**Status:** source-level audit only. This is not deployable SQL. No local or hosted database was changed, and no runtime/Auth trigger test was run. Keep NEXORA-TEST empty until the local Foundation replay and synthetic Auth/RLS gates pass.
