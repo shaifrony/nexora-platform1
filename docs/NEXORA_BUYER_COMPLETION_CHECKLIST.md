@@ -349,3 +349,12 @@ Implementation rules:
 - Reject still asks for confirmation. Existing server RPC `respond_to_demand_offer` remains the authoritative state/permission validator; no database logic was weakened or changed.
 - Static verification: marketplace.js compiles; inline form exists; max quantity and positive price guards present; Buyer accept/counter handler no longer uses prompt(); duplicate-submit guard present. No browser/runtime test performed.
 - Commit: marketplace.js `19e3e553a80ffb891df954c12a984fd05d69245f`.
+
+
+### Product Detail — direct Chat consent safety — 2026-11-14
+- Audited the Buyer Product Detail direct-contact path. The frontend called `create_product_inquiry` and immediately opened the returned conversation. The available repository evidence did not establish whether this RPC creates a Seller-visible invitation requiring acceptance or directly creates/opens a conversation; the RPC SQL definition could not be verified from the accessible migration sources in this pass.
+- To avoid implying Seller consent or bypassing an unverified consent gate, removed the direct Chat button and its RPC call from Product Detail. The page now explains that Buyers can contact Sellers through an explicit price negotiation or order request; direct Chat remains temporarily unavailable until the server-side invitation/acceptance contract is verified.
+- Preserved price negotiation (`start_product_price_negotiation`) and order request (`create_commerce_order`) paths. A negotiation is initiated by the Buyer and its conversation is opened only after the Buyer explicitly submits the price proposal.
+- Static verification: marketplace.js syntax compilation PASS; no `create_product_inquiry` call or old direct Chat button remains; consent explanation present; negotiation and order paths remain. No browser/runtime or DB integration test performed.
+- Commit: `89a78e69f9e53b5db7a94e092114b714335ee3a7`.
+- No SQL/migration or hosted database was changed. NEXORA-TEST remains untouched; no Live/Production, `main`, DNS, paid service or deployment change.
