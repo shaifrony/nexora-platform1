@@ -96,7 +96,7 @@ grant update (demand_status) on public.buyer_demands to authenticated;
 
 create or replace function private.initialise_seller_offer_negotiation()
 returns trigger language plpgsql security definer set search_path=''
-as $
+as $$
 declare
   v_demand public.buyer_demands%rowtype;
   v_qty numeric(18,3);
