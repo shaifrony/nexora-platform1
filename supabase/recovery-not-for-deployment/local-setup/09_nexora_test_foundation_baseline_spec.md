@@ -578,3 +578,71 @@ Seller role request review remains a separate Director-only `review_role_request
 ### 17.5 Approval gate before SQL
 
 The proposal is suitable as the default recovery design, but it changes department boundaries and moderation governance. Obtain explicit owner confirmation before turning these keys/departments into executable SQL. Until approved, the bootstrap candidate must not seed them and all missing permission paths remain fail-closed.
+
+## 18. Owner-approved Admin Governance and Foundation Bootstrap preparation (2026-11-14)
+
+**Governance status: APPROVED BY PROJECT OWNER.** The §17 proposal is accepted as the canonical initial department/permission boundary. This approval authorizes preparation of a recovery-only Foundation bootstrap design; it does **not** authorize SQL execution, migration replay, NEXORA-TEST mutation, or Production/Live changes.
+
+### 18.1 Approved department catalogue
+
+Seed exactly these department keys (subject to the source compatibility repairs below):
+
+| Key | Approved responsibility |
+|---|---|
+| `managing_director` | Managing Director Office and cross-department coordination |
+| `marketing` | Leads and campaigns only |
+| `transport` | External transport partners, vehicles and transport staff |
+| `logistics` | Delivery operations, fulfilment and assignment |
+| `product_business` | Product and Service listing workflow |
+| `trust_safety` | User, Business and Product moderation |
+| `accounts` | Finance, transactions, refunds and payouts |
+
+The Director remains a protected appointment, not an assignable department officer. Keep `logistics` separate from `transport`; the fact that the legacy #34 migration currently groups them is a source defect to reconcile, not the approved policy.
+
+### 18.2 Approved permission seed intent
+
+- Preserve all existing #19 Logistics keys under `logistics`: `logistics.view`, `logistics.assign`.
+- Preserve #34 Marketing, Transport and Accounts keys in their respective departments.
+- Preserve `services.edit` under `product_business`; add `products.edit` to the same department only after confirming the exact product edit/delete UI action contract.
+- Add `trust_safety` keys: `users.view`, `users.suspend`, `users.restore`, `users.cancel`, `businesses.view`, `businesses.suspend`, `products.view`, `products.suspend`, `products.restore`, `products.cancel`.
+- Moderation keys are explicit, audited and fail-closed. `users.cancel` means reversible account deactivation only, never Auth hard-delete. Business suspension affects public Business/listing visibility, not automatically the owner's Buyer account.
+- No initial `security.audit_logs.view` grant for non-Director staff. Audit Log viewing is Director-only.
+- Director-only initial approvals: public Seller/Business activation, initial Product/Service public approval, Admin appointment/deactivation, Buyer→Seller role review and audit oversight. Existing Seller listing-edit request review remains separately enforced by its existing server contract and approved permission mapping.
+- No permission grants access to private Buyer contact/profile data, private chat/call content, or finance outside Accounts.
+
+### 18.3 Source compatibility blockers discovered while translating approval into a bootstrap plan
+
+**Blocker A — migration #34 hard-codes the old department model.** In `20261114200000_centralized_officer_account_management.sql`, the `manage_nexora_officer` function accepts non-MD positions only for `marketing`, `transport`, and `accounts`; its seed list omits `logistics`, `product_business`, and `trust_safety`. It also inserts `logistics.view` and `logistics.assign` into `transport` with `ON CONFLICT DO NOTHING`. The bootstrap must not silently paper over this. Before replay, either revise this migration on the development branch as a reviewed source correction or add an explicitly ordered compatibility repair before any dependent Admin workflow is enabled. The repair must make the department allowlist, seed ownership and grant validation agree with this approved catalogue.
+
+**Blocker B — permission keys need action-to-server mapping.** The UI currently checks several moderation/edit keys, but the corresponding user/listing mutation RPCs are absent or stale (`manage_nexora_user`, `admin_manage_user`, `manage_marketplace_listing`). Do not seed a key and imply that it is functional. Implement only narrow, separately reviewed RPCs after defining each action's exact target, reversible status transition, row lock, reason, audit and Director/Trust & Safety boundary. Until then, leave those UI mutation paths disabled and missing keys fail closed.
+
+**Blocker C — role request source is not recovered.** The frontend contract is known, but original `role_requests` / `review_role_request` SQL is absent. The Foundation candidate must implement the exact owner-only pending request + partial unique index + Director-only row-locked review contract; it must not claim historical recovery.
+
+**Blocker D — local runtime is unavailable in the current session.** The current environment has no Supabase CLI, Docker or psql, and no local repo working tree. Therefore this session cannot parse/replay a candidate against disposable Supabase/PostgreSQL. This is a verification blocker, not permission to use hosted NEXORA-TEST as a substitute.
+
+### 18.4 Recovery-only bootstrap build order
+
+The candidate, when generated in a suitable disposable local Supabase environment, must be assembled in dependency order:
+
+1. **Platform preflight:** confirm actual Supabase-managed Auth/Storage/Realtime schemas and extensions; do not create platform internals or fake Auth/AAL2.
+2. **Schemas and least-privilege defaults:** create/verify `private`; keep it outside exposed schemas; establish explicit grants/default privileges only after Data API exposure review.
+3. **Core identity:** `profiles` with exact four-role constraint and account-status constraint; no marketplace category fields. Include only columns proven required by the 38 migrations/frontend.
+4. **Governance catalogue and staff:** departments, `admin_staff`, permission catalogue, grants, Director invariants and reporting relationships. Enforce the approved seven-department catalogue.
+5. **Audit and lifecycle:** append-only `admin_audit_logs`, `role_requests`, `profile_change_requests`, `porter_account_reviews`; safe public identity projection only if required by the feature chain.
+6. **Canonical private authorization:** protected Director check, AAL2 + active profile/staff + explicit permission + department scope + explicit-deny precedence; compatibility wrappers for legacy names only where source callers require them.
+7. **Signup function and Auth trigger:** use the exact final #35 role allowlist/ OAuth behavior; install exactly one Auth trigger after testing; no Admin metadata signup; Porter pending review atomic.
+8. **RLS automation:** implement the real #1-required event-trigger function, restricted to newly created ordinary/partitioned `public` tables; separately enable RLS on every Foundation public table. Do not create a no-op stub or auto-generate policies.
+9. **Explicit Data API grants and policies:** grant only required tables/columns/functions; RLS and grants are separate controls. Internal governance tables remain inaccessible except through narrow audited RPCs.
+10. **Foundation assertions:** catalog assertions for constraints, indexes, triggers, function owners/security config/ACLs, RLS, policies, grants and seeds.
+11. **Feature replay rehearsal:** apply all 38 active migrations in their true order on a disposable local stack, after source repairs. Do not fabricate the 11 missing historical versions or place recovery SQL in `supabase/migrations/`.
+12. **Synthetic security/E2E:** run signup, role lifecycle, AAL1/AAL2, Director/staff, department deny, owner isolation, public projection, and full migration replay tests.
+
+### 18.5 Candidate output and non-negotiable stop conditions
+
+- The next artifact may be a clearly labelled recovery-only SQL candidate outside `supabase/migrations/`, but only after all table/column/function dependencies are source-verified and the local parser/runtime is available.
+- The candidate must contain no hard-coded Director UUID/email, no service-role credential, no real-user data, no fabricated migration-history rows and no permissive fallback.
+- Stop if any active migration references a missing column/function/enum, if a seed conflicts with the approved department ownership, if any function has a public/default EXECUTE exposure, or if a public table lacks a reviewed RLS/grant plan.
+- Do not apply the candidate to NEXORA-TEST until the disposable local Foundation + all 38 feature migrations + synthetic security tests pass and a separate explicit hosted-Test authorization is obtained.
+- No Live/Production/main/DNS/paid-service operation is in scope.
+
+**Current status:** Governance approved; bootstrap architecture and dependency order prepared. Executable SQL remains blocked by the #34 source compatibility repair and unavailable disposable local runtime. No SQL or database was changed.
