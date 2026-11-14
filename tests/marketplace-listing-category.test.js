@@ -465,7 +465,7 @@ test("Seller can answer only a Buyer counter-offer and refreshes its Demand inbo
 
 test("Buyer Demand order conversion is idempotently limited to one order per Seller quotation", () => {
   assert.match(demandOrderSql, /create unique index if not exists commerce_orders_source_offer_unique_idx[\s\S]*?on public\.commerce_orders\(source_offer_id\) where source_offer_id is not null/i);
-  assert.match(demandOrderSql, /listing_type='buyer_demand'[\s\S]*?source_demand_id=v_demand\.id[\s\S]*?source_offer_id=v_offer\.id/i);
+  assert.match(demandOrderSql, /values\s*\(\s*'buyer_demand',v_demand\.id,[\s\S]*?v_demand\.id,v_offer\.id/i);
   assert.match(demandOrderSql, /v_role='seller' then 'accepted' else 'pending' end/i);
   assert.match(demandOrderSql, /update public\.seller_offers set offer_status='accepted',negotiation_status='ordered'/i);
 });
