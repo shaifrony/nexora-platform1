@@ -399,3 +399,16 @@ Implementation rules:
 - The remaining 22 checks include migration reconciliation, full schema/runtime authorization tests, order/inventory behavior, Buyer communications/reviews/support, payment/wallet, delivery integration and browser/mobile E2E.
 - The latest Order identity snapshot task is **design documented, implementation pending**; the current Commerce Order schema has no historical item/Seller display-name snapshot columns.
 - Release/acceptance status remains **not complete** until the completion gates in Section 6 are met.
+
+
+### Buyer Order item + Seller identity snapshot — source contract verified (2026-11-14)
+- [x] Verified Commerce Order has no historical item/Seller identity snapshot columns; current Buyer order query intentionally does not guess a polymorphic listing join.
+- [x] Verified direct Product source: `products.product_name`; Service source: `service_listings.service_name`; Buyer Demand conversion source: `buyer_demands.product_name`.
+- [x] Located and reviewed the final effective order writers: `private.create_commerce_order` (Product/Service, latest replacement in migration #29) and `private.respond_to_demand_offer` (Buyer Demand conversion, migration #36).
+- [x] Verified Seller public name source: `public.public_businesses.display_name`, matched by exact Business + Seller ownership; no private `profiles` identity fallback permitted.
+- [x] Updated `docs/NEXORA_BUYER_ORDER_IDENTITY_SNAPSHOT_DESIGN.md` with verified source contracts, required additive migration behavior, legacy NULL handling and synthetic security tests.
+- [ ] Reconcile Foundation and complete migration history before generating/applying a natural-timestamp migration; NEXORA-TEST remains empty.
+- [ ] Add immutable server-captured snapshot columns to all three order paths; preserve stock, pricing, negotiation, totals and transition behavior.
+- [ ] Update Buyer Order History to display snapshots with escaped text and neutral fallback for historical NULL values.
+- [ ] Run synthetic SQL, PostgREST/JWT/RLS, browser and mobile E2E tests. No runtime test was performed in this source-verification pass.
+- No SQL, database, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment was changed.
