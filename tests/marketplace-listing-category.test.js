@@ -670,6 +670,7 @@ test("Product order creation locks the approved listing and enforces MOQ and ava
   assert.match(fn, /update public\.products set reserved_quantity=reserved_quantity\+p_quantity/i);
   assert.match(fn, /v_seller=v_buyer/i);
   assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
+  assert.match(fn, /public\.is_nexora_admin\(\) and \(select auth\.jwt\(\)->>'aal'\)='aal2'/i);
 });
 
 test("Product order snapshots the highest qualifying quantity-tier unit price", () => {
