@@ -1088,3 +1088,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Updated Foundation spec §12 and compatibility matrix §12. Both remain design/recovery documents, not deployable SQL.
 - No app code or SQL migration changed. No database, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment mutation. No runtime/Auth trigger test was run.
 - Next: resolve the Auth trigger owner/binding and RLS event-trigger dependency from authoritative baseline evidence, then reconcile all permission keys and RPC enforcement before preparing a local-only Foundation candidate.
+
+## 2026-11-14 — Auth trigger binding and Admin resolver follow-up
+
+- Re-scanned all 38 active migration sources, distinguishing application triggers from Auth/RLS infrastructure triggers.
+- Confirmed there are triggers for public identity projection and business identity synchronization, but no active migration installs an `auth.users` trigger for `public.handle_new_user()`. The function body is defined/replaced by #19/#35 only.
+- Confirmed no active migration creates the RLS auto-enable event trigger; #1 only revokes EXECUTE on `public.rls_auto_enable()`, whose implementation/binding is absent.
+- Inspected #12: `private.is_nexora_active_admin_staff()` checks AAL2 + active Admin profile + active staff row, but is not a full Director/permission resolver. Existing policies OR this helper with missing `public.is_nexora_super_admin()`; multiple workflows depend on missing `private.has_nexora_permission(text)`.
+- Added Foundation spec §13 and compatibility matrix §13. No code, SQL, migration, trigger, database or deployment changed; no runtime tests were run.
+- Next: establish an authoritative Auth/RLS infrastructure baseline (historical recovery or explicitly new design), then create a local-only Foundation candidate only after complete dependency reconciliation and disposable replay.
