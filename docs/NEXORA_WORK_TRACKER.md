@@ -4,7 +4,7 @@ Updated: 2026-11-14 (latest Migration reconciliation refresh)
 
 Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md). Buyer phase checklist: [NEXORA Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md).
 
-Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Repeated local logic testing is closed; two-session concurrency remains unverified and is not a blocker for continuing product implementation. Hosted deployment remains blocked.
+Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Base and extended local logic suites plus the focused two-session order-acceptance race passed on disposable PostgreSQL 17. The later review-column privacy candidate #31/#32 is a separate, not-yet-executed gate. Hosted deployment remains blocked.
 
 Status definitions: **Done (staged)** = committed to Development, not necessarily deployed; **Partial** = foundation exists; **Pending** = not implemented; **Blocked** = prerequisite or release approval missing.
 
@@ -26,7 +26,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
 | Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
-| Review RPC local logic validation | Done (local only) | Base and extended local suites passed; local superuser caveat documented; concurrency not yet verified; hosted deployment not approved |
+| Review RPC local logic validation | Done (local only) | Base/extended local suites and two-session order-acceptance race passed on disposable PostgreSQL 17; local superuser caveat documented; hosted deployment not approved |
 | Separate Admin domain | Not required | Earlier prototype retained temporarily; do not deploy as a second app |
 | Production release | Blocked | Migration history mismatch, isolated DB and E2E missing; no approval |
 
@@ -42,7 +42,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## M1 — Identity / governance
 - [x] Local Review RPC base and extended logic-test cycle closed; see closeout document. No more repetitive local tests unless code changes materially.
-- [ ] Optional focused two-session concurrency check before any hosted Review RPC release.
+- [x] Focused two-session order-acceptance concurrency check passed on disposable PostgreSQL 17; retain as a release regression test.
 - [x] Director, MD and department governance defined.
 - [x] Officer invite and permission backend staged.
 - [ ] Reconcile all migrations in order.
@@ -1264,3 +1264,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Expanded recovery test #32 to assert that all five withheld columns are inaccessible to both API roles, all ten allowlisted columns remain readable, table-level SELECT is absent, and the SECURITY INVOKER summary RPC still executes under `anon`.
 - Updated the Business review design gate to document why table-level REVOKE alone is insufficient when independent column grants exist.
 - `git diff --check` passed. No SQL execution or database verification was attempted because the Foundation/migration replay gate remains unresolved. Candidate/test remain recovery-only; no active migration, hosted database, Live/Production, `main`, DNS or deployment changed.
+
+
+## 2026-11-14 — Review privacy recovery test strengthened
+
+- Revisited recovery-only candidate #31 and test #32 against the exact `listing_reviews` schema and `get_listing_review_summary` SECURITY INVOKER query. The current schema has ten intended public columns and five private/internal columns; the summary reads only `rating`, `listing_type`, `listing_id`, and `review_status`.
+- Strengthened test #32 to check all table-level privilege classes (SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER), inspect every live column against the explicit public allowlist (so future columns default to denied), and execute the safe-column query plus summary RPC under both `anon` and `authenticated`.
+- Static review confirms the recovery candidate revokes table-level privileges and the five existing private-column SELECT grants before granting only the ten allowlisted columns. The patch and expanded SQL test have **not** been executed against PostgreSQL in this resumed session: this Sandbox has no local PostgreSQL client or running database service, and Docker/Podman are unavailable. The previous disposable PostgreSQL replay and Buyer JWT/PostgREST tests remain valid for the state tested at that time, but do not verify this later review-grant patch.
+- No active migration or frontend code changed. Candidate #31/#32 remain recovery-only and unexecuted; no hosted DB, `main`, Live/Production, DNS, deployment, or paid service changed.
