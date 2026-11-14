@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
-do $block$ begin create role anon nologin; exception when duplicate_object then null; end $$;
-do $block$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
+do $block$ begin create role anon nologin; exception when duplicate_object then null; end $block$;
+do $block$ begin create role authenticated nologin; exception when duplicate_object then null; end $block$;
 create schema if not exists auth;
 create schema if not exists private;
 create or replace function auth.uid() returns uuid language sql stable set search_path=''
@@ -34,7 +34,7 @@ as $$ select jsonb_build_object('status',$2) $$;
 grant execute on function private.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
 create function public.update_delivery_network_job_status(p_job_id uuid,p_next_status text,p_location_description text default null,p_note text default null,p_external_tracking_code text default null)
 returns jsonb language sql security invoker set search_path=''
-as $ select private.update_delivery_network_job_status($1,$2,$3,$4,$5) $;
+as $legacy_public$ select private.update_delivery_network_job_status($1,$2,$3,$4,$5) $legacy_public$;
 grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
 
 \ir ../supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql
@@ -71,17 +71,17 @@ do $block$ begin
  if (select length(payload->>'code') from otp_result)<>16 then raise exception 'FAIL: Buyer did not receive a 16-character OTP'; end if;
 end $block$;
 reset role;
-do $ begin
+do $block$ begin
  if (select code_hash from private.delivery_receipt_challenges limit 1)=(select payload->>'code' from otp_result) then
    raise exception 'FAIL: raw OTP was stored';
  end if;
 end $block$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
-do $ begin
+do $block$ begin
  perform public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000002');
  raise exception 'FAIL: unrelated Buyer requested another Buyer shipment OTP';
-exception when insufficient_privilege then null; end $$;
+exception when insufficient_privilege then null; end $block$;
 reset role;
 
 -- The old status RPC cannot bypass receipt verification, and its renamed implementation is private.
@@ -92,8 +92,8 @@ do $block$ begin
   '74000000-0000-4000-8000-000000000001','delivered',null,null,null
  );
  raise exception 'FAIL: legacy public status RPC bypassed OTP';
-exception when insufficient_privilege then null; end $$;
-do $ begin
+exception when insufficient_privilege then null; end $block$;
+do $block$ begin
  if has_function_privilege('authenticated','private.update_delivery_network_job_status_legacy(uuid,text,text,text,text)','EXECUTE') then
   raise exception 'FAIL: authenticated can execute renamed legacy transition function';
  end if;
