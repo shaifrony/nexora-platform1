@@ -786,3 +786,13 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - **Mobile layout check:** at 393 px width, neither the Services section nor Chat section caused horizontal document overflow. JavaScript syntax checks passed for auth.js, marketplace.js, chat.js, app.js and admin/admin.js; git diff --check passed.
 - **Scope limits:** this is Android-sized Chromium emulation, **not a physical Android phone/browser test**. It does not verify the native Android file picker, on-screen keyboard behavior, device background/resume, real network transitions, or all Android browsers. The empty authenticated service response did not test rendering a real approved service card. Audio/Video Calling was not tested and remains paused.
 - All test users, messages and files were synthetic and local. The native Supabase stack and Vercel Sandbox were stopped after testing. No hosted/Live DB, real user data, private conversations, real attachments, calls, main, Production, DNS or paid service was accessed or changed. No application source or SQL migration was committed as part of this E2E run.
+
+
+## 2026-11-14 — Migration version inventory rechecked
+
+- Fresh branch scan: **38 active SQL migration files / 38 unique versions**, no active version collision and no identical active SQL-content hashes. The two redundant conversation migration copies remain safely preserved in the recovery archive.
+- The former shared version is resolved: product-linked conversations uses CLI-generated version `20261113203025`; unified delivery assignment retains `20261114180000`. Product-linked conversations has no Delivery Network/assignment/tracking references.
+- Supabase CLI 3.1.0 naming probe in a disposable sandbox: UTC clock `2026-11-14T01:12:10Z`; official `supabase migration new version_order_probe` generated `20261114011211`. Probe file was deleted immediately; no repository change or DB operation.
+- Latest active migration is `20261115120000`; the generated timestamp is earlier. Do not create a new migration until CLI naturally generates a version later than `20261115120000`. Do not hand-edit timestamps or set the clock. Existing source review and tests can continue without adding migrations.
+- Sandbox stopped. No Live/hosted DB, migration history, user data, `main`, Production, DNS or paid services touched.
+- Physical Android-device E2E remains pending; prior Android-sized Chromium emulation is not represented as a real phone test.
