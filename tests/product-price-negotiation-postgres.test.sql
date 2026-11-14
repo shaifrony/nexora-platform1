@@ -131,7 +131,7 @@ begin
  v_denied:=false;
  begin
   perform public.respond_to_product_price_negotiation(v_id,'reject',null,null,'Self reject',null);
- exception when raise_exception then v_denied:=true;
+ exception when sqlstate '22023' then v_denied:=true;
  end;
  if not v_denied then raise exception 'FAIL: Seller rejected its own latest proposal'; end if;
 
