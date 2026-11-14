@@ -105,3 +105,54 @@ NEXORA will support two seller operating models. The system must make the distin
 10. **Direct Seller collection:** confirm that every direct Seller's sale must be collected by an Agent, with no Seller-to-transporter direct handover exception.
 
 Until these decisions and legal/compliance controls are settled, keep this as an approved business requirement/design only. Do not create an Agent role, permissions, fee engine, financial ledger, payout flow, migration, or live operation yet.
+
+
+## 8. Agent-to-Agent inter-area procurement (local demand collection)
+
+The Agent network also supports a two-sided marketplace and procurement/transport coordination model. An Agent may perform a Buyer-side representative function as well as the Seller-side representative function already described.
+
+### Example: Sirajdikhan, Munshiganj
+
+1. A NEXORA Agent operating in Sirajdikhan Upazila, Munshiganj visits or serves local markets and collects purchase requirements from local shops/businesses (for example, product, specification/quality, quantity, target price if supplied, required-by date, delivery location and contact/authorization).
+2. The Agent records each requirement in NEXORA against the actual local business that requested the goods. The Agent is the authenticated actor submitting the demand on that business's behalf; the local business remains the represented Buyer unless a separately approved principal-reseller model is chosen.
+3. The Agent searches NEXORA for products/offers published by authorized Agents or Sellers in other Upazilas/areas, compares the available product details, prices, quantities, origin and fulfilment terms, and selects a suitable offer.
+4. The Sirajdikhan Agent submits a purchase order/quotation acceptance against the supplying Agent's advertised goods, identifying the actual represented Buyer and the exact offer, quantity, price, delivery destination and required date. The supplying Agent acts for the actual farmer/business or supplier whose goods are being offered.
+5. The supplying Agent arranges source-side collection, quantity/quality verification, packaging and handover. The Sirajdikhan Agent coordinates or accepts the inter-area transport leg and local delivery/handover to the requesting business, using the approved NEXORA transport network and custody records.
+6. Both sides can see the order status and relevant transaction records within their assigned scope. The represented Buyer and represented Seller identities, Agent actors, product source, agreed price and every custody transfer remain separately auditable.
+7. Payment collection, settlement, NEXORA charge, Agent commissions, transport charges and the final amount payable to each represented business are calculated from the approved transaction and fee rules. Neither Agent may change the other party's amount or recipient or self-approve settlement.
+
+### Agent capacities in this model
+
+An authorized Agent may be assigned one or more transaction-specific capacities, subject to permissions and conflict controls:
+
+- **Buyer-side procurement representative:** gathers demand from businesses in the Agent's assigned territory, publishes/submits the requirement with their authority, searches supply and places/coordinates purchase orders on their behalf.
+- **Seller-side sales representative:** presents products supplied by farmers/businesses in the Agent's territory, manages listing/order tasks under their authorization and coordinates source-side fulfilment.
+- **Collection/transport coordinator:** arranges pickup, records quantity and condition, packaging, inter-area transport, Drop Point handover and final local delivery/receipt as assigned.
+- A single Agent may act for the Buyer in one transaction and another Agent may act for the Seller in that same transaction. The same Agent must not silently represent both sides of the same transaction or approve both sides' financial settlement. Any exceptional dual representation requires explicit informed consent, disclosure and a separately approved conflict-of-interest policy.
+
+### Demand, ordering and traceability rules
+
+- Each market requirement needs a unique Demand ID and must preserve the requesting business, Agent submitting it, authorization/consent, origin market/Upazila, destination, required-by date, product/specification, quantity/unit and status.
+- Each resulting purchase order must link to the originating Demand ID and the exact advertised product/offer version. Price, quantity, seller, buyer, currency and agreed delivery terms must be snapshotted so later listing edits do not rewrite the order.
+- The Buyer-side Agent may not create an order without recorded authority from the requesting business or change its requested product/quantity/price/destination without confirmation.
+- Seller-side Agent may advertise only goods it is authorized to represent and must preserve the real farmer/business/source identity, available quantity and offer validity.
+- Partial fulfilment, multiple supplying areas, split shipments, substitutions, shortages, damaged goods, cancellations and returns must be explicit and traceable; no silent substitutions.
+- A market Demand is not automatically a paid order. Order acceptance, payment confirmation, collection, dispatch, delivery and Buyer receipt remain separate states.
+- The requesting business should receive a comprehensible order/price/fee confirmation through an accessible channel, even when the Agent operates the app on its behalf.
+
+### Commercial treatment and safeguards
+
+- The transaction ledger must distinguish the represented Buyer, represented Seller, Buyer-side Agent, Seller-side Agent, transport Agent(s), actual product source, and any Drop Point/operator.
+- NEXORA's platform charge and each Agent's procurement, sales, collection, packaging and transport commission must be separately itemized. The same Agent may earn only for approved services actually performed; avoid duplicate commission for overlapping duties.
+- Define who pays each fee (Buyer, Seller or allocated between them), the commission base, tax/refund treatment, and when each amount becomes payable before enabling the workflow.
+- Use role- and territory-scoped access: a Buyer-side Agent sees only the requirements/orders assigned to them; a Seller-side Agent sees only authorized listings/orders; transport Agents see only assigned logistics data. Do not expose private profiles or unrelated buyer/seller contacts.
+- Apply maker-checker and conflict-of-interest controls to Agent onboarding, order adjustments, refunds, payout, commission and dispute resolution. Agents cannot approve their own disputed transaction or financial settlement.
+- The platform must clearly disclose to both businesses when an Agent is representing them. The Agent's operational ability to act as Buyer/Seller in the interface does not by itself make the Agent the legal buyer, seller, goods owner or merchant of record.
+
+## 9. Additional open decisions
+
+11. **Agency vs principal trading:** when an Agent gathers a local business's demand and orders from another Agent, is the first Agent always acting as the local business's disclosed purchasing representative, or may the Agent buy in its own name and resell to that business? The default design is disclosed representation; principal/reseller activity requires separate approval and legal/tax review.
+12. **Demand workflow:** should the Agent submit a private/targeted business requirement to selected supplying Agents, or publish a public Buyer Demand with the requesting business's identity/contact protected?
+13. **Inter-area delivery:** does the supplying Agent deliver to a Drop Point, the receiving-area Agent, or a nominated transporter? Who is responsible for final-mile delivery to the local business?
+14. **Agent commission split:** how should NEXORA charge and Buyer-side, Seller-side, collection and transport Agents be paid when several Agents contribute to one order? Define no-double-charge rules.
+15. **Order authority and payment:** what evidence/confirmation is required from the local business before the Agent commits to a purchase order or payment obligation?
