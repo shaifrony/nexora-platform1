@@ -47,3 +47,20 @@ USING (
 -- * Seller sees only its own quotation; unrelated Seller cannot submit one.
 -- * anon has no EXECUTE; authenticated has EXECUTE.
 -- * buyer_demands.buyer_id remains unselectable by anon/authenticated.
+
+-- Negotiation history must use the same private owner helper; do not query
+-- buyer_demands.buyer_id from an authenticated RLS policy.
+DROP POLICY IF EXISTS seller_offer_negotiations_participant_read ON public.seller_offer_negotiations;
+CREATE POLICY seller_offer_negotiations_participant_read
+ON public.seller_offer_negotiations FOR SELECT TO authenticated
+USING (
+  EXISTS (
+    SELECT 1
+    FROM public.seller_offers AS offer
+    WHERE offer.id=seller_offer_negotiations.offer_id
+      AND (
+        offer.seller_id=(SELECT auth.uid())
+        OR private.is_buyer_demand_owner(offer.demand_id)
+      )
+  )
+);
