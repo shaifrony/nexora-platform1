@@ -701,3 +701,16 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 - No active migration, repository source file, hosted database, NEXORA-TEST, Live/Production, `main`, DNS or deployment was changed. No security/E2E pass is claimed.
 
 **Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #34 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 38-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
+
+
+## 20. Local RLS auto-enable candidate — runtime preflight (2026-11-14)
+
+**Status: RECOVERY-ONLY CANDIDATE / NOT HISTORICAL SQL / NOT DEPLOYABLE / NOT APPLIED TO HOSTED PROJECTS.**
+
+- Prepared `12_rls_auto_enable_recovery_candidate.sql` outside the active migration directory from the §14.2 design contract. It defines the actual `public.rls_auto_enable()` event-trigger function and `ensure_rls` DDL event trigger; it is not a no-op stub and does not generate policies or grants.
+- Tested on a disposable native Supabase CLI v3.1.0 stack using PostgreSQL 17. The candidate installed successfully and passed 12 runtime assertions: two ordinary public tables in one multi-statement run; CTAS; `SELECT INTO`; partitioned parent and child; non-public schema exclusion; function and event-trigger ownership (`postgres`); trigger enabled; no EXECUTE for `PUBLIC`, `anon`, or `authenticated`; no-policy table returns zero rows to `anon` after an explicit SELECT grant; one trigger remains installed (no recursive trigger creation).
+- A fresh replay with migrations temporarily disabled during stack startup installed the candidate first. Active migration `20261112045441_revoke_public_rls_auto_enable_execute.sql` then applied successfully. The next migration, `20261112050241_secure_public_profile_identity_projection.sql`, stopped because `public.profiles` does not exist. This confirms the RLS helper removes the first blocker, but the approved Foundation bootstrap is still missing.
+- Exactly 1 of 38 active feature migrations was recorded as applied in that disposable database. The stack was destroyed afterward; `stack list` returned empty. The earlier failed replay stack was also destroyed. No hosted database was changed.
+- **Not yet covered:** an extension-owned table creation test, full Foundation/Auth/AAL2 behavior, complete 38-migration replay, and end-to-end security tests. The candidate must not be called production-ready or deployed until these gates pass.
+- No active migration was edited or created; migration #1 remains unchanged. `main`, NEXORA-TEST, Live/Production, DNS and deployments were not changed.
+- Next: implement the missing Foundation baseline from approved spec contracts in a disposable local stack, then rerun all 38 migrations from a fresh database and complete synthetic security tests.
