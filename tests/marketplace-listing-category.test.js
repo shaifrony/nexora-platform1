@@ -100,3 +100,52 @@ test("Buyer Demand negotiation serializes offer and demand changes with row lock
   assert.match(demandOrderSql, /from public\.buyer_demands where id=v_offer\.demand_id for update/i);
   assert.match(demandOrderSql, /from public\.commerce_orders\s+where id=p_order_id and listing_type='buyer_demand' for update/i);
 });
+
+
+const marketplaceCoreSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112050345_create_marketplace_core_schema.sql"),
+  "utf8"
+);
+
+test("Seller cannot self-approve a Business Profile or alter its review metadata", () => {
+  const policy = marketplaceCoreSql.match(/create policy business_owner_pending_update[\\s\\S]*?;/i);
+  assert.ok(policy, "missing Business Profile owner update policy");
+  assert.match(policy[0], /using\\s*\\(seller_id=\\(select auth\\.uid\\(\\)\\) and approval_status='pending'\\)/i);
+  assert.match(policy[0], /with check\\s*\\(seller_id=\\(select auth\\.uid\\(\\)\\) and approval_status='pending' and reviewed_by is null and reviewed_at is null and admin_note is null\\)/i);
+  assert.match(marketplaceCoreSql, /grant update \\(display_name,description,country,city,sales_center_address\\) on public\\.business_profiles to authenticated;/i);
+});
+
+test("Seller cannot self-approve a Product Listing or alter its review metadata", () => {
+  const policy = marketplaceCoreSql.match(/create policy products_owner_pending_update[\\s\\S]*?;/i);
+  assert.ok(policy, "missing Product owner update policy");
+  assert.match(policy[0], /using\\s*\\(seller_id=\\(select auth\\.uid\\(\\)\\) and listing_status='pending'\\)/i);
+  assert.match(policy[0], /with check\\s*\\(seller_id=\\(select auth\\.uid\\(\\)\\) and listing_status='pending' and reviewed_by is null and reviewed_at is null and admin_note is null\\)/i);
+  assert.match(marketplaceCoreSql, /grant update \\(product_name,category,image_urls,description,origin,specifications_quality,price,currency\\) on public\\.products to authenticated;/i);
+});
+
+test("Only approved Business Profiles are copied into the public business projection", () => {
+  const trigger = marketplaceCoreSql.match(/create or replace function public\\.sync_public_business\\([\\s\\S]*?\\$function\\$;/i);
+  assert.ok(trigger, "missing public business synchronization trigger");
+  assert.match(trigger[0], /if new\\.approval_status <> 'approved' then[\\s\\S]*?delete from public\\.public_businesses/i);
+  assert.match(trigger[0], /insert into public\\.public_businesses\\(business_id,seller_id,display_name,country,city,updated_at\\)/i);
+  assert.match(marketplaceCoreSql, /create policy public_businesses_authenticated_read on public\\.public_businesses for select to authenticated using \\(true\\);/i);
+});
+
+test("Product Listing creation requires an approved public Business Profile", () => {
+  const policy = marketplaceCoreSql.match(/create policy products_approved_seller_insert[\\s\\S]*?;/i);
+  assert.ok(policy, "missing approved Seller insert policy");
+  assert.match(policy[0], /listing_status='pending'/i);
+  assert.match(policy[0], /public\\.public_businesses/i);
+  assert.match(policy[0], /p\\.role='seller' and p\\.account_status='active'/i);
+});
+
+test("Super Admin review UI checks active Admin identity before applying approval decisions", () => {
+  const start = js.indexOf("async function handleAdminDecision(e)");
+  const end = js.indexOf("async function", start + 10);
+  assert.notEqual(start, -1, "missing Admin review handler");
+  const handler = js.slice(start, end);
+  assert.match(handler, /profile\\(\\)\\?\\.role !== "admin"/);
+  assert.match(handler, /profile\\(\\)\\?\\.account_status !== "active"/);
+  assert.match(handler, /admin_level !== "super_admin"/);
+  assert.match(handler, /is_active !== true/);
+});
