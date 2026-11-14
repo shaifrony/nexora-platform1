@@ -1134,3 +1134,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Director-only initial boundary: public Seller/Business/Product/Service approval, Admin appointment, Buyer→Seller role review and audit log viewing. No default staff audit-log permission.
 - Documented restrictions: no private Buyer contact/profile dump, no private chat/call access, no finance cross-access, no implicit cross-department grants, no generic mutation RPC and no alias-by-guessing.
 - Await explicit owner confirmation before executable SQL. No SQL, source code, migration, database or deployment changed.
+
+## 2026-11-14 — Owner-approved Admin Governance / Foundation Bootstrap preparation
+
+- Owner explicitly approved the proposed Admin Governance structure.
+- Canonical departments: `managing_director`, `marketing`, `transport`, `logistics`, `product_business`, `trust_safety`, `accounts`.
+- Approved boundary: Logistics separate from Transport; Product/Service listing edits in Product & Business; user/business/product moderation in Trust & Safety; Marketing leads/campaigns only; Accounts finance only. Director-only initial audit-log viewing, public listing/business activation approvals, Admin appointment and Buyer→Seller role review.
+- Documented Trust & Safety permission seed intent. Mutation permissions remain nonfunctional until narrow audited server RPCs and their exact action/target/state transitions are implemented; `users.cancel` is reversible deactivation, not Auth deletion.
+- New source blocker: active migration #34 `manage_nexora_officer` hard-codes non-MD departments to `marketing|transport|accounts`, omits `logistics|product_business|trust_safety`, and attempts to seed `logistics.*` under `transport`. This must be reconciled before staff permissions can be assigned correctly.
+- Added Foundation spec §18 with owner approval, approved catalogue, source blockers, recovery-only bootstrap dependency order and stop conditions; updated compatibility matrix §18.
+- No SQL/migration/code/DB mutation performed. Current environment lacks Supabase CLI, Docker and psql, so no local parser/replay/runtime test is possible here. NEXORA-TEST remains untouched; no Live/Production/main/DNS/deployment changes.
+- Next: resolve #34 source compatibility on `nexora-development`, obtain a disposable local Supabase runtime, then author a recovery-only Foundation SQL candidate outside `supabase/migrations/` and validate Foundation + all 38 feature migrations with synthetic security tests.
