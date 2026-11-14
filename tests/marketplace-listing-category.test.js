@@ -51,3 +51,52 @@ test("public Buyer Demand projection includes the required date but excludes buy
     assert.ok(!columns.includes(privateField), "public projection must not expose " + privateField);
   }
 });
+
+
+const demandOrderSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql"),
+  "utf8"
+);
+
+test("Buyer Demand negotiation RPCs are private SECURITY DEFINER functions with an empty search_path", () => {
+  for (const signature of [
+    "private.respond_to_demand_offer(",
+    "private.transition_buyer_demand_order("
+  ]) {
+    const start = demandOrderSql.indexOf("create or replace function " + signature);
+    assert.notEqual(start, -1, "missing " + signature);
+    const header = demandOrderSql.slice(start, demandOrderSql.indexOf("as $$", start));
+    assert.match(header, /security definer/i);
+    assert.match(header, /set search_path\s*=\s*''/i);
+  }
+});
+
+test("Buyer Demand negotiation private RPCs cannot be executed directly by client roles", () => {
+  assert.match(demandOrderSql, /revoke all on function private\.respond_to_demand_offer\(uuid,text,numeric,numeric,text\) from public,anon,authenticated;/i);
+  assert.match(demandOrderSql, /revoke all on function private\.transition_buyer_demand_order\(uuid,text,text\) from public,anon,authenticated;/i);
+  assert.match(demandOrderSql, /grant execute on function private\.respond_to_demand_offer\(uuid,text,numeric,numeric,text\) to authenticated;/i);
+  assert.match(demandOrderSql, /grant execute on function private\.transition_buyer_demand_order\(uuid,text,text\) to authenticated;/i);
+});
+
+test("Buyer Demand public RPC wrappers remain SECURITY INVOKER and deny anonymous execution", () => {
+  for (const signature of [
+    "public.respond_to_demand_offer(",
+    "public.transition_buyer_demand_order("
+  ]) {
+    const start = demandOrderSql.indexOf("create or replace function " + signature);
+    assert.notEqual(start, -1, "missing " + signature);
+    const header = demandOrderSql.slice(start, demandOrderSql.indexOf("as $$", start));
+    assert.match(header, /security invoker/i);
+    assert.match(header, /set search_path\s*=\s*''/i);
+  }
+  assert.match(demandOrderSql, /revoke all on function public\.respond_to_demand_offer\(uuid,text,numeric,numeric,text\) from public,anon;/i);
+  assert.match(demandOrderSql, /revoke all on function public\.transition_buyer_demand_order\(uuid,text,text\) from public,anon;/i);
+  assert.match(demandOrderSql, /grant execute on function public\.respond_to_demand_offer\(uuid,text,numeric,numeric,text\) to authenticated;/i);
+  assert.match(demandOrderSql, /grant execute on function public\.transition_buyer_demand_order\(uuid,text,text\) to authenticated;/i);
+});
+
+test("Buyer Demand negotiation serializes offer and demand changes with row locks", () => {
+  assert.match(demandOrderSql, /from public\.seller_offers where id=p_offer_id for update/i);
+  assert.match(demandOrderSql, /from public\.buyer_demands where id=v_offer\.demand_id for update/i);
+  assert.match(demandOrderSql, /from public\.commerce_orders\s+where id=p_order_id and listing_type='buyer_demand' for update/i);
+});
