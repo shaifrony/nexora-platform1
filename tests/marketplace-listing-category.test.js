@@ -832,7 +832,7 @@ test("Public profile projection exposes only identity ID and full name to authen
     publicIdentitySql.indexOf("create or replace view public.public_profiles"),
     publicIdentitySql.indexOf("grant select on public.public_profiles")
   );
-  assert.match(view, /select id, full_name from public\.public_identities/i);
+  assert.match(view, /select id,\s*full_name\s+from public\.public_identities/i);
   assert.match(publicIdentitySql, /grant select on public\.public_profiles to authenticated/i);
   assert.match(publicIdentitySql, /revoke all on public\.public_profiles from public, anon/i);
   assert.doesNotMatch(view, /email|phone|address|role|account_status/i);
