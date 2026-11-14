@@ -1387,3 +1387,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Expanded financial-config.test.js with category normalization, unclassified rejection, conflicting-input rejection and legacy-input compatibility cases.
 - Validation in the local checkout before publishing: node --test tests/*.test.js — 24 passed, 0 failed; node --check over all JavaScript files — passed; git diff --check — passed.
 - No frontend, SQL, migration, database, deployment, main branch or paid service changed.
+
+
+### Canonical market_category verification on branch HEAD — 2026-11-14
+- Synced the remote branch into the existing sandbox checkout and re-ran the committed suite after publishing the financial module changes: 24/24 tests passed, 0 failed.
+- Re-ran node --check across all JavaScript files and git diff --check; both passed. The local checkout is clean on nexora-development.
+- The Vercel Sandbox can run Node tests but cannot run a container runtime: Podman installation succeeded, but sandbox kernel restrictions denied /dev/net/tun and container proc mounts. No local Supabase stack was started and no remote DB was modified.
+- The finance module now treats market_category as canonical and sale_type as a compatibility alias; conflicting values fail closed.
