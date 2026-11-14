@@ -1,6 +1,6 @@
 # NEXORA — Buyer বিভাগ সম্পূর্ণকরণ তালিকা
 
-Updated: 2026-11-13  
+Updated: 2026-11-14  
 Branch: `nexora-development`  
 Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion blocked by integration/security/E2E tests**
 
@@ -88,7 +88,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Required date is NOT NULL and constrained to current_date or later; subcategory constraints and public projection field are present in final migration.
 - [x] Demand routing source uses approved Product category/subcategory + active Seller + approved public Business Profile; no Buyer/Seller account-category or Wholesale/Retail market_category gate.
 - [x] Read-only catalog audit 24 initially executed and correctly SKIPped because full Demand schema was absent from visibility fixture 21. A separate local-only Demand fixture 25, behavior tests 26 and Termux runner 27 are now staged to enable focused local validation; user execution pending.
-- [ ] Run local Demand fixture 25 + audit 24 + behavior tests 26 using runner 27; inspect every PASS/FAIL.
+- [x] On a disposable local PostgreSQL 17 stack, replayed all 38 active migrations with the Foundation/RLS/Governance recovery candidates, then ran read-only audit 24 and transactional behavior suite 26. The complete migration chain already supplied Demand schema, so fixture 25 was not applied.
 - [ ] Verify privacy, ownership, Seller inbox, quotations and status transitions under real JWT/PostgREST sessions and browser E2E.
 - [x] Buyer/Seller quotation acceptance, counter-offer, rejection turn-taking, offer expiry and source-linked Buyer Demand order conversion are implemented in staged frontend + migration source. Buyer acceptance creates a pending Seller-confirmation order; Seller acceptance of a Buyer counter-offer creates an accepted order and event.
 - [ ] Run isolated SQL behavior tests for both acceptance paths, counter-offer turn-taking, rejection, expired offers, inactive participants, duplicate order prevention, and order transitions; hosted JWT/PostgREST/RLS and browser E2E remain pending.
@@ -412,3 +412,14 @@ Implementation rules:
 - [ ] Update Buyer Order History to display snapshots with escaped text and neutral fallback for historical NULL values.
 - [ ] Run synthetic SQL, PostgREST/JWT/RLS, browser and mobile E2E tests. No runtime test was performed in this source-verification pass.
 - No SQL, database, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment was changed.
+
+
+### Buyer Demand quotation SELECT privacy fix — local verification (2026-11-14)
+- [x] Corrected audit 24 to inspect the final effective policy names (demands_insert_buyer_or_admin, demands_update_owner_or_admin); the read-only catalog audit passes.
+- [x] Updated behavior test 26 for the current schema: business_profiles primary key is id, public identity projection is populated by the existing sync trigger, Product has no sale-channel column, and Seller available quantity is numeric text.
+- [x] Local behavior suite exposed a real RLS dependency: offers_select_buyer_seller_or_admin directly queried buyer_demands.buyer_id, a deliberately private column unavailable to API roles. That caused quotation reads to fail during policy evaluation.
+- [x] Added recovery-only patch 30: a narrowly scoped SECURITY DEFINER helper returns only whether the authenticated active Buyer owns the specific Demand; anon cannot execute it, authenticated can, and Buyer ID remains unavailable to both API roles.
+- [x] After applying patch 30 to the disposable local database, audit 24 and transactional behavior test 26 both passed. The behavior test verifies Buyer owner quotation visibility, unrelated Buyer denial, Seller inbox routing, unmatched Seller denial, duplicate offer rejection, Demand owner spoof prevention, required-date validation and private-column/grant boundaries.
+- [ ] Convert patch 30 into a genuine forward migration only after a naturally generated timestamp sorts after the latest active migration; do not edit historical migration files or invent timestamps.
+- [ ] Repeat using real Supabase JWT/PostgREST sessions and browser/mobile E2E. The local PostgreSQL logic test is not a substitute.
+- Hosted NEXORA-TEST, Live/Production, main, DNS and deployment were not changed.
