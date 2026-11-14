@@ -4,7 +4,7 @@
 **Date:** 2026-11-14  
 **Target:** Supabase project `NEXORA-TEST` only  
 **Repository branch:** `nexora-development`  
-**Purpose:** Define the minimum identity, account lifecycle, Admin authorization and audit foundation required before replaying the 38 active feature migrations.
+**Purpose:** Define the minimum identity, account lifecycle, Admin authorization and audit foundation required before replaying the 39 active feature migrations.
 
 > This is a new Test-only design specification. It is not recovered historical SQL, is not a migration, and must not be copied into `supabase/migrations/` as-is. No schema or data has been changed by writing this document. The prior `06_local_foundation_baseline_fixture.sql` is a PostgreSQL compatibility fixture for local testing only; it is not a hosted Supabase baseline.
 
@@ -12,7 +12,7 @@
 
 The following are the current authoritative decisions and supersede conflicting statements in the older `05_foundation_design_proposal.md`:
 
-1. Marketplace is a **single unified marketplace**. Do not create Buyer/Seller Wholesale/Retail category fields or category-based visibility. Everyone sees the same approved marketplace listings; sellers set their own prices and quantities. Wholesale/Retail delivery service modes, if used by logistics, are a separate transport concept and do not create marketplace user categories.
+1. Marketplace has a **single unified audience**: there are no Buyer/Seller account-level Wholesale/Retail categories and no category-based access restriction. A Seller may create distinct Wholesale and Retail Listing records; each listing has its own identity, URL, price/terms and history, with `market_category` set per listing. All users see all approved listings. Existing unclassified records must remain `legacy_unclassified` until explicitly classified; never guess a type. Delivery service modes remain a separate logistics concept.
 2. Buyer, Seller, Porter and Admin are the four internal account roles. Public signup permits Buyer, Seller and Porter only; Admin is provisioned through protected governance.
 3. Buyer can use an account after valid registration. Seller can create their Business Profile and product listings, but public visibility requires Admin approval. Porter signup creates a pending account and requires Admin approval before Porter workspace/use.
 4. Buyer Demand cards are public, but Buyer identity, profile ID and contact details remain private. Required-by date is part of the Demand data contract.
@@ -21,7 +21,7 @@ The following are the current authoritative decisions and supersede conflicting 
 7. Calling is paused, not deleted. Keep existing call tables/functions/migrations intact; do not extend or test Calling in this baseline.
 8. Private Chat, Message, File/Image Sharing and Conversation Privacy remain separate feature migrations and are tested only with synthetic identities/data.
 
-The older proposal's Wholesale-only Buyer/Seller category requirements and the local fixture's corresponding category check are **superseded**. Do not implement those fields in the new Test baseline.
+The older proposal's Wholesale-only Buyer/Seller account-category requirements and the local fixture's corresponding category check are **superseded**. Do not implement account-category fields in the Foundation. Per-listing `market_category` is a separate feature contract supplied by migration #33.
 
 ## 1. Baseline boundary and schema layout
 
@@ -153,7 +153,7 @@ RLS requirements:
 7. Profile trigger failure must fail the signup transaction; do not leave an Auth user without the required profile.
 8. The trigger function is not granted as an executable client function. Trigger binding and duplicate signup behavior must be tested using the actual local Supabase Auth service, not plain PostgreSQL alone.
 
-## 7. Dependencies to satisfy before the 38 active migrations
+## 7. Dependencies to satisfy before the 39 active migrations
 
 At minimum, the following dependencies must exist before feature migration replay:
 
@@ -171,7 +171,7 @@ Do not apply any feature migration until a dependency scan confirms every refere
 ## 8. Required validation gates
 
 ### Gate A — source contract
-- Compare every column/function reference in all 38 active migrations and frontend files against this spec.
+- Compare every column/function reference in all 39 active migrations and frontend files against this spec.
 - Resolve stale migration references and business-model contradictions before replay.
 - Review Admin governance source and exact permission keys.
 - Check all function overloads, grants, triggers, RLS policies and FK delete behavior.
@@ -191,7 +191,7 @@ Do not apply any feature migration until a dependency scan confirms every refere
 - Confirm no Live project ref, no Production variables, no service-role key in browser, and no real data.
 
 ### Gate D — feature migrations
-- Rehearse all 38 active migrations in order, then apply to NEXORA-TEST only after a separate review/approval.
+- Rehearse all 39 active migrations in order, then apply to NEXORA-TEST only after a separate review/approval.
 - Keep archived duplicate migrations and historical recovery drafts outside active migration path.
 - Reconcile the 11 missing historical migration versions separately; do not invent history entries or mark unverified drafts as applied.
 
@@ -214,7 +214,7 @@ Do not apply any feature migration until a dependency scan confirms every refere
 
 **Current result:** Foundation contract is now consolidated for the current Marketplace and account decisions. It is a design specification only; it has not been converted to SQL or executed.
 
-**Next safe implementation:** build a dependency-by-dependency compatibility matrix for all 38 active migrations and current frontend, then author a new Test-only SQL baseline only after every required field, permission key, trigger behavior and function signature is confirmed. The SQL must be generated through the approved Supabase migration workflow when the CLI timestamp gate allows it; never invent or rename a migration timestamp.
+**Next safe implementation:** build a dependency-by-dependency compatibility matrix for all 39 active migrations and current frontend, then author a new Test-only SQL baseline only after every required field, permission key, trigger behavior and function signature is confirmed. The SQL must be generated through the approved Supabase migration workflow when the CLI timestamp gate allows it; never invent or rename a migration timestamp.
 
 
 ## 11. Frontend-derived role-request and Admin governance contracts — source audit v2
@@ -236,21 +236,21 @@ Verified in `auth.js`:
 
 ### 11.2 Admin staff columns consumed by current frontend / migrations
 
-The current frontend reads `admin_staff(admin_code,admin_level,department_key,is_active)` for the signed-in Admin. The Director management UI additionally reads the staff roster and permission assignments. Migration #34 directly requires or writes:
+The current frontend reads `admin_staff(admin_code,admin_level,department_key,is_active)` for the signed-in Admin. The Director management UI additionally reads the staff roster and permission assignments. Migration #35 directly requires or writes:
 
 - `user_id` (one staff record per Admin profile), `admin_code`, `admin_level` (Director uses `super_admin`; managed staff use `assistant_admin`), `department_key`, `is_active`, `created_by`, `staff_email`, `position_key`, `reports_to_user_id`, `updated_at`.
-- Position values: `director`, `managing_director`, `department_head`, `department_officer`. #34 permits at most one active MD and one active Head per department.
+- Position values: `director`, `managing_director`, `department_head`, `department_officer`. #35 permits at most one active MD and one active Head per department.
 - Managed officers are provisioned only against an existing active Buyer Auth/profile account after a secure invite. The server changes the profile role to Admin and inserts staff + permission grants in one transaction. Director is never self-created through signup or public metadata.
-- `admin_permission_grants` must support `admin_user_id`, `permission_key`, `is_allowed`, `granted_by`; #34 replaces an officer's grant set transactionally on update and deletes grants on deactivation. Authorization must fail closed; an explicit deny must never be overridden by an allow from another grant row.
-- `admin_permission_catalog` must support `permission_key`, `department_key`, `permission_name`, `description`, `is_sensitive`, `is_active`; permission seeds are spread across feature migrations, not just #34. The Foundation must inventory every referenced key before seeding and reject inactive/mismatched department grants.
+- `admin_permission_grants` must support `admin_user_id`, `permission_key`, `is_allowed`, `granted_by`; #35 replaces an officer's grant set transactionally on update and deletes grants on deactivation. Authorization must fail closed; an explicit deny must never be overridden by an allow from another grant row.
+- `admin_permission_catalog` must support `permission_key`, `department_key`, `permission_name`, `description`, `is_sensitive`, `is_active`; permission seeds are spread across feature migrations, not just #35. The Foundation must inventory every referenced key before seeding and reject inactive/mismatched department grants.
 - `admin_audit_logs` must support the exact columns written by current functions: `actor_user_id`, `actor_admin_code`, `action_key`, `target_type`, `target_id`, optional `reason`, `details` JSONB and timestamp. Append-only from client roles; writes only through audited server-side workflows.
 
 ### 11.3 Confirmed frontend / database mismatches requiring reconciliation
 
 - `auth.js` calls `review_role_request(request_id, decision)`; no active migration defines this RPC. It remains a Foundation RPC requirement, not a recovered historical object.
-- `marketplace.js` still calls `manage_nexora_user(p_user_id, p_action, p_reason)`, while later Admin UI paths call `admin_manage_user(p_user_id, p_action, p_reason)`. Neither is defined by the 38 active migrations according to the dependency scan. These are not interchangeable until their intended actions, status transitions and permission keys are reconciled. Do not create both aliases blindly.
+- `marketplace.js` still calls `manage_nexora_user(p_user_id, p_action, p_reason)`, while later Admin UI paths call `admin_manage_user(p_user_id, p_action, p_reason)`. Neither is defined by the 39 active migrations according to the dependency scan. These are not interchangeable until their intended actions, status transitions and permission keys are reconciled. Do not create both aliases blindly.
 - `marketplace.js` reads `profiles(id,full_name,role,account_status,created_at)` for Admin user management and allows Buyer/Seller account actions. This must be gated by exact user-management permissions, AAL2 and audited RPCs; frontend grant checks are only presentation, never authorization.
-- `admin_staff.admin_level='super_admin'` is still hard-coded by current Director UI and #34, while the newer organization model also uses `position_key='director'`. Preserve a compatibility value for the Director but make the Director predicate require both the protected staff appointment and active Admin profile; position text alone is not authority.
+- `admin_staff.admin_level='super_admin'` is still hard-coded by current Director UI and #35, while the newer organization model also uses `position_key='director'`. Preserve a compatibility value for the Director but make the Director predicate require both the protected staff appointment and active Admin profile; position text alone is not authority.
 - Existing older Admin policies in migrations #10–12 are not fully aligned: #10 checks AAL2 inline, #12 centralizes active Admin/AAL2 for selected policies, and some Super Admin reads bypass the helper via `public.is_nexora_super_admin()`. Foundation must define one canonical private authorization implementation and compatibility wrappers with identical fail-closed semantics; migration replay tests must verify there is no pre-MFA or inactive-staff read path.
 
 ### 11.4 Permission resolver minimum semantics
@@ -285,7 +285,7 @@ Additional source inspection of `marketplace.js` and Admin/Logistics migrations 
 - It checks `products.suspend`, `products.restore`, `products.cancel`, and `businesses.suspend` for listing moderation.
 - Listing edit workflow uses `products.edit` and `services.edit`.
 - Logistics / Porter review and delivery workflows use `logistics.view` and `logistics.assign`.
-- #34 adds `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
+- #35 adds `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
 
 The Foundation seed audit must account for every key above and every additional key found in the remaining active migrations. The UI's grant lookup is presentation-only. Each RPC must enforce its own server-side key; never treat a visible button or a row in `admin_permission_grants` as sufficient by itself. In particular, the exact permissions for the older `manage_nexora_user` / newer `admin_manage_user` and `manage_marketplace_listing` calls remain unverified and must be reconciled before those operations are enabled.
 
@@ -312,7 +312,7 @@ The active migration sources explicitly seed:
 - `logistics.view`, `logistics.assign` in migration `20261113220000_delivery_assignment_system.sql` under the `logistics` department.
 - `services.edit` in migration `20261114120000_listing_edit_review_workflow.sql` under `product_business`.
 - Marketing, Transport and Finance keys in migration `20261114200000_centralized_officer_account_management.sql`: `marketing.leads.view`, `marketing.leads.manage`, `marketing.campaigns.manage`, `transport.partners.view`, `transport.partners.manage`, `transport.staff.manage`, `finance.view`, `finance.transactions.view`, `finance.transactions.manage`, `finance.refunds.request`, `finance.refunds.approve`, `finance.payouts.manage`.
-- #34 also lists `logistics.view|assign` under `transport` but uses `ON CONFLICT DO NOTHING`; because #19 already seeds those keys under `logistics`, the original department mapping remains `logistics`. Do not assume the duplicate statement moves the keys to `transport`.
+- #35 also lists `logistics.view|assign` under `transport` but uses `ON CONFLICT DO NOTHING`; because #19 already seeds those keys under `logistics`, the original department mapping remains `logistics`. Do not assume the duplicate statement moves the keys to `transport`.
 
 The current frontend additionally checks `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit`. These keys are not explicitly seeded by the 38 active migration files inspected. They remain unresolved Foundation/catalog requirements, not existing seed data. The active sources do not establish a complete, consistent mapping for these permissions. Reconcile each key's owning department, sensitivity and server-side RPC enforcement before creating the canonical seed set.
 
@@ -332,7 +332,7 @@ A second source scan of all 38 active migration files distinguished ordinary app
 
 - Active migrations create `profiles_sync_public_identity` on `public.profiles` and `business_profiles_sync_public_business` on `public.business_profiles`, plus application-specific triggers.
 - No active migration creates an `auth.users` trigger invoking `public.handle_new_user()`; no active migration creates an event trigger for automatic RLS enablement.
-- #19 and #35 define/replace the function body, but function existence is not evidence that the trigger binding exists. The active migration chain alone therefore cannot guarantee profile provisioning on signup.
+- #19 and #36 define/replace the function body, but function existence is not evidence that the trigger binding exists. The active migration chain alone therefore cannot guarantee profile provisioning on signup.
 - The canonical Foundation must explicitly install or verify exactly one `auth.users` AFTER INSERT trigger, verify function owner and SECURITY DEFINER privileges, and test rollback/failure behavior. Do not assume the trigger is managed out-of-band unless an authoritative, versioned source proves it.
 
 ### 13.2 Existing active-Admin helper is not the canonical Director/permission resolver
@@ -352,7 +352,7 @@ Before any candidate Foundation SQL is considered:
 2. Prove signup creates exactly one profile and, for Porter, exactly one pending review row; invalid roles and Admin metadata cannot create privileged accounts.
 3. Prove every exposed public table has RLS enabled and every relevant policy is installed; verify the RLS automation mechanism on tables created after Foundation.
 4. Test trigger owner, function owner, grants, empty search_path, SECURITY DEFINER boundaries and error rollback.
-5. Replay the complete 38-migration chain against a disposable local database and run synthetic Buyer/Seller/Porter/Admin AAL1/AAL2 tests before considering NEXORA-TEST.
+5. Replay the complete 39-migration chain against a disposable local database and run synthetic Buyer/Seller/Porter/Admin AAL1/AAL2 tests before considering NEXORA-TEST.
 
 **Status:** source scan and design documentation only. No trigger, event trigger, SQL migration or database was changed. No runtime claim is made.
 
@@ -364,13 +364,13 @@ Before any candidate Foundation SQL is considered:
 
 Install exactly one PostgreSQL row trigger on `auth.users`:
 - Timing/event: `AFTER INSERT FOR EACH ROW`.
-- Function: the final, reviewed `public.handle_new_user()` contract already replaced by feature migration #35 (`20261114210000_porter_public_registration_and_review.sql`).
+- Function: the final, reviewed `public.handle_new_user()` contract already replaced by feature migration #36 (`20261114210000_porter_public_registration_and_review.sql`).
 - Function security: `SECURITY DEFINER`, empty `search_path`, every relation/type/function fully qualified, owner explicitly verified as a trusted database owner. Do not grant direct EXECUTE to `PUBLIC`, `anon` or `authenticated`; trigger invocation does not require exposing it as a client RPC.
-- The function must derive identity from `NEW.id`; user-editable `raw_user_meta_data` is only an input for the explicitly permitted signup role allowlist and display fields, never Admin authorization. Reject unknown roles and all Admin signup attempts. OAuth provider default remains Buyer as #35 specifies.
+- The function must derive identity from `NEW.id`; user-editable `raw_user_meta_data` is only an input for the explicitly permitted signup role allowlist and display fields, never Admin authorization. Reject unknown roles and all Admin signup attempts. OAuth provider default remains Buyer as #36 specifies.
 - Buyer/Seller signup creates exactly one profile with the intended active status. Porter signup creates exactly one pending profile and exactly one pending `porter_account_reviews` record. Admin appointment is never inferred from metadata/email.
 - No blanket exception swallowing. A provisioning error must roll back the Auth insert rather than leave an Auth user without the required application profile/review state. Test email confirmation, OAuth, duplicate/replayed provisioning and malformed metadata.
 - Migration must verify/drop only the specifically named expected trigger before creating it, then query `pg_trigger`/catalogs to prove exactly one non-internal trigger points to the intended function. Do not drop unrelated Auth triggers.
-- Keep trigger creation separate from function-body history: #19/#35 already define the function, but neither installs the Auth trigger.
+- Keep trigger creation separate from function-body history: #19/#36 already define the function, but neither installs the Auth trigger.
 
 ### 14.2 Automatic RLS enablement event-trigger contract
 
@@ -408,7 +408,7 @@ The active feature migrations depend on Foundation objects before and during the
 Permitted next design path:
 1. Continue searching for authoritative historical Foundation source and trigger definitions.
 2. If unavailable, prepare a separately versioned recovery-only Foundation bootstrap candidate for a disposable local database, clearly marked non-deployable.
-3. Apply that candidate manually only in the disposable local test environment before replaying feature migrations; validate all 38 migrations in order and record the bootstrap as a deliberate recovery prerequisite, not fabricated historical migration history.
+3. Apply that candidate manually only in the disposable local test environment before replaying feature migrations; validate all 39 migrations in order and record the bootstrap as a deliberate recovery prerequisite, not fabricated historical migration history.
 4. After compatibility and replay pass, design a clean forward migration/reconciliation strategy with genuine CLI-generated timestamps and explicit approval. Do not apply anything to NEXORA-TEST yet.
 
 ### 14.6 Verification gates
@@ -418,7 +418,7 @@ Permitted next design path:
 - RLS matrix: every public table enabled; policies and grants separately enumerated; new table after event trigger becomes RLS-enabled before API use; no API role can read an unpolicied table.
 - Admin matrix: AAL1/AAL2, active/inactive profile, active/inactive appointment, protected Director, department mismatch, missing/inactive catalog, explicit deny, stale JWT and sensitive RPC audit.
 - Platform matrix: explicit Data API grants/exposure on fresh Supabase project; do not rely on old auto-exposure behavior.
-- Only after local Foundation + all 38 feature migrations + synthetic E2E pass may NEXORA-TEST be considered, with separate explicit approval.
+- Only after local Foundation + all 39 feature migrations + synthetic E2E pass may NEXORA-TEST be considered, with separate explicit approval.
 
 **Decision:** this design resolves the intended shape of the Auth/RLS baseline, but the missing Foundation source, clean replay and local runtime evidence remain blockers. No SQL, code, trigger, migration, database, hosted project or deployment was changed in this step.
 
@@ -433,22 +433,22 @@ Permitted next design path:
 | `logistics.view` | #19 `20261113220000_delivery_assignment_system.sql` | `logistics` | true in #19 |
 | `logistics.assign` | #19 | `logistics` | true in #19 |
 | `services.edit` | #25 `20261114120000_listing_edit_review_workflow.sql` | `product_business` | true |
-| `marketing.leads.view` | #34 `20261114200000_centralized_officer_account_management.sql` | `marketing` | false |
-| `marketing.leads.manage` | #34 | `marketing` | true |
-| `marketing.campaigns.manage` | #34 | `marketing` | true |
-| `transport.partners.view` | #34 | `transport` | false |
-| `transport.partners.manage` | #34 | `transport` | true |
-| `transport.staff.manage` | #34 | `transport` | true |
-| `finance.view` | #34 | `accounts` | false |
-| `finance.transactions.view` | #34 | `accounts` | false |
-| `finance.transactions.manage` | #34 | `accounts` | true |
-| `finance.refunds.request` | #34 | `accounts` | true |
-| `finance.refunds.approve` | #34 | `accounts` | true |
-| `finance.payouts.manage` | #34 | `accounts` | true |
+| `marketing.leads.view` | #35 `20261114200000_centralized_officer_account_management.sql` | `marketing` | false |
+| `marketing.leads.manage` | #35 | `marketing` | true |
+| `marketing.campaigns.manage` | #35 | `marketing` | true |
+| `transport.partners.view` | #35 | `transport` | false |
+| `transport.partners.manage` | #35 | `transport` | true |
+| `transport.staff.manage` | #35 | `transport` | true |
+| `finance.view` | #35 | `accounts` | false |
+| `finance.transactions.view` | #35 | `accounts` | false |
+| `finance.transactions.manage` | #35 | `accounts` | true |
+| `finance.refunds.request` | #35 | `accounts` | true |
+| `finance.refunds.approve` | #35 | `accounts` | true |
+| `finance.payouts.manage` | #35 | `accounts` | true |
 
-**Critical department conflict:** #19 initially inserts `logistics.view` and `logistics.assign` under department `logistics`. #34 later attempts to insert those same keys under `transport` using `ON CONFLICT(permission_key) DO NOTHING`; therefore it does not move the existing rows. #34's officer assignment validates permission department equality for non-MD staff, so a Transport officer cannot be granted these Logistics keys under the current catalog rows. Do not silently reassign them: decide whether Logistics remains a separate department or whether #19/#34 are reconciled to one canonical department key, then test existing policy/RPC references.
+**Critical department conflict:** #19 initially inserts `logistics.view` and `logistics.assign` under department `logistics`. #35 later attempts to insert those same keys under `transport` using `ON CONFLICT(permission_key) DO NOTHING`; therefore it does not move the existing rows. #35's officer assignment validates permission department equality for non-MD staff, so a Transport officer cannot be granted these Logistics keys under the current catalog rows. Do not silently reassign them: decide whether Logistics remains a separate department or whether #19/#35 are reconciled to one canonical department key, then test existing policy/RPC references.
 
-**Missing department dependency:** #25 seeds `services.edit` under `product_business`, but #34's department seed list contains only `managing_director`, `marketing`, `transport`, and `accounts`. Foundation must explicitly define the `product_business` department (or migrate the permission to a chosen existing department) before the permission is assignable. #34 also does not seed `products.edit`, despite #25 checking it for Product image delete.
+**Missing department dependency:** #25 seeds `services.edit` under `product_business`, but #35's department seed list contains only `managing_director`, `marketing`, `transport`, and `accounts`. Foundation must explicitly define the `product_business` department (or migrate the permission to a chosen existing department) before the permission is assignable. #35 also does not seed `products.edit`, despite #25 checking it for Product image delete.
 
 ### 15.2 Frontend permission keys with no matching active migration seed
 
@@ -480,7 +480,7 @@ Proposed canonical catalog additions, subject to exact RPC and RLS review:
 | `manage_nexora_user` | `p_user_id uuid`, `p_action text`, `p_reason text` | No active definition | Do not create until action/status semantics, permission keys, audit and legacy caller are reconciled. |
 | `admin_manage_user` | Previously observed as a newer frontend call variant | No active definition | Stale/alternate name; do not create an alias to `manage_nexora_user` without a single canonical contract. |
 | `manage_marketplace_listing` | `p_target_type text`, `p_target_id uuid`, `p_action text`, `p_reason text` | No active definition | Do not implement a generic polymorphic mutation until Product/Business action matrix, permission mapping and per-type validation are explicit. |
-| `manage_nexora_officer` | email, action, department, position, permissions, reason | #34 defines private + public wrapper | Current #34 enforces Director/AAL2 and validates catalog department, but its catalog conflicts above must be resolved before use. |
+| `manage_nexora_officer` | email, action, department, position, permissions, reason | #35 defines private + public wrapper | Current #35 enforces Director/AAL2 and validates catalog department, but its catalog conflicts above must be resolved before use. |
 
 The current frontend user moderation and listing moderation handlers call missing RPCs. Client-side permission gates are presentation only and cannot authorize these mutations.
 
@@ -513,7 +513,7 @@ Before a Foundation bootstrap candidate is authored:
 
 ### Department governance decisions that must be finalized before bootstrap SQL
 The current source contracts are internally inconsistent. Candidate choices requiring explicit product/governance approval:
-1. Whether `logistics` remains its own department or is consolidated into `transport`. If consolidated, update #19/#34 seed reconciliation and all existing grants/policies/RPC assumptions as one migration plan.
+1. Whether `logistics` remains its own department or is consolidated into `transport`. If consolidated, update #19/#35 seed reconciliation and all existing grants/policies/RPC assumptions as one migration plan.
 2. Whether `product_business` remains a distinct department for `products.edit`/`services.edit`, and seed its department before any officer can receive those keys.
 3. Whether User/Business/Product moderation belongs to a new `trust_safety`/governance department or an existing department. Marketing should not automatically inherit suspension/cancellation powers merely because it manages acquisition leads.
 4. Whether audit log viewing is Director-only by default or may be granted to a separate audited role; default is Director-only until approved.
@@ -522,7 +522,7 @@ The current source contracts are internally inconsistent. Candidate choices requ
 Until these are decided, missing permission keys remain unseeded and all related non-Director UI actions must fail closed. No department ownership is guessed in SQL.
 
 ### Current gate
-**Foundation candidate SQL is not authorized for creation or application yet.** The next safe step is to settle the above permission ownership decisions and make a disposable local Supabase/Postgres environment available. Then prepare a clearly marked recovery-only bootstrap candidate, replay all 38 feature migrations and test before any NEXORA-TEST change.
+**Foundation candidate SQL is not authorized for creation or application yet.** The next safe step is to settle the above permission ownership decisions and make a disposable local Supabase/Postgres environment available. Then prepare a clearly marked recovery-only bootstrap candidate, replay all 39 feature migrations and test before any NEXORA-TEST change.
 
 ## 17. Recommended department and moderation governance baseline (PROPOSAL — pending owner confirmation)
 
@@ -533,7 +533,7 @@ Until these are decided, missing permission keys remain unseeded and all related
 | Department key | Responsibility | Permission scope |
 |---|---|---|
 | `logistics` | Internal order fulfilment, delivery assignment and operational delivery workflow | Existing `logistics.view`, `logistics.assign` |
-| `transport` | External transport partners, provider onboarding, vehicles and transport staff | Existing #34 `transport.partners.*`, `transport.staff.manage` |
+| `transport` | External transport partners, provider onboarding, vehicles and transport staff | Existing #35 `transport.partners.*`, `transport.staff.manage` |
 | `product_business` | Product and service listing review/edit workflow, Seller business listing administration | Existing `services.edit`; proposed `products.edit` |
 | `trust_safety` | User account moderation, business safety moderation, product listing enforcement and appeals intake | Proposed `users.*`, `businesses.*`, `products.*` moderation keys |
 | `marketing` | Leads and campaigns only | Existing `marketing.*`; no suspension/cancellation authority by default |
@@ -597,12 +597,12 @@ Seed exactly these department keys (subject to the source compatibility repairs 
 | `trust_safety` | User, Business and Product moderation |
 | `accounts` | Finance, transactions, refunds and payouts |
 
-The Director remains a protected appointment, not an assignable department officer. Keep `logistics` separate from `transport`; the fact that the legacy #34 migration currently groups them is a source defect to reconcile, not the approved policy.
+The Director remains a protected appointment, not an assignable department officer. Keep `logistics` separate from `transport`; the fact that the legacy #35 migration currently groups them is a source defect to reconcile, not the approved policy.
 
 ### 18.2 Approved permission seed intent
 
 - Preserve all existing #19 Logistics keys under `logistics`: `logistics.view`, `logistics.assign`.
-- Preserve #34 Marketing, Transport and Accounts keys in their respective departments.
+- Preserve #35 Marketing, Transport and Accounts keys in their respective departments.
 - Preserve `services.edit` under `product_business`; add `products.edit` to the same department only after confirming the exact product edit/delete UI action contract.
 - Add `trust_safety` keys: `users.view`, `users.suspend`, `users.restore`, `users.cancel`, `businesses.view`, `businesses.suspend`, `products.view`, `products.suspend`, `products.restore`, `products.cancel`.
 - Moderation keys are explicit, audited and fail-closed. `users.cancel` means reversible account deactivation only, never Auth hard-delete. Business suspension affects public Business/listing visibility, not automatically the owner's Buyer account.
@@ -612,7 +612,7 @@ The Director remains a protected appointment, not an assignable department offic
 
 ### 18.3 Source compatibility blockers discovered while translating approval into a bootstrap plan
 
-**Blocker A — migration #34 hard-codes the old department model.** In `20261114200000_centralized_officer_account_management.sql`, the `manage_nexora_officer` function accepts non-MD positions only for `marketing`, `transport`, and `accounts`; its seed list omits `logistics`, `product_business`, and `trust_safety`. It also inserts `logistics.view` and `logistics.assign` into `transport` with `ON CONFLICT DO NOTHING`. The bootstrap must not silently paper over this. Before replay, either revise this migration on the development branch as a reviewed source correction or add an explicitly ordered compatibility repair before any dependent Admin workflow is enabled. The repair must make the department allowlist, seed ownership and grant validation agree with this approved catalogue.
+**Blocker A — migration #35 hard-codes the old department model.** In `20261114200000_centralized_officer_account_management.sql`, the `manage_nexora_officer` function accepts non-MD positions only for `marketing`, `transport`, and `accounts`; its seed list omits `logistics`, `product_business`, and `trust_safety`. It also inserts `logistics.view` and `logistics.assign` into `transport` with `ON CONFLICT DO NOTHING`. The bootstrap must not silently paper over this. Before replay, either revise this migration on the development branch as a reviewed source correction or add an explicitly ordered compatibility repair before any dependent Admin workflow is enabled. The repair must make the department allowlist, seed ownership and grant validation agree with this approved catalogue.
 
 **Blocker B — permission keys need action-to-server mapping.** The UI currently checks several moderation/edit keys, but the corresponding user/listing mutation RPCs are absent or stale (`manage_nexora_user`, `admin_manage_user`, `manage_marketplace_listing`). Do not seed a key and imply that it is functional. Implement only narrow, separately reviewed RPCs after defining each action's exact target, reversible status transition, row lock, reason, audit and Director/Trust & Safety boundary. Until then, leave those UI mutation paths disabled and missing keys fail closed.
 
@@ -630,11 +630,11 @@ The candidate, when generated in a suitable disposable local Supabase environmen
 4. **Governance catalogue and staff:** departments, `admin_staff`, permission catalogue, grants, Director invariants and reporting relationships. Enforce the approved seven-department catalogue.
 5. **Audit and lifecycle:** append-only `admin_audit_logs`, `role_requests`, `profile_change_requests`, `porter_account_reviews`; safe public identity projection only if required by the feature chain.
 6. **Canonical private authorization:** protected Director check, AAL2 + active profile/staff + explicit permission + department scope + explicit-deny precedence; compatibility wrappers for legacy names only where source callers require them.
-7. **Signup function and Auth trigger:** use the exact final #35 role allowlist/ OAuth behavior; install exactly one Auth trigger after testing; no Admin metadata signup; Porter pending review atomic.
+7. **Signup function and Auth trigger:** use the exact final #36 role allowlist/ OAuth behavior; install exactly one Auth trigger after testing; no Admin metadata signup; Porter pending review atomic.
 8. **RLS automation:** implement the real #1-required event-trigger function, restricted to newly created ordinary/partitioned `public` tables; separately enable RLS on every Foundation public table. Do not create a no-op stub or auto-generate policies.
 9. **Explicit Data API grants and policies:** grant only required tables/columns/functions; RLS and grants are separate controls. Internal governance tables remain inaccessible except through narrow audited RPCs.
 10. **Foundation assertions:** catalog assertions for constraints, indexes, triggers, function owners/security config/ACLs, RLS, policies, grants and seeds.
-11. **Feature replay rehearsal:** apply all 38 active migrations in their true order on a disposable local stack, after source repairs. Do not fabricate the 11 missing historical versions or place recovery SQL in `supabase/migrations/`.
+11. **Feature replay rehearsal:** apply all 39 active migrations in their true order on a disposable local stack, after source repairs. Do not fabricate the 11 missing historical versions or place recovery SQL in `supabase/migrations/`.
 12. **Synthetic security/E2E:** run signup, role lifecycle, AAL1/AAL2, Director/staff, department deny, owner isolation, public projection, and full migration replay tests.
 
 ### 18.5 Candidate output and non-negotiable stop conditions
@@ -642,21 +642,21 @@ The candidate, when generated in a suitable disposable local Supabase environmen
 - The next artifact may be a clearly labelled recovery-only SQL candidate outside `supabase/migrations/`, but only after all table/column/function dependencies are source-verified and the local parser/runtime is available.
 - The candidate must contain no hard-coded Director UUID/email, no service-role credential, no real-user data, no fabricated migration-history rows and no permissive fallback.
 - Stop if any active migration references a missing column/function/enum, if a seed conflicts with the approved department ownership, if any function has a public/default EXECUTE exposure, or if a public table lacks a reviewed RLS/grant plan.
-- Do not apply the candidate to NEXORA-TEST until the disposable local Foundation + all 38 feature migrations + synthetic security tests pass and a separate explicit hosted-Test authorization is obtained.
+- Do not apply the candidate to NEXORA-TEST until the disposable local Foundation + all 39 feature migrations + synthetic security tests pass and a separate explicit hosted-Test authorization is obtained.
 - No Live/Production/main/DNS/paid-service operation is in scope.
 
-**Current status:** Governance approved; bootstrap architecture and dependency order prepared. Executable SQL remains blocked by the #34 source compatibility repair and unavailable disposable local runtime. No SQL or database was changed.
+**Current status:** Governance approved; bootstrap architecture and dependency order prepared. Executable SQL remains blocked by the #35 source compatibility repair and unavailable disposable local runtime. No SQL or database was changed.
 
-## 19. Migration #34 compatibility repair plan (recovery-only; 2026-11-14)
+## 19. Migration #35 compatibility repair plan (recovery-only; 2026-11-14)
 
-**Status: source-audited repair specification; NOT SQL, NOT an active migration, NOT applied.** The approved Governance in §18 is authoritative. Preserve historical migration #34 unchanged until a disposable replay strategy and runtime are available; do not silently rewrite an already-versioned migration.
+**Status: source-audited repair specification; NOT SQL, NOT an active migration, NOT applied.** The approved Governance in §18 is authoritative. Preserve historical migration #35 unchanged until a disposable replay strategy and runtime are available; do not silently rewrite an already-versioned migration.
 
 ### 19.1 Exact repair contract
 
-A recovery-only post-#34 compatibility patch (or an explicitly reviewed source correction if the project later establishes that #34 has never been applied anywhere) must:
+A recovery-only post-#35 compatibility patch (or an explicitly reviewed source correction if the project later establishes that #35 has never been applied anywhere) must:
 
 1. Upsert the seven canonical departments exactly as approved in §18.1: `managing_director`, `marketing`, `transport`, `logistics`, `product_business`, `trust_safety`, `accounts`. Do not merge Logistics into Transport.
-2. Keep #34's Marketing keys under `marketing`, Transport partner/staff keys under `transport`, and Finance keys under `accounts`.
+2. Keep #35's Marketing keys under `marketing`, Transport partner/staff keys under `transport`, and Finance keys under `accounts`.
 3. Ensure `logistics.view` and `logistics.assign` are owned by `logistics`, not `transport`. Because #19 already seeds them under `logistics`, the repair must correct the catalog row's department deterministically rather than relying on `ON CONFLICT DO NOTHING`.
 4. Keep `services.edit` under `product_business`; add `products.edit` only after its exact UI action and server-side RPC contract are verified.
 5. Add the approved Trust & Safety catalog entries from §18.2. Until each corresponding narrow RPC is implemented and tested, mutation permissions must remain inactive/ungrantable; catalog presence alone is not authorization. `users.cancel` remains reversible deactivation, never Auth deletion.
@@ -667,9 +667,9 @@ A recovery-only post-#34 compatibility patch (or an explicitly reviewed source c
 
 ### 19.2 Replay ordering and why no active migration is created here
 
-- The current #34 file is timestamped `20261114200000`; the active feature set has later timestamps. A new forward migration cannot retroactively provide prerequisites required by earlier migrations.
+- The current #35 file is timestamped `20261114200000`; the active feature set has later timestamps. A new forward migration cannot retroactively provide prerequisites required by earlier migrations.
 - A recovery-only patch is therefore an explicit test/replay artifact, not a new historical migration and not a timestamp-fabricated file under `supabase/migrations/`.
-- The disposable replay must establish the Foundation baseline, replay the 38 active feature migrations in their actual timestamp order, apply the reviewed #34 compatibility repair at the correct post-#34 point before Admin officer workflows are exercised, then run the complete security/E2E suite.
+- The disposable replay must establish the Foundation baseline, replay the 39 active feature migrations in their actual timestamp order, apply the reviewed #35 compatibility repair at the correct post-#35 point before Admin officer workflows are exercised, then run the complete security/E2E suite.
 - After local replay succeeds, determine the genuine forward migration strategy for any already-existing environment separately. Never assume that editing a migration source updates a database where that version was previously applied.
 
 ### 19.3 Required tests for this repair
@@ -700,7 +700,7 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 - The exact function body remains unrecovered. Section 14.2 is the design contract for a newly authored recovery-only implementation: owner-controlled event trigger, public ordinary/partitioned tables only, extension/system objects excluded, RLS enabled (not FORCE), no API execution grant, and no implicit policy/grant creation. Do not create a stub or label a candidate as recovered historical SQL.
 - No active migration, repository source file, hosted database, NEXORA-TEST, Live/Production, `main`, DNS or deployment was changed. No security/E2E pass is claimed.
 
-**Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #34 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 38-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
+**Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #35 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 38-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
 
 
 ## 20. Local RLS auto-enable candidate — runtime preflight (2026-11-14)
@@ -710,10 +710,10 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 - Prepared `12_rls_auto_enable_recovery_candidate.sql` outside the active migration directory from the §14.2 design contract. It defines the actual `public.rls_auto_enable()` event-trigger function and `ensure_rls` DDL event trigger; it is not a no-op stub and does not generate policies or grants.
 - Tested on a disposable native Supabase CLI v3.1.0 stack using PostgreSQL 17. The candidate installed successfully and passed 12 runtime assertions: two ordinary public tables in one multi-statement run; CTAS; `SELECT INTO`; partitioned parent and child; non-public schema exclusion; function and event-trigger ownership (`postgres`); trigger enabled; no EXECUTE for `PUBLIC`, `anon`, or `authenticated`; no-policy table returns zero rows to `anon` after an explicit SELECT grant; one trigger remains installed (no recursive trigger creation).
 - A fresh replay with migrations temporarily disabled during stack startup installed the candidate first. Active migration `20261112045441_revoke_public_rls_auto_enable_execute.sql` then applied successfully. The next migration, `20261112050241_secure_public_profile_identity_projection.sql`, stopped because `public.profiles` does not exist. This confirms the RLS helper removes the first blocker, but the approved Foundation bootstrap is still missing.
-- Exactly 1 of 38 active feature migrations was recorded as applied in that disposable database. The stack was destroyed afterward; `stack list` returned empty. The earlier failed replay stack was also destroyed. No hosted database was changed.
-- **Not yet covered:** an extension-owned table creation test, full Foundation/Auth/AAL2 behavior, complete 38-migration replay, and end-to-end security tests. The candidate must not be called production-ready or deployed until these gates pass.
+- Exactly 1 of 39 active feature migrations was recorded as applied in that disposable database. The stack was destroyed afterward; `stack list` returned empty. The earlier failed replay stack was also destroyed. No hosted database was changed.
+- **Not yet covered:** an extension-owned table creation test, full Foundation/Auth/AAL2 behavior, complete 39-migration replay, and end-to-end security tests. The candidate must not be called production-ready or deployed until these gates pass.
 - No active migration was edited or created; migration #1 remains unchanged. `main`, NEXORA-TEST, Live/Production, DNS and deployments were not changed.
-- Next: implement the missing Foundation baseline from approved spec contracts in a disposable local stack, then rerun all 38 migrations from a fresh database and complete synthetic security tests.
+- Next: implement the missing Foundation baseline from approved spec contracts in a disposable local stack, then rerun all 39 migrations from a fresh database and complete synthetic security tests.
 
 
 ## 21. Recovery-only Foundation candidate — fresh replay and synthetic security verification (2026-11-14)
@@ -722,19 +722,30 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 
 - Candidate: `13_foundation_bootstrap_recovery_candidate.sql`. Built from the owner-approved Foundation baseline and active migration/frontend contracts. It supplies the missing profiles, seven approved departments, role/profile-change request tables, admin staff/catalog/grants/audit structures, Porter review row, protected Director/AAL2 resolvers, strict department permission resolver, Auth signup trigger and the frontend-contract `review_role_request(uuid,text)` RPC.
 - The candidate includes both `public.is_nexora_admin()` and the public compatibility wrapper `public.is_nexora_super_admin()`; the latter was discovered as a direct dependency of active migration `20261112151344_enforce_aal2_on_admin_metadata_reads.sql`. Both resolve only the protected active Director with AAL2.
-- Installed RLS helper candidate #12 and Foundation candidate #13 into a **fresh disposable native PostgreSQL 17 stack**, then replayed all 38 active migrations. Exact migration history: **38/38**, first `20261112045441`, last `20261115120000`. No active migration was edited.
+- Installed RLS helper candidate #12 and Foundation candidate #13 into a **fresh disposable native PostgreSQL 17 stack**, then replayed all 39 active migrations. Exact migration history: **38/38**, first `20261112045441`, last `20261115120000`. No active migration was edited.
 - Synthetic Foundation suite: **15/15 assertions passed** for Buyer/Seller/Porter Auth trigger provisioning, Porter pending review, rejection of public Admin signup, Director AAL1 denial/AAL2 acceptance, permission resolution, cross-department denial, same-department grant, explicit deny, Buyer own-profile RLS, duplicate pending Seller request, protected role field, atomic Director Seller approval and audit record.
 - Schema verification: Supabase CLI `db lint` reported **no schema errors**. All **41/41 public tables** had RLS enabled. All **46/46 SECURITY DEFINER functions** in public/private had an explicit `search_path`. Exactly one `auth.users` trigger invoked `public.handle_new_user()`. Internal `handle_new_user` and `rls_auto_enable` functions had no EXECUTE for anon/authenticated.
 - The fresh disposable stack was destroyed after verification and stack list was confirmed empty.
 
-## 22. Admin Governance migration #34 compatibility repair — local-only validation (2026-11-14)
+## 22. Admin Governance migration #35 compatibility repair — local-only validation (2026-11-14)
 
 **Status: RECOVERY-ONLY PATCH / NOT HISTORICAL SQL / NOT AN ACTIVE MIGRATION / NOT DEPLOYABLE.**
 
-- Candidate: `14_admin_governance_compatibility_repair_candidate.sql`. It preserves the existing `manage_nexora_officer` RPC signature while correcting the old #34 allowlist to six operational departments (Marketing, Transport, Logistics, Product & Business, Trust & Safety, Accounts), with Managing Director Office reserved for the MD position.
+- Candidate: `14_admin_governance_compatibility_repair_candidate.sql`. It preserves the existing `manage_nexora_officer` RPC signature while correcting the old #35 allowlist to six operational departments (Marketing, Transport, Logistics, Product & Business, Trust & Safety, Accounts), with Managing Director Office reserved for the MD position.
 - The repair validates that each permission is active and belongs to the selected department (except MD's specifically approved cross-department permissions), accumulates sensitivity across the full permission set, requires a reason for sensitive grants, preserves the supplied audit reason, and keeps Director AAL2, active Buyer prerequisite, row locking, atomic role/staff/grant writes, and reversible deactivation.
 - Local Governance suite: **16/16 assertions passed** for appointment in all six operational departments, correct permission assignment, rejection and rollback of cross-department grants, rejection of inactive Trust & Safety permissions, audit reason retention and reversible deactivation. Additional update/AAL1/sensitive-reason suite: **3/3 assertions passed**.
 - Re-ran `db lint` after the patch: no schema errors. RLS remained **41/41**; SECURITY DEFINER search_path check remained **46/46**. The final disposable stack was destroyed and stack list returned empty.
 - Combined runtime assertions across RLS helper (12), Foundation (15), Governance (16) and update/security (3): **46 passed**.
 - Remaining gates: extension-owned-table event-trigger test; protected initial Director bootstrap procedure (tests used a synthetic Director inserted only by local postgres); non-Director cross-department exception model remains fail-closed/not implemented; full Admin RPC coverage (`manage_nexora_user`, `manage_marketplace_listing`, `admin_manage_user`) is still missing; full Buyer browser journey is not yet validated.
 - No hosted NEXORA-TEST, Live/Production, `main`, DNS, Vercel deployment or paid service was changed. These candidates must not be applied to hosted environments.
+
+
+## 22. Current 39-migration inventory and product-listing reconciliation — 2026-11-15
+
+- The active migration directory contains 39 SQL files with 39 unique timestamp prefixes. The prior 38-file matrix omitted `20261114175118_add_dual_listing_market_category.sql`; it is now migration #32. Later migration references in this specification have been shifted by one where they refer to the active timestamp order.
+- Migration #32 adds `public.products.market_category` with `wholesale`, `retail`, and `legacy_unclassified` handling, plus rules preventing an approved Listing's type from being changed in place. This is per-Listing classification only; it does not reintroduce Buyer/Seller account categories or restrict Marketplace visibility.
+- Migration #39 `20261115120000_multilingual_chat_foundation.sql` depends on `profiles` and the earlier communications tables. It creates owner-scoped language preferences and accepted-participant read access to message translations. Translation remains disabled and must not be rolled out by this baseline.
+- The current source-level dependency matrix is `10_migration_frontend_compatibility_matrix.md` v2. Static parsing is not a migration replay. Earlier 38/38 replay claims in that matrix are historical and are not evidence that the current 39-file chain has passed.
+- A read-only check on 2026-11-15 confirms NEXORA-TEST remains `ACTIVE_HEALTHY` with zero application migration-history rows and zero public application tables. No Foundation or feature migration was applied.
+- Supabase CLI v3 targets local by default and requires explicit remote targeting for hosted changes. New public tables are not automatically exposed to the Data API; the baseline must explicitly grant only required privileges and pair them with RLS.
+- **Current stop condition:** do not apply any recovery-only candidate to hosted Supabase. Do not apply a new Foundation to NEXORA-TEST until source/permission contracts and the complete 39-migration chain pass on a genuinely isolated Supabase runtime. The current sandbox's inability to start that runtime is a blocker, not a reason to bypass the gate.
