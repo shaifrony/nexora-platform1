@@ -1210,3 +1210,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Termux runner #27 was updated to fetch immutable current commits for audit #24, behavior #26 and patch #30; fixture-only patch #28 is skipped when the full migration schema already exists.
 - Remaining: duplicate-order/concurrency tests, inactive participant tests, broader order-state transitions, real JWT/PostgREST and browser/mobile E2E. Patch #30 remains recovery-only pending a genuine forward migration timestamp.
 - No active migration was edited; no hosted database, Live/Production, main, DNS or deployment changed.
+
+
+## 2026-11-14 — Buyer Demand lifecycle and concurrent order tests passed
+
+- Extended recovery-only behavior test 26 to verify inactive Buyer negotiation denial, inactive Seller order-acceptance denial, Seller pending → accepted → ready transitions, Buyer ready → completed transition, Buyer cancellation of pending order, and Seller rejection with a mandatory reason.
+- Re-ran read-only privacy/routing audit 24 and behavior suite 26 on a fresh disposable PostgreSQL 17 stack after all 38 active migrations and recovery candidates #12–#14. All 34 PostgreSQL PASS notices succeeded; the behavior suite rolled back and synthetic Auth users, Demands and offers returned to zero.
+- Ran a separate two-session row-lock race test on one quotation. Concurrent Buyer acceptance yielded exactly one commerce order, one accepted negotiation turn and one `created` order event. The second transaction waited for the first lock, then was rejected because the quotation had already been ordered.
+- Found and corrected test-harness issues without weakening policies: test role SQLSTATE expectations now match `42501`; verified-review private table is not queried under `authenticated`; lifecycle test uses a dedicated Demand to respect the one-offer-per-Seller/Demand unique key.
+- Repaired Termux runner #27: corrected malformed curl/download quoting, added the recovery-only patch #30 download, preserved strict `nexora_test` target and prerequisite/session checks, and pinned immutable behavior-test revision.
+- Verified runner shell syntax with `bash -n`. Full real JWT/PostgREST/browser/mobile E2E remains pending.
+- Buyer Demand verified-review eligibility remains deliberately unasserted: existing review schema supports product/service/logistics subjects, while a Demand quotation order does not guarantee a linked Seller product ID. Do not fabricate a listing subject or widen review types; design a business-level review subject or explicit product association first.
+- Destroyed the disposable native stack and verified `stack list` returned empty. No active migration changed; no NEXORA-TEST, Live/Production, `main`, DNS or deployment changed.
