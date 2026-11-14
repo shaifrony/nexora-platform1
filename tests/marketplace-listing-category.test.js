@@ -537,7 +537,7 @@ test("Buyer Demand negotiation caps every counter-offer and accepted order at th
     demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
     demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order(")
   );
-  assert.ok(fn.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
+  assert.ok(fn.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+[.]?[0-9]*'),'')::numeric"));
   assert.ok(fn.includes("p_quantity>least(coalesce(nullif(v_offer.available_quantity,'')::numeric,0),v_demand_qty)"));
   assert.ok(fn.includes("least(v_latest.proposed_quantity,v_demand_qty)"));
   assert.ok(fn.includes("least(nullif(v_offer.available_quantity,'')::numeric,v_demand_qty)"));
@@ -951,14 +951,14 @@ test("Buyer Demand negotiation RPC caps Buyer and Seller counter quantities at r
     demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
     demandOrderSql.indexOf("revoke all on function private.respond_to_demand_offer")
   );
-  assert.ok(fn.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
+  assert.ok(fn.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+[.]?[0-9]*'),'')::numeric"));
   assert.ok(fn.includes("p_quantity>least(coalesce(nullif(v_offer.available_quantity,'')::numeric,0),v_demand_qty)"));
   assert.ok(fn.includes("least(v_latest.proposed_quantity,v_demand_qty)"));
   assert.ok(fn.includes("v_qty>v_demand_qty"));
 });
 
 test("Buyer Demand requested quantity parser accepts numeric amounts followed by units", () => {
-  assert.ok(demandOrderSql.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
+  assert.ok(demandOrderSql.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+[.]?[0-9]*'),'')::numeric"));
   assert.match(demandOrderSql, /if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid'/i);
 });
 
@@ -1004,7 +1004,7 @@ test("Seller quotation insert rejects a Buyer Demand with invalid or non-positiv
     demandOrderSql.indexOf("create or replace function private.initialise_seller_offer_negotiation()"),
     demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
   );
-  assert.ok(trigger.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
+  assert.ok(trigger.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+[.]?[0-9]*'),'')::numeric"));
   assert.ok(trigger.includes("if v_demand_qty is null or v_demand_qty<=0 then\n    raise exception 'Buyer Demand quantity must start with a positive numeric amount'"));
   assert.ok(trigger.includes("returns trigger language plpgsql security definer set search_path=''\nas $$\ndeclare"));
 });
