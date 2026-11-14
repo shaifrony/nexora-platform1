@@ -971,3 +971,13 @@ test("Seller Demand quotations must use the Buyer Demand's selected currency", (
   assert.match(trigger, /upper\(new\.currency\)<>upper\(v_demand\.currency\)/i);
   assert.match(trigger, /Quotation currency must match the Buyer Demand currency/i);
 });
+
+
+test("Demand negotiation and order creation revalidate the quoted Seller's active approved Business Profile", () => {
+  const fn = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
+    demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order(")
+  );
+  assert.match(fn, /p_action in \('accept','counter'\)[\s\S]*?p\.role='seller' and p\.account_status='active'[\s\S]*?public\.public_businesses b where b\.seller_id=v_offer\.seller_id/i);
+  assert.match(fn, /quoted Seller must remain active with an approved Business Profile/i);
+});
