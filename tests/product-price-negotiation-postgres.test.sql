@@ -126,7 +126,7 @@ begin
  end;
  if not v_denied then raise exception 'FAIL: NULL action was not rejected'; end if;
 
- -- Seller counters; Seller cannot reject its own latest proposal.
+ -- Seller counters; the next rejection attempt is checked against this Seller proposal.
  perform public.respond_to_product_price_negotiation(v_id,'counter',10,85,'Seller counter',null);
  v_denied:=false;
  begin
