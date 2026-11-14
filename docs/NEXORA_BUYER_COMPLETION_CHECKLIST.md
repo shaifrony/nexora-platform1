@@ -107,6 +107,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Buyer Demand quotation conversion and Buyer/Seller order status source paths are staged; Buyer order card shows delivery-inclusive `grand_total` with charge breakdown when non-zero.
 - [ ] Buyer account category ছাড়া যেকোনো approved product order করতে পারে—full-schema/runtime verification pending.
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
+- [x] Source-level tests cover active assigned Buyer/Seller checks on Product/Service order transitions, role-specific state changes, stock reservation/release/deduction, MOQ/available-stock validation and tier-price snapshots. Development CI [#43647408251](https://github.com/shaifrony/nexora-platform1/actions/runs/43647408251) passed 83/83 tests; hosted runtime/RLS and browser E2E remain pending.
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
 - [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
