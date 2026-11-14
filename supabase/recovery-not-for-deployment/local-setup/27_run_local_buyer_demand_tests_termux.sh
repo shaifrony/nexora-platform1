@@ -13,7 +13,7 @@ cd "$WORK_DIR"
 echo "Downloading immutable local-only SQL files ..."
 curl -fL --retry 3 "$BASE/cf3dc4991cad964d664ecb47f031c72e19914114/supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql" -o 25_local_buyer_demand_fixture.sql
 curl -fL --retry 3 "$BASE/5e0c4cc14c0e078097d3a8ae9b4df1bc29183e9a/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
-curl -fL --retry 3 "$BASE/0939b2b9c87e36939f10e487efcebf79a8ba77ac/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
+curl -fL --retry 3 "$BASE/223714ffff3a0d8ba6aa50c136b2bd1bb4639b4d/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
 curl -fL --retry 3 "$BASE/442827e1927ba8fa47cea8eac563e6c66f1975df/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql
 curl -fL --retry 3 "$BASE/8d7276f57d1c090aef49daf971794f3dbe5d7cb1/supabase/recovery-not-for-deployment/local-setup/30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
 
