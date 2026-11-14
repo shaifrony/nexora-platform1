@@ -93,6 +93,28 @@
         </form>
       </article>`).join("");
     providers.forEach(p=>loadVehicles(p.id));
+    host.insertAdjacentHTML("beforeend",'<section class="card" id="nxProviderReceiptJobs"><h3>Buyer Receipt Verification</h3><p class="muted">শুধু আপনার অনুমোদিত Provider-এ বরাদ্দ এবং Buyer-এর OTP অপেক্ষমাণ চালান এখানে দেখানো হবে।</p><div data-provider-receipt-list>চালান লোড হচ্ছে…</div></section>');
+    loadAssignedReceiptJobs();
+  }
+
+  async function loadAssignedReceiptJobs(){
+    const host=$("nxProviderReceiptJobs")?.querySelector("[data-provider-receipt-list]");
+    if(!host||!db())return;
+    const {data,error}=await db().rpc("get_my_assigned_receipt_jobs");
+    if(error){host.textContent="Receipt verification queue লোড হয়নি: "+error.message;return;}
+    const jobs=data||[];
+    host.innerHTML=jobs.length?jobs.map(j=>'<form class="offer" data-provider-receipt-form="'+esc(j.job_id)+'"><b>'+esc(j.job_reference)+'</b><p class="muted">Status: '+esc(j.job_status)+' · Buyer-এর কাছ থেকে পাওয়া ১৬ অক্ষরের OTP লিখুন।</p><label>Buyer Receipt OTP<input name="code" minlength="16" maxlength="16" pattern="[0-9A-Fa-f]{16}" autocomplete="one-time-code" required></label><label>Delivery note (ঐচ্ছিক)<input name="note" maxlength="1500"></label><button class="primary" type="submit">OTP যাচাই করে Delivered করুন</button><p class="muted" role="status" aria-live="polite"></p></form>').join(""):'<p class="muted">এখনো আপনার নামে OTP-যোগ্য কোনো চালান বরাদ্দ নেই।</p>';
+    host.querySelectorAll("[data-provider-receipt-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();const button=form.querySelector("button[type=submit]"),status=form.querySelector('[role="status"]'),data=new FormData(form);
+      button.disabled=true;status.textContent="OTP যাচাই হচ্ছে…";
+      try{
+        const {data:result,error:rpcError}=await db().rpc("verify_delivery_receipt_code",{p_job_id:form.dataset.providerReceiptForm,p_code:String(data.get("code")||"").trim(),p_location_description:null,p_note:String(data.get("note")||"").trim()||null});
+        if(rpcError)throw rpcError;
+        if(result?.verified){status.textContent="OTP সঠিক। Delivery Delivered হিসেবে নিশ্চিত হয়েছে।";form.querySelectorAll("input,button").forEach(x=>x.disabled=true);await loadAssignedReceiptJobs();}
+        else status.textContent="OTP যাচাই হয়নি। "+(result?.reason||("অবশিষ্ট চেষ্টা: "+(result?.attempts_remaining??"—")));
+      }catch(err){status.textContent="যাচাই হয়নি: "+err.message;}
+      finally{button.disabled=false;}
+    }));
   }
 
   async function loadVehicles(providerId) {
