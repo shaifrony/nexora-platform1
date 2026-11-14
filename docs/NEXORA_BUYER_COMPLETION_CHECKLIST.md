@@ -430,3 +430,13 @@ Implementation rules:
 - [x] Real Supabase Auth JWT/PostgREST integration was run against the disposable local native stack; signup trigger, RLS, safe public view, Buyer/Seller RPCs, order lifecycle and private-column boundaries passed.
 - [ ] Browser/mobile UI E2E remains open. The local Auth/PostgREST integration is not a browser test.
 - Hosted NEXORA-TEST, Live/Production, main, DNS and deployment were not changed.
+
+## 2026-11-14 — Additional frontend audit (verified)
+
+- `node --check` passed for `app.js`, `auth.js`, `marketplace.js`, `chat.js`, `delivery-network-admin.js`, `transport-provider.js`, and `admin/admin.js`.
+- Python's standard HTML parser accepted `index.html`; 175 element IDs were found with no duplicate IDs; all local script references exist; all explicit `label[for]` targets resolve. The Supabase JS CDN reference is external and was not fetched in this check.
+- **Critical Buyer Demand frontend gap found:** `index.html` contains `#demandForm` and its Publish Demand button, but no JavaScript file registers a submit handler for `demandForm`, and no frontend JS references `buyer_demands`, `buyer_demand_inbox`, or `seller_offers`. Therefore the visible form is not a working Buyer Demand flow yet. Earlier “frontend staged” wording must not be interpreted as functional completion.
+- Current active migration chain defines `buyer_demands`, `seller_offers`, and `buyer_demand_inbox`, but the public privacy-safe Demand projection `public_buyer_demands` used by the previous disposable local API test is supplied by recovery-only patch #30, not an active migration. Do not wire public/anonymous Demand browsing to a relation that is absent from the active migration chain. First convert the validated patch into a naturally timestamped forward migration and replay it on a fresh disposable local stack.
+- No browser binary or Playwright/Cypress package was present in the resumed sandbox. Browser/mobile UI E2E remains unverified; syntax/HTML parsing is not a substitute.
+- Verified purchase review schema accepts only `product`, `service`, and `logistics`; Buyer Demand-originated orders are not safely reviewable as products because no product ID is guaranteed. Conservative next design: add a separately typed, verified Business-level review subject linked to the completed order's Seller/Business, while keeping listing reviews unchanged; derive eligibility only from a server-confirmed completed order, enforce one review per Buyer/Business, and keep Buyer identity private. No schema or UI change made pending a separately replay-tested migration.
+
