@@ -72,6 +72,14 @@ create table public.seller_offers (
   updated_at timestamptz not null default now()
 );
 
+alter table public.seller_offers enable row level security;
+create policy seller_offers_fixture_participant_read on public.seller_offers
+  for select to authenticated
+  using (
+    seller_id=(select auth.uid())
+    or exists(select 1 from public.buyer_demands d
+      where d.id=seller_offers.demand_id and d.buyer_id=(select auth.uid()))
+  );
 grant select on public.seller_offers to authenticated;
 
 create table public.commerce_orders (
@@ -342,6 +350,19 @@ begin
   if not v_denied then raise exception 'FAIL: Buyer changed protected Demand currency'; end if;
 end
 $buyer_demand_update_rights$;
+
+select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000012',false);
+do $rls_seller_owner$
+begin
+  if (select count(*) from public.buyer_demands)<>0 then
+    raise exception 'FAIL: Seller can read a closed Buyer Demand outside its routed inbox';
+  end if;
+  if (select count(*) from public.seller_offer_negotiations
+      where offer_id='30000000-0000-4000-8000-000000000002')<>3 then
+    raise exception 'FAIL: Seller lost access to own negotiation history after Demand closure';
+  end if;
+end
+$rls_seller_owner$;
 
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
 do $rls_other_buyer$
