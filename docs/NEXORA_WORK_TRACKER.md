@@ -1044,3 +1044,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Buyer checklist update: `a3b9faa264354052ff782e07e7e27c32da090faa`.
 - **Not implemented yet:** snapshot columns/RPC updates and Buyer card UI. The Foundation baseline and complete migration history remain unreconciled; NEXORA-TEST is empty. Do not create/apply an active migration or update frontend selects until that gate is cleared.
 - No SQL, database, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed. No runtime/DB test was run in this pass.
+
+
+## 2026-11-14 — Continued Foundation / delivery dependency audit
+
+- Re-read the Supabase skill and checked the current Supabase changelog. CLI v3 changes defaults: database commands target local by default; hosted mutations require explicit targeting/confirmation. No CLI command or hosted mutation was run.
+- Read-only NEXORA-TEST check reconfirmed project ref `lhxmqoyxoywntmkmmnjb`, ACTIVE_HEALTHY / PostgreSQL 17.11, zero migration history rows, zero public/private application tables, and zero security advisor lints. The project remains intentionally empty.
+- Source-inspected delivery migrations #19, #31 and #32. The active model uses `delivery_jobs`, `delivery_job_events`, `delivery_job_assignment_history`, approved transport providers/vehicles and delivery-network partners/staff.
+- Confirmed `marketplace.js` Admin Logistics monitor is stale: it still reads absent `porter_delivery_jobs` / `porter_delivery_job_events`, queries private `profiles.full_name`, and calls absent legacy Porter RPCs. Porter workspace itself already says the old job table is not used. Do not create duplicate legacy tables/RPCs; Admin monitor needs a separately reviewed migration to the unified delivery network model and must remain blocked/hidden until replaced.
+- Added §9 to `supabase/recovery-not-for-deployment/local-setup/10_migration_frontend_compatibility_matrix.md` with the verified evidence and safe replacement contract. Commit: `10ee4e89e5a12cfd116acd20251df8ec3c67ceea`.
+- No source application code was changed in this pass. No SQL, NEXORA-TEST schema, Live/Production, `main`, DNS, paid service or deployment changed.
+- Next priority remains Buyer Department and the Foundation gate; do not spend Buyer-critical time implementing the legacy Admin Logistics panel until the Buyer Order/Delivery contracts and Foundation replay are ready.
