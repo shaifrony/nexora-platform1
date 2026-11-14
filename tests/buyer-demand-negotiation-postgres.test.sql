@@ -292,6 +292,23 @@ begin
 end
 $rls_buyer_owner$;
 
+do $buyer_demand_update_rights$
+declare
+  v_denied boolean:=false;
+begin
+  update public.buyer_demands set demand_status='closed'
+  where id='20000000-0000-4000-8000-000000000004';
+  if not found then raise exception 'FAIL: Buyer could not update own Demand lifecycle status'; end if;
+
+  begin
+    execute 'update public.buyer_demands set currency=''USD'' where id=''20000000-0000-4000-8000-000000000004''';
+  exception when insufficient_privilege then
+    v_denied:=true;
+  end;
+  if not v_denied then raise exception 'FAIL: Buyer changed protected Demand currency'; end if;
+end
+$buyer_demand_update_rights$;
+
 select set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000002',false);
 do $rls_other_buyer$
 begin
