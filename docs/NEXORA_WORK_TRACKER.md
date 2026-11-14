@@ -1032,3 +1032,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - B-01 to B-06 checklist: **29/51 = 57% staged-source checklist completion**. This is not production acceptance or test-pass percentage.
 - 22 checks remain open, including migration/Foundation reconciliation, integration/security/E2E, orders/inventory, communications/reviews/support, payments/wallet and delivery integration.
 - Latest Buyer Order identity snapshot: design documented; code/schema implementation remains blocked pending exact final Demand conversion RPC and public Business projection verification plus the migration/Foundation gate.
+
+
+## 2026-11-14 — Buyer Order identity source verification
+
+- Completed source-level verification for all three Commerce Order creation paths: Product/Service via latest `private.create_commerce_order` in migration #29; Buyer Demand conversion via `private.respond_to_demand_offer` in migration #36.
+- Verified item-name sources: `products.product_name`, `service_listings.service_name`, and `buyer_demands.product_name`.
+- Verified Seller public identity source: `public.public_businesses.display_name`, requiring exact Business + Seller match. Private profile identity must never be used as a fallback.
+- Replaced the earlier incomplete snapshot design with a source-verified contract covering the three paths, immutable server-side snapshots, legacy NULL values, unchanged order logic and synthetic security tests.
+- Design document: `docs/NEXORA_BUYER_ORDER_IDENTITY_SNAPSHOT_DESIGN.md`; source verification and commit: `12590b6b2f2daf394ae1c6bafdf7f3f15e146cfc`.
+- Buyer checklist update: `a3b9faa264354052ff782e07e7e27c32da090faa`.
+- **Not implemented yet:** snapshot columns/RPC updates and Buyer card UI. The Foundation baseline and complete migration history remain unreconciled; NEXORA-TEST is empty. Do not create/apply an active migration or update frontend selects until that gate is cleared.
+- No SQL, database, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed. No runtime/DB test was run in this pass.
