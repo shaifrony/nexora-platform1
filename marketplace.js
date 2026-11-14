@@ -1252,11 +1252,17 @@
     const host=$("nxSellerServiceList"); if(!host)return;
     if(!activeSeller()||!signedIn()){host.textContent="সক্রিয় Seller হিসেবে লগইন করুন।";return;}
     try{
-      const {data,error}=await client().from("service_listings")
-        .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,admin_note,image_urls")
-        .eq("seller_id",user().id).order("created_at",{ascending:false});
-      if(error)throw error;
-      if(!data?.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
+      const [servicesResult,notesResult]=await Promise.all([
+        client().from("service_listings")
+          .select("id,service_code,service_name,service_category,description,country,city,service_area,price_basis,price_amount,currency,availability,listing_status,image_urls")
+          .eq("seller_id",user().id).order("created_at",{ascending:false}),
+        client().rpc("get_my_service_listing_review_notes")
+      ]);
+      if(servicesResult.error)throw servicesResult.error;
+      if(notesResult.error)throw notesResult.error;
+      const noteMap=new Map((notesResult.data||[]).map(n=>[n.service_listing_id,n.admin_note]));
+      const data=(servicesResult.data||[]).map(s=>({...s,admin_note:noteMap.get(s.id)||null}));
+      if(!data.length){host.innerHTML='<p class="muted">আপনি এখনো কোনো সেবা যোগ করেননি।</p>';return;}
       window.NEXORA_SELLER_SERVICES=data;
       host.innerHTML=data.map(s=>'<article class="card" data-seller-service>'+(s.image_urls?.[0]?'<img class="product-image" src="'+esc(s.image_urls[0])+'" alt="'+esc(s.service_name)+'" loading="lazy">':'')+'<div class="section-head"><strong>'+esc(s.service_name)+'</strong><span class="tag">'+esc(({pending:"পর্যালোচনাধীন",approved:"অনুমোদিত",rejected:"প্রত্যাখ্যাত",suspended:"স্থগিত"})[s.listing_status]||s.listing_status)+'</span></div><p class="muted">'+esc(serviceCategoryLabels[s.service_category]||s.service_category)+' · '+esc(s.service_area)+' · '+esc(s.city)+'</p><small>Service ID: '+esc(s.service_code)+'</small>'+(s.admin_note?'<p class="muted">Admin Note: '+esc(s.admin_note)+'</p>':'')+(s.listing_status==="pending"?'<div class="form-actions"><button class="primary" type="button" data-edit-service="'+esc(s.id)+'">সেবা সম্পাদনা</button><button class="danger" type="button" data-delete-service="'+esc(s.id)+'">Pending সেবা মুছুন</button></div>':s.listing_status==="approved"?'<div class="form-actions"><button class="light" type="button" data-request-service-edit="'+esc(s.id)+'">পরিবর্তন প্রস্তাব করুন</button></div>':'')+'</article>').join("");
       host.querySelectorAll("[data-delete-service]").forEach(b=>b.addEventListener("click",()=>deleteService(b.dataset.deleteService)));
