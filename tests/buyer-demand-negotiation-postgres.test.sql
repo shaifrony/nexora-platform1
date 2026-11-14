@@ -167,7 +167,7 @@ begin
     where id=v_offer and negotiation_status='open'
       and last_negotiator_id=seller_id
       and accepted_quantity is null and accepted_unit_price is null and demand_order_id is null
-      and current_quantity=6000 and current_unit_price=100
+      and current_quantity=5000 and current_unit_price=100
   ) then
     raise exception 'FAIL: initial quotation accepted forged protected state';
   end if;
