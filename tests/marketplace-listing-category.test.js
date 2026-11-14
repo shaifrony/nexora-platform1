@@ -1045,3 +1045,14 @@ test("Initial Seller quotation quantity is capped at Buyer demand while Seller a
   assert.match(trigger, /new\.current_quantity:=least\(v_qty,v_demand_qty\)/i);
   assert.match(trigger, /new\.available_quantity/);
 });
+
+
+test("Buyer Demand latest negotiation turn uses a monotonic event sequence, not random UUID ordering", () => {
+  const negotiationSql = fs.readFileSync(
+    path.join(__dirname, "..", "supabase", "migrations", "20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql"),
+    "utf8"
+  );
+  assert.match(negotiationSql, /add column if not exists event_order bigint generated always as identity/i);
+  assert.match(negotiationSql, /order by event_order desc limit 1/i);
+  assert.doesNotMatch(negotiationSql, /order by created_at desc,id desc limit 1/i);
+});
