@@ -1626,3 +1626,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added three source regression tests for Product/Service column allowlists, owner-scoped note retrieval, Admin AAL2 note access and Seller UI wiring. One test assertion was initially attached to the Product order test rather than the Service note RPC; corrected the test placement (no Product order code changed).
 - Latest GitHub Actions Development CI [#43648379719](https://github.com/shaifrony/nexora-platform1/actions/runs/43648379719) for commit `84e1d3064ffa9a033e1924e1a2dc699d85c5afb9` completed successfully: **96/96 tests passed**, JavaScript syntax and migration filename/order guard passed.
 - No migration applied; no hosted database privilege changes. Actual anon/authenticated JWT column-privilege tests and Admin MFA runtime tests remain pending.
+
+
+## 2026-11-15 — Buyer Demand quotation integrity and requested-quantity limits
+- Hardened `private.initialise_seller_offer_negotiation()` so direct Seller inserts always initialise server-owned negotiation state: status `open`, last negotiator = Seller, and accepted quantity/price/order linkage cleared. Client-supplied values for those protected fields are ignored.
+- Hardened `private.respond_to_demand_offer()` to parse the Buyer-requested quantity and cap Seller initial quotes, Buyer/Seller counter-offers and final order quantity at both the requested quantity and Seller available quantity.
+- Added dependency-free regression coverage for forged initial quotation state and requested-quantity limits. GitHub Actions Development CI run [#43648638922](https://github.com/shaifrony/nexora-platform1/actions/runs/43648638922) for commit `bc27acb03abb3b01bb366166908a480245bdb044` completed successfully: JavaScript syntax, regression tests and migration filename/order guard all passed.
+- This is source-level regression coverage, not executed PostgreSQL/Supabase migration or live RLS/JWT/PostgREST integration. Hosted migration remains blocked pending migration-history reconciliation and explicit release approval. No hosted database, Production, DNS or `main` changed.
