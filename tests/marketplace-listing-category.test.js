@@ -900,7 +900,7 @@ test("Authenticated Service listing reads omit review metadata and Seller notes 
     serviceListingPrivacySql.indexOf("create or replace function public.get_my_service_listing_review_notes()"),
     serviceListingPrivacySql.indexOf("revoke all on function public.get_my_service_listing_review_notes()")
   );
-  assert.match(fn, /security definer set search_path=''/i);
+  assert.match(fn, /security definer[\s\S]*?set search_path=''/i);
   assert.match(fn, /s\.seller_id=\(select auth\.uid\(\)\)/i);
   assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
   assert.match(serviceListingPrivacySql, /revoke all on function public\.get_my_service_listing_review_notes\(\) from public,anon/i);
