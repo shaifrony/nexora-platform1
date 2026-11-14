@@ -80,3 +80,20 @@ The later unified Marketplace decision is now implemented in the development sou
 - Buyer/Seller profile sale-category fields are no longer created; Porter registration is aligned with this profile shape.
 
 Source-only status: updated frontend and staged migrations are on `nexora-development`. No hosted migration has been executed. Browser tests, SQL runtime tests and disposable database rehearsal remain pending.
+
+
+## 2026-11-14 — Latest approved separate Wholesale/Retail Listing model
+
+**This section supersedes the later unified-single-listing assumption above.** The Marketplace remains unified for discovery and access, but Wholesale and Retail are separate listing records.
+
+- Buyer/Seller account roles do not split by sale type. There are no Buyer Wholesale/Retail account categories and no Seller account-level sale-type permissions.
+- Every approved Wholesale and Retail Listing is visible to the same public/Buyer audience, subject to the normal approval and privacy rules.
+- A Seller may create two separate Listing records for the same underlying goods: one Wholesale and one Retail. Each Listing has its own Product/Listing ID, permanent URL/slug, price, currency, terms, quantity/MOQ rules, images, approval status, edit history, negotiation history and order snapshot.
+- In the current legacy schema, each row in public.products is effectively a listing record. The current active migration chain removed the former per-product market-category field, so the approved separate-listing model is **not yet implemented** in the database or frontend.
+- Target compatibility approach: restore a controlled per-listing sale_type field on product listing records, with explicit wholesale/retail values for all new listings. Existing rows must not be guessed into either category; retain a temporary legacy_unclassified state until the Seller confirms the correct type through a reviewed update flow.
+- Once a Listing is published, its sale_type is identity-defining and should not be changed in-place. To switch sale type, the Seller creates a separate Listing; existing orders and history retain the original Listing ID and terms.
+- Public Marketplace search defaults to both sale types; filters may narrow to wholesale or retail but never restrict a user's account visibility.
+- Buyer Demand matching remains product taxonomy + approved Seller/Business eligibility. It must not filter by Buyer/Seller account category or hide one sale type.
+- Order creation, product price negotiation, review eligibility and financial calculation must bind to the exact Listing ID and snapshot sale_type, price, currency and applicable terms.
+- Migration must preserve existing Product IDs, slugs, images, prices, reviews and historical Orders. Existing records must not be silently duplicated or assigned an invented sale type.
+- This is a source/design alignment note only. No SQL migration, schema or database was changed by recording it.
