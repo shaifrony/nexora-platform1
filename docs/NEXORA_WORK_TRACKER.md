@@ -1019,3 +1019,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Static verification: `marketplace.js` compiles with `new Function`; latest-50 label/limit, seven filter states, real status filtering, empty state, timeline fields, Seller update and no raw delivery table query verified. No browser, PostgREST, RLS, Auth or database runtime tests performed.
 - Buyer source commit: cce44c4359ad6429192198dcd429aac8c7f2a793. Tracking design commit: 825e1390b180de253bec5ab949a54e75add22672.
 - No SQL/migration, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed. Foundation/migration-history blockers remain.
+
+
+## 2026-11-14 — Buyer Order identity snapshots
+- Buyer Order History still lacks immutable item-name and Seller public Business Display Name snapshots. The current polymorphic `listing_id` is not sufficient for a safe historical join.
+- Added `docs/NEXORA_BUYER_ORDER_IDENTITY_SNAPSHOT_DESIGN.md` (design only). It specifies server-captured immutable names, safe public Business projection only, NULL legacy fallback, and required Product/Service/Demand conversion + privacy tests.
+- Frontend remains unchanged until the snapshot schema and final Demand conversion RPC are verified. No guessed query or private `profiles` lookup was introduced.
+- Status: **Design documented; implementation blocked** by Foundation/migration reconciliation and final Demand conversion/public projection source verification. No SQL or database mutation performed.
