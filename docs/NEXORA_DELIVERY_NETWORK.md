@@ -105,3 +105,14 @@ Before any real buyer delivery is enabled:
 - The separate Admin-managed NEXORA Team path was also validated in an earlier disposable run: approved team partner, staff roster, job assignment and five Admin-authored tracking transitions through delivered.
 - Disposable stack and all synthetic records were stopped and destroyed. No Live database mutation, `main`, Production, DNS or paid resource was used.
 - Remaining release work: approved-vehicle assignment/availability, courier-partner operational tracking, delivery receipt OTP/digital proof, delivery charge/payment/settlement, disputes/returns, external courier APIs/webhooks, PostgREST/HTTP and browser/device E2E, and concurrency/load testing.
+
+
+## 2026-11-15 — Buyer-safe Order Tracking projection
+
+- Added staged migration `20261115130000_buyer_safe_delivery_updates.sql`.
+- Operational `delivery_jobs.job_status` changes now create append-only, fixed-message customer updates only for jobs linked to a Commerce Order.
+- The Buyer read path is a narrow authenticated RPC. It requires an active Buyer and filters every requested Order by `commerce_orders.buyer_id = auth.uid()`.
+- Buyers do not receive raw job/tracking tables, exact addresses, private contacts, provider/Admin identity, assignment history, GPS, internal notes or unverified external tracking codes.
+- Buyer Dashboard now groups safe updates under each of the latest 50 orders and supports multiple delivery jobs per order. Operator-reported `delivered` does not complete the Commerce Order; Buyer receipt confirmation remains separate.
+- Disposable PostgreSQL integration passed for status mapping, append-only history, Buyer A/Buyer B isolation, private-table access denial and anonymous RPC denial. Development CI [#43652641287](https://github.com/shaifrony/nexora-platform1/actions/runs/43652641287) passed 120/120 source tests and 40 active migration filename/order checks.
+- Remaining: Buyer receipt OTP/alternative proof, order-to-delivery job creation/assignment UX, delivery charges/payment/settlement, disputes/returns and full Supabase/browser E2E.
