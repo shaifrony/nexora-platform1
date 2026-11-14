@@ -366,6 +366,143 @@ BEGIN
 END
 $expired_offer$;
 
+-- Inactive-account enforcement and the complete Buyer Demand order lifecycle.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
+VALUES('25400000-0000-4000-8000-000000000005','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000013',12500,'BDT','40','Lifecycle quote');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $lifecycle_buyer_accepts$
+DECLARE v_order uuid;
+BEGIN
+  v_order:=private.respond_to_demand_offer('25400000-0000-4000-8000-000000000005','accept',null,null,'Buyer accepts lifecycle quote');
+  IF NOT EXISTS(SELECT 1 FROM public.commerce_orders WHERE id=v_order AND order_status='pending' AND listing_type='buyer_demand') THEN
+    RAISE EXCEPTION 'FAIL: lifecycle order did not start pending';
+  END IF;
+  RAISE NOTICE 'PASS: lifecycle order created in pending state';
+END
+$lifecycle_buyer_accepts$;
+
+RESET ROLE;
+UPDATE public.profiles SET account_status='suspended'
+WHERE id='25000000-0000-4000-8000-000000000001';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $inactive_buyer_denied$
+DECLARE v_denied boolean:=false;
+BEGIN
+  BEGIN
+    PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000005','counter',20,12000,'Inactive Buyer attempt');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: inactive Buyer negotiated a quotation'; END IF;
+  RAISE NOTICE 'PASS: inactive Buyer cannot negotiate';
+END
+$inactive_buyer_denied$;
+RESET ROLE;
+UPDATE public.profiles SET account_status='active'
+WHERE id='25000000-0000-4000-8000-000000000001';
+UPDATE public.profiles SET account_status='suspended'
+WHERE id='25000000-0000-4000-8000-000000000013';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+DO $inactive_seller_denied$
+DECLARE v_order uuid; v_denied boolean:=false;
+BEGIN
+  SELECT id INTO v_order FROM public.commerce_orders
+  WHERE source_offer_id='25400000-0000-4000-8000-000000000005';
+  BEGIN
+    PERFORM private.transition_buyer_demand_order(v_order,'accept','Inactive Seller attempt');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: inactive Seller accepted a Buyer Demand order'; END IF;
+  RAISE NOTICE 'PASS: inactive Seller cannot accept an order';
+END
+$inactive_seller_denied$;
+RESET ROLE;
+UPDATE public.profiles SET account_status='active'
+WHERE id='25000000-0000-4000-8000-000000000013';
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+DO $lifecycle_seller_accepts$
+DECLARE v_order uuid; v_status text; v_accepted timestamptz;
+BEGIN
+  SELECT id INTO v_order FROM public.commerce_orders
+  WHERE source_offer_id='25400000-0000-4000-8000-000000000005';
+  PERFORM private.transition_buyer_demand_order(v_order,'accept','Seller accepts lifecycle order');
+  SELECT order_status,accepted_at INTO v_status,v_accepted FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'accepted' OR v_accepted IS NULL THEN RAISE EXCEPTION 'FAIL: Seller acceptance transition invalid'; END IF;
+  PERFORM private.transition_buyer_demand_order(v_order,'ready','Seller marks order ready');
+  SELECT order_status INTO v_status FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'ready_for_confirmation' THEN RAISE EXCEPTION 'FAIL: ready transition invalid'; END IF;
+  RAISE NOTICE 'PASS: Seller transitions pending → accepted → ready_for_confirmation';
+END
+$lifecycle_seller_accepts$;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $lifecycle_buyer_completes$
+DECLARE v_order uuid; v_status text; v_completed timestamptz;
+BEGIN
+  SELECT id INTO v_order FROM public.commerce_orders
+  WHERE source_offer_id='25400000-0000-4000-8000-000000000005';
+  PERFORM private.transition_buyer_demand_order(v_order,'complete','Buyer confirms receipt');
+  SELECT order_status,completed_at INTO v_status,v_completed FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'completed' OR v_completed IS NULL THEN RAISE EXCEPTION 'FAIL: Buyer completion transition invalid'; END IF;
+  IF NOT EXISTS(SELECT 1 FROM private.review_purchase_eligibility WHERE purchase_reference=(SELECT order_code FROM public.commerce_orders WHERE id=v_order)) THEN
+    RAISE EXCEPTION 'FAIL: completed order did not create review eligibility';
+  END IF;
+  RAISE NOTICE 'PASS: Buyer completes ready order and verified-review eligibility is created';
+END
+$lifecycle_buyer_completes$;
+
+-- Buyer cancellation is limited to pending orders.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
+VALUES('25400000-0000-4000-8000-000000000006','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000012',12600,'BDT','25','Cancellation quote');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_cancels_pending$
+DECLARE v_order uuid; v_status text; v_cancelled timestamptz;
+BEGIN
+  v_order:=private.respond_to_demand_offer('25400000-0000-4000-8000-000000000006','accept',null,null,'Buyer accepts then cancels');
+  PERFORM private.transition_buyer_demand_order(v_order,'cancel','Buyer no longer needs this order');
+  SELECT order_status,cancelled_at INTO v_status,v_cancelled FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'cancelled' OR v_cancelled IS NULL THEN RAISE EXCEPTION 'FAIL: Buyer cancellation transition invalid'; END IF;
+  RAISE NOTICE 'PASS: Buyer can cancel a pending order';
+END
+$buyer_cancels_pending$;
+
+-- Seller rejection requires a reason and applies only to pending orders.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
+VALUES('25400000-0000-4000-8000-000000000007','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000013',12700,'BDT','30','Rejection quote');
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
+DO $buyer_accepts_rejection_quote$
+BEGIN
+  PERFORM private.respond_to_demand_offer('25400000-0000-4000-8000-000000000007','accept',null,null,'Buyer accepts pending rejection test');
+END
+$buyer_accepts_rejection_quote$;
+SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
+DO $seller_rejects_pending$
+DECLARE v_order uuid; v_denied boolean:=false; v_status text;
+BEGIN
+  SELECT id INTO v_order FROM public.commerce_orders
+  WHERE source_offer_id='25400000-0000-4000-8000-000000000007';
+  BEGIN
+    PERFORM private.transition_buyer_demand_order(v_order,'reject','');
+  EXCEPTION WHEN raise_exception THEN v_denied:=true;
+  END;
+  IF NOT v_denied THEN RAISE EXCEPTION 'FAIL: Seller rejection without reason was accepted'; END IF;
+  PERFORM private.transition_buyer_demand_order(v_order,'reject','Supply unavailable');
+  SELECT order_status INTO v_status FROM public.commerce_orders WHERE id=v_order;
+  IF v_status<>'rejected' THEN RAISE EXCEPTION 'FAIL: Seller rejection transition invalid'; END IF;
+  RAISE NOTICE 'PASS: Seller rejection requires a reason and rejects a pending order';
+END
+$seller_rejects_pending$;
+
 -- Buyer spoofing another owner ID must fail the INSERT policy.
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
 DO $buyer_spoof$
