@@ -90,9 +90,17 @@ create unique index if not exists commerce_orders_source_offer_unique_idx
 
 create or replace function private.initialise_seller_offer_negotiation()
 returns trigger language plpgsql security definer set search_path=''
-as $$
-declare v_qty numeric(18,3); v_unit numeric(18,2);
+as $
+declare
+  v_demand public.buyer_demands%rowtype;
+  v_qty numeric(18,3);
+  v_unit numeric(18,2);
 begin
+  -- Serialize quotation creation against Buyer closing/cancelling the Demand.
+  select * into v_demand from public.buyer_demands where id=new.demand_id for update;
+  if not found or v_demand.demand_status<>'open' then
+    raise exception 'Buyer Demand is not open for quotations' using errcode='22023';
+  end if;
   v_qty:=nullif(new.available_quantity,'')::numeric;
   if v_qty is null or v_qty<=0 then
     raise exception 'Seller quotation availability must be a positive number' using errcode='22023';
