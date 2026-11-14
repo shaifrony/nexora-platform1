@@ -1222,3 +1222,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Verified runner shell syntax with `bash -n`. Full real JWT/PostgREST/browser/mobile E2E remains pending.
 - Buyer Demand verified-review eligibility remains deliberately unasserted: existing review schema supports product/service/logistics subjects, while a Demand quotation order does not guarantee a linked Seller product ID. Do not fabricate a listing subject or widen review types; design a business-level review subject or explicit product association first.
 - Destroyed the disposable native stack and verified `stack list` returned empty. No active migration changed; no NEXORA-TEST, Live/Production, `main`, DNS or deployment changed.
+
+
+## 2026-11-14 — Real Auth JWT and PostgREST Buyer journey passed
+
+- Started a separate disposable native Supabase stack with PostgREST and Auth enabled. Used synthetic Auth signup/password sessions only; signup trigger created Buyer profiles with active status by default.
+- Replayed the RLS helper + Foundation + all 38 active migrations + Admin Governance recovery candidate, then applied recovery-only Buyer ownership patch #30 locally.
+- Real Auth JWT/PostgREST checks passed: Buyer Demand insert (201), Buyer own read/update, unrelated Buyer read/update denial, anonymous safe public Demand view, Buyer ID column denial (403), approved Seller inbox routing, Seller quotation insert (201), Buyer quotation read, unrelated Buyer quotation denial, Buyer counter RPC, Seller acceptance RPC, Buyer order read, Seller ready RPC, Buyer completion RPC, completed order read, unrelated Buyer order denial, repeat completion denial (403), and Seller direct Inbox insert denial (403).
+- Final direct catalog audit: 41 public tables, 0 public tables without RLS, 0 SECURITY DEFINER functions without explicit search_path; Buyer ID SELECT denied to anon/authenticated; anon cannot execute private Buyer ownership helper; authenticated cannot directly INSERT/DELETE Demand Inbox; public Demand view is SECURITY INVOKER.
+- Local SQL behavior suite 26 also passed all 34 PostgreSQL PASS notices; two-session concurrent Buyer acceptance produced exactly one order, one accepted negotiation turn and one created event.
+- Supabase CLI `db lint` did not attach to the named native stack despite `stack status` reporting ready; direct catalog/security checks and the API integration suite were run instead. `db advisors` was not counted as passed.
+- Remaining: Browser/mobile UI E2E; Buyer Demand verified-review subject design (no guaranteed Seller product ID on a Demand quotation); recovery patch #30 must become a genuine forward migration after a natural CLI timestamp; repeat tests after forward migration.
+- All test accounts and rows existed only in the disposable local stack. No hosted NEXORA-TEST, Live/Production, `main`, DNS or deployment changed.
