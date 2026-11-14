@@ -1707,6 +1707,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - No hosted Supabase/NEXORA-TEST mutation, Production deployment, DNS/public alias change or `main` change was made. This increment is staged only on `nexora-development`.
 
 
+## 2026-11-15 — Receipt OTP PostgreSQL harness correction
+
+- Inspected the failing Development CI job log for run [#43654695337](https://github.com/shaifrony/nexora-platform1/actions/runs/43654695337). The migration itself and OTP verification RPC executed; the failure was in the test harness: it queried `public.delivery_jobs` while still running as the restricted `authenticated` role, which intentionally has no direct table SELECT privilege.
+- Moved the final delivered-status assertion to run after `RESET ROLE`, preserving the actual authenticated Provider call and subsequent one-time OTP reuse check. This corrects the fixture instead of widening operational table access.
+- Fixed the 16-character OTP regex to use an explicit end anchor and removed an accidental duplicated migration tail. The fixture also grants only the schema USAGE needed to invoke the narrowly granted private functions; no table grants were added.
+- Development CI [#43655233048](https://github.com/shaifrony/nexora-platform1/actions/runs/43655233048) passed on commit `e16c139556a93b2e419c865b75ce17441339f2d9`: JavaScript syntax, dependency-free regressions, Buyer Demand PostgreSQL, Product Price Negotiation PostgreSQL, Buyer-safe Delivery PostgreSQL, Buyer Receipt OTP PostgreSQL and migration filename/order checks all passed.
+- This is a disposable PostgreSQL harness result, not a hosted Supabase Auth/PostgREST/RLS or browser verification. Buyer OTP request/display UI and assigned Provider/Admin verification UI remain unimplemented; no SMS/WhatsApp delivery is configured. No hosted migration, NEXORA-TEST mutation, Production deployment, DNS/public alias change or `main` change was made.
+
 ## 2026-11-15 — Buyer receipt OTP security foundation (staged)
 
 - Added staged migration `20261115140000_buyer_delivery_receipt_otp.sql` with a private receipt-challenge table. The Buyer can request a 16-character one-time code only for their own shipment while its status is `out_for_delivery`.
