@@ -989,3 +989,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Buyer quotation acceptance and counter-offer now use inline forms instead of browser prompt dialogs. Quantity is bounded by Seller's available amount; counter price validated; optional note supported; busy/error feedback and cancel action included. Reject confirmation remains.
 - Existing server-side RPC and permission/state checks unchanged. Static JS compilation and source guards passed; browser runtime remains untested.
 - Commit: `19e3e553a80ffb891df954c12a984fd05d69245f`.
+
+
+### 2026-11-14 — Product Detail contact consent safeguard
+- Removed direct Product Detail Chat creation because the available source evidence did not prove that `create_product_inquiry` requires Seller acceptance before a conversation opens. Replaced it with a clear notice; Buyers retain explicit price-negotiation and order-request routes.
+- Static JavaScript syntax and source checks passed. Runtime/browser/DB tests remain blocked pending Foundation and safe NEXORA-TEST setup.
+- Checklist updated. Commit: `89a78e69f9e53b5db7a94e092114b714335ee3a7`.
+- No SQL, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment change.
