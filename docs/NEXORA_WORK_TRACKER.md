@@ -796,3 +796,11 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Latest active migration is `20261115120000`; the generated timestamp is earlier. Do not create a new migration until CLI naturally generates a version later than `20261115120000`. Do not hand-edit timestamps or set the clock. Existing source review and tests can continue without adding migrations.
 - Sandbox stopped. No Live/hosted DB, migration history, user data, `main`, Production, DNS or paid services touched.
 - Physical Android-device E2E remains pending; prior Android-sized Chromium emulation is not represented as a real phone test.
+
+
+## 2026-11-14 — Physical Android E2E access/safety gate
+
+- Read-only Vercel deployment inventory confirms a READY preview deployment for `nexora-development`; however, the current frontend source still contains the hosted Supabase project URL and publishable key in `auth.js`. Vercel project environment-variable listing returned no preview overrides.
+- Therefore, the preview cannot be treated as an isolated backend for Android Chat/Auth/Storage testing. Do **not** ask the user to sign up, send messages, upload files, or otherwise exercise authenticated flows against that preview.
+- Physical Android testing remains blocked until an isolated test Supabase backend is provided and wired into a non-production preview (or the user explicitly approves a separately scoped test project). No new Supabase project or paid service was created.
+- This is distinct from the completed Android-sized Chromium emulation against the disposable local Supabase stack. No physical-device test is claimed.
