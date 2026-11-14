@@ -1235,12 +1235,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Remaining: Browser/mobile UI E2E; Buyer Demand verified-review subject design (no guaranteed Seller product ID on a Demand quotation); recovery patch #30 must become a genuine forward migration after a natural CLI timestamp; repeat tests after forward migration.
 - All test accounts and rows existed only in the disposable local stack. No hosted NEXORA-TEST, Live/Production, `main`, DNS or deployment changed.
 
-### 2026-11-14 — Buyer frontend audit follow-up
-- Resumed the existing persistent sandbox from its latest snapshot; fast-forward synced `nexora-development`; repository was clean before this audit.
-- JavaScript syntax checks passed for all seven shipped frontend scripts (`app.js`, `auth.js`, `marketplace.js`, `chat.js`, `delivery-network-admin.js`, `transport-provider.js`, `admin/admin.js`).
-- HTML parser check: `index.html` parsed, 175 IDs, zero duplicate IDs, all local script files found, and all explicit label targets resolved. External Supabase CDN was not fetched.
-- Critical gap: visible `#demandForm` has no submit handler; frontend JavaScript has no references to `buyer_demands`, `buyer_demand_inbox`, or `seller_offers`. Buyer Demand UI is therefore not functional despite the backend journey being API-tested. Treat as a release blocker; implement only after privacy-safe projection is included in active migration history.
-- `public_buyer_demands` used in prior local integration test currently exists via recovery-only patch #30, not active migrations. Promote the validated recovery patch to a naturally timestamped forward migration and replay before wiring public Demand listing.
-- No browser binary or Playwright/Cypress runtime in sandbox; browser/mobile E2E not performed. Do not count static checks as E2E.
-- Review scope: current verified listing-review model supports product/service/logistics only. Buyer Demand orders have no guaranteed product association. Preferred safe design is a distinct Business-level verified review subject based on server-confirmed completed Buyer Demand order and Seller/Business; no migration/UI changes made yet.
+### 2026-11-14 — Corrected Buyer frontend audit
+- Correction: the previous appended note incorrectly said the Buyer Demand UI was absent. Inspection of the actual `marketplace.js` confirms the `demandForm` submit handler, Buyer Demand insert/dashboard, Seller Demand Inbox, Seller quotation insert, and public projection query already exist.
+- Active migration `20261112153000_publish_open_demands_without_buyer_identity.sql` provides the anon open-Demand RLS policy and column-limited public grants excluding `buyer_id`.
+- Active migration `20261114160000_demand_inbox_quotations_subcategories.sql` adds Buyer Demand subcategory and creates/recreates `public_buyer_demands` with `security_invoker=true`, including subcategory, with restricted view and base-table grants.
+- Static checks: seven frontend JS files parse; HTML parses with 175 unique IDs; all local script paths resolve; Demand form field names and the active subcategory schema addition align. Submit, Buyer dashboard, Seller inbox, quotation and public view code paths are present.
+- Browser/mobile E2E remains open; sandbox has no browser binary or Playwright/Cypress runtime. Do not infer runtime UI success from static checks.
+- Recovery patch #30 is not the public Demand projection; it is a separate local-only offer SELECT-policy patch and remains outside active migrations.
+- Review subject for Buyer Demand orders remains an unresolved design item; no fabricated product association or review schema change.
+- Migration CLI 3.1.0 is available from the sandbox's npx cache. Current UTC is 2026-11-14 12:17; latest active migration is timestamped 20261115120000. A newly generated timestamp now would sort before that migration, so no new migration was generated or renamed artificially. Wait for the CLI's natural timestamp to exceed the latest migration before adding a forward migration.
 - No Production, Live, NEXORA-TEST, `main`, deployment, DNS, or paid-service changes.
