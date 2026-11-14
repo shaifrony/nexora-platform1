@@ -292,7 +292,7 @@ The Foundation seed audit must account for every key above and every additional 
 
 ## 12. Follow-up source audit — Auth trigger, RLS bootstrap and complete permission seed gaps (2026-11-14)
 
-A source scan of all 38 active SQL migration files on `nexora-development`, followed by direct inspection of the relevant definitions, confirms:
+A source scan of all 39 active SQL migration files on `nexora-development`, followed by direct inspection of the relevant definitions, confirms:
 
 ### 12.1 Auth signup function evolution
 
@@ -328,7 +328,7 @@ The current frontend additionally checks `users.view|suspend|restore|cancel`, `p
 
 ### 13.1 Auth trigger binding is absent from the active migration chain
 
-A second source scan of all 38 active migration files distinguished ordinary application triggers from the Supabase Auth signup trigger:
+A second source scan of all 39 active migration files distinguished ordinary application triggers from the Supabase Auth signup trigger:
 
 - Active migrations create `profiles_sync_public_identity` on `public.profiles` and `business_profiles_sync_public_business` on `public.business_profiles`, plus application-specific triggers.
 - No active migration creates an `auth.users` trigger invoking `public.handle_new_user()`; no active migration creates an event trigger for automatic RLS enablement.
@@ -626,7 +626,7 @@ The candidate, when generated in a suitable disposable local Supabase environmen
 
 1. **Platform preflight:** confirm actual Supabase-managed Auth/Storage/Realtime schemas and extensions; do not create platform internals or fake Auth/AAL2.
 2. **Schemas and least-privilege defaults:** create/verify `private`; keep it outside exposed schemas; establish explicit grants/default privileges only after Data API exposure review.
-3. **Core identity:** `profiles` with exact four-role constraint and account-status constraint; no marketplace category fields. Include only columns proven required by the 38 migrations/frontend.
+3. **Core identity:** `profiles` with exact four-role constraint and account-status constraint; no Buyer/Seller account-category fields. Include only columns proven required by the 39 migrations/frontend.
 4. **Governance catalogue and staff:** departments, `admin_staff`, permission catalogue, grants, Director invariants and reporting relationships. Enforce the approved seven-department catalogue.
 5. **Audit and lifecycle:** append-only `admin_audit_logs`, `role_requests`, `profile_change_requests`, `porter_account_reviews`; safe public identity projection only if required by the feature chain.
 6. **Canonical private authorization:** protected Director check, AAL2 + active profile/staff + explicit permission + department scope + explicit-deny precedence; compatibility wrappers for legacy names only where source callers require them.
@@ -700,7 +700,7 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 - The exact function body remains unrecovered. Section 14.2 is the design contract for a newly authored recovery-only implementation: owner-controlled event trigger, public ordinary/partitioned tables only, extension/system objects excluded, RLS enabled (not FORCE), no API execution grant, and no implicit policy/grant creation. Do not create a stub or label a candidate as recovered historical SQL.
 - No active migration, repository source file, hosted database, NEXORA-TEST, Live/Production, `main`, DNS or deployment was changed. No security/E2E pass is claimed.
 
-**Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #35 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 38-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
+**Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #35 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 39-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
 
 
 ## 20. Local RLS auto-enable candidate — runtime preflight (2026-11-14)
@@ -722,7 +722,7 @@ The current session has no local Supabase CLI, Docker, `psql`, or checked-out wo
 
 - Candidate: `13_foundation_bootstrap_recovery_candidate.sql`. Built from the owner-approved Foundation baseline and active migration/frontend contracts. It supplies the missing profiles, seven approved departments, role/profile-change request tables, admin staff/catalog/grants/audit structures, Porter review row, protected Director/AAL2 resolvers, strict department permission resolver, Auth signup trigger and the frontend-contract `review_role_request(uuid,text)` RPC.
 - The candidate includes both `public.is_nexora_admin()` and the public compatibility wrapper `public.is_nexora_super_admin()`; the latter was discovered as a direct dependency of active migration `20261112151344_enforce_aal2_on_admin_metadata_reads.sql`. Both resolve only the protected active Director with AAL2.
-- Installed RLS helper candidate #12 and Foundation candidate #13 into a **fresh disposable native PostgreSQL 17 stack**, then replayed all 39 active migrations. Exact migration history: **38/38**, first `20261112045441`, last `20261115120000`. No active migration was edited.
+- Historical local rehearsal record: RLS helper candidate #12 and Foundation candidate #13 were reported installed into a **fresh disposable native PostgreSQL 17 stack**, followed by a **38/38 replay of the 38 migrations then present**, first `20261112045441`, last `20261115120000`. The later-added `20261114175118_add_dual_listing_market_category.sql` was not part of that historical 38-file set. This record is not 39/39 evidence; the current 39-file replay remains unverified.
 - Synthetic Foundation suite: **15/15 assertions passed** for Buyer/Seller/Porter Auth trigger provisioning, Porter pending review, rejection of public Admin signup, Director AAL1 denial/AAL2 acceptance, permission resolution, cross-department denial, same-department grant, explicit deny, Buyer own-profile RLS, duplicate pending Seller request, protected role field, atomic Director Seller approval and audit record.
 - Schema verification: Supabase CLI `db lint` reported **no schema errors**. All **41/41 public tables** had RLS enabled. All **46/46 SECURITY DEFINER functions** in public/private had an explicit `search_path`. Exactly one `auth.users` trigger invoked `public.handle_new_user()`. Internal `handle_new_user` and `rls_auto_enable` functions had no EXECUTE for anon/authenticated.
 - The fresh disposable stack was destroyed after verification and stack list was confirmed empty.
