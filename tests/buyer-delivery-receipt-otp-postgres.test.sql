@@ -32,9 +32,9 @@ create function private.update_delivery_network_job_status(uuid,text,text,text,t
 returns jsonb language sql security definer set search_path=''
 as $$ select jsonb_build_object('status',$2) $$;
 grant execute on function private.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
-create function public.update_delivery_network_job_status(uuid,text,text default null,text default null,text default null)
+create function public.update_delivery_network_job_status(p_job_id uuid,p_next_status text,p_location_description text default null,p_note text default null,p_external_tracking_code text default null)
 returns jsonb language sql security invoker set search_path=''
-as $$ select private.update_delivery_network_job_status($1,$2,$3,$4,$5) $$;
+as $ select private.update_delivery_network_job_status($1,$2,$3,$4,$5) $;
 grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
 
 \ir ../supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql
