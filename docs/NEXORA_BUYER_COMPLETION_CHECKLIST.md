@@ -342,3 +342,10 @@ Implementation rules:
 - Confirmed from the active Marketplace schema: description is NOT NULL but accepts an empty string; specifications_quality is nullable; subcategory is added as nullable and the demand-to-Seller matching logic treats blank subcategory as broad category matching. Frontend submission already sends trimmed empty strings; no schema mutation needed.
 - Static checks: marketplace.js compiles; form exists; three optional fields no longer required; essential fields and required date remain required; script tags balanced. No browser/runtime test performed.
 - Commit: index.html `7f9249e406a87dc1c5b583e224375ffda48212fc`.
+
+
+### Buyer quotation response UX — 2026-11-14
+- Replaced Buyer-side browser prompt() sequence for quotation acceptance and counter-offers with inline accessible forms embedded in the relevant quotation card. Buyer can enter quantity, unit price and optional note without browser dialogs; quantity is validated against Seller's maximum available amount and counter price must be positive. Submit button disables during request; inline status displays progress/errors; cancel restores the original action buttons.
+- Reject still asks for confirmation. Existing server RPC `respond_to_demand_offer` remains the authoritative state/permission validator; no database logic was weakened or changed.
+- Static verification: marketplace.js compiles; inline form exists; max quantity and positive price guards present; Buyer accept/counter handler no longer uses prompt(); duplicate-submit guard present. No browser/runtime test performed.
+- Commit: marketplace.js `19e3e553a80ffb891df954c12a984fd05d69245f`.
