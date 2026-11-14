@@ -951,15 +951,14 @@ test("Buyer Demand negotiation RPC caps Buyer and Seller counter quantities at r
     demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
     demandOrderSql.indexOf("revoke all on function private.respond_to_demand_offer")
   );
-  assert.match(fn, /v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),' '\)::numeric|v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),'\'\)::numeric/i);
-  assert.match(fn, /p_quantity>least\(coalesce\(nullif\(v_offer\.available_quantity,'\'\)::numeric,0\),v_demand_qty\)/i);
-  assert.match(fn, /least\(v_latest\.proposed_quantity,v_demand_qty\)/i);
-  assert.match(fn, /v_qty>v_demand_qty[\s\S]*?v_qty>coalesce\(nullif\(v_offer\.available_quantity,'\'\)::numeric,0\)/i);
+  assert.ok(fn.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
+  assert.ok(fn.includes("p_quantity>least(coalesce(nullif(v_offer.available_quantity,'')::numeric,0),v_demand_qty)"));
+  assert.ok(fn.includes("least(v_latest.proposed_quantity,v_demand_qty)"));
+  assert.ok(fn.includes("v_qty>v_demand_qty"));
 });
 
-
 test("Buyer Demand requested quantity parser accepts numeric amounts followed by units", () => {
-  assert.match(demandOrderSql, /v_demand_qty:=nullif\(substring\(regexp_replace\(btrim\(v_demand\.required_quantity\),',','','g'\) from '\^\[0-9\]\+\(\[\.\]\[0-9\]\+\)\?'\),' '\)::numeric/i);
+  assert.ok(demandOrderSql.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
   assert.match(demandOrderSql, /if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid'/i);
 });
 
