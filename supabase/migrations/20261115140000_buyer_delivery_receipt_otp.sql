@@ -121,91 +121,10 @@ declare
  v_actor_type text;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
- if length(coalesce(p_code,''))<>16 or p_code !~ '^[0-9A-Fa-f]{16}
-    or length(coalesce(p_location_description,''))>500 or length(coalesce(p_note,''))>1500 then
-   raise exception 'Invalid receipt verification input' using errcode='22023';
- end if;
- if private.has_nexora_permission('logistics.assign') then
-   if (select auth.jwt()->>'aal') is distinct from 'aal2' then
-     raise exception 'Admin MFA (AAL2) is required' using errcode='42501';
-   end if;
-   select s.admin_code into v_admin_code from public.admin_staff s join public.profiles p on p.id=s.user_id
-    where s.user_id=v_actor and s.is_active=true and p.role='admin' and p.account_status='active';
-   if v_admin_code is null then raise exception 'Active Admin membership required' using errcode='42501'; end if;
-   v_actor_type:='admin';
- else
-   select tp.owner_user_id into v_owner
-   from public.delivery_jobs j join public.transport_providers tp on tp.id=j.assigned_provider_id
-   where j.id=p_job_id;
-   if v_owner is distinct from v_actor then
-     raise exception 'Only the assigned independent Provider or authorized Admin can verify receipt' using errcode='42501';
-   end if;
-   v_actor_type:='independent_provider';
- end if;
- select * into v_challenge from private.delivery_receipt_challenges c
- where c.job_id=p_job_id and c.consumed_at is null
- order by c.created_at desc limit 1 for update;
- if not found then return jsonb_build_object('verified',false,'reason','no_active_challenge'); end if;
- if v_challenge.expires_at<=now() then
-   update private.delivery_receipt_challenges set consumed_at=now() where id=v_challenge.id;
-   return jsonb_build_object('verified',false,'reason','expired');
- end if;
- if v_challenge.attempts>=5 then
-   update private.delivery_receipt_challenges set consumed_at=now() where id=v_challenge.id;
-   return jsonb_build_object('verified',false,'reason','attempt_limit');
- end if;
- if v_challenge.code_hash<>md5(upper(p_code)||p_job_id::text||v_challenge.buyer_id::text||'NEXORA-RECEIPT-V1') then
-   update private.delivery_receipt_challenges set attempts=attempts+1,
-     consumed_at=case when attempts+1>=5 then now() else null end
-   where id=v_challenge.id;
-   return jsonb_build_object('verified',false,'attempts_remaining',greatest(0,4-v_challenge.attempts));
- end if;
- select job_status into v_old from public.delivery_jobs where id=p_job_id for update;
- if v_old not in ('out_for_delivery','partially_delivered') then
-   raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
- end if;
- update private.delivery_receipt_challenges set consumed_at=now(),verified_at=now() where id=v_challenge.id;
- update public.delivery_jobs set job_status='delivered',updated_at=now() where id=p_job_id;
- update private.delivery_receipt_challenges set verified_at=null where id=v_challenge.id;
- insert into public.delivery_tracking_events(job_id,previous_status,new_status,location_description,note,
-   external_tracking_code,actor_user_id,actor_type)
- values(p_job_id,v_old,'delivered',nullif(btrim(coalesce(p_location_description,'')),''),
-   nullif(btrim(coalesce(p_note,'')),''),null,v_actor,v_actor_type);
- if v_actor_type='admin' then
-   insert into public.admin_audit_logs(actor_user_id,actor_admin_code,action_key,target_type,target_id,details)
-   values(v_actor,v_admin_code,'delivery_job.receipt_verified','delivery_job',p_job_id::text,
-     jsonb_build_object('previous_status',v_old,'new_status','delivered','verification','buyer_otp'));
- end if;
- return jsonb_build_object('verified',true,'job_id',p_job_id,'previous_status',v_old,'status','delivered');
-end;
-$$;
-revoke all on function private.verify_delivery_receipt_code(uuid,text,text,text) from public,anon,authenticated;
-grant execute on function private.verify_delivery_receipt_code(uuid,text,text,text) to authenticated;
-
-create or replace function public.verify_delivery_receipt_code(
- p_job_id uuid,p_code text,p_location_description text default null,p_note text default null
-) returns jsonb language sql security invoker set search_path=''
-as $$ select private.verify_delivery_receipt_code($1,$2,$3,$4); $$;
-revoke all on function public.verify_delivery_receipt_code(uuid,text,text,text) from public,anon;
-grant execute on function public.verify_delivery_receipt_code(uuid,text,text,text) to authenticated;
-
--- Rebind the public RPC after the private function rename; PostgreSQL dependencies
--- otherwise keep the pre-existing wrapper attached to the renamed legacy function.
-create or replace function public.update_delivery_network_job_status(
- p_job_id uuid,p_next_status text,p_location_description text default null,p_note text default null,p_external_tracking_code text default null
-) returns jsonb language sql security invoker set search_path=''
-as $status_guard$ select private.update_delivery_network_job_status($1,$2,$3,$4,$5); $status_guard$;
-revoke all on function public.update_delivery_network_job_status(uuid,text,text,text,text) from public,anon;
-grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
-
-comment on table private.delivery_receipt_challenges is
- 'Private one-time Buyer receipt challenges. Only a salted digest is stored; raw OTP is returned only to the owning Buyer at request time.';
-comment on function public.verify_delivery_receipt_code(uuid,text,text,text) is
- 'Verifies the Buyer one-time receipt code and is the only authenticated RPC path that can set a Delivery Job to delivered.';
-
-commit;
-
-    or length(coalesce(p_location_description,''))>500 or length(coalesce(p_note,''))>1500 then
+ if length(coalesce(p_code,''))<>16
+    or p_code !~ '^[0-9A-Fa-f]{16}$'
+    or length(coalesce(p_location_description,''))>500
+    or length(coalesce(p_note,''))>1500 then
    raise exception 'Invalid receipt verification input' using errcode='22023';
  end if;
  if private.has_nexora_permission('logistics.assign') then
