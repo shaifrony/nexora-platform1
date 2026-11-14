@@ -215,3 +215,63 @@ Do not apply any feature migration until a dependency scan confirms every refere
 **Current result:** Foundation contract is now consolidated for the current Marketplace and account decisions. It is a design specification only; it has not been converted to SQL or executed.
 
 **Next safe implementation:** build a dependency-by-dependency compatibility matrix for all 38 active migrations and current frontend, then author a new Test-only SQL baseline only after every required field, permission key, trigger behavior and function signature is confirmed. The SQL must be generated through the approved Supabase migration workflow when the CLI timestamp gate allows it; never invent or rename a migration timestamp.
+
+
+## 11. Frontend-derived role-request and Admin governance contracts — source audit v2
+
+This section records exact current frontend contracts and identifies incompatibilities. It is design/reconciliation evidence only; it does not authorize SQL or a hosted change.
+
+### 11.1 Seller role request — current frontend contract
+
+Verified in `auth.js`:
+
+- Owner reads only their own pending request using `role_requests(user_id, requested_role, status, created_at)`, ordered newest first, limit 1.
+- Owner inserts only `user_id = auth.uid()`, `requested_role = 'seller'`, `status = 'pending'`; a partial unique constraint/index must prevent more than one pending request per user.
+- Owner handles SQLSTATE `23505` / constraint name `one_pending_role_request_per_user` as an already-pending request.
+- Admin queue reads pending rows with `id,user_id,requested_role,created_at`, then reads only applicant projection `profiles(id,full_name,role,account_status)` for those IDs. This must be restricted to the authorized role-review workflow; it is not permission for general Admin profile browsing.
+- Admin review RPC call is exactly `review_role_request(request_id uuid, decision text)`; accepted decision values sent by frontend are `approved` and `rejected`. Admin UI gates to active Super Admin, and server-side implementation must independently enforce Director/Super Admin identity, AAL2, row locking, current pending state, valid applicant role/status, audit logging and atomic profile role transition.
+- On approval, the intended product outcome is Seller role; on rejection, Buyer remains Buyer. A request cannot grant Admin or Porter. Duplicate/replayed decisions must fail safely.
+
+**Important:** the frontend call is confirmed, but the original historical SQL defining this table/RPC is not present in the active migration set. Do not infer or fabricate historical source. A new compatible Foundation contract may implement it only after the exact current UI and product decision are approved and synthetic tests pass.
+
+### 11.2 Admin staff columns consumed by current frontend / migrations
+
+The current frontend reads `admin_staff(admin_code,admin_level,department_key,is_active)` for the signed-in Admin. The Director management UI additionally reads the staff roster and permission assignments. Migration #34 directly requires or writes:
+
+- `user_id` (one staff record per Admin profile), `admin_code`, `admin_level` (Director uses `super_admin`; managed staff use `assistant_admin`), `department_key`, `is_active`, `created_by`, `staff_email`, `position_key`, `reports_to_user_id`, `updated_at`.
+- Position values: `director`, `managing_director`, `department_head`, `department_officer`. #34 permits at most one active MD and one active Head per department.
+- Managed officers are provisioned only against an existing active Buyer Auth/profile account after a secure invite. The server changes the profile role to Admin and inserts staff + permission grants in one transaction. Director is never self-created through signup or public metadata.
+- `admin_permission_grants` must support `admin_user_id`, `permission_key`, `is_allowed`, `granted_by`; #34 replaces an officer's grant set transactionally on update and deletes grants on deactivation. Authorization must fail closed; an explicit deny must never be overridden by an allow from another grant row.
+- `admin_permission_catalog` must support `permission_key`, `department_key`, `permission_name`, `description`, `is_sensitive`, `is_active`; permission seeds are spread across feature migrations, not just #34. The Foundation must inventory every referenced key before seeding and reject inactive/mismatched department grants.
+- `admin_audit_logs` must support the exact columns written by current functions: `actor_user_id`, `actor_admin_code`, `action_key`, `target_type`, `target_id`, optional `reason`, `details` JSONB and timestamp. Append-only from client roles; writes only through audited server-side workflows.
+
+### 11.3 Confirmed frontend / database mismatches requiring reconciliation
+
+- `auth.js` calls `review_role_request(request_id, decision)`; no active migration defines this RPC. It remains a Foundation RPC requirement, not a recovered historical object.
+- `marketplace.js` still calls `manage_nexora_user(p_user_id, p_action, p_reason)`, while later Admin UI paths call `admin_manage_user(p_user_id, p_action, p_reason)`. Neither is defined by the 38 active migrations according to the dependency scan. These are not interchangeable until their intended actions, status transitions and permission keys are reconciled. Do not create both aliases blindly.
+- `marketplace.js` reads `profiles(id,full_name,role,account_status,created_at)` for Admin user management and allows Buyer/Seller account actions. This must be gated by exact user-management permissions, AAL2 and audited RPCs; frontend grant checks are only presentation, never authorization.
+- `admin_staff.admin_level='super_admin'` is still hard-coded by current Director UI and #34, while the newer organization model also uses `position_key='director'`. Preserve a compatibility value for the Director but make the Director predicate require both the protected staff appointment and active Admin profile; position text alone is not authority.
+- Existing older Admin policies in migrations #10–12 are not fully aligned: #10 checks AAL2 inline, #12 centralizes active Admin/AAL2 for selected policies, and some Super Admin reads bypass the helper via `public.is_nexora_super_admin()`. Foundation must define one canonical private authorization implementation and compatibility wrappers with identical fail-closed semantics; migration replay tests must verify there is no pre-MFA or inactive-staff read path.
+
+### 11.4 Permission resolver minimum semantics
+
+The canonical `private.has_nexora_permission(text)` must:
+
+1. Require `auth.uid()`, current JWT AAL2, active `profiles.role='admin'`, active account status and one active `admin_staff` appointment.
+2. Treat the Director as a protected governance appointment; do not infer Director from email, signup metadata, role alone, a client argument or a permission grant.
+3. Require an active catalog entry and an explicit allowed grant for non-Director staff; enforce department scope and any Director-authorized cross-department exception.
+4. Fail closed for missing, inactive, conflicting or malformed grants. If deny rows are retained, deny takes precedence over allow.
+5. Keep all reads and decisions server-side. The frontend may hide controls based on grants but cannot authorize RPC execution.
+6. Revoke PUBLIC/anon execution and grant only the minimum authenticated invocation needed by RLS/RPC wrappers. Internal definer helpers remain in `private`, fully qualified, with empty search_path and explicit `auth.uid()` validation.
+
+### 11.5 Required synthetic tests added to the Foundation gate
+
+- Buyer/Seller cannot read Admin staff, department, permission catalogue/grants or audit data.
+- Admin AAL1, inactive Admin, missing staff row, suspended profile, missing grant, inactive catalog permission, wrong department and explicit deny all fail.
+- Director-only officer create/update/deactivate works only for the protected Director at AAL2; self-appointment and duplicate active MD/department Head are rejected.
+- Officer permission changes are atomic, remove stale grants, preserve audit trail and cannot grant keys from another department without the protected cross-department approval path.
+- Seller role request is owner-only, one pending request per user, cannot request Admin/Porter, and only an authorized AAL2 reviewer can approve/reject once. Approval changes Buyer to Seller atomically; rejection leaves Buyer unchanged.
+- Admin user suspend/restore/cancel operations are defined once, separately permissioned, audited and cannot be invoked through stale legacy aliases.
+- Auth signup cannot create Admin; Porter stays pending until separate approval; Buyer/Seller signup remains active.
+
+**Status:** contracts are now more precise, but original missing historical SQL remains missing. This document is still NOT SQL / NOT DEPLOYABLE / NOT APPLIED. Continue to keep NEXORA-TEST empty until local Supabase runtime gates pass.
