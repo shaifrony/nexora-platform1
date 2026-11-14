@@ -816,3 +816,17 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Vercel Preview environment inspection found no existing branch-scoped variables. The current `auth.js` still hardcodes the original hosted Supabase URL and publishable key; therefore, do not use the existing Preview for authenticated testing yet.
 - Next safe step: design and implement an explicit branch-only Test backend configuration for `nexora-development`, verify Production/main cannot select the Test backend, then apply/rehearse schema only after establishing a safe isolated migration baseline. Do not set ineffective Vercel env variables for this static frontend without first adding a supported build-time configuration path.
 - No Vercel environment variables, deployment, repository application source, SQL migration, main, Production, DNS or paid service changed during project creation.
+
+
+## 2026-11-14 — Isolated Test backend routing staged on Development
+
+- Added shared `supabase-config.js` with an explicit hostname allowlist:
+  - Exact Development branch alias `nexora-platform1-git-nexora-development-shaifrony-7200.vercel.app` selects only the separate `NEXORA-TEST` project (`lhxmqoyxoywntmkmmnjb`).
+  - Verified Production project domain `nexora-platform1-mu.vercel.app` retains the existing production backend.
+  - Every other host fails closed and blocks Auth/Data API initialization; unknown per-deployment Preview URLs and localhost are not silently routed to Live.
+- Loaded the shared config before Auth on both `index.html` and `admin/index.html`; updated `auth.js` and `admin/admin.js` to use the selected config. The only Test credential embedded is the Supabase **publishable** key, which is intended for browser use; no service-role/secret key or database password is present.
+- Changes are confined to `nexora-development`; no `main` or Production source/config changes. No Vercel environment variables were changed. No Supabase migration/schema/data operation was performed.
+- Disposable Vercel Sandbox source checks: `node --check auth.js`, `node --check admin/admin.js`, `node --check supabase-config.js`, `git diff --check` all passed. Confirmed both HTML pages load the config before their Auth script. Node VM routing tests: exact Development alias -> Test; a different Vercel Preview host -> blocked; unapproved non-Vercel host -> blocked; exact verified Production domain -> Production.
+- Vercel automatically built the earlier source commits as READY Preview deployments and the stable branch alias was attached to the Development commit. A raw unauthenticated HTTP probe to that alias was redirected by Vercel Deployment Protection; no protection setting was weakened. Final fail-closed allowlist commit: `7bff5370c1d6c2da6f9efa1190996581931078f5`; its Preview build/alias must be rechecked before any authenticated use.
+- **Not yet verified:** authenticated browser login, REST/PostgREST, Storage, Realtime, and actual Android device flows against the hosted Test Project. No user should sign in or upload anything until the latest Preview is confirmed READY on the branch alias and isolated DB schema is safely prepared.
+- No Live data was copied; no hosted Test migrations applied yet. Calling remains paused.
