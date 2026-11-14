@@ -444,7 +444,7 @@ Implementation rules:
 
 ## 2026-11-14 — Business review security gate
 - [ ] Add Business as a verified-review subject using `business_profiles.id` for completed Buyer Demand orders; never fabricate a Product ID.
-- [ ] Harden `listing_reviews` API column grants before further review rollout. Current table-level SELECT grants plus published-row RLS expose private columns such as `buyer_id`, `reviewed_by`, and `moderation_note` to direct API selection.
+- [ ] Harden `listing_reviews` API column grants before further review rollout. Current table-level SELECT grants plus published-row RLS expose private columns (`buyer_id`, `reviewed_by`, `reviewed_at`, `moderation_note`, `updated_at`) to direct API selection. Recovery hardening now revokes table-level and independent column-level grants before allowlisting public columns.
 - [ ] Generate eligibility server-side only after a Buyer Demand order actually transitions to completed; backfill eligible completed orders idempotently.
 - [ ] Extend existing review eligibility/submit RPCs with Buyer/Business ownership, self-review, active Buyer, atomic consume, and one-review-per-Buyer/Business enforcement.
 - [ ] Add Business detail review UI using public Business ID and neutral reviewer label; do not reveal Buyer identity or order data.
