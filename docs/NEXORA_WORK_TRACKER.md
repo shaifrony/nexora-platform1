@@ -983,3 +983,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Confirmed active source schema permits empty description, nullable specifications and nullable/blank subcategory; the Seller routing function treats blank subcategory as category-wide matching. No DB/schema change.
 - Static checks passed: marketplace.js syntax, form constraints, script tag balance. Browser/runtime remains pending.
 - Commit: `7f9249e406a87dc1c5b583e224375ffda48212fc`.
+
+
+### Buyer quotation response made easier — 2026-11-14
+- Buyer quotation acceptance and counter-offer now use inline forms instead of browser prompt dialogs. Quantity is bounded by Seller's available amount; counter price validated; optional note supported; busy/error feedback and cancel action included. Reject confirmation remains.
+- Existing server-side RPC and permission/state checks unchanged. Static JS compilation and source guards passed; browser runtime remains untested.
+- Commit: `19e3e553a80ffb891df954c12a984fd05d69245f`.
