@@ -923,30 +923,62 @@
       return '<article class="card"><div class="section-head"><div><span class="tag">'+esc(d.category)+'</span><span class="tag">'+esc(labels[d.demand_status]||d.demand_status)+'</span></div><strong>'+esc(d.demand_code)+'</strong></div><h3>'+esc(d.product_name)+'</h3><p class="muted">Subcategory: '+esc(d.subcategory||"—")+'</p><p>'+esc(d.description)+'</p><p class="muted"><strong>স্পেসিফিকেশন:</strong> '+esc(d.specifications_quality||"উল্লেখ করা হয়নি")+'</p><div class="grid"><div><p class="muted">পরিমাণ</p><strong>'+esc(d.required_quantity)+'</strong></div><div><p class="muted">বাজেট</p><strong>'+(d.budget===null?"উল্লেখ করা হয়নি":esc(d.budget+" "+d.currency))+'</strong></div><div><p class="muted">গন্তব্য</p><strong>'+esc(d.destination_city)+', '+esc(d.destination_country)+'</strong></div></div><p><span class="demand-date">প্রয়োজনের তারিখ: '+esc(d.required_date)+'</span></p><p><strong>'+list.length+'টি Price Offer</strong></p>'+offerHTML+actions+'</article>';
     }).join("");
     host.querySelectorAll("button[data-demand-status][data-demand-id]").forEach(b=>b.addEventListener("click",()=>updateBuyerDemandStatus(b.dataset.demandId,b.dataset.demandStatus)));
-    host.querySelectorAll("button[data-quote-action]").forEach(b=>b.addEventListener("click",()=>respondToDemandQuotation(b.dataset.offerId,b.dataset.quoteAction,Number(b.dataset.maxQuantity)||null)));
+    host.querySelectorAll("button[data-quote-action]").forEach(b=>b.addEventListener("click",()=>respondToDemandQuotation(b.dataset.offerId,b.dataset.quoteAction,Number(b.dataset.maxQuantity)||null,b)));
   }
 
-  async function respondToDemandQuotation(offerId,action,maxQuantity){
+  async function respondToDemandQuotation(offerId,action,maxQuantity,trigger){
     if(!activeBuyer()||!signedIn())return say("এই কাজটি করতে Active Buyer লগইন প্রয়োজন।");
-    let quantity=null,unitPrice=null,note=null;
-    if(action==="accept"){
-      const raw=prompt("কত ইউনিট কিনতে চান? Seller-এর সর্বোচ্চ সরবরাহযোগ্য পরিমাণ "+maxQuantity+"।",String(maxQuantity));
-      if(raw===null)return;quantity=Number(raw);
-      if(!Number.isFinite(quantity)||quantity<=0||quantity>maxQuantity)return say("পরিমাণ ০-এর বেশি এবং Seller-এর সরবরাহযোগ্য পরিমাণের মধ্যে হতে হবে।");
-      if(!confirm(quantity+" ইউনিটের জন্য Quotation গ্রহণ করে Order তৈরি করবেন?"))return;
-    }else if(action==="counter"){
-      const q=prompt("আপনি কত ইউনিট চান? সর্বোচ্চ "+maxQuantity+"।",String(maxQuantity));if(q===null)return;quantity=Number(q);
-      if(!Number.isFinite(quantity)||quantity<=0||quantity>maxQuantity)return say("পরিমাণ সঠিক নয় বা Seller-এর সক্ষমতার বেশি।");
-      const p=prompt("আপনার প্রস্তাবিত প্রতি ইউনিট মূল্য লিখুন:");if(p===null)return;unitPrice=Number(p);
-      if(!Number.isFinite(unitPrice)||unitPrice<=0)return say("প্রতি ইউনিট মূল্য ০-এর বেশি হতে হবে।");
-      note=prompt("অতিরিক্ত শর্ত (ঐচ্ছিক):")||null;
-    }else if(action==="reject"&&!confirm("এই Quotation প্রত্যাখ্যান করবেন?"))return;
-    try{
-      const {data,error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note});
-      if(error)throw error;
-      say(action==="accept"?"Quotation গৃহীত হয়েছে। Order তৈরি হয়েছে; Seller-এর নিশ্চিতকরণের অপেক্ষায় আছে।":action==="counter"?"আপনার Counter-offer Seller-এর কাছে পাঠানো হয়েছে।":"Quotation প্রত্যাখ্যান করা হয়েছে।",true);
-      await Promise.all([loadBuyerDashboard(),loadBuyerOrders()]);
-    }catch(err){say("Quotation আপডেট হয়নি: "+err.message);}
+    if(!["accept","counter","reject"].includes(action))return;
+    if(action==="reject"){
+      if(!confirm("এই Quotation প্রত্যাখ্যান করবেন?"))return;
+      try{
+        const {error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:"reject",p_quantity:null,p_unit_price:null,p_note:null});
+        if(error)throw error;
+        say("Quotation প্রত্যাখ্যান করা হয়েছে।",true);
+        await loadBuyerDashboard();
+      }catch(err){say("Quotation আপডেট হয়নি: "+err.message);}
+      return;
+    }
+    if(!Number.isFinite(maxQuantity)||maxQuantity<=0)return say("Seller-এর সরবরাহযোগ্য পরিমাণ পাওয়া যায়নি।");
+    const actions=trigger?.closest(".form-actions");
+    if(!actions)return say("Quotation form খোলা যায়নি।");
+    const form=document.createElement("form");
+    form.className="nx-buyer-quote-response card";
+    form.setAttribute("aria-label",action==="accept"?"Quotation গ্রহণ":"Counter-offer পাঠান");
+    form.innerHTML=action==="accept"
+      ? '<strong>কত ইউনিট কিনবেন?</strong><label>পরিমাণ *<input name="quantity" type="number" min="0.001" step="0.001" required></label><p class="muted">Seller সর্বোচ্চ '+esc(maxQuantity)+' ইউনিট দিতে পারবেন।</p><div class="form-actions"><button class="primary" type="submit">Quotation গ্রহণ করে Order তৈরি</button><button class="light" type="button" data-quote-response-cancel>ফিরে যান</button></div><p class="muted" role="status" aria-live="polite"></p>'
+      : '<strong>আপনার Counter-offer</strong><label>আপনি কত ইউনিট চান? *<input name="quantity" type="number" min="0.001" step="0.001" required></label><label>প্রতি ইউনিট প্রস্তাবিত মূল্য *<input name="unit_price" type="number" min="0.01" step="0.01" required></label><label>অতিরিক্ত শর্ত (ঐচ্ছিক)<textarea name="note" maxlength="1000"></textarea></label><p class="muted">Seller সর্বোচ্চ '+esc(maxQuantity)+' ইউনিট দিতে পারবেন।</p><div class="form-actions"><button class="primary" type="submit">Counter-offer পাঠান</button><button class="light" type="button" data-quote-response-cancel>ফিরে যান</button></div><p class="muted" role="status" aria-live="polite"></p>';
+    const quantityInput=form.querySelector('[name="quantity"]');
+    quantityInput.max=String(maxQuantity);
+    quantityInput.value=String(maxQuantity);
+    actions.replaceWith(form);
+    form.querySelector("[data-quote-response-cancel]")?.addEventListener("click",()=>form.replaceWith(actions));
+    form.addEventListener("submit",async e=>{
+      e.preventDefault();
+      const quantity=Number(quantityInput.value);
+      if(!Number.isFinite(quantity)||quantity<=0||quantity>maxQuantity){
+        form.querySelector('[role="status"]').textContent="পরিমাণ ০-এর বেশি এবং Seller-এর সর্বোচ্চ সরবরাহযোগ্য পরিমাণের মধ্যে হতে হবে।";
+        return;
+      }
+      const unitPrice=action==="counter"?Number(form.querySelector('[name="unit_price"]').value):null;
+      if(action==="counter"&&(!Number.isFinite(unitPrice)||unitPrice<=0)){
+        form.querySelector('[role="status"]').textContent="প্রতি ইউনিট মূল্য ০-এর বেশি দিন।";
+        return;
+      }
+      const submit=form.querySelector('button[type="submit"]');
+      submit.disabled=true;
+      form.querySelector('[role="status"]').textContent="আপনার উত্তর পাঠানো হচ্ছে…";
+      try{
+        const note=action==="counter"?(form.querySelector('[name="note"]')?.value||"").trim()||null:null;
+        const {error}=await client().rpc("respond_to_demand_offer",{p_offer_id:offerId,p_action:action,p_quantity:quantity,p_unit_price:unitPrice,p_note:note});
+        if(error)throw error;
+        say(action==="accept"?"Quotation গৃহীত হয়েছে। Order তৈরি হয়েছে; Seller-এর নিশ্চিতকরণের অপেক্ষায় আছে.":"আপনার Counter-offer Seller-এর কাছে পাঠানো হয়েছে।",true);
+        await Promise.all([loadBuyerDashboard(),loadBuyerOrders()]);
+      }catch(err){
+        form.querySelector('[role="status"]').textContent="উত্তর পাঠানো যায়নি: "+(err.message||"অজানা সমস্যা");
+        submit.disabled=false;
+      }
+    });
   }
 
   async function updateBuyerDemandStatus(demandId, nextStatus) {
