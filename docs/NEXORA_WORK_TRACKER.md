@@ -1234,3 +1234,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Supabase CLI `db lint` did not attach to the named native stack despite `stack status` reporting ready; direct catalog/security checks and the API integration suite were run instead. `db advisors` was not counted as passed.
 - Remaining: Browser/mobile UI E2E; Buyer Demand verified-review subject design (no guaranteed Seller product ID on a Demand quotation); recovery patch #30 must become a genuine forward migration after a natural CLI timestamp; repeat tests after forward migration.
 - All test accounts and rows existed only in the disposable local stack. No hosted NEXORA-TEST, Live/Production, `main`, DNS or deployment changed.
+
+### 2026-11-14 — Buyer frontend audit follow-up
+- Resumed the existing persistent sandbox from its latest snapshot; fast-forward synced `nexora-development`; repository was clean before this audit.
+- JavaScript syntax checks passed for all seven shipped frontend scripts (`app.js`, `auth.js`, `marketplace.js`, `chat.js`, `delivery-network-admin.js`, `transport-provider.js`, `admin/admin.js`).
+- HTML parser check: `index.html` parsed, 175 IDs, zero duplicate IDs, all local script files found, and all explicit label targets resolved. External Supabase CDN was not fetched.
+- Critical gap: visible `#demandForm` has no submit handler; frontend JavaScript has no references to `buyer_demands`, `buyer_demand_inbox`, or `seller_offers`. Buyer Demand UI is therefore not functional despite the backend journey being API-tested. Treat as a release blocker; implement only after privacy-safe projection is included in active migration history.
+- `public_buyer_demands` used in prior local integration test currently exists via recovery-only patch #30, not active migrations. Promote the validated recovery patch to a naturally timestamped forward migration and replay before wiring public Demand listing.
+- No browser binary or Playwright/Cypress runtime in sandbox; browser/mobile E2E not performed. Do not count static checks as E2E.
+- Review scope: current verified listing-review model supports product/service/logistics only. Buyer Demand orders have no guaranteed product association. Preferred safe design is a distinct Business-level verified review subject based on server-confirmed completed Buyer Demand order and Seller/Business; no migration/UI changes made yet.
+- No Production, Live, NEXORA-TEST, `main`, deployment, DNS, or paid-service changes.
