@@ -100,6 +100,8 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Added source-level regression coverage for quotation INSERT state hardening: client-supplied negotiation status/current terms/accepted terms/order linkage are overwritten by a BEFORE INSERT trigger; initial quote actor/status/terms are derived from the Seller's quote.
 - [x] Added server-side Buyer Demand quantity ceilings: every Buyer/Seller counter-offer and final accepted order is capped at the lower of Seller availability and the Buyer's posted required quantity. Buyer and Seller dashboard controls apply the same ceiling.
 - [x] Final Development CI [#43646918669](https://github.com/shaifrony/nexora-platform1/actions/runs/43646918669) passed 70/70 dependency-free source regression tests, JavaScript syntax and migration filename/order guard. This does not replace database execution, JWT/RLS/PostgREST or browser E2E.
+- [x] Quotation creation locks the Buyer Demand row and rejects closed/cancelled Demand; negotiation locks Demand before Offer using the same order to avoid a concurrent insert/negotiation lock inversion. Source regression coverage verifies this lock order.
+- [x] Latest Development CI [#43647210267](https://github.com/shaifrony/nexora-platform1/actions/runs/43647210267) passed 77/77 dependency-free source tests, including the above Demand protections and seven Private Chat invitation/participant-isolation checks. No hosted Auth/JWT/PostgREST or browser E2E claim is made.
 
 ### B-04 — Orders, stock ও pricing
 - [x] Buyer Demand quotation conversion and Buyer/Seller order status source paths are staged; Buyer order card shows delivery-inclusive `grand_total` with charge breakdown when non-zero.
@@ -113,6 +115,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Buyer/Seller quotation accept, counter and reject actions and server-side turn-taking rules are staged; accepted quotation creates a source-linked Commerce Order with negotiated quantity/price.
 - [ ] End-to-end competing-offer, concurrency, expiry, inactive-account, RLS and browser behavior tests remain pending.
 - [ ] Seller invitation accept না করা পর্যন্ত Buyer message পাঠাতে পারে না।
+- [x] Source regression checks verify accepted-participant-only Chat membership, creator-only invitations, accepted-only message/file/call-signal access, Product inquiry Buyer/approved Seller eligibility, and hidden composer/call controls while an invitation is pending. Full runtime verification remains pending.
 - [ ] Audio/video/file sharing এবং history শুধু conversation participants দেখতে পারে।
 - [ ] Admin ব্যক্তিগত chat-এর content দেখতে পারে না—পূর্বের privacy decision অনুযায়ী।
 - [ ] Verified review কেবল completed purchase-এর পর; একজন Buyer এক listing-এ একবার।
