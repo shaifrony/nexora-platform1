@@ -29,7 +29,7 @@ DECLARE
   v_permission_sensitive boolean;
   v_reports_to uuid;
   v_details jsonb;
-  v_email text := lower(trim(coalesce(p_email,''));
+  v_email text := lower(trim(coalesce(p_email,'')));
 BEGIN
   IF v_actor IS NULL
      OR (SELECT auth.jwt()->>'aal') IS DISTINCT FROM 'aal2'
