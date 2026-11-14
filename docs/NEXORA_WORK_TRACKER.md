@@ -1332,3 +1332,16 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Updated the Agent Network design with the user's latest superseding decisions: Seller Agent resells as own NEXORA Seller (no unregistered Seller record/profile); separate Wholesale/Retail listings; mandatory Buyer Agent fee only when that service is used; Seller Agent pays onward transport; NEXORA assigns receiving-area Local Distribution Agent; `buyer_received` settlement trigger; Buyer Demand orders use the same fulfilment path.
 - Financial rates and calculation bases remain unapproved and must be supplied through versioned, effective-dated configuration; no default rates are embedded in the financial module.
 - Local Node checks passed for configurable bases, Wholesale/Retail calculation, Buyer Agent fee on/off, exact transport allocation reconciliation, overlapping schedule rejection and invalid split rejection.
+
+
+## 2026-11-14 — Implementation approval and first regression suite
+
+- User approved implementation of the NEXORA Core Rebuild and requested the fastest safe delivery path without compromising quality or security.
+- Implementation boundary remains nexora-development; main, Production/Live Supabase, DNS, deployment and paid services remain excluded unless separately approved.
+- Revalidated repository branch and migration inventory. nexora-development exists and the latest recorded source inventory contains 38 active migration files with unique version prefixes.
+- Read-only inspection confirmed the NEXORA-TEST Supabase project (lhxmqoyxoywntmkmmnjb) is healthy but currently has zero applied migrations and zero application tables. No schema or data was changed.
+- Confirmed current blockers: supabase/config.toml is absent; active migrations require an untracked Foundation prerequisite; local Docker, Supabase CLI and PostgreSQL client are not installed in the available execution environment. The 38 migrations must not be applied directly to the empty hosted Test project before the Foundation and clean-replay gate is satisfied.
+- Added tests/financial-config.test.js using Node's built-in test runner. It covers schedule validation, sale-type-specific fee calculation, conditional Buyer Agent fee, exact minor-unit transport allocation, invalid rates/bases, effective-date overlap, unapproved schedules and immutable Order Fee Snapshot.
+- Local Node test run: 15 tests passed, 0 failed. The run used a local verification copy of the current financial-config.js source; this is a unit-level calculation test, not Supabase/database integration evidence.
+- No SQL migration or database change was applied. No Production/Live, main, DNS, deployment or paid service was changed.
+- Next safe work: reconcile the latest approved separate Wholesale/Retail Listing model against the current unified-product source, then establish a reproducible local Supabase CLI v3 environment and generate migrations only through supabase migration new. If a local Supabase runtime cannot be made available without a paid service, pause before hosted Test schema changes and report the blocker.
