@@ -362,3 +362,144 @@ test("Negotiation dashboard interpolates user and listing data through HTML esca
   assert.match(seller, /esc\(n\.fulfilment_location\)/);
   assert.match(seller, /esc\(n\.quantity\)/);
 });
+
+
+const demandInboxSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114160000_demand_inbox_quotations_subcategories.sql"),
+  "utf8"
+);
+
+test("Seller can read and quote only open Buyer Demands routed to its approved Business Profile", () => {
+  const readPolicy = demandInboxSql.slice(
+    demandInboxSql.indexOf("create policy demands_owner_inbox_admin_read"),
+    demandInboxSql.indexOf("-- Seller quotation creation")
+  );
+  const insertPolicy = demandInboxSql.slice(
+    demandInboxSql.indexOf("create policy offers_approved_seller_inbox_insert"),
+    demandInboxSql.indexOf("grant update (subcategory)")
+  );
+  assert.match(readPolicy, /demand_status='open'/i);
+  assert.match(readPolicy, /i\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(insertPolicy, /seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(insertPolicy, /p\.role='seller' and p\.account_status='active'/i);
+  assert.match(insertPolicy, /public\.public_businesses b where b\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(insertPolicy, /i\.seller_id=\(select auth\.uid\(\)\) and d\.demand_status='open'/i);
+});
+
+test("Buyer Demand quotation UI validates amount, currency, availability and delivery charge before insert", () => {
+  const submit = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function submitDemandQuotation("),
+    marketplaceUi.indexOf("async function respondToDemandQuotationSeller(")
+  );
+  assert.match(submit, /activeSeller\(\)/);
+  assert.match(submit, /state\.business\.approval_status!==\"approved\"/);
+  assert.match(submit, /price<=0/);
+  assert.match(submit, /currencyOK/);
+  assert.match(submit, /available_quantity/);
+  assert.match(submit, /deliveryCharge<0/);
+  assert.match(submit, /demand_id:demandId,seller_id:user\(\)\.id/);
+});
+
+test("Buyer Demand inbox and dashboard load only the relevant Seller or Buyer demand records", () => {
+  const inbox = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerDemandInbox()"),
+    marketplaceUi.indexOf("const serviceCategoryLabels")
+  );
+  const buyer = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadBuyerDashboard()"),
+    marketplaceUi.indexOf("function renderBuyerDashboard(")
+  );
+  assert.match(inbox, /activeSeller\(\)/);
+  assert.match(inbox, /\.eq\("seller_id",user\(\)\.id\)/);
+  assert.match(inbox, /buyer_demands!inner/);
+  assert.match(inbox, /\.eq\("buyer_demands\.demand_status","open"\)/);
+  assert.match(inbox, /\.eq\("seller_id",user\(\)\.id\)/);
+  assert.match(buyer, /activeBuyer\(\)/);
+  assert.match(buyer, /\.from\("buyer_demands"\)/);
+  assert.match(buyer, /\.from\("seller_offers"\)/);
+  assert.match(buyer, /\.in\("demand_id", ids\)/);
+});
+
+test("Buyer Demand quotation actions are shown only to the Buyer after the Seller's latest offer", () => {
+  const render = marketplaceUi.slice(
+    marketplaceUi.indexOf("function renderBuyerDashboard(offers)"),
+    marketplaceUi.indexOf("async function respondToDemandQuotation(")
+  );
+  assert.match(render, /d\.demand_status==="open"/);
+  assert.match(render, /last_negotiator_id!==user\(\)\.id/);
+  assert.match(render, /data-quote-action="accept"/);
+  assert.match(render, /data-quote-action="counter"/);
+  assert.match(render, /data-quote-action="reject"/);
+});
+
+test("Buyer Demand counter-offer form enforces Seller availability and positive price before RPC", () => {
+  const respond = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function respondToDemandQuotation("),
+    marketplaceUi.indexOf("async function updateBuyerDemandStatus(")
+  );
+  assert.match(respond, /maxQuantity/);
+  assert.match(respond, /quantity>maxQuantity/);
+  assert.match(respond, /unitPrice<=0/);
+  assert.match(respond, /respond_to_demand_offer/);
+  assert.match(respond, /loadBuyerOrders\(\)/);
+});
+
+test("Seller can answer only a Buyer counter-offer and refreshes its Demand inbox and orders", () => {
+  const respond = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function respondToDemandQuotationSeller("),
+    marketplaceUi.indexOf("async function loadSellerDemandInbox(")
+  );
+  const inbox = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerDemandInbox()"),
+    marketplaceUi.indexOf("const serviceCategoryLabels")
+  );
+  assert.match(respond, /activeSeller\(\)/);
+  assert.match(respond, /respond_to_demand_offer/);
+  assert.match(respond, /loadSellerDemandInbox\(\)/);
+  assert.match(respond, /loadSellerOrders\(\)/);
+  assert.match(inbox, /offer\.negotiation_status==="buyer_countered"/);
+  assert.match(inbox, /data-seller-quote-action="accept"/);
+  assert.match(inbox, /data-seller-quote-action="counter"/);
+  assert.match(inbox, /data-seller-quote-action="reject"/);
+});
+
+test("Buyer Demand order conversion is idempotently limited to one order per Seller quotation", () => {
+  assert.match(demandOrderSql, /create unique index if not exists commerce_orders_source_offer_unique_idx[\s\S]*?on public\.commerce_orders\(source_offer_id\) where source_offer_id is not null/i);
+  assert.match(demandOrderSql, /listing_type='buyer_demand'[\s\S]*?source_demand_id=v_demand\.id[\s\S]*?source_offer_id=v_offer\.id/i);
+  assert.match(demandOrderSql, /v_role='seller' then 'accepted' else 'pending' end/i);
+  assert.match(demandOrderSql, /update public\.seller_offers set offer_status='accepted',negotiation_status='ordered'/i);
+});
+
+test("Buyer Demand order dashboards display the agreed quotation total and use the dedicated transition RPC", () => {
+  const buyerOrders = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadBuyerOrders()"),
+    marketplaceUi.indexOf("async function updateSellerProductInventory(")
+  );
+  const sellerOrders = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerOrders()"),
+    marketplaceUi.indexOf("async function transitionCommerceOrder(")
+  );
+  const transition = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function transitionCommerceOrder("),
+    marketplaceUi.indexOf("async function loadListingReviews(")
+  );
+  assert.match(buyerOrders, /source_offer_total/);
+  assert.match(buyerOrders, /grand_total/);
+  assert.match(sellerOrders, /source_offer_total/);
+  assert.match(sellerOrders, /grand_total/);
+  assert.match(transition, /listingType==="buyer_demand"\?"transition_buyer_demand_order"/);
+  assert.match(transition, /p_order_id:orderId,p_action:action,p_note:note/);
+});
+
+test("Buyer Demand order transitions enforce assigned Buyer or Seller identity and valid state changes", () => {
+  const fn = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order("),
+    demandOrderSql.indexOf("revoke all on function private.respond_to_demand_offer")
+  );
+  assert.match(fn, /p\.role='buyer' and p\.id=v_order\.buyer_id/);
+  assert.match(fn, /p\.role='seller' and p\.id=v_order\.seller_id/);
+  assert.match(fn, /p_action='accept'[\s\S]*?v_actor<>v_order\.seller_id[\s\S]*?v_order\.order_status<>'pending'/);
+  assert.match(fn, /p_action='ready'[\s\S]*?v_actor<>v_order\.seller_id[\s\S]*?v_order\.order_status<>'accepted'/);
+  assert.match(fn, /p_action='complete'[\s\S]*?v_actor<>v_order\.buyer_id[\s\S]*?v_order\.order_status<>'ready_for_confirmation'/);
+  assert.match(fn, /p_action='cancel'[\s\S]*?v_actor<>v_order\.buyer_id[\s\S]*?v_order\.order_status<>'pending'/);
+});
