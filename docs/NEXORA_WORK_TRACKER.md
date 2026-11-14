@@ -1379,3 +1379,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Chose the existing product-schema contract name market_category for the restored per-listing Wholesale/Retail field, rather than introducing a second database column named sale_type. The financial calculator's internal sale_type input will be normalized from market_category.
 - This reuses the prior product_market_category contract and local visibility fixture while preserving the newly approved separate Listing IDs/URLs. It does not restore Buyer/Seller account categories.
 - No schema or frontend behavior changed in this naming reconciliation.
+
+
+### Financial engine market_category normalization — 2026-11-14
+- Updated financial-config.js to accept the established product market_category field as the canonical input, while preserving the prior sale_type input only as a compatibility alias. If both are supplied and disagree, calculation fails closed.
+- Fee calculation and immutable Order Fee Snapshot now retain market_category explicitly. Only wholesale and retail are accepted for new financial calculations; legacy_unclassified cannot be priced silently.
+- Expanded financial-config.test.js with category normalization, unclassified rejection, conflicting-input rejection and legacy-input compatibility cases.
+- Validation in the local checkout before publishing: node --test tests/*.test.js — 24 passed, 0 failed; node --check over all JavaScript files — passed; git diff --check — passed.
+- No frontend, SQL, migration, database, deployment, main branch or paid service changed.
