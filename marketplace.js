@@ -1351,11 +1351,19 @@
       await loadSellerServices();
       await loadSellerOrders();
       await loadSellerPriceNegotiations();
-      const { data, error } = await client().from("products")
-        .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
-        .eq("seller_id", user().id).order("created_at", { ascending: false });
-      if (error) throw error;
-      const products = data || [];
+      const [productsResult,notesResult] = await Promise.all([
+        client().from("products")
+          .select("id,product_code,product_name,category,subcategory,market_category,origin,price,currency,listing_status,image_urls,description,specifications_quality,minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers")
+          .eq("seller_id", user().id).order("created_at", { ascending: false }),
+        client().rpc("get_my_product_listing_review_notes")
+      ]);
+      if (productsResult.error) throw productsResult.error;
+      if (notesResult.error) throw notesResult.error;
+      const reviewNotes = new Map((notesResult.data || []).map(n => [n.product_id, n]));
+      const products = (productsResult.data || []).map(p => ({
+        ...p, admin_note: reviewNotes.get(p.id)?.admin_note || null,
+        reviewed_at: reviewNotes.get(p.id)?.reviewed_at || null
+      }));
       await loadSellerEditRequests();
       const approvedCount = products.filter(p => p.listing_status === "approved").length;
       const pendingCount = products.filter(p => p.listing_status === "pending").length;
@@ -1379,6 +1387,7 @@
           <p class="price">${esc(p.price)} ${esc(p.currency)} / ইউনিট · MOQ ${esc(p.minimum_order_quantity||1)}</p>
           <p class="muted">${p.stock_tracking?'স্টক: '+esc(p.stock_quantity)+' · সংরক্ষিত: '+esc(p.reserved_quantity)+' · উপলব্ধ: '+esc(Math.max(0,Number(p.stock_quantity)-Number(p.reserved_quantity))):'স্টক ট্র্যাকিং বন্ধ'}</p>
           <p class="muted">Product ID: ${esc(p.product_code)}</p>
+          ${p.admin_note ? '<p class="muted">Admin Note: '+esc(p.admin_note)+'</p>' : ''}
           ${p.listing_status === "pending" ? `<div class="form-actions"><button class="primary" type="button" data-edit-product="${esc(p.id)}">Edit Product</button><button class="danger" type="button" data-delete-product="${esc(p.id)}">Delete pending product</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : p.listing_status === "approved" ? `<div class="form-actions"><button class="light" type="button" data-request-product-edit="${esc(p.id)}">পরিবর্তন প্রস্তাব করুন</button><button class="light" type="button" data-inventory-product="${esc(p.id)}">স্টক পরিচালনা</button></div>` : ""}
         </article>`).join("") : '<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি। Add Product দিয়ে নতুন পণ্য যোগ করুন।</p>';
       productHost.querySelectorAll("button[data-delete-product]").forEach(b => b.addEventListener("click", () => deleteProduct(b.dataset.deleteProduct)));
