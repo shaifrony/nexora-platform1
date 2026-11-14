@@ -306,3 +306,11 @@ Do not edit historical migration #34 in place or invent a timestamp. Prepare a r
 Required tests: six operational departments accept valid officers; Logistics permissions never grant to Transport; cross-department and inactive permissions reject; Trust & Safety mutation grants remain blocked until RPC readiness; Director-only operations reject all staff; AAL1/inactive/suspended/self-target/invalid target/missing sensitive reason fail closed; transaction and audit consistency hold.
 
 **Environment stop:** no Supabase CLI, Docker, psql or local checkout is available in this session. NEXORA-TEST is empty and must not be used as a substitute. No SQL, migration, database or deployment was changed or runtime-tested.
+
+## 20. Disposable local Supabase replay preflight — observed result (2026-11-14)
+
+- Reused the existing persistent `nexora-backend-routing-check` Sandbox after the earlier `nexora-disposable-db-preflight` Sandbox could not resume because it had no snapshot. No new Sandbox was created.
+- Checked out `nexora-development`; worktree clean. Copied exactly 38 active migrations into isolated `/tmp/nexora-replay` and initialized a separate local Supabase project using CLI v3.1.0 / experimental native runtime.
+- Replay failed at migration #1 (`20261112045441_revoke_public_rls_auto_enable_execute.sql`) because `public.rls_auto_enable()` is absent (PostgreSQL 42883). No later migration was tested. The local stack was destroyed and verified absent; no applied-count assertion is made.
+- This is direct runtime confirmation of the Foundation prerequisite already identified in §§3, 7 and 14.2. Do not stub the helper or alter historical migration #1. Author a recovery-only implementation from §14.2, test it in a fresh local stack, then continue to the next dependency failure.
+- No active SQL, repo source, hosted DB, NEXORA-TEST, Live/Production, `main`, DNS or deployment changed. No successful replay/security test is claimed.
