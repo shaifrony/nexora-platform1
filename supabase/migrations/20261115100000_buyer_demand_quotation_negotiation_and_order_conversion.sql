@@ -99,8 +99,15 @@ begin
   end if;
   v_unit:=case when new.price_basis='total' then round(new.offer_price/v_qty,2) else new.offer_price end;
   if v_unit<=0 then raise exception 'Seller quotation unit price must be positive' using errcode='22023'; end if;
-  new.current_quantity:=coalesce(new.current_quantity,v_qty);
-  new.current_unit_price:=coalesce(new.current_unit_price,v_unit);
+  -- Treat every direct Seller INSERT as a fresh quote. Never trust client-supplied
+  -- negotiation state, counter terms, accepted terms, actor identity or order linkage.
+  new.current_quantity:=v_qty;
+  new.current_unit_price:=v_unit;
+  new.negotiation_status:='open';
+  new.last_negotiator_id:=new.seller_id;
+  new.accepted_quantity:=null;
+  new.accepted_unit_price:=null;
+  new.demand_order_id:=null;
   return new;
 end;
 $$;
