@@ -355,3 +355,69 @@ Before any candidate Foundation SQL is considered:
 5. Replay the complete 38-migration chain against a disposable local database and run synthetic Buyer/Seller/Porter/Admin AAL1/AAL2 tests before considering NEXORA-TEST.
 
 **Status:** source scan and design documentation only. No trigger, event trigger, SQL migration or database was changed. No runtime claim is made.
+
+## 14. Proposed Auth + RLS infrastructure baseline — design decision v1 (2026-11-14)
+
+**Status: DESIGN ONLY — NOT SQL, NOT A MIGRATION, NOT DEPLOYABLE, NOT APPLIED.** This section defines the candidate contract to resolve the missing historical infrastructure. It does not claim that the active feature chain is currently replayable.
+
+### 14.1 Auth user provisioning trigger contract
+
+Install exactly one PostgreSQL row trigger on `auth.users`:
+- Timing/event: `AFTER INSERT FOR EACH ROW`.
+- Function: the final, reviewed `public.handle_new_user()` contract already replaced by feature migration #35 (`20261114210000_porter_public_registration_and_review.sql`).
+- Function security: `SECURITY DEFINER`, empty `search_path`, every relation/type/function fully qualified, owner explicitly verified as a trusted database owner. Do not grant direct EXECUTE to `PUBLIC`, `anon` or `authenticated`; trigger invocation does not require exposing it as a client RPC.
+- The function must derive identity from `NEW.id`; user-editable `raw_user_meta_data` is only an input for the explicitly permitted signup role allowlist and display fields, never Admin authorization. Reject unknown roles and all Admin signup attempts. OAuth provider default remains Buyer as #35 specifies.
+- Buyer/Seller signup creates exactly one profile with the intended active status. Porter signup creates exactly one pending profile and exactly one pending `porter_account_reviews` record. Admin appointment is never inferred from metadata/email.
+- No blanket exception swallowing. A provisioning error must roll back the Auth insert rather than leave an Auth user without the required application profile/review state. Test email confirmation, OAuth, duplicate/replayed provisioning and malformed metadata.
+- Migration must verify/drop only the specifically named expected trigger before creating it, then query `pg_trigger`/catalogs to prove exactly one non-internal trigger points to the intended function. Do not drop unrelated Auth triggers.
+- Keep trigger creation separate from function-body history: #19/#35 already define the function, but neither installs the Auth trigger.
+
+### 14.2 Automatic RLS enablement event-trigger contract
+
+Preserve the compatibility object expected by migration #1, but implement it rather than stubbing it:
+- Function name: `public.rls_auto_enable()`, return type `event_trigger`.
+- Event trigger: one named event trigger on `ddl_command_end`, restricted to `CREATE TABLE`, `CREATE TABLE AS`, and `SELECT INTO` tags, invoking the function.
+- Execute only as the trusted database owner capable of altering newly created relations. Verify event-trigger owner and function owner; never expose the function as an RPC. Keep the existing PUBLIC/anon/authenticated EXECUTE revoke.
+- Inspect `pg_event_trigger_ddl_commands()` and act only on newly created ordinary or partitioned tables whose schema is exactly `public`. Ignore system schemas, extension-owned objects, views, materialized views, foreign tables and non-public relations. Use catalog OIDs/qualified identifiers rather than trusting an unparsed display string.
+- Enable RLS (not FORCE RLS) on the qualifying table. RLS enablement is a fail-safe default, not a policy generator and not a GRANT. Every new public table still requires a separately reviewed owner/participant/admin policy set and explicit table/sequence/function privileges.
+- The event trigger affects only objects created after it is installed. Foundation must separately enumerate all existing public tables and enable RLS where required, then test every table's policy and grants. It must not claim that a global trigger alone secures historical tables.
+- Verify that the function does not recurse: its internal ALTER TABLE ENABLE ROW LEVEL SECURITY command is not one of the subscribed CREATE tags. Test multi-table DDL, CTAS, SELECT INTO, partitioned tables, non-public tables, extension operations, and a table created without a policy (it must remain inaccessible to API roles, not silently become public).
+
+### 14.3 Canonical Admin authorization contract
+
+Implement one private resolver and narrow compatibility wrappers:
+- `private.has_nexora_permission(text)`: authenticated identity required; JWT AAL2 required; active `profiles.role='admin'` and `account_status='active'`; active `admin_staff` appointment required; permission catalog key must exist and be active.
+- Director/Super Admin status comes only from the protected, active Director appointment (including the required `admin_level='super_admin'` compatibility value and approved Director position/governance invariant), never email, user metadata, role alone or client input. Director bypass must be explicit and audited for sensitive RPC actions.
+- Non-Director staff require an explicit allowed grant, active staff, matching department, and approved cross-department exception where relevant. Explicit deny wins over allow; missing, inactive, duplicate/conflicting or malformed state fails closed.
+- `public.is_nexora_admin()` and `public.is_nexora_super_admin()` are compatibility wrappers over the same canonical checks. `private.is_nexora_active_admin_staff()` may remain only as a narrow AAL2+active-staff wrapper and must not be OR'ed into policies in a way that bypasses permission checks.
+- Keep decision tables/functions in non-exposed `private`; fully qualify names; empty `search_path`; revoke PUBLIC/anon; grant authenticated execution only where required by RLS or public wrapper. Sensitive mutations stay in narrow audited RPCs, not generic client writes.
+- Before replacing policies #10–12, enumerate every policy that calls the old public predicates and test pre-MFA, inactive profile, missing staff, Director, department officer, explicit deny and wrong-department cases.
+
+### 14.4 Data API exposure and table grants (current Supabase platform behavior)
+
+Supabase's breaking change dated 2026-04-28 became enforced on all projects on 2026-10-30: new public tables are no longer automatically exposed to the Data/GraphQL API. Therefore:
+- Do not assume a public table is REST-accessible merely because it is in `public`.
+- For each table the frontend must access, explicitly grant only the needed schema/table/sequence/function privileges and pair them with RLS policies. Tables not intended for client access should have no client grants and should use private RPC/view paths as designed.
+- Add a release checklist that compares frontend `supabase.from(...)`/RPC/Storage calls against actual GRANTs, exposed schemas and RLS policies. Verify Data API behavior on a fresh project rather than relying on legacy defaults.
+- Reference: https://supabase.com/changelog/breaking-change-data-api-tables-not-exposed-by-default
+
+### 14.5 Foundation installation order and replay constraint
+
+The active feature migrations depend on Foundation objects before and during their execution. A newly timestamped migration after the current latest version cannot satisfy earlier dependencies in a clean timestamp-ordered replay. Do not create a late Foundation migration and pretend it is a valid bootstrap.
+
+Permitted next design path:
+1. Continue searching for authoritative historical Foundation source and trigger definitions.
+2. If unavailable, prepare a separately versioned recovery-only Foundation bootstrap candidate for a disposable local database, clearly marked non-deployable.
+3. Apply that candidate manually only in the disposable local test environment before replaying feature migrations; validate all 38 migrations in order and record the bootstrap as a deliberate recovery prerequisite, not fabricated historical migration history.
+4. After compatibility and replay pass, design a clean forward migration/reconciliation strategy with genuine CLI-generated timestamps and explicit approval. Do not apply anything to NEXORA-TEST yet.
+
+### 14.6 Verification gates
+
+- Catalog assertions: exactly one Auth signup trigger; exactly one RLS event trigger; correct function owner/security config; no client EXECUTE on internal trigger functions.
+- Signup matrix: Buyer, Seller, Porter, OAuth Buyer, invalid role, attempted Admin metadata, duplicate provisioning, and trigger failure rollback.
+- RLS matrix: every public table enabled; policies and grants separately enumerated; new table after event trigger becomes RLS-enabled before API use; no API role can read an unpolicied table.
+- Admin matrix: AAL1/AAL2, active/inactive profile, active/inactive appointment, protected Director, department mismatch, missing/inactive catalog, explicit deny, stale JWT and sensitive RPC audit.
+- Platform matrix: explicit Data API grants/exposure on fresh Supabase project; do not rely on old auto-exposure behavior.
+- Only after local Foundation + all 38 feature migrations + synthetic E2E pass may NEXORA-TEST be considered, with separate explicit approval.
+
+**Decision:** this design resolves the intended shape of the Auth/RLS baseline, but the missing Foundation source, clean replay and local runtime evidence remain blockers. No SQL, code, trigger, migration, database, hosted project or deployment was changed in this step.
