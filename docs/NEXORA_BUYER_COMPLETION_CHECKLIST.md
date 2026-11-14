@@ -289,3 +289,15 @@ Buyer বিভাগকে **সম্পূর্ণ** বলা হবে ক
 - Syntax-only JavaScript compilation of auth.js, marketplace.js and chat.js passed after the wallet UI change; index.html script opening/closing tag counts are balanced (7/7). This is not browser/runtime, database, Auth, RLS or mobile acceptance testing.
 - Critical test/deployment blocker remains: NEXORA-TEST is empty and the exact original Foundation DDL plus migration-history reconciliation are not yet available. Do not invent/replay a Foundation or active migration chain. No hosted SQL or real user data may be used.
 - Buyer Module remains INCOMPLETE / NOT ACCEPTANCE-TESTED. Next steps: obtain/reconcile trusted Foundation contract, implement safe Buyer profile-change request, validate Buyer data/API contracts in an isolated Supabase-compatible runtime, then run synthetic two-account browser/mobile acceptance tests for the complete Buyer journey.
+
+
+## 10. 2026-11-14 — Buyer account settings implementation
+
+- Added Buyer-only Account Security & Contact settings in index.html: change login email and change password with confirmation fields.
+- Added auth.js handlers using Supabase Auth updateUser({ email }) and updateUser({ password }); handlers require an active signed-in Buyer, validate distinct email, require a 10+ character password and matching confirmation, show accessible status feedback, and do not write protected profile columns.
+- UI is hidden for non-Buyer roles; handlers independently enforce Buyer + active account checks.
+- Commits: index.html e48a5da4409ee388fcfaeb3fad62f2bc8011cc02; auth.js b7d81c66c769c4a96f2d3154344500240fd589c1.
+- Source verification: JavaScript syntax compilation PASS; both forms present; 7 opening/7 closing script tags; Buyer and active-account guards present; Auth email/password update calls present.
+- Not runtime-tested: email confirmation workflow, password update, session behavior, Auth rate limits and actual UI interaction require isolated Supabase Auth + browser E2E.
+- Display/legal name changes remain blocked: the approved Foundation design names profile_change_requests, but no active migration/table/RPC currently defines it. Do not update public.profiles directly or fake a request. Implement only after Foundation contract and migration history are safely reconciled.
+- No schema/migration or hosted DB was changed; NEXORA-TEST remains empty; no Live/Production/main/DNS/paid service/deployment changes.
