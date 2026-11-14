@@ -12,8 +12,34 @@ create table if not exists private.delivery_receipt_challenges (
   created_at timestamptz not null default now(),
   expires_at timestamptz not null,
   consumed_at timestamptz,
+  verified_at timestamptz,
   check (expires_at > created_at)
 );
+create or replace function private.require_verified_delivery_receipt()
+returns trigger
+language plpgsql
+security definer
+set search_path=''
+as $
+begin
+ if new.job_status='delivered' and old.job_status is distinct from 'delivered' then
+   if not exists(
+     select 1 from private.delivery_receipt_challenges c
+     where c.job_id=new.id and c.verified_at is not null
+       and c.verified_at>now()-interval '1 minute'
+   ) then
+     raise exception 'A valid Buyer receipt verification is required' using errcode='42501';
+   end if;
+ end if;
+ return new;
+end;
+$;
+revoke all on function private.require_verified_delivery_receipt() from public,anon,authenticated;
+drop trigger if exists delivery_jobs_require_verified_receipt on public.delivery_jobs;
+create trigger delivery_jobs_require_verified_receipt
+before update of job_status on public.delivery_jobs
+for each row execute function private.require_verified_delivery_receipt();
+
 create index if not exists delivery_receipt_challenges_job_idx
  on private.delivery_receipt_challenges(job_id,created_at desc);
 create index if not exists delivery_receipt_challenges_buyer_idx
@@ -119,7 +145,7 @@ begin
  select * into v_challenge from private.delivery_receipt_challenges c
  where c.job_id=p_job_id and c.consumed_at is null
  order by c.created_at desc limit 1 for update;
- if not found then raise exception 'No active Buyer receipt challenge exists' using errcode='P0002'; end if;
+ if not found then return jsonb_build_object('verified',false,'reason','no_active_challenge'); end if;
  if v_challenge.expires_at<=now() then
    update private.delivery_receipt_challenges set consumed_at=now() where id=v_challenge.id;
    return jsonb_build_object('verified',false,'reason','expired');
@@ -138,8 +164,9 @@ begin
  if v_old not in ('out_for_delivery','partially_delivered') then
    raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
  end if;
- update private.delivery_receipt_challenges set consumed_at=now() where id=v_challenge.id;
+ update private.delivery_receipt_challenges set consumed_at=now(),verified_at=now() where id=v_challenge.id;
  update public.delivery_jobs set job_status='delivered',updated_at=now() where id=p_job_id;
+ update private.delivery_receipt_challenges set verified_at=null where id=v_challenge.id;
  insert into public.delivery_tracking_events(job_id,previous_status,new_status,location_description,note,
    external_tracking_code,actor_user_id,actor_type)
  values(p_job_id,v_old,'delivered',nullif(btrim(coalesce(p_location_description,'')),''),
