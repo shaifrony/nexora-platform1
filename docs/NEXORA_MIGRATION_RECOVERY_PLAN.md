@@ -840,3 +840,18 @@ The Supabase CLI v3 guidance was rechecked on 2026-11-14: migration files belong
 - The separate Admin-managed NEXORA Team path was also validated in an earlier disposable run: approved team partner, staff roster, job assignment and five Admin-authored tracking transitions through delivered.
 - Disposable stack and all synthetic records were stopped and destroyed. No Live database mutation, `main`, Production, DNS or paid resource was used.
 - Remaining release work: approved-vehicle assignment/availability, courier-partner operational tracking, delivery receipt OTP/digital proof, delivery charge/payment/settlement, disputes/returns, external courier APIs/webhooks, PostgREST/HTTP and browser/device E2E, and concurrency/load testing.
+
+
+## 2026-11-14 — Fresh migration inventory and CLI timestamp-order check
+
+A fresh shallow clone of the current `nexora-development` branch was inspected in a disposable Vercel Hobby Sandbox. This check did not connect to the hosted database.
+
+- Current active `supabase/migrations/` inventory: **38 SQL files, 38 unique versions**. No active version collision was found.
+- SHA-256 content scan found **no identical active migration bodies**.
+- The two later duplicate conversation migrations remain preserved under `supabase/recovery-not-for-deployment/archived-duplicate-migrations/`; their canonical earlier versions remain active.
+- The former shared-version collision is no longer present: `20261113203025_product_linked_private_conversations.sql` is active and `20261114180000_unified_delivery_jobs_assignment.sql` remains the sole active file at version 14180000. The Product Conversation migration contains no Delivery Network/assignment/tracking object references; its direct prerequisites are earlier Marketplace and private-communications objects.
+- Supabase CLI **3.1.0** was used for a disposable naming probe. The sandbox UTC clock was `2026-11-14T01:12:10Z`; `supabase migration new version_order_probe` generated `20261114011211_version_order_probe.sql`. The temporary probe was immediately deleted and is not in the branch.
+- The latest active migration version is `20261115120000`, which is later than the CLI-generated probe. Therefore, although the existing collision is resolved, **a new migration created by the current CLI clock would sort before the latest active migration**. Do not create a new feature migration until the CLI clock naturally generates a version later than `20261115120000`. Do not set the machine clock, invent a timestamp, rename a migration file, or modify migration history to bypass this.
+- The probe generated no database changes. No local DB stack was started. No hosted database, migration history, user data, `main`, Production, DNS or paid service was accessed or changed. The sandbox was stopped.
+
+**Current gate:** active version uniqueness is clean; future migration creation remains blocked by timestamp ordering until a supported CLI-generated timestamp is greater than `20261115120000`. Existing staged SQL may continue through source review and disposable tests without creating a new migration file.
