@@ -1135,6 +1135,11 @@
   }
   async function loadServicesMarketplace() {
     const host=$("nxServiceList"); if(!host)return;
+    if(!signedIn()){
+      host.innerHTML='<div class="card muted">অনুমোদিত সেবার তালিকা দেখতে লগইন করুন।</div>';
+      state.services=[];
+      return;
+    }
     host.innerHTML='<p class="muted">সেবা লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("service_listings")
