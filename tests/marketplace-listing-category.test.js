@@ -560,7 +560,7 @@ test("Buyer and Seller Demand quotation forms present and enforce the Buyer-requ
   assert.match(buyer, /Math\.min\(qty,demandQuantity\)/);
   assert.match(buyer, /data-max-quantity=.*Math\.min\(qty,demandQuantity\)/);
   assert.match(seller, /quantity>currentQuantity/);
-  assert.match(inbox, /Math\.min\(Number\(offer\.available_quantity\),Number\(d\.required_quantity\)\)/);
+  assert.match(inbox, /Math\.min\(Number\(offer\.available_quantity\),requestedQuantity\)/);
 });
 
 
