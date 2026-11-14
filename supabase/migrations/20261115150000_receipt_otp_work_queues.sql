@@ -20,7 +20,7 @@ begin
  from public.commerce_orders o
  join public.delivery_jobs j on j.commerce_order_id=o.id
  where o.buyer_id=v_actor and o.id=any(p_order_ids)
- order by o.created_at desc,j.created_at asc;
+;
 end;
 $$;
 revoke all on function public.get_my_order_receipt_jobs(uuid[]) from public,anon;
