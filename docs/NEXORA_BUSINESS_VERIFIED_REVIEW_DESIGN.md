@@ -99,3 +99,8 @@ The review form must appear only when the RPC says `can_review=true`; UI visibil
 - Do not apply to NEXORA-TEST, Live/Production, or deploy until Foundation/migration history reconciliation and a clean disposable local replay pass.
 - No review schema, frontend, hosted DB, Production, deployment, DNS, or paid-service change is made by this design document.
 - Browser/mobile E2E remains a separate release gate; static parsing is not a substitute.
+
+## 9. Recovery-only grant candidate prepared (not executed)
+- `supabase/recovery-not-for-deployment/local-setup/31_listing_reviews_column_grants_recovery_candidate.sql` contains the narrow revoke/table-column grant change.
+- `supabase/recovery-not-for-deployment/local-setup/32_listing_reviews_column_grants_recovery_test.sql` asserts that anon/authenticated have no table-level SELECT and cannot read `buyer_id`, `reviewed_by`, or `moderation_note`, while the intended public columns and summary RPC remain available.
+- These files are test/recovery artifacts only. They have not been run because a clean disposable replay is still blocked by unresolved Foundation/migration history. Do not apply them to a hosted database or treat the privacy issue as fixed until the test and real JWT/PostgREST checks pass.
