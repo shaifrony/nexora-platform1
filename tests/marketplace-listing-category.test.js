@@ -1056,3 +1056,39 @@ test("Buyer Demand latest negotiation turn uses a monotonic event sequence, not 
   assert.match(negotiationSql, /order by event_order desc limit 1/i);
   assert.doesNotMatch(negotiationSql, /order by created_at desc,id desc limit 1/i);
 });
+
+
+const buyerSafeDeliverySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261115130000_buyer_safe_delivery_updates.sql"),
+  "utf8"
+);
+
+test("Buyer order dashboard requests only the authenticated Buyer's customer-safe delivery projection", () => {
+  const buyerOrdersStart = js.indexOf("async function loadBuyerOrders()");
+  const buyerOrdersEnd = js.indexOf("async function updateSellerProductInventory", buyerOrdersStart);
+  assert.ok(buyerOrdersStart >= 0 && buyerOrdersEnd > buyerOrdersStart);
+  const buyerOrders = js.slice(buyerOrdersStart, buyerOrdersEnd);
+  assert.match(buyerOrders, /rpc\("get_my_order_delivery_updates",\{p_order_ids:rows\.map\(o=>o\.id\)\}\)/);
+  assert.match(buyerOrders, /trackingByOrder\.get\(o\.id\)/);
+  assert.match(buyerOrders, /ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়/);
+  assert.doesNotMatch(buyerOrders, /from\("delivery_jobs"\)|from\("delivery_tracking_events"\)/);
+});
+
+test("delivery customer projection is private, append-only and Buyer-order scoped", () => {
+  assert.match(buyerSafeDeliverySql, /create table if not exists private\.delivery_customer_updates/i);
+  assert.match(buyerSafeDeliverySql, /before update or delete on private\.delivery_customer_updates/i);
+  assert.match(buyerSafeDeliverySql, /o\.id=requested\.order_id and o\.buyer_id=v_actor/i);
+  assert.match(buyerSafeDeliverySql, /p\.role='buyer' and p\.account_status='active'/i);
+  assert.match(buyerSafeDeliverySql, /revoke all on private\.delivery_customer_updates from public,anon,authenticated/i);
+  assert.match(buyerSafeDeliverySql, /grant execute on function public\.get_my_order_delivery_updates\(uuid\[\]\) to authenticated/i);
+  assert.match(buyerSafeDeliverySql, /revoke all on function public\.get_my_order_delivery_updates\(uuid\[\]\) from public,anon/i);
+});
+
+test("delivery customer updates use reviewed status mapping and never copy internal notes or precise addresses", () => {
+  assert.match(buyerSafeDeliverySql, /when 'picked_up' then 'picked_up'/i);
+  assert.match(buyerSafeDeliverySql, /when 'in_transit' then 'in_transit'/i);
+  assert.match(buyerSafeDeliverySql, /when 'out_for_delivery' then 'out_for_delivery'/i);
+  assert.match(buyerSafeDeliverySql, /when 'delivered' then 'delivered'/i);
+  assert.match(buyerSafeDeliverySql, /insert into private\.delivery_customer_updates\(\s*job_id,commerce_order_id,customer_status,customer_message\s*\)/i);
+  assert.doesNotMatch(buyerSafeDeliverySql, /new\.note|new\.location_description|new\.pickup_address|new\.delivery_address/i);
+});
