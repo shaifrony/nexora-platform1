@@ -58,8 +58,14 @@ create table if not exists public.seller_offer_negotiations (
   note text check (note is null or length(note)<=1000),
   created_at timestamptz not null default now()
 );
-create index if not exists seller_offer_negotiations_offer_created_idx
-  on public.seller_offer_negotiations(offer_id,created_at,id);
+-- UUIDs are not chronological. A monotonic sequence makes the latest proposal
+-- deterministic even when multiple RPC calls share one transaction timestamp.
+alter table public.seller_offer_negotiations
+  add column if not exists event_order bigint generated always as identity;
+create unique index if not exists seller_offer_negotiations_event_order_uidx
+  on public.seller_offer_negotiations(event_order);
+create index if not exists seller_offer_negotiations_offer_event_order_idx
+  on public.seller_offer_negotiations(offer_id,event_order desc);
 alter table public.seller_offer_negotiations enable row level security;
 revoke all on public.seller_offer_negotiations from public,anon,authenticated;
 grant select on public.seller_offer_negotiations to authenticated;
@@ -221,7 +227,7 @@ begin
   end if;
 
   select * into v_latest from public.seller_offer_negotiations
-  where offer_id=p_offer_id order by created_at desc,id desc limit 1;
+  where offer_id=p_offer_id order by event_order desc limit 1;
 
   if p_action='reject' then
     if v_latest.actor_role=v_role then
