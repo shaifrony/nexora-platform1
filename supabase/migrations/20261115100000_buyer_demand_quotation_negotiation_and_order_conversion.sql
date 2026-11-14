@@ -155,6 +155,7 @@ declare
   v_location text;
   v_currency text;
   v_max_qty numeric(18,3);
+  v_demand_qty numeric(18,3);
 begin
   if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
   if p_action is null or p_action not in ('accept','counter','reject') then raise exception 'Invalid negotiation action' using errcode='22023'; end if;
@@ -164,6 +165,8 @@ begin
   if not found then raise exception 'Quotation not found'; end if;
   select * into v_demand from public.buyer_demands where id=v_offer.demand_id for update;
   if not found then raise exception 'Buyer Demand not found'; end if;
+  v_demand_qty:=nullif(btrim(v_demand.required_quantity),'')::numeric;
+  if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid' using errcode='22023'; end if;
   if v_demand.demand_status<>'open' then raise exception 'This Buyer Demand is no longer open'; end if;
   if v_offer.offer_status not in ('pending','accepted') or v_offer.negotiation_status in ('declined','ordered','agreed') then
     raise exception 'This quotation is no longer available for negotiation';
@@ -193,7 +196,7 @@ begin
   end if;
 
   if p_action='counter' then
-    if p_quantity is null or p_quantity<=0 or p_quantity>coalesce(nullif(v_offer.available_quantity,'')::numeric,0)
+    if p_quantity is null or p_quantity<=0 or p_quantity>least(coalesce(nullif(v_offer.available_quantity,'')::numeric,0),v_demand_qty)
        or p_unit_price is null or p_unit_price<=0 then
       raise exception 'Counter quantity must be positive and no greater than Seller availability; unit price must be positive' using errcode='22023';
     end if;
@@ -214,7 +217,7 @@ begin
   -- Acceptance is permitted only by the party receiving the latest proposal.
   if v_role='buyer' then
     if v_latest.actor_role<>'seller' then raise exception 'The Seller must make the latest proposal before Buyer acceptance'; end if;
-    v_max_qty:=case when v_latest.action='counter' then v_latest.proposed_quantity else nullif(v_offer.available_quantity,'')::numeric end;
+    v_max_qty:=case when v_latest.action='counter' then least(v_latest.proposed_quantity,v_demand_qty) else least(nullif(v_offer.available_quantity,'')::numeric,v_demand_qty) end;
     v_qty:=coalesce(p_quantity,v_offer.current_quantity);
     if v_qty is null or v_qty<=0 or v_qty>coalesce(v_max_qty,0) then
       raise exception 'Choose a quantity greater than zero and no greater than Seller availability' using errcode='22023';
@@ -226,7 +229,8 @@ begin
     v_qty:=v_offer.current_quantity;
     v_price:=v_offer.current_unit_price;
   end if;
-  if v_qty is null or v_price is null or v_price<=0 then raise exception 'Negotiated terms are incomplete'; end if;
+  if v_qty is null or v_qty<=0 or v_qty>v_demand_qty or v_qty>coalesce(nullif(v_offer.available_quantity,'')::numeric,0)
+     or v_price is null or v_price<=0 then raise exception 'Negotiated terms are incomplete or exceed Buyer Demand/Seller availability' using errcode='22023'; end if;
   -- Preserve the Seller's exact total-price quote; a rounded unit-price division can otherwise lose cents.
   v_total:=case
     when v_role='buyer' and v_latest.action='initial_quote' and v_offer.price_basis='total'
