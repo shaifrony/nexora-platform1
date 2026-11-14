@@ -16,7 +16,11 @@
   }
 
   if (host === approvedProductionHost) {
-    window.NEXORA_SUPABASE_CONFIG = { environment: "production" };
+    window.NEXORA_SUPABASE_CONFIG = {
+      environment: "production",
+      url: "https://qsjdeqljpnjumceewsjq.supabase.co",
+      publishableKey: "sb_publishable_ZHxwvrwjAn2_UCCYsNLu8A_9twoGAKs"
+    };
     document.documentElement.dataset.nexoraBackend = "production";
     return;
   }
