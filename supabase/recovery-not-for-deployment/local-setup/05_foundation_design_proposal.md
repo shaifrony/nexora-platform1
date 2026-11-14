@@ -1,6 +1,6 @@
 # NEXORA Foundation Schema — New Local-Only Design Proposal
 
-**Status:** PROPOSAL — NOT ORIGINAL / NOT RECOVERED / NOT DEPLOYABLE  
+**Status:** SUPERSEDED DESIGN PROPOSAL — NOT ORIGINAL / NOT RECOVERED / NOT DEPLOYABLE  
 **Date:** 2026-11-13  
 **Repository:** `shaifrony/nexora-platform1`  
 **Branch:** `nexora-development`  
@@ -264,16 +264,9 @@ A Porter is a person-level NEXORA account role. A Transport Provider is a separa
 
 This supersedes the older `NEXORA_PORTER_ARCHITECTURE.md` statement that Porter is not an account role. That document must be updated to avoid contradictory instructions.
 
-### 7.2 Wholesale-only category model
+### 7.2 SUPERSEDED — old Wholesale-Only category model
 
-The approved marketplace is Wholesale-Only. There is no retail category or retail-only order flow.
-
-Foundation contract:
-- Buyer: `buyer_category='wholesale'`.
-- Seller: `seller_categories` contains only `wholesale`; for a single-category implementation, exactly `['wholesale']`.
-- Porter/Admin: `buyer_category IS NULL` and `seller_categories='{}'`.
-- Signup metadata containing `retail`, mixed categories, or unsupported values is rejected; it must not be silently normalized into permission.
-- The Buyer/Seller category migration and frontend registration/category-switch controls that allow retail are legacy conflicts. Do not replay them unchanged. Any correction requires a separately reviewed change to active branch files and dependent UI.
+This subsection is historical only and must not be implemented. The current approved Marketplace is unified: no Buyer/Seller market-category fields, no Wholesale/Retail marketplace split, and no category-based listing visibility. Sellers set their own prices and quantities; everyone can see the same approved Marketplace listings. The old category constraints and references are removed from the current frontend/product schema. Logistics service-mode terminology is separate and does not create marketplace account categories.
 
 ### 7.3 Business/listing approval and account lifecycle
 
