@@ -1154,3 +1154,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Specified positive and negative synthetic tests for every department, cross-department permission attempts, inactive permission grants, Director-only boundaries, AAL1/inactive staff, invalid targets and transaction/audit consistency.
 - No SQL candidate or active migration was created. No repository application source was modified. No NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment mutation occurred.
 - Environment gate remains: no local Supabase CLI, Docker, `psql` or checked-out working tree. Generate and test the recovery-only SQL only in a disposable local Supabase environment; do not substitute the empty hosted NEXORA-TEST project.
+
+## 2026-11-14 — Disposable local Foundation replay preflight
+
+- The old `nexora-disposable-db-preflight` Sandbox was non-persistent and had no snapshot; resume failed with `snapshot_not_found`. Reused the existing persistent `nexora-backend-routing-check` Sandbox instead; no new Sandbox was created.
+- Checked out `nexora-development` and verified the repository worktree remained clean. Active migration count remains 38.
+- Copied the active migrations to isolated `/tmp/nexora-replay`, initialized a separate local Supabase config, and started a disposable native-runtime replay with Supabase CLI v3.1.0.
+- Runtime replay failed at the first active migration (`20261112045441_revoke_public_rls_auto_enable_execute.sql`) because `public.rls_auto_enable()` does not exist (PostgreSQL 42883). This validates the known Foundation blocker only; later migrations and security/E2E tests remain untested.
+- Did not stub or fabricate the missing function, rewrite migration #1, or alter active SQL. Destroyed the disposable local stack and verified no local stack remained. No applied-migration count is claimed because the failed stack was not running when queried.
+- No repository source/migration, NEXORA-TEST, Live/Production, `main`, DNS or deployment changed. No hosted mutation occurred.
+- Next: author a recovery-only Foundation bootstrap candidate outside `supabase/migrations/` from the reviewed §14 contracts and §19 governance repair, then validate it on a fresh disposable native stack before replaying all 38 migrations.
