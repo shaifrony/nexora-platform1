@@ -1075,3 +1075,16 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added compatibility matrix §11. Exact permission requirements for legacy `manage_nexora_user`, newer `admin_manage_user`, and `manage_marketplace_listing` remain unresolved; do not enable them or add aliases until the server-side contract is reconciled. Client-side grant lookups are presentation only.
 - Foundation spec commit: `a760d5ff8e56849aed809584da4ee00979c840a2`; compatibility matrix commit: `543329a1a10a6e4fc39cdf8858e7e06be7767757`.
 - No app code or SQL changed; no database, deployment, production or DNS mutation. All work remains docs-only and source-level.
+
+
+## 2026-11-14 — Auth trigger, RLS bootstrap and permission seed audit
+
+- Scanned the 38 active migration files and directly inspected the Auth signup function and Admin permission seed sources.
+- Confirmed #19 defines Buyer/Seller-only `handle_new_user()`; #35 replaces it with a Buyer/Seller/Porter allowlist, OAuth Buyer default and pending Porter review. Admin signup remains blocked. The Auth trigger binding on `auth.users` still needs explicit Foundation verification; defining the function alone is not proof the trigger is installed.
+- Confirmed `public.rls_auto_enable()` has no definition in the active migration set; only an EXECUTE revoke references it. This remains an unresolved historical/Foundation dependency. No no-op function was created and no revoke was removed.
+- Consolidated active permission seeds: Logistics `logistics.view|assign` (#19), `services.edit` (#24), Marketing/Transport/Finance keys (#34). #34's duplicate Logistics seed under Transport uses `ON CONFLICT DO NOTHING`, so the earlier Logistics department mapping remains unchanged.
+- Identified frontend permission keys not seeded by the active migrations: `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit`. They must be reconciled before authoring the Foundation seed set.
+- Confirmed feature migrations consume `is_nexora_admin()`, `is_nexora_super_admin()` and `has_nexora_permission(text)`; canonical definitions and fail-closed semantics remain Foundation blockers.
+- Updated Foundation spec §12 and compatibility matrix §12. Both remain design/recovery documents, not deployable SQL.
+- No app code or SQL migration changed. No database, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment mutation. No runtime/Auth trigger test was run.
+- Next: resolve the Auth trigger owner/binding and RLS event-trigger dependency from authoritative baseline evidence, then reconcile all permission keys and RPC enforcement before preparing a local-only Foundation candidate.
