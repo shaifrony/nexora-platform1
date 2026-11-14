@@ -214,7 +214,7 @@ Do not apply any feature migration until a dependency scan confirms every refere
 
 **Current result:** Foundation contract is now consolidated for the current Marketplace and account decisions. It is a design specification only; it has not been converted to SQL or executed.
 
-**Next safe implementation:** build a dependency-by-dependency compatibility matrix for all 39 active migrations and current frontend, then author a new Test-only SQL baseline only after every required field, permission key, trigger behavior and function signature is confirmed. The SQL must be generated through the approved Supabase migration workflow when the CLI timestamp gate allows it; never invent or rename a migration timestamp.
+**Next safe implementation:** the 39-migration dependency/frontend matrix v2 is now complete. Close the remaining permission/RPC and source-compatibility mismatches, then obtain a reproducible disposable Supabase runtime. Only after those gates pass should a recovery-only Foundation candidate be generated and rehearsed against all 39 active migrations. A hosted Test baseline must be produced through the approved migration workflow with a natural CLI timestamp; never invent or rename a migration timestamp.
 
 
 ## 11. Frontend-derived role-request and Admin governance contracts — source audit v2
