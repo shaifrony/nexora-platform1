@@ -1409,3 +1409,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - All JavaScript files pass node --check; git diff --check passes; checkout is clean on nexora-development.
 - Frontend contract now requires market_category on new product submissions, displays the type on public/Buyer/Seller/Admin views, supports an optional type filter (default both), and visibly labels legacy records as unclassified.
 - Database column market_category is still absent from the active migration chain. This frontend commit is not deployable until a reviewed database migration and RLS/constraint tests are completed. No deployment was made.
+
+
+### Dual-listing schema recovery candidate — 2026-11-14
+- Added recovery-only candidate 31_dual_listing_market_category_recovery_candidate.sql (not an active migration): restores public.products.market_category with wholesale/retail/legacy_unclassified values; backfills existing rows without guessing; blocks unclassified new listings; permits pending Seller classification; prevents published Listing type changes; exposes the field to anon; and adds the index.
+- Candidate also adds commerce_orders.market_category_snapshot, backfills existing product Orders, derives new snapshots from the approved Product Listing (ignoring client-supplied values), and prevents snapshot mutation. Service Orders keep a NULL snapshot.
+- PostgreSQL 18.6 disposable synthetic fixture test passed for backfill, RLS-scoped pending classification, new-listing validation, published Listing immutability, order snapshot derivation and snapshot immutability.
+- This is SQL-level synthetic verification only—not full Supabase/PostgREST/Auth/Storage integration, not a migration replay, and not an applied database change. Candidate remains outside supabase/migrations and must be reviewed/replayed with the full Foundation + 38-migration chain before conversion to an active migration.
