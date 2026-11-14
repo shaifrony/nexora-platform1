@@ -262,3 +262,15 @@ Missing keys deny by default; do not grant or bypass.
 
 ### Next blocker
 Choose canonical departments for Logistics/Transport, Product/Business, user governance, listing moderation and audit; map each UI action to one seeded key and one server-side RPC/policy. Then reconcile stale RPC callers and test missing/deny, cross-department and Director/AAL2 cases. No database or runtime changes in this audit.
+
+## 17. Recommended department governance proposal (not approved / no SQL)
+
+- Keep `logistics` separate from `transport`: Logistics = order/delivery assignment; Transport = external providers, vehicles and staff. Seed both department keys explicitly. Do not remap #19 Logistics permissions to Transport.
+- Seed `product_business` for Product/Service listing workflows; add missing `products.edit` only after reviewed action/RPC mapping.
+- Proposed `trust_safety` owns user, business and product moderation. Marketing remains leads/campaigns only.
+- Proposed moderation keys: `users.view/suspend/restore/cancel`, `businesses.view/suspend`, `products.view/suspend/restore/cancel`; sensitive by default except read-only product projection. `users.cancel` is reversible deactivation, never Auth hard delete.
+- `products.edit` and `services.edit` belong to `product_business`.
+- Director-only initially: Seller public activation, Product/Service/Business initial approval, Admin appointment, Buyer→Seller role review and Audit Log viewing. No default audit-log staff grant.
+- Trust & Safety cannot grant permissions, appoint staff, change roles, access finance or private chat/call content. Cross-department exceptions are explicit and audited.
+- No RPC aliases. User moderation and listing moderation remain separate narrow RPC contracts; role review remains separate Director-only row-locked RPC.
+- Proposal only, pending explicit owner confirmation; no executable seeds/RPC/migration authorized.
