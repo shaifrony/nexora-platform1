@@ -220,3 +220,12 @@ The UI's client-side grant lookup is not an authorization boundary. The exact se
 - Frontend keys `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit` are not seeded by the active 38 migrations. These are unresolved catalog requirements. Confirm department, sensitivity and RPC enforcement before seeding.
 - `is_nexora_admin()`, `is_nexora_super_admin()` and `has_nexora_permission(text)` are consumed by feature migrations but remain Foundation prerequisites; canonicalize their fail-closed behavior, AAL2 and protected Director rules before any replay.
 - No SQL, app code, local/hosted DB, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment was changed. This pass is source audit + documentation only; no runtime test was run.
+
+## 13. Auth trigger binding and Admin resolver source audit (2026-11-14)
+
+- Second scan of all 38 active migrations confirms application triggers exist for public profile identity and business identity, but no active migration creates an `auth.users` trigger invoking `public.handle_new_user()`. #19/#35 only define or replace the function.
+- No active migration creates an event trigger for automatic RLS enablement. #1 only revokes EXECUTE on `public.rls_auto_enable()`; its definition and binding are absent.
+- #12 defines `private.is_nexora_active_admin_staff()` with AAL2 + active Admin profile + active staff appointment. It does not itself enforce protected Director appointment or per-permission catalog/grant/department scope. Several policies OR it with `public.is_nexora_super_admin()`, which has no definition in the active feature migrations.
+- `private.has_nexora_permission(text)` is consumed by multiple workflows but not defined in the active feature migration set.
+- Foundation must install/verify one Auth trigger, define a tested RLS automation strategy, and make the old active-admin helper a narrow wrapper (or replace its policies) so it cannot bypass the canonical permission resolver.
+- Release gate: full disposable local replay + synthetic signup/role/AAL1/AAL2/RLS tests. No trigger or database was changed in this audit.
