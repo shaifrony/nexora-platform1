@@ -865,3 +865,55 @@ test("Public Buyer Demand view is security-invoker and omits Buyer identity and 
   assert.match(publicDemandProjectionSql, /grant select \([\s\S]*?required_date[\s\S]*?\) on public\.buyer_demands to authenticated/i);
   assert.match(publicDemandProjectionSql, /revoke select on public\.buyer_demands from authenticated/i);
 });
+
+
+const dualMarketGrantSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114175118_add_dual_listing_market_category.sql"),
+  "utf8"
+);
+const serviceListingPrivacySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114160000_demand_inbox_quotations_subcategories.sql"),
+  "utf8"
+);
+
+test("Authenticated Product reads are column-allowlisted and exclude Admin review metadata", () => {
+  assert.match(dualMarketGrantSql, /revoke select on public\.products from authenticated/i);
+  const grant = dualMarketGrantSql.match(/grant select \(([\s\S]*?)\) on public\.products to authenticated/i);
+  assert.ok(grant, "authenticated Product column allowlist must exist");
+  for (const field of ["id","business_id","seller_id","product_code","slug","product_name","category","subcategory","market_category","image_urls","description","origin","specifications_quality","price","currency","listing_status","created_at","updated_at","minimum_order_quantity","stock_tracking","stock_quantity","reserved_quantity","price_tiers"]) {
+    assert.ok(grant[1].includes(field), "Product read allowlist must include " + field);
+  }
+  for (const privateField of ["admin_note","reviewed_by","reviewed_at"]) {
+    assert.ok(!grant[1].includes(privateField), "Product read allowlist must omit " + privateField);
+  }
+  assert.doesNotMatch(dualMarketGrantSql, /grant select on public\.products to authenticated/i);
+});
+
+test("Authenticated Service listing reads omit review metadata and Seller notes use an owner-scoped RPC", () => {
+  assert.match(serviceListingPrivacySql, /revoke select on public\.service_listings from authenticated/i);
+  const grant = serviceListingPrivacySql.match(/grant select \(([\s\S]*?)\) on public\.service_listings to authenticated/i);
+  assert.ok(grant, "Service listing column allowlist must exist");
+  for (const privateField of ["admin_note","reviewed_by","reviewed_at","business_id"]) {
+    assert.ok(!grant[1].includes(privateField), "Service listing read allowlist must omit " + privateField);
+  }
+  const fn = serviceListingPrivacySql.slice(
+    serviceListingPrivacySql.indexOf("create or replace function public.get_my_service_listing_review_notes()"),
+    serviceListingPrivacySql.indexOf("revoke all on function public.get_my_service_listing_review_notes()")
+  );
+  assert.match(fn, /security definer set search_path=''/i);
+  assert.match(fn, /s\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
+  assert.match(serviceListingPrivacySql, /revoke all on function public\.get_my_service_listing_review_notes\(\) from public,anon/i);
+  assert.match(serviceListingPrivacySql, /grant execute on function public\.get_my_service_listing_review_notes\(\) to authenticated/i);
+});
+
+test("Seller Service dashboard loads private Admin notes only through the owner-scoped notes RPC", () => {
+  const ui = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerServices()"),
+    marketplaceUi.indexOf("async function deleteService(")
+  );
+  assert.match(ui, /get_my_service_listing_review_notes/);
+  assert.match(ui, /service_listing_id/);
+  assert.match(ui, /admin_note:noteMap\.get\(s\.id\)/);
+  assert.doesNotMatch(ui, /\.select\("[^"]*admin_note/);
+});
