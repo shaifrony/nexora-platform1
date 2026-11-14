@@ -608,7 +608,7 @@ test("Private messages are readable and sendable only by accepted members of an 
 test("Chat files and call signaling require accepted conversation participants", () => {
   assert.match(hardenedCommunicationsSql, /create policy attachments_participant_read[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
   assert.match(hardenedCommunicationsSql, /create policy attachments_sender_insert[\s\S]*?uploaded_by=\(select auth\.uid\(\)\)[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
-  assert.match(hardenedCommunicationsSql, /create policy call_signals_sender_insert[\s\S]*?sender_id=\(select auth\.uid\(\)\)[\s\S]*?recipient_id<>\(select auth\.uid\(\)\)[\s\S]*?private\.is_conversation_member\(conversation_id\)[\s\S]*?target\.invitation_status='accepted'/i);
+  assert.match(hardenedCommunicationsSql, /create policy call_signals_sender_insert[\s\S]*?sender_id=\(select auth\.uid\(\)\)[\s\S]*?recipient_id<>\(select auth\.uid\(\)\)[\s\S]*?private\.is_conversation_member\(conversation_id\)[\s\S]*?cp\.invitation_status='accepted'/i);
   assert.match(privateCommunicationsSql, /create policy nexora_chat_files_read[\s\S]*?cp\.invitation_status='accepted'/i);
 });
 
