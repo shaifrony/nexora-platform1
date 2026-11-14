@@ -936,7 +936,7 @@ test("Product review notes are returned only to the owning active Seller or MFA-
 test("Seller Product dashboard loads and displays review notes through the scoped RPC", () => {
   const ui = marketplaceUi.slice(
     marketplaceUi.indexOf("async function loadSellerDashboard()"),
-    marketplaceUi.indexOf("async function loadBuyerDashboard(")
+    marketplaceUi.indexOf("async function loadSellerEditRequests(")
   );
   assert.match(ui, /get_my_product_listing_review_notes/);
   assert.match(ui, /reviewNotes\.get\(p\.id\)/);
