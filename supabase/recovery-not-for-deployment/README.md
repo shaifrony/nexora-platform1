@@ -3,7 +3,7 @@
 **Branch:** `nexora-development`  
 **Repository:** `shaifrony/nexora-platform1`  
 **Purpose:** Preserve recovery work for 11 migration-history entries whose original SQL files were not present in the repository.  
-**Execution status:** NONE — no SQL in this directory has been executed.
+**Execution status:** Selected recovery-only candidates have been executed in disposable local test environments only; none are authorized or applied to hosted Supabase.
 
 ## Critical warning
 
@@ -76,7 +76,7 @@ See [NEXORA Missing Migration Draft Audit](../../docs/NEXORA_MISSING_MIGRATION_D
 
 The default-privilege draft was narrowed during review to Data API-facing grants only (table CRUD, sequence USAGE/SELECT, function EXECUTE); it does not revoke service_role defaults. This remains a reconstructed proposal, not verified original SQL.
 
-No PostgreSQL parser or isolated replay test was available, so no draft is certified as execution-ready.
+Some candidates have narrow local PostgreSQL/Supabase rehearsal evidence, but that does not certify the complete recovery package or the current 39-migration chain. No draft is certified for hosted execution.
 
 
 ## Current NEXORA-TEST Foundation Design
