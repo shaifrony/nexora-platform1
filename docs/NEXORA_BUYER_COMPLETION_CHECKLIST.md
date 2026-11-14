@@ -102,12 +102,13 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [x] Final Development CI [#43646918669](https://github.com/shaifrony/nexora-platform1/actions/runs/43646918669) passed 70/70 dependency-free source regression tests, JavaScript syntax and migration filename/order guard. This does not replace database execution, JWT/RLS/PostgREST or browser E2E.
 - [x] Quotation creation locks the Buyer Demand row and rejects closed/cancelled Demand; negotiation locks Demand before Offer using the same order to avoid a concurrent insert/negotiation lock inversion. Source regression coverage verifies this lock order.
 - [x] Latest Development CI [#43647210267](https://github.com/shaifrony/nexora-platform1/actions/runs/43647210267) passed 77/77 dependency-free source tests, including the above Demand protections and seven Private Chat invitation/participant-isolation checks. No hosted Auth/JWT/PostgREST or browser E2E claim is made.
+- [x] Public identity regression tests verify the `public_profiles` view contains only ID/name, `public_businesses` is an approved-only limited projection, and the public Demand view is security-invoker and omits Buyer identity/contact. Latest Development CI [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) passed 93/93 source tests; this is not live RLS/HTTP testing.
 
 ### B-04 — Orders, stock ও pricing
 - [x] Buyer Demand quotation conversion and Buyer/Seller order status source paths are staged; Buyer order card shows delivery-inclusive `grand_total` with charge breakdown when non-zero.
 - [ ] Buyer account category ছাড়া যেকোনো approved product order করতে পারে—full-schema/runtime verification pending.
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
-- [x] Source-level tests cover active assigned Buyer/Seller checks on Product/Service order transitions, role-specific state changes, stock reservation/release/deduction, MOQ/available-stock validation and tier-price snapshots. Development CI [#43647408251](https://github.com/shaifrony/nexora-platform1/actions/runs/43647408251) passed 83/83 tests; hosted runtime/RLS and browser E2E remain pending.
+- [x] Source-level tests cover active assigned Buyer/Seller checks on Product/Service order transitions, role-specific state changes, stock reservation/release/deduction, MOQ/available-stock validation and tier-price snapshots. The expanded suite [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) passed 93/93 tests; hosted runtime/RLS and browser E2E remain pending.
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
 - [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
