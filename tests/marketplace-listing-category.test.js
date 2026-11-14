@@ -1015,3 +1015,15 @@ test("Buyer Demand owners can update only demand status, not posted commercial t
   assert.match(demandOrderSql, /revoke update \(subcategory\) on public\.buyer_demands from authenticated/i);
   assert.match(demandOrderSql, /grant update \(demand_status\) on public\.buyer_demands to authenticated/i);
 });
+
+
+test("Seller retains access to own Demand quotation history after Buyer closes the Demand", () => {
+  const policy = demandOrderSql.slice(
+    demandOrderSql.indexOf("create policy seller_offer_negotiations_participant_read"),
+    demandOrderSql.indexOf("-- Initialise the current terms")
+  );
+  assert.match(policy, /exists\([\s\S]*?from public\.seller_offers o[\s\S]*?o\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(policy, /or exists\([\s\S]*?join public\.buyer_demands d on d\.id=o\.demand_id[\s\S]*?d\.buyer_id=\(select auth\.uid\(\)\)/i);
+  const sellerBranch = policy.slice(0, policy.indexOf("or exists"));
+  assert.doesNotMatch(sellerBranch, /join public\.buyer_demands/i);
+});
