@@ -69,4 +69,27 @@ CREATE TRIGGER products_guard_market_category
   FOR EACH ROW
   EXECUTE FUNCTION private.guard_product_market_category();
 
+
+-- Review notes are not readable through the Product table grant. Return them
+-- only to the owning active Seller or an MFA-protected active NEXORA Admin.
+create or replace function public.get_my_product_listing_review_notes()
+returns table(product_id uuid, admin_note text, reviewed_at timestamptz)
+language sql
+security definer
+set search_path=''
+as $
+  select p.id,p.admin_note,p.reviewed_at
+  from public.products p
+  where (
+    (p.seller_id=(select auth.uid()) and exists(
+      select 1 from public.profiles pr
+      where pr.id=(select auth.uid()) and pr.role='seller' and pr.account_status='active'
+    ))
+    or (public.is_nexora_admin() and (select auth.jwt()->>'aal')='aal2')
+  )
+  order by p.updated_at desc;
+$;
+revoke all on function public.get_my_product_listing_review_notes() from public,anon;
+grant execute on function public.get_my_product_listing_review_notes() to authenticated;
+
 COMMIT;
