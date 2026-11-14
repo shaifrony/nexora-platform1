@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NEXORA | Global Trade Marketplace</title>
+<title>NEXORA</title>
 
 <style>
 :root{
@@ -34,7 +34,20 @@ header{
   flex-wrap:wrap;
   gap:12px;
 }
-.logo{font-size:25px;font-weight:800;letter-spacing:2px}
+.logo{font-size:25px;font-weight:800;letter-spacing:2px;display:flex;align-items:center;gap:9px}
+.logo-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(145deg,#36d6a8,#1769aa);display:inline-grid;place-items:center;color:#fff;font-size:20px;letter-spacing:0;box-shadow:0 4px 12px #0002}
+.hero{position:relative;overflow:hidden}
+.hero-kicker{display:inline-block;background:#ffffff20;border:1px solid #ffffff45;border-radius:30px;padding:7px 12px;font-size:12px;font-weight:700;letter-spacing:.5px}
+.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+.home-tools{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:20px 0 28px}
+.home-tool{background:#fff;border:1px solid var(--border);border-radius:13px;padding:18px;box-shadow:0 3px 12px #10243a08}
+.home-tool h3{margin:0 0 8px;color:var(--navy);font-size:17px}
+.home-tool p{margin:0 0 13px}
+.home-tool .tool-icon{font-size:23px;margin-bottom:10px}
+.promo-strip{background:#e8f6f2;border:1px solid #ccebe1;border-radius:13px;padding:17px 19px;margin:18px 0 26px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.promo-strip h3{margin:0 0 5px;color:#075c49}
+.brand-sub{font-size:10px;letter-spacing:1.5px;color:#dceafa;font-weight:600}
+@media(max-width:600px){.hero{padding:27px 18px}.home-tool{padding:15px}}
 .logo span{color:#36d6a8}
 nav{display:flex;gap:8px;flex-wrap:wrap}
 button{
@@ -111,6 +124,9 @@ input:focus,select:focus,textarea:focus{
   margin:3px;
 }
 .price{font-size:19px;font-weight:800;color:var(--green)}
+.call-video{width:100%;min-height:120px;max-height:240px;background:#172b40;border-radius:8px;object-fit:contain}
+.chat-messages{height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding:10px;background:#f7f9fc;border:1px solid var(--border);border-radius:10px;margin:12px 0}
+.chat-person,.chat-thread{display:block;width:100%;text-align:left;margin:6px 0}
 .product-image{
   width:100%;height:150px;object-fit:cover;
   border-radius:9px;background:#edf1f5;
@@ -136,73 +152,1050 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
   .container{padding:16px 12px}
   nav button{padding:9px 10px;font-size:12px}
 }
+
+
+/* NEXORA LOGIN / REGISTRATION LAYOUT */
+.nx-auth-layout{display:block;max-width:720px;margin:0 auto}
+.nx-auth-panel{margin:0;min-width:0}
+.nx-auth-panel h3{margin:0 0 12px;color:var(--navy)}
+.nx-login-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px}
+.nx-login-actions button{min-width:130px}
+.nx-signup-form{max-width:680px;margin:0 auto}
+.nx-social-divider{text-align:center;color:var(--muted);font-size:13px;margin:18px 0 10px}
+.nx-social-buttons{display:flex;gap:10px;flex-wrap:wrap}
+.nx-social-buttons button{flex:1;min-width:180px;background:#fff;border:1px solid #d6dee8;color:#263746}
+.nx-google-mark{font-weight:800;color:#4285f4;font-size:17px;margin-right:7px}
+@media(max-width:650px){.nx-login-actions{gap:8px}.nx-login-actions button{flex:1}}
+
+/* NEXORA MARKETPLACE HOMEPAGE REDESIGN */
+:root{--orange:#f26b38;--teal:#087f78;--ink:#172b3d}
+body{background:#f4f6f8;color:#263746}
+header{background:#fff;color:#172b3d;padding:13px max(4%,calc((100% - 1280px)/2));box-shadow:0 2px 12px #142b3b12;position:sticky;top:0;z-index:20}
+.logo{color:#142b3b}.brand-sub{color:#718096}
+nav button{background:#f1f4f7;color:#263746}nav input{width:min(280px,42vw);padding:10px 12px;border:1px solid #d6dee8;border-radius:8px;background:#fbfcfd;font-size:14px}nav button:hover{background:#e5f5f1;color:#087f78}
+.container{max-width:1280px;padding:22px 18px}
+.hero{border-radius:18px;background:linear-gradient(112deg,#102b43 0%,#145a72 58%,#087f78 100%);padding:46px 38px;min-height:275px;box-shadow:0 12px 30px #102b4324}
+.hero h1{font-size:clamp(30px,4vw,46px);max-width:650px;line-height:1.15}
+.hero p{max-width:650px;font-size:16px}
+.hero:after{content:"GLOBAL SOURCING  •  VERIFIED BUSINESS  •  CROSS-BORDER TRADE";display:block;margin-top:26px;color:#d2f5ec;font-size:11px;letter-spacing:1.4px;font-weight:700}
+.hero-actions button{padding:13px 19px}
+.home-tools{grid-template-columns:repeat(3,minmax(0,1fr))}
+.home-tool{border-radius:15px;padding:22px;border-top:3px solid #0b9875}
+.home-tool .tool-icon{font-size:28px}
+.promo-strip{background:linear-gradient(90deg,#fff3e9,#fff);border-color:#ffe0c8}
+.section{margin:32px 0}
+.section-head{border-bottom:1px solid #e4eaf0;padding-bottom:13px}
+h2{font-size:24px}
+#market{background:#fff;padding:22px;border-radius:18px;border:1px solid #e6ebf0}
+#market .grid:first-of-type{grid-template-columns:minmax(0,2fr) minmax(190px,1fr);gap:10px}
+#productSearch{padding:15px 18px;border-radius:10px;background:#fbfcfd}
+#categoryFilter{padding:15px;border-radius:10px}
+#productList{grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+#productList .card{padding:12px;border-radius:13px;transition:transform .18s,box-shadow .18s}
+#productList .card:hover{transform:translateY(-3px);box-shadow:0 10px 24px #172b3d16}
+.product-image{height:180px;object-fit:contain;background:#f7f8fa}
+#productList .card h3{font-size:16px;min-height:38px}
+#productList .price{color:#e65d2f}
+.nx-search-panel{margin-bottom:18px}
+.nx-search-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}
+.nx-search-toolbar>#productSearch{min-width:0;width:100%;padding:15px 18px;border-radius:10px;background:#fbfcfd}
+.nx-advanced-search{position:relative;min-width:104px}
+.nx-advanced-search summary{cursor:pointer;list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 16px;border:1px solid #d6dee8;border-radius:10px;background:#fff;color:#263746;font-weight:700;white-space:nowrap}
+.nx-advanced-search summary::-webkit-details-marker{display:none}
+.nx-advanced-search summary span{font-size:18px;line-height:1}
+.nx-advanced-search[open] summary{border-color:#087f78;color:#087f78;background:#f0faf7}
+.nx-filter-popover{position:absolute;right:0;top:calc(100% + 8px);z-index:15;width:min(620px,calc(100vw - 36px));padding:16px;background:#fff;border:1px solid #e1e7ed;border-radius:13px;box-shadow:0 14px 36px #172b3d20}
+.nx-filter-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.nx-filter-heading .muted{font-size:12px}
+.nx-filter-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;padding:4px 0 12px}
+.nx-filter-grid label{margin:7px 0 5px;font-size:12px}
+.nx-filter-grid input,.nx-filter-grid select{padding:10px;font-size:13px}
+.nx-filter-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-top:4px;border-top:1px solid #edf0f3}
+.nx-filter-actions button{padding:9px 13px}
+#filterHint{font-size:12px}
+.nx-public-demands{margin-top:22px;padding:16px 18px;background:#f8fafc;border:1px solid #e6ebf0;border-radius:14px}
+.nx-public-demands .section-head{margin-bottom:10px;padding-bottom:8px}
+.nx-public-demands .section-head h2{font-size:19px}
+.nx-public-demands .section-head .muted{margin:2px 0 0}
+.nx-demand-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+/* Buyer-only dashboard styling */
+.nx-profile-wrap{position:relative}.nx-profile-toggle{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #e2e8f0;border-radius:28px;padding:5px 10px 5px 6px;color:#172b3d;min-width:0}
+.nx-avatar{width:38px;height:38px;border-radius:50%;display:inline-grid;place-items:center;background:linear-gradient(135deg,#0b79b7,#0b9875);color:#fff;font-weight:800;font-size:17px;flex:0 0 auto}
+.nx-profile-label{display:flex;flex-direction:column;text-align:left;line-height:1.25;max-width:130px}.nx-profile-label strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.nx-profile-label small,.nx-profile-summary small{font-size:11px;color:#718096}
+.nx-profile-dropdown{position:absolute;right:0;top:calc(100% + 10px);width:270px;background:#fff;border:1px solid #e2e8f0;border-radius:15px;box-shadow:0 16px 42px #10243a24;padding:9px;z-index:50}
+.nx-profile-summary{display:flex;align-items:center;gap:11px;padding:10px 9px 14px;border-bottom:1px solid #edf1f5;margin-bottom:6px}.nx-profile-summary>span:last-child{display:flex;flex-direction:column;gap:4px;min-width:0}.nx-avatar-large{width:48px;height:48px}
+.nx-profile-dropdown>button{display:block;width:100%;text-align:left;background:#fff;color:#263746;padding:10px 11px;border-radius:8px;font-weight:500}.nx-profile-dropdown>button:hover{background:#f1f7fb;color:#087f78}.nx-profile-dropdown .nx-profile-logout{border-top:1px solid #edf1f5;margin-top:5px;color:#b42318}
+.nx-buyer-topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}.nx-buyer-topbar h2{margin:0}
+.nx-buyer-promo{padding:22px 24px;border-radius:15px;background:linear-gradient(110deg,#102d4b,#126b85 70%,#0b9875);color:#fff;margin-bottom:18px}.nx-buyer-promo h2{color:#fff;margin:8px 0}.nx-buyer-promo p{color:#e1edf4;margin:0;line-height:1.6}
+.nx-buyer-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin:18px 0}#buyerProductList{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}#buyerProductList .card{margin:0;padding:12px}#buyerProductList .product-image{height:150px;object-fit:contain}
+@media(max-width:600px){.nx-profile-label{display:none}.nx-profile-toggle{padding:4px}.nx-profile-dropdown{width:min(270px,calc(100vw - 24px))}.nx-buyer-promo{padding:18px}#buyerProductList{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.demand-card{min-width:0;padding:12px 14px;background:#fff;border:1px solid #e4eaf0;border-radius:11px}
+.demand-card h3{margin:6px 0;font-size:15px;color:#172b3d}
+.demand-card p{margin:4px 0}
+.demand-card .demand-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:#718096}
+.demand-card .demand-date{font-size:11px;padding:5px 8px}
+.demand-card .demand-description{font-size:12px;color:#64748b;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media(max-width:760px){header{position:relative}nav{width:100%}.home-tools{grid-template-columns:1fr}.hero{padding:30px 22px;min-height:0}#market .grid:first-of-type{grid-template-columns:1fr}#productList{grid-template-columns:repeat(2,minmax(0,1fr))}.product-image{height:130px}}
+@media(max-width:420px){.nx-search-toolbar{grid-template-columns:minmax(0,1fr) auto;gap:7px}.nx-advanced-search{min-width:88px}.nx-advanced-search summary{padding:0 10px}.nx-filter-popover{right:-1px;width:calc(100vw - 24px);padding:12px}.nx-filter-grid{grid-template-columns:1fr}}
+@media(max-width:420px){#productList{grid-template-columns:1fr 1fr}.container{padding:12px 9px}.hero h1{font-size:27px}}
+@media(max-width:760px){.nx-search-main{grid-template-columns:1fr}.nx-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.nx-public-demands{padding:12px}.nx-demand-grid{grid-template-columns:1fr}}
+@media(max-width:390px){.nx-filter-grid{grid-template-columns:1fr}}
+
+  #nxAdminManagement .nx-permission-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:8px}
+  #nxAdminManagement .nx-permission-option{display:flex;gap:8px;align-items:flex-start;padding:10px;border:1px solid var(--border);border-radius:8px;margin:0;font-weight:400}
+  #nxAdminManagement .nx-permission-option input{width:auto;margin-top:3px}
+  #nxAdminManagement .nx-permission-option small{display:block;color:var(--muted);font-size:12px;font-weight:400;margin-top:3px}
+
+/* NEXORA AMAZON + ALIBABA VISUAL POLISH — development */
+:root{--nx-radius:16px;--nx-shadow:0 8px 24px rgba(23,43,61,.07)}
+body{letter-spacing:.005em}
+header{min-height:68px}
+.logo{letter-spacing:1.6px}
+nav button{border:1px solid #e4eaf0;transition:background .18s,border-color .18s,transform .18s}
+nav button:focus-visible,button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #8bd8c7;outline-offset:2px}
+#market{box-shadow:var(--nx-shadow)}
+#market>.section-head{align-items:center}
+#market>.section-head h2{font-size:26px;letter-spacing:-.4px}
+#productList .card{overflow:hidden;border-color:#e8edf2;box-shadow:0 3px 14px rgba(23,43,61,.045)}
+#productList .card h3{line-height:1.45;color:#172b3d}
+#productList .card .muted{min-height:34px}
+#productList .card button{width:100%;margin-top:8px}
+#productList .price{font-size:20px;letter-spacing:-.3px}
+.nx-public-demands{box-shadow:0 3px 14px rgba(23,43,61,.035)}
+.demand-card{transition:border-color .18s,transform .18s,box-shadow .18s}
+.demand-card:hover{border-color:#b8ded4;transform:translateY(-2px);box-shadow:0 7px 18px rgba(23,43,61,.06)}
+#buyerDashboard{background:#fff;border:1px solid #e6ebf0;border-radius:18px;padding:22px;box-shadow:var(--nx-shadow)}
+#buyerDashboard .section-head{margin-bottom:18px}
+#buyerDashboard .card{border-radius:14px}
+#buyerDashboard .nx-buyer-promo{box-shadow:0 10px 25px rgba(16,45,75,.12)}
+#buyerDashboard .nx-buyer-search input{min-height:48px}
+#buyerProductList .card{border-color:#e8edf2;box-shadow:0 3px 14px rgba(23,43,61,.045);transition:transform .18s,box-shadow .18s}
+#buyerProductList .card:hover{transform:translateY(-3px);box-shadow:0 10px 22px rgba(23,43,61,.10)}
+#buyerProductList .card h3{font-size:15px;line-height:1.45}
+#buyerProductList .price{color:#e65d2f}
+.nx-profile-dropdown{box-shadow:0 18px 42px rgba(16,36,58,.16)}
+@media(max-width:760px){
+ #market{padding:15px 12px}
+ #market>.section-head h2{font-size:22px}
+ #buyerDashboard{padding:14px 11px}
+ #buyerDashboard .nx-buyer-topbar{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{scroll-behavior:auto!important;transition:none!important;animation:none!important}
+}
+
+
+/* Admin logistics monitoring */
+.nx-logistics-monitor-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.nx-logistics-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}
+.nx-logistics-metrics>div{padding:13px;border:1px solid var(--border);border-radius:12px;background:#f8fafc;display:flex;flex-direction:column;gap:4px}
+.nx-logistics-metrics strong{font-size:23px;color:var(--navy)}.nx-logistics-metrics span{font-size:12px;color:var(--muted)}
+.nx-logistics-jobs,.nx-logistics-history{display:grid;gap:10px;margin-top:12px}
+.nx-logistics-job,.nx-logistics-event{padding:14px;border:1px solid var(--border);border-radius:12px;background:#fff}
+.nx-logistics-job-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.nx-logistics-job-code{font-size:11px;font-weight:800;letter-spacing:.8px;color:#087f78}
+.nx-logistics-job h5{font-size:15px;margin:5px 0;color:var(--navy)}
+.nx-logistics-job p,.nx-logistics-event p{margin:5px 0;font-size:13px;color:#64748b}
+.nx-logistics-status{display:inline-block;padding:5px 9px;border-radius:20px;background:#edf5f8;color:#28536a;font-size:11px;font-weight:700}
+.nx-logistics-event{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nx-logistics-event time{font-size:11px;color:var(--muted)}
+.nx-logistics-admin-actions{display:flex;align-items:end;gap:8px;flex-wrap:wrap;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.nx-logistics-admin-actions label{width:100%;margin:0;font-size:12px}
+.nx-logistics-admin-actions select{max-width:260px;flex:1;min-width:150px;padding:9px}
+.nx-logistics-admin-actions button{padding:9px 12px}
+
+@media(max-width:560px){.nx-logistics-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-logistics-event{display:block}}
+/* NEXORA visible marketplace redesign — hero, category discovery and dual-market storefront */
+.nx-market-hero{position:relative;isolation:isolate;display:grid;grid-template-columns:1.2fr .8fr;gap:20px;min-height:340px;overflow:hidden;padding:38px 42px;margin:8px 0 30px;border-radius:22px;background:linear-gradient(115deg,#0b2238 0%,#104e65 58%,#087f78 100%);color:#fff;box-shadow:0 18px 40px #102b4326}
+.nx-market-hero:before{content:"";position:absolute;width:430px;height:430px;border:1px solid #ffffff18;border-radius:50%;right:5%;top:-45%;z-index:-1}
+.nx-market-hero-copy{align-self:center;max-width:650px}
+.nx-market-eyebrow{display:block;color:#69ddc0;font-size:10px;letter-spacing:2px;font-weight:800;margin-bottom:10px}
+.nx-market-hero h1{font-size:clamp(32px,4.3vw,50px);line-height:1.14;letter-spacing:-1.3px;margin:0 0 14px;color:#fff}
+.nx-market-hero h1 em{font-style:normal;color:#7ce0c7}
+.nx-market-hero p{max-width:570px;color:#d6e8ee;font-size:15px;line-height:1.8;margin:0}
+.nx-market-hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:23px}
+.nx-market-hero-actions button{padding:13px 18px;border-radius:9px}
+.nx-hero-primary{background:#f47b45;color:white}.nx-hero-primary:hover{background:#e96832}
+.nx-hero-secondary{background:#ffffff14;color:white;border:1px solid #ffffff55}
+.nx-market-benefits{display:flex;gap:17px;flex-wrap:wrap;margin-top:22px;color:#d4eee8;font-size:11px;font-weight:600}
+.nx-market-hero-art{position:relative;min-height:245px;display:grid;place-items:center}
+.nx-orbit{position:absolute;border:1px solid #ffffff24;border-radius:50%;width:270px;height:270px}
+.nx-orbit-two{width:205px;height:205px;border-style:dashed}
+.nx-hero-box{position:absolute;display:grid;place-items:center;font-weight:900;box-shadow:0 20px 45px #001a2a55}
+.nx-box-back{width:145px;height:145px;border-radius:27px;background:linear-gradient(145deg,#f6a46d,#d75b3e);transform:translate(43px,-25px) rotate(12deg);font-size:68px;color:#fff8}
+.nx-box-front{width:165px;height:165px;border-radius:25px;background:linear-gradient(145deg,#fff,#dcefe9);color:#12364a;font-size:30px;transform:translate(-17px,23px);display:flex;flex-direction:column;gap:5px}
+.nx-box-front span{font-size:8px;letter-spacing:2px;color:#0b8b78}
+.nx-float-chip{position:absolute;padding:9px 13px;border-radius:9px;background:#fff;color:#16465a;font-size:10px;font-weight:900;letter-spacing:1px;box-shadow:0 8px 22px #001a2a30}
+.nx-chip-top{top:14%;right:3%}.nx-chip-bottom{bottom:7%;left:2%}
+.nx-category-section{margin:0 0 34px;padding:22px 22px 24px;background:#fff;border:1px solid #e7edf1;border-radius:17px;box-shadow:0 6px 22px #172b3d08}
+.nx-category-heading,.nx-market-section-title{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:16px}
+.nx-category-heading h3{margin:0;color:#172b3d;font-size:21px}
+.nx-category-rail{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.nx-category-rail button{display:flex;flex-direction:column;align-items:flex-start;gap:6px;text-align:left;min-height:125px;padding:15px 13px;border:1px solid #e6edf1;border-radius:13px;background:#fbfcfd;color:#243b4c;transition:.18s}
+.nx-category-rail button:hover{border-color:#8ccfc0;background:#f0faf7;transform:translateY(-3px)}
+.nx-category-rail button>span{display:grid;place-items:center;width:39px;height:39px;border-radius:11px;background:#e8f5f1;font-size:21px}
+.nx-category-rail button b{font-size:12px;line-height:1.35}
+.nx-category-rail button small{font-size:11px;color:#718096}
+.nx-market-section-title{margin:5px 0 16px;padding:0 2px}
+.nx-market-section-title h2{margin:0;font-size:25px}
+.nx-market-section-title .nx-market-eyebrow{margin-bottom:5px}
+@media(max-width:850px){.nx-market-hero{grid-template-columns:1fr .65fr;padding:30px 25px}.nx-category-rail{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.nx-market-hero{grid-template-columns:1fr;padding:26px 21px;min-height:0}.nx-market-hero-art{min-height:190px;margin-top:5px}.nx-orbit{width:205px;height:205px}.nx-orbit-two{width:155px;height:155px}.nx-box-back{width:105px;height:105px;font-size:48px}.nx-box-front{width:125px;height:125px;font-size:23px}.nx-market-benefits{gap:9px}.nx-category-section{padding:17px 12px}.nx-category-heading{align-items:flex-start;flex-direction:column}.nx-category-rail{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.nx-category-rail button{min-height:112px;padding:12px}.nx-market-section-title{align-items:flex-start;flex-direction:column}.nx-market-section-title h2{font-size:21px}}
+
+
+/* Buyer Center — substantial workspace redesign */
+.nx-buyer-workspace{padding:0!important;background:#f5f7fa;border:1px solid #e5eaf0;border-radius:18px;overflow:visible;box-shadow:0 12px 34px rgba(19,43,61,.07)}
+.nx-buyer-shellbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 22px;background:#fff;border-bottom:1px solid #e8edf2;border-radius:18px 18px 0 0}
+.nx-buyer-brand{display:flex;align-items:center;gap:10px;color:#142b3d;font-weight:900;letter-spacing:1.3px}.nx-buyer-brand>span:last-child{display:flex;flex-direction:column;font-size:16px}.nx-buyer-brand small{font-size:9px;letter-spacing:2px;color:#0b9875;margin-top:2px}
+.nx-buyer-brandmark{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:linear-gradient(145deg,#0b9875,#1769aa);color:#fff;font-size:20px}
+.nx-buyer-shell-actions{display:flex;align-items:center;gap:15px}.nx-buyer-icon-action{background:#f4f7f9;color:#34495a;border:1px solid #e7edf1}.nx-buyer-layout{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:760px}
+.nx-buyer-sidebar{padding:23px 14px;background:#fff;border-right:1px solid #e8edf2;border-radius:0 0 0 18px}.nx-buyer-side-label{padding:0 10px 9px;color:#91a0ae;font-size:10px;font-weight:800;letter-spacing:1.5px}.nx-buyer-sidebar>button{display:flex;align-items:center;gap:11px;width:100%;padding:12px 11px;margin:3px 0;text-align:left;background:transparent;color:#536577;border-radius:9px;font-size:13px}.nx-buyer-sidebar>button.active,.nx-buyer-sidebar>button:hover{background:#eaf6f3;color:#087f78}.nx-buyer-sidebar>button:first-of-type{font-weight:800}.nx-buyer-side-divider{height:1px;background:#edf1f4;margin:18px 8px}.nx-buyer-help{margin:28px 4px 0;padding:14px;background:#f2f8f7;border:1px solid #dcefe9;border-radius:12px}.nx-buyer-help strong{font-size:12px;color:#14594d}.nx-buyer-help p{font-size:11px;line-height:1.6;color:#607b76}.nx-buyer-help button{width:100%;padding:9px;background:#0b8977;color:#fff;font-size:11px}
+.nx-buyer-main{min-width:0;padding:24px}.nx-buyer-welcome{display:flex;justify-content:space-between;align-items:center;gap:18px;min-height:205px;padding:27px 30px;border-radius:16px;background:linear-gradient(115deg,#102a43,#145b70 68%,#0b9875);color:#fff;overflow:hidden}.nx-buyer-eyebrow{display:block;color:#0b9875;font-size:10px;font-weight:900;letter-spacing:1.7px;margin-bottom:8px}.nx-buyer-welcome .nx-buyer-eyebrow{color:#77dfc7}.nx-buyer-welcome h1{max-width:560px;font-size:clamp(24px,3vw,34px);line-height:1.2;color:#fff;margin:0 0 10px}.nx-buyer-welcome p{max-width:570px;color:#d8e8ed;line-height:1.7;font-size:13px;margin:0}.nx-buyer-welcome-art{width:190px;height:145px;flex:0 0 190px;display:flex;flex-direction:column;justify-content:center;align-items:center;border:1px solid #ffffff35;border-radius:18px;background:#ffffff0d;transform:rotate(2deg)}.nx-buyer-welcome-art span{font-size:21px;font-weight:900;letter-spacing:2px;color:#fff}.nx-buyer-welcome-art b{font-size:34px;color:#7ce0c7}.nx-buyer-welcome-art i{font-size:9px;letter-spacing:2px;color:#c4e6e1;font-style:normal}
+.nx-buyer-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:17px 0}.nx-buyer-quick-actions button{display:grid;grid-template-columns:40px 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;padding:15px;background:#fff;border:1px solid #e5ebf0;border-radius:12px;color:#263746}.nx-buyer-quick-actions button>span{grid-row:1/3;width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#e9f6f2;color:#087f78;font-size:21px}.nx-buyer-quick-actions strong{font-size:12px}.nx-buyer-quick-actions small{font-size:10px;color:#8492a0;font-weight:400;margin-top:4px}
+.nx-buyer-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:17px 0 25px}.nx-buyer-stats>div{padding:15px 17px;background:#fff;border:1px solid #e5ebf0;border-radius:12px}.nx-buyer-stats span,.nx-buyer-stats small{display:block;color:#778696;font-size:11px}.nx-buyer-stats strong{display:block;color:#142f45;font-size:27px;margin:7px 0 3px}.nx-buyer-discover,.nx-buyer-demands{padding:20px;margin:18px 0;background:#fff;border:1px solid #e5ebf0;border-radius:15px}.nx-buyer-section-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.nx-buyer-section-heading h2{font-size:20px;margin:0 0 4px}.nx-buyer-section-heading p{font-size:11px;color:#81909d;margin:0}.nx-buyer-count{padding:7px 10px;background:#f0f5f7;border-radius:20px;color:#647789;font-size:11px}.nx-buyer-search{margin:14px 0 18px}.nx-buyer-search input{border-radius:9px;background:#f9fbfc}.nx-buyer-discover #buyerProductList{grid-template-columns:repeat(auto-fill,minmax(175px,1fr))}
+@media(max-width:850px){.nx-buyer-layout{grid-template-columns:1fr}.nx-buyer-sidebar{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:9px;border-right:0;border-bottom:1px solid #e8edf2;border-radius:0}.nx-buyer-side-label,.nx-buyer-side-divider,.nx-buyer-help{display:none}.nx-buyer-sidebar>button{justify-content:center;flex-direction:column;gap:4px;padding:8px 3px;font-size:18px}.nx-buyer-sidebar>button span{font-size:10px}.nx-buyer-main{padding:16px}}
+@media(max-width:560px){.nx-buyer-shellbar{padding:10px 12px}.nx-buyer-icon-action span{display:none}.nx-buyer-main{padding:11px}.nx-buyer-welcome{min-height:0;padding:21px 18px}.nx-buyer-welcome-art{display:none}.nx-buyer-quick-actions{gap:7px}.nx-buyer-quick-actions button{grid-template-columns:1fr;text-align:center;justify-items:center;padding:11px 5px}.nx-buyer-quick-actions button>span{grid-row:auto;margin-bottom:5px}.nx-buyer-quick-actions small{display:none}.nx-buyer-stats{gap:7px}.nx-buyer-stats>div{padding:11px 9px}.nx-buyer-stats strong{font-size:22px}.nx-buyer-stats span,.nx-buyer-stats small{font-size:9px}.nx-buyer-discover,.nx-buyer-demands{padding:13px 10px}.nx-buyer-section-heading h2{font-size:17px}.nx-buyer-discover #buyerProductList{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+
+/* Product sale-type choices are rendered in the listing form. */
+
+/* Hide public/global navigation while the dedicated Buyer Center is active */
+body:has(#buyerDashboard:not(.hidden))>header{display:none!important}
+body:has(#buyerDashboard:not(.hidden))>main.container{padding-top:18px}
+
+/* WhatsApp-style call controls inside the conversation header */
+.nx-chat-topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-bottom:1px solid var(--border,#e5e7eb);margin-bottom:12px}
+.nx-chat-topbar h3{margin:0;min-width:0}
+.nx-chat-call-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.nx-chat-call-button{width:42px;height:42px;border:0;border-radius:50%;background:#e9f7f1;color:#087b5f;font-size:19px;cursor:pointer}
+.nx-chat-call-button:disabled{opacity:.45;cursor:not-allowed}
+.nx-chat-call-panel{margin-top:10px}
+.nx-chat-call-panel .grid{margin-top:10px}
+.nx-product-contact{margin-top:18px}
+.nx-contact-seller-button{min-width:190px}
+@media(max-width:600px){.nx-chat-topbar{padding:9px 6px}.nx-chat-call-button{width:38px;height:38px}}
+
+
+/* Focused standalone Buyer Demand page */
+.nx-demand-only{max-width:820px;margin:24px auto 60px;padding:0 18px}
+.nx-demand-page-heading{margin:0 0 22px;padding:26px 28px;border-radius:16px;background:linear-gradient(115deg,#102b43,#087f78);color:#fff}
+.nx-demand-eyebrow{font-size:10px;letter-spacing:1.7px;font-weight:800;color:#9debd8}
+.nx-demand-page-heading h1{margin:8px 0;font-size:30px;color:#fff}
+.nx-demand-page-heading p{margin:0;color:#e0f1ef;font-size:14px}
+.nx-demand-form-card{padding:24px;background:#fff;border:1px solid #e4eaf0;border-radius:16px;box-shadow:0 10px 30px #172b3d0c}
+.nx-demand-form-card form>label{margin-top:18px}
+.nx-demand-form-card .grid{gap:8px 16px}
+.nx-demand-form-card .form-actions{justify-content:flex-end}
+.nx-demand-form-card .form-actions button{min-width:170px;padding:13px 20px}
+body.nx-demand-only-active>header{display:none!important}
+body.nx-demand-only-active main.container{max-width:none;padding:1px 18px 40px}
+body.nx-demand-only-active #postDemand{display:block!important}
+@media(max-width:600px){.nx-demand-only{margin:12px auto 32px;padding:0 8px}.nx-demand-page-heading{padding:22px 18px}.nx-demand-page-heading h1{font-size:25px}.nx-demand-form-card{padding:16px 13px}.nx-demand-form-card .form-actions button{width:100%}}
+
+
+/* Consistent back navigation on every internal page; homepage stays uncluttered */
+.nx-page-back-row{display:flex;align-items:center;margin:0 0 14px}
+.nx-page-back-button{display:inline-flex;align-items:center;gap:8px;padding:9px 13px;border:1px solid #dce5ec;border-radius:9px;background:#fff;color:#244157;font-size:13px;font-weight:700;box-shadow:0 2px 8px #10243a0a}
+.nx-page-back-button:hover{background:#f1f8f7;border-color:#a9d8cc;color:#087f78}
+.nx-page-back-button span{font-size:18px;line-height:1}
+body.nx-demand-only-active .nx-page-back-row{margin:0 0 12px}
+@media(max-width:600px){.nx-page-back-row{margin-bottom:10px}.nx-page-back-button{padding:8px 12px}}
+
+/* Buyer account menu: single three-dot entry, all account actions inside */
+body.nx-buyer-dashboard-active>header{display:none}
+.nx-buyer-shell-actions{display:flex;align-items:center;justify-content:flex-end}
+.nx-account-menu-trigger{width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid #dce5ec;color:#172b3d;font-size:27px;line-height:1;font-weight:800;box-shadow:0 3px 12px rgba(16,36,58,.08)}
+.nx-account-menu-trigger:hover,.nx-account-menu-trigger[aria-expanded="true"]{background:#edf8f5;border-color:#83cdbb;color:#087f78}
+.nx-profile-dropdown{width:248px;padding:8px;border-radius:14px}
+.nx-profile-dropdown>button{min-height:42px;padding:11px 12px;font-size:14px}
+.nx-profile-dropdown .nx-profile-logout{margin-top:6px;padding-top:12px}
+@media(max-width:600px){.nx-account-menu-trigger{width:42px;height:42px;min-width:42px}}
+
+/* Unified commerce design system — NEXORA role workspaces */
+:root{
+  --nx-ink:#172b3d;--nx-muted:#718096;--nx-line:#e5ebf0;
+  --nx-surface:#fff;--nx-soft:#f6f8fa;--nx-brand:#087f78;
+  --nx-accent:#f26b38;--nx-radius:16px;
+  --nx-elevation:0 8px 26px rgba(23,43,61,.065);
+}
+main.container{max-width:1320px}
+main>section.section:not(#market){
+  background:var(--nx-surface);border:1px solid var(--nx-line);
+  border-radius:18px;padding:clamp(16px,2.3vw,28px);
+  box-shadow:var(--nx-elevation);margin:22px auto;
+}
+main>section.section:not(#market)>.section-head{
+  padding-bottom:15px;border-bottom:1px solid #edf1f4;margin-bottom:20px;
+}
+main>section.section:not(#market) h2,
+main>section.section:not(#market) h3{color:var(--nx-ink);letter-spacing:-.25px}
+main>section.section:not(#market) .card{
+  border:1px solid var(--nx-line);border-radius:14px;
+  box-shadow:0 3px 14px rgba(23,43,61,.035);padding:20px;
+}
+main>section.section:not(#market) button{
+  min-height:40px;transition:background .18s,border-color .18s,transform .18s;
+}
+main>section.section:not(#market) button:active{transform:translateY(1px)}
+main>section.section:not(#market) input,
+main>section.section:not(#market) select,
+main>section.section:not(#market) textarea{
+  border-color:#dce4eb;border-radius:10px;background:#fbfcfd;
+  min-height:44px;
+}
+main>section.section:not(#market) textarea{min-height:100px}
+main>section.section:not(#market) label{color:#34495e;font-weight:700}
+.nx-buyer-shellbar{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:12px 15px;margin:-4px 0 20px;border:1px solid var(--nx-line);
+  border-radius:15px;background:#fff;box-shadow:0 4px 16px rgba(23,43,61,.045);
+}
+.nx-buyer-brand{display:flex;align-items:center;gap:10px;color:var(--nx-ink);font-weight:850;letter-spacing:.7px}
+.nx-buyer-brand small{display:block;font-size:9px;letter-spacing:1.5px;color:var(--nx-muted);margin-top:3px}
+.nx-buyer-brandmark{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;color:#fff;background:linear-gradient(145deg,#35cda5,#087f78);font-size:20px;box-shadow:0 4px 12px #087f7828}
+.nx-buyer-shell-actions{gap:12px}
+.nx-buyer-wallet{
+  min-width:184px;display:flex;align-items:center;gap:10px;padding:7px 13px;
+  border:1px solid #dcebe7;border-radius:13px;background:linear-gradient(110deg,#f0faf7,#fff);
+}
+.nx-buyer-wallet-icon{
+  width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+  border-radius:11px;background:#dff4ed;color:#087f78;font-size:22px;
+}
+.nx-buyer-wallet-copy{display:flex;flex-direction:column;gap:1px;line-height:1.2}
+.nx-buyer-wallet-copy small{font-size:9px;letter-spacing:1px;font-weight:800;color:#638078}
+.nx-buyer-wallet-copy strong{font-size:17px;color:#087f78;font-variant-numeric:tabular-nums}
+.nx-buyer-wallet-copy em{font-size:10px;color:#718096;font-style:normal}
+.nx-buyer-layout{gap:22px}
+.nx-buyer-sidebar{border-radius:15px;border:1px solid var(--nx-line);background:#fbfcfd;padding:13px}
+.nx-buyer-sidebar button{border-radius:10px}
+.nx-buyer-main{min-width:0}
+.nx-buyer-demands,.nx-buyer-products{border:1px solid var(--nx-line);border-radius:15px;padding:18px;background:#fff}
+.nx-buyer-section-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:15px}
+.nx-buyer-eyebrow{font-size:10px;letter-spacing:1.5px;font-weight:800;color:var(--nx-brand)}
+#buyerDemandList .card,#matchedDemands .card,#sellerProducts .card{
+  border:1px solid var(--nx-line);border-radius:13px;box-shadow:none;
+}
+#privateChat .chat-messages{border-radius:12px;background:#f7f9fb}
+#postDemand .nx-demand-form-card{max-width:850px;margin:0 auto;padding:clamp(16px,3vw,30px);border:1px solid var(--nx-line);border-radius:16px;background:#fff;box-shadow:var(--nx-elevation)}
+#accountSection .nx-auth-panel{max-width:560px;margin:0 auto}
+@media(max-width:680px){
+  main>section.section:not(#market){padding:14px 11px;border-radius:14px}
+  .nx-buyer-shellbar{padding:10px;gap:9px}
+  .nx-buyer-wallet{min-width:0;padding:6px 8px;gap:7px}
+  .nx-buyer-wallet-icon{width:32px;height:32px;flex-basis:32px}
+  .nx-buyer-wallet-copy strong{font-size:15px}
+  .nx-buyer-wallet-copy small{font-size:8px}
+  .nx-buyer-wallet-copy em{display:none}
+  .nx-buyer-shell-actions{gap:7px}
+  .nx-account-menu-trigger{width:40px;height:40px;min-width:40px}
+  .nx-buyer-layout{display:block}
+  .nx-buyer-sidebar{margin-bottom:14px}
+  .nx-buyer-demands,.nx-buyer-products{padding:13px}
+}
+@media(max-width:380px){
+  .nx-buyer-brand{font-size:12px;gap:6px}
+  .nx-buyer-brandmark{width:31px;height:31px}
+  .nx-buyer-wallet{padding:5px 6px}
+}
+
+
+/* NEXORA role workspaces — shared enterprise shell */
+.nx-role-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;padding:24px;border:1px solid var(--nx-line);border-radius:18px;background:linear-gradient(120deg,#10243a,#174f78);color:#fff;margin:0 0 20px}
+.nx-role-hero h1{font-size:clamp(23px,3vw,30px);margin:5px 0 8px;color:#fff}
+.nx-role-hero p{margin:0;color:#dceafa;line-height:1.65;max-width:680px}
+.nx-role-eyebrow{font-size:10px;letter-spacing:1.6px;font-weight:800;color:#8de5ce}
+.nx-role-hero-mark{width:54px;height:54px;display:grid;place-items:center;border-radius:15px;background:#ffffff18;border:1px solid #ffffff35;font-size:25px;flex:0 0 auto}
+.nx-role-shortcuts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}
+.nx-role-shortcuts a{display:inline-flex;align-items:center;padding:9px 13px;border:1px solid var(--nx-line);border-radius:10px;background:#fff;color:var(--nx-ink);font-size:13px;font-weight:700;text-decoration:none}
+.nx-role-shortcuts a:hover{border-color:var(--nx-brand);color:var(--nx-brand)}
+.nx-porter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin:18px 0}
+.nx-porter-module{padding:18px;border:1px solid var(--nx-line);border-radius:14px;background:#fff}
+.nx-porter-module h3{margin:8px 0 6px;font-size:16px}
+.nx-porter-module p{margin:0;color:var(--nx-muted);font-size:13px;line-height:1.6}
+.nx-module-status{display:inline-block;margin-top:12px;padding:5px 8px;border-radius:20px;background:#f1f4f7;color:#657487;font-size:11px;font-weight:700}
+@media(max-width:600px){.nx-role-hero{padding:18px}.nx-role-hero-mark{width:44px;height:44px}}
+
+
+/* Seller Center operational overview */
+.nx-seller-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 20px}
+.nx-seller-stat{min-width:0;padding:16px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;box-shadow:0 2px 8px #10243a08}
+.nx-seller-stat span{display:block;color:var(--nx-muted);font-size:12px;font-weight:700}
+.nx-seller-stat strong{display:block;margin:7px 0 3px;color:var(--nx-ink);font-size:27px;line-height:1.2;overflow-wrap:anywhere}
+.nx-seller-stat small{display:block;color:var(--nx-muted);font-size:11px}
+.nx-seller-stat .nx-seller-status-value{font-size:17px}
+.nx-seller-product-tools{display:grid;grid-template-columns:minmax(0,1fr) minmax(160px,220px);gap:8px 12px;align-items:center;margin:12px 0 16px}
+.nx-seller-search-label{font-size:12px;font-weight:700;color:var(--nx-muted)}
+.nx-seller-product-tools input,.nx-seller-product-tools select{width:100%;min-width:0}
+.nx-seller-product-item{padding:15px;border:1px solid var(--nx-line);border-radius:12px;background:#fff;margin:10px 0}
+.nx-seller-product-item[hidden]{display:none!important}
+@media(max-width:760px){.nx-seller-overview{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.nx-seller-stat{padding:12px}.nx-seller-stat strong{font-size:23px}.nx-seller-product-tools{grid-template-columns:1fr}.nx-seller-search-label{margin-top:4px}}
+
+
+/* Porter delivery operations */
+.nx-porter-note{font-size:12px;line-height:1.65;margin:12px 2px}
+.nx-porter-job{padding:17px;border:1px solid var(--nx-line);border-radius:14px;background:#fff;margin:12px 0}
+.nx-porter-job[hidden]{display:none!important}
+.nx-porter-job-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.nx-porter-job-code{font-size:11px;color:var(--nx-muted);font-weight:800;letter-spacing:.5px}
+.nx-porter-job-status{display:inline-flex;padding:5px 9px;border-radius:20px;background:#eef3f8;color:#38516b;font-size:11px;font-weight:800}
+.nx-porter-route{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
+.nx-porter-route>div{padding:12px;border-radius:10px;background:#f7f9fb;min-width:0}
+.nx-porter-route strong{display:block;font-size:12px;margin-bottom:5px}
+.nx-porter-route p{margin:0;font-size:13px;line-height:1.55;overflow-wrap:anywhere}
+.nx-porter-job-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.nx-porter-job-actions button{min-height:38px}
+@media(max-width:560px){.nx-porter-route{grid-template-columns:1fr}.nx-porter-job{padding:13px}}
+
+
+.nx-porter-history-item{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #e8edf2}
+.nx-porter-history-item:last-child{border-bottom:0}
+.nx-porter-history-item strong{display:block;color:#172b3d;font-size:13px}
+.nx-porter-history-item p{margin:4px 0 0;font-size:12px;color:#718096;line-height:1.5}
+.nx-porter-history-item time{font-size:11px;color:#718096;white-space:nowrap}
+@media(max-width:520px){.nx-porter-history-item{display:block}.nx-porter-history-item time{display:block;margin-top:6px}}
+
+/* NEXORA unified marketplace discovery design */
+.nx-discovery-section{margin:0 0 34px;padding:24px;background:#fff;border:1px solid #e7edf1;border-radius:20px;box-shadow:0 8px 26px rgba(23,43,61,.055)}
+.nx-discovery-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px}
+.nx-discovery-heading h2{margin:0;color:#172b3d;font-size:clamp(22px,3vw,28px);letter-spacing:-.5px}
+.nx-discovery-heading p{margin:6px 0 0;color:#718096;font-size:13px}
+.nx-discovery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.nx-discovery-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;gap:12px;min-width:0;min-height:220px;overflow:hidden;padding:17px;text-align:left;border:1px solid transparent;border-radius:16px;color:#17364a;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+.nx-discovery-card:after{content:"";position:absolute;z-index:-1;width:150px;height:150px;right:-48px;top:-48px;border:1px solid #ffffff9c;border-radius:50%;box-shadow:0 0 0 18px #ffffff24,0 0 0 38px #ffffff18}
+.nx-discovery-card:hover{transform:translateY(-4px);box-shadow:0 14px 26px rgba(18,47,64,.12);border-color:#b9d8d2}
+.nx-discovery-marketplace{background:linear-gradient(145deg,#e9f4f1,#d7eae4)}
+.nx-discovery-services{background:linear-gradient(145deg,#edf0ff,#dfe5ff)}
+.nx-discovery-logistics{background:linear-gradient(145deg,#e8f2fb,#d7e8f7)}
+.nx-discovery-art{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#ffffffb8;font-size:31px;box-shadow:0 7px 17px #17364a12}
+.nx-discovery-copy{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.nx-discovery-copy small{font-size:9px;letter-spacing:1.1px;font-weight:900;color:#5e7884}
+.nx-discovery-copy strong{font-size:clamp(16px,1.8vw,21px);line-height:1.2;color:#153449}
+.nx-discovery-copy em{font-size:13px;font-style:normal;color:#506779}
+.nx-discovery-copy>span{margin-top:7px;font-size:11px;font-weight:800;color:#087f78}
+.nx-discovery-note{margin:15px 2px 0;color:#718096;font-size:11px}
+.nx-logistics-market{max-width:1100px;margin:0 auto}
+.nx-logistics-page-hero{padding:clamp(24px,5vw,46px);margin:8px 0 22px;border-radius:20px;background:linear-gradient(120deg,#10243a,#17617a);color:#fff}
+.nx-logistics-page-hero h1{margin:0 0 12px;font-size:clamp(27px,4vw,42px);color:#fff}
+.nx-logistics-page-hero h1 em{font-style:normal;color:#80e2ca}
+.nx-logistics-page-hero p{max-width:700px;margin:0;color:#d7e8ef;line-height:1.8}
+.nx-logistics-discovery-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.nx-logistics-discovery-card{padding:24px;border:1px solid #e1e9ef;border-radius:17px;background:#fff;box-shadow:0 7px 22px #10243a09}
+.nx-logistics-discovery-card h2{margin:12px 0 8px;font-size:21px;color:#17364a}
+.nx-logistics-discovery-card p,.nx-logistics-discovery-card li{font-size:13px;line-height:1.7;color:#607386}
+.nx-logistics-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#eef6f8;font-size:30px;margin-bottom:15px}
+.nx-logistics-bulk .nx-logistics-icon{background:#e7f2fb}.nx-logistics-local .nx-logistics-icon{background:#fff0e7}
+.nx-logistics-status{display:inline-flex;margin-top:10px;padding:7px 10px;border-radius:20px;background:#f1f4f7;color:#607386;font-size:11px;font-weight:800}
+.nx-logistics-disclaimer{margin:16px 2px;color:#718096;font-size:12px}
+@media(max-width:850px){.nx-discovery-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-discovery-card{min-height:190px}}
+@media(max-width:560px){.nx-discovery-section{padding:17px 12px;border-radius:16px}.nx-discovery-grid{gap:9px}.nx-discovery-card{min-height:170px;padding:13px;border-radius:13px}.nx-discovery-art{width:46px;height:46px;font-size:25px}.nx-discovery-copy strong{font-size:16px}.nx-discovery-copy em{font-size:12px}.nx-logistics-discovery-grid{grid-template-columns:1fr}.nx-logistics-discovery-card{padding:18px}}
+
+/* Product and service cards — image-led marketplace grid */
+.nx-product-card{padding:0!important;margin:0!important;overflow:hidden;border:1px solid #e5ebef!important;border-radius:16px!important;box-shadow:0 5px 20px rgba(18,42,60,.06)!important;transition:transform .2s,box-shadow .2s}
+.nx-product-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(18,42,60,.12)!important}
+.nx-product-card-media{position:relative;display:grid;place-items:center;height:205px;overflow:hidden;background:linear-gradient(145deg,#eef5f4,#e6edf3);text-decoration:none}
+.nx-product-card-media .product-image{height:100%;width:100%;object-fit:cover;border-radius:0;background:transparent;transition:transform .35s}
+.nx-product-card:hover .nx-product-card-media .product-image{transform:scale(1.035)}
+.nx-product-image-fallback{font-size:60px}
+.nx-product-card-body{padding:15px 16px 14px}
+.nx-product-card-body h3{margin:8px 0;font-size:17px;line-height:1.4}
+.nx-product-card-body h3 a,.nx-service-card h3 a{color:#17364a;text-decoration:none}
+.nx-product-card-body h3 a:hover,.nx-service-card h3 a:hover{color:#087f78}
+.nx-product-description{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:40px;margin:7px 0}
+.nx-product-origin{margin:8px 0;font-size:11px}
+.nx-product-card-footer,.nx-service-card-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding-top:10px;border-top:1px solid #edf1f4}
+.nx-product-card-footer .price{margin:0;font-size:17px}
+.nx-product-detail-link,.nx-service-card-footer a{color:#087f78;font-size:12px;font-weight:800;text-decoration:none}
+.nx-product-business{margin:9px 0 0;font-size:10px}
+.nx-demo-product-card .nx-product-card-body{padding-top:12px}
+.nx-empty-market{grid-column:1/-1}
+.nx-service-grid{grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:16px}
+.nx-service-card{padding:0!important;margin:0!important;overflow:hidden;border:1px solid #e4eaf0!important;border-radius:16px!important;box-shadow:0 5px 20px rgba(18,42,60,.055)!important;transition:transform .2s,box-shadow .2s}
+.nx-service-card:hover{transform:translateY(-4px);box-shadow:0 14px 28px rgba(18,42,60,.12)!important}
+.nx-service-card-art{position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;min-height:142px;background:linear-gradient(135deg,#e7f4ef,#dce9f4);text-decoration:none}
+.nx-service-card-art:before,.nx-service-card-art:after{content:"";position:absolute;border:1px solid #ffffffb5;border-radius:50%;width:150px;height:150px}
+.nx-service-card-art:after{width:110px;height:110px;border-style:dashed}
+.nx-service-card-art>span{z-index:1;display:grid;place-items:center;width:65px;height:65px;border-radius:20px;background:#ffffffc9;font-size:34px;box-shadow:0 7px 18px #17364a12}
+.nx-service-card-art small{z-index:1;font-size:9px;font-weight:900;letter-spacing:1.5px;color:#52717b}
+.nx-service-card-body{padding:15px}
+.nx-service-card-body h3{margin:8px 0;font-size:17px;line-height:1.4}
+.nx-service-card-description{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:58px;color:#627487;font-size:12px;line-height:1.6}
+.nx-service-card-footer{margin:12px 0 8px;font-size:12px}
+.nx-service-card-footer strong{color:#173f50}
+.nx-service-card-body>small{font-size:10px}
+.nx-service-detail-panel{padding:clamp(16px,3vw,30px);border:1px solid #e3eaf0;border-radius:18px;background:#fff;box-shadow:0 7px 24px #10243a0b}
+.nx-back-link{display:inline-flex;margin-bottom:18px;color:#087f78;font-size:13px;font-weight:800;text-decoration:none}
+.nx-service-detail-hero{display:flex;align-items:center;gap:18px;padding:22px;border-radius:15px;background:linear-gradient(120deg,#10243a,#17617a);color:#fff}
+.nx-service-detail-icon{display:grid;place-items:center;flex:0 0 76px;width:76px;height:76px;border-radius:20px;background:#ffffff1c;font-size:38px}
+.nx-service-detail-kicker{display:block;margin:4px 0;color:#70ddc2;font-size:9px;font-weight:900;letter-spacing:1.5px}
+.nx-service-detail-hero h1{margin:4px 0;color:#fff;font-size:clamp(22px,4vw,32px)}
+.nx-service-detail-hero p{margin:4px 0;color:#d6e8ef;font-size:13px}
+.nx-service-detail-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(220px,.8fr);gap:16px;margin-top:18px}
+.nx-service-detail-main,.nx-service-detail-aside{padding:18px;border:1px solid #e7edf1;border-radius:13px}
+.nx-service-detail-main h2,.nx-service-detail-main h3{margin:0 0 10px;color:#17364a}
+.nx-service-detail-main h3{margin-top:20px;font-size:15px}
+.nx-service-detail-main p{color:#5e7182;line-height:1.8;font-size:14px}
+.nx-service-detail-aside{background:#f7fafb}
+.nx-service-detail-aside strong{display:block;margin:6px 0 12px;color:#087f78;font-size:19px;line-height:1.5}
+.nx-service-detail-aside small{display:block;color:#718096;font-size:10px}
+.nx-service-detail-aside p{margin-top:18px;color:#687c8a;font-size:11px;line-height:1.7}
+@media(max-width:600px){.nx-product-card-media{height:155px}.nx-product-card-body{padding:12px}.nx-product-card-body h3,.nx-service-card-body h3{font-size:15px}.nx-service-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nx-service-card-art{min-height:112px}.nx-service-card-art>span{width:50px;height:50px;font-size:26px}.nx-service-card-body{padding:11px}.nx-service-card-description{font-size:11px;min-height:65px}.nx-service-detail-hero{align-items:flex-start;padding:16px;gap:12px}.nx-service-detail-icon{flex-basis:55px;width:55px;height:55px;font-size:28px}.nx-service-detail-grid{grid-template-columns:1fr}.nx-service-detail-main,.nx-service-detail-aside{padding:14px}}
+@media(max-width:360px){.nx-service-grid{grid-template-columns:1fr}}
+
+/* Product detail page visual hierarchy */
+#productDetailPanel.nx-product-detail-panel{padding:clamp(16px,3vw,30px);border:1px solid #e3eaf0;border-radius:18px;background:#fff;box-shadow:0 7px 24px #10243a0b}
+#productDetailPanel.nx-product-detail-panel>h2{margin:14px 0;font-size:clamp(24px,4vw,34px);color:#17364a}
+#productDetailPanel.nx-product-detail-panel>.grid{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:16px 0}
+#productDetailPanel.nx-product-detail-panel .product-image{height:230px;border-radius:13px}
+#productDetailPanel.nx-product-detail-panel>h3{margin:22px 0 10px;color:#17364a}
+#productDetailPanel.nx-product-detail-panel>p{line-height:1.75;color:#5f7282}
+#productDetailPanel.nx-product-detail-panel>.price{color:#087f78;font-size:22px}
+#productDetailPanel.nx-product-detail-panel>.nx-product-contact{margin-top:24px;padding:18px;border:1px solid #dcebe6;border-radius:14px;background:#f6fbf9}
+#productDetailPanel.nx-product-detail-panel>.nx-product-contact h3{margin:0 0 12px}
+@media(max-width:600px){#productDetailPanel.nx-product-detail-panel .product-image{height:170px}}
+
+/* Seller listing image uploads */
+.nx-upload-preview{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:10px;margin:10px 0 16px}
+.nx-upload-preview:empty{display:none}
+.nx-upload-preview figure{position:relative;margin:0;border:1px solid #e1e8ee;border-radius:10px;overflow:hidden;background:#f7fafb}
+.nx-upload-preview img{display:block;width:100%;height:92px;object-fit:cover}
+.nx-upload-preview>img{width:100%;height:92px;object-fit:cover;border:1px solid #e1e8ee;border-radius:9px}
+.nx-upload-preview figcaption{padding:5px 6px;font-size:10px;color:#536575;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nx-upload-preview button{position:absolute;top:5px;right:5px;padding:4px 7px;border-radius:20px;background:#fff;color:#b42318;box-shadow:0 1px 6px #0002;font-size:11px}
+.nx-service-card-art .nx-service-uploaded-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.nx-service-detail-image{width:100%;max-height:300px;object-fit:cover;border-radius:14px;margin-bottom:14px}
+
+/* Seller listing editor */
+.nx-listing-editor{margin-top:12px;padding:14px;border:1px solid #d9e4ec;border-radius:12px;background:#f8fbfd}
+.nx-listing-editor h4{margin:0 0 10px}
+.nx-listing-editor .nx-existing-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:9px;margin:8px 0 12px}
+.nx-listing-editor .nx-existing-image{border:1px solid #e1e8ee;border-radius:9px;padding:6px;background:#fff}
+.nx-listing-editor .nx-existing-image img{width:100%;height:82px;object-fit:cover;border-radius:6px;display:block}
+.nx-listing-editor .nx-existing-image label{font-size:12px;display:flex;gap:5px;align-items:center;margin-top:5px}
+.nx-listing-editor .form-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+
+.nx-history-card{margin-top:12px}
+.nx-history-card details{margin-top:12px;padding:10px;border:1px solid var(--border,#ddd);border-radius:10px}
+.nx-history-card summary{cursor:pointer;font-weight:650}
+.nx-history-card h5{margin:12px 0 8px}
+.nx-history-table{width:100%;border-collapse:collapse;font-size:.9rem}
+.nx-history-table th,.nx-history-table td{padding:8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--border,#ddd)}
+.nx-history-table th{width:38%;font-weight:650}
+.nx-history-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
+.nx-history-compare>section{min-width:0;padding:12px;border:1px solid var(--border,#ddd);border-radius:12px}
+.nx-history-timeline{margin:10px 0;padding-left:22px}
+.nx-history-timeline li{padding:0 0 12px 4px}
+.nx-history-timeline small{display:block;opacity:.75;margin-top:3px}
+@media(max-width:700px){.nx-history-compare{grid-template-columns:1fr}.nx-history-table th{width:42%}}
+
+/* Verified purchase review UI */
+.nx-listing-reviews{margin-top:28px;padding-top:22px;border-top:1px solid #e4ebef}
+.nx-reviews-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nx-reviews-heading h3{margin:0;color:#17364a}
+.nx-review-summary{display:flex;align-items:center;gap:9px;color:#526879;font-size:14px}
+.nx-review-summary strong{font-size:18px;color:#a66a08}
+.nx-review-card{padding:15px 0;border-bottom:1px solid #edf1f4}
+.nx-review-card-top{display:flex;justify-content:space-between;gap:12px;align-items:center}
+.nx-review-stars{color:#d99a22;letter-spacing:1px;white-space:nowrap}
+.nx-review-card h4{margin:8px 0 4px;color:#244458}
+.nx-review-card p{margin:6px 0;line-height:1.7;white-space:pre-wrap}
+.nx-review-card small{font-size:12px}
+.nx-review-form{display:grid;gap:12px;margin-top:20px;padding:18px;border:1px solid #dce8ed;border-radius:14px;background:#f8fbfc}
+.nx-review-form h3{margin:0;color:#17364a}
+.nx-review-form label{display:grid;gap:6px;font-weight:600;color:#365264}
+.nx-review-form input,.nx-review-form select,.nx-review-form textarea{width:100%;padding:11px;border:1px solid #cbd8df;border-radius:9px;background:#fff;font:inherit}
+.nx-review-form textarea{min-height:110px;resize:vertical}
+.nx-review-note{padding:12px 14px;border-radius:10px;background:#f4f7f9;color:#536a79;line-height:1.65}
+@media(max-width:600px){.nx-reviews-heading{align-items:flex-start;flex-direction:column}.nx-review-card-top{align-items:flex-start;flex-direction:column;gap:4px}}
+
+
+/* Commerce order and booking UI */
+.nx-order-form{display:grid;gap:12px;margin:20px 0;padding:18px;border:1px solid #dce8ed;border-radius:14px;background:#f8fbfc}
+.nx-order-form h3{margin:0;color:#17364a}
+.nx-order-form label{display:grid;gap:6px;font-weight:600;color:#365264}
+.nx-order-form input,.nx-order-form textarea{width:100%;padding:11px;border:1px solid #cbd8df;border-radius:9px;background:#fff;font:inherit}
+.nx-order-form textarea{min-height:76px;resize:vertical}
+.nx-order-card{margin:10px 0;padding:15px}
+.nx-order-card .section-head{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.nx-order-card button{margin-top:9px}
+
+
+/* Unified role-based single-domain dashboard */
+.nx-admin-workspace{background:#f5f8fb;border:1px solid #e5ebf1;border-radius:18px;padding:clamp(14px,2.5vw,24px)}
+.nx-admin-workspace-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:8px 0 18px}
+.nx-admin-workspace-head h1{margin:6px 0;font-size:clamp(24px,4vw,34px);color:#17324a}
+.nx-admin-workspace-mark{display:grid;place-items:center;width:54px;height:54px;border-radius:16px;background:#12314a;color:#fff;font-weight:900;font-size:28px}
+#administrationDashboard #nxAdmin{margin:0;border:0;box-shadow:none;padding:0;background:transparent}
+#administrationDashboard #nxAdmin>h3{display:none}
+@media(max-width:600px){.nx-admin-workspace-head{align-items:flex-start}.nx-admin-workspace-mark{width:44px;height:44px}}
 </style>
 </head>
 
 <body>
 
 <header>
-  <div class="logo">NEX<span>ORA</span></div>
-  <nav>
-    <button onclick="showSection('market')">Marketplace</button>
-    <button onclick="showSection('demandBoard')">Demand Board</button>
-    <button onclick="showSection('postDemand')">Post a Demand</button>
-    <button onclick="showSection('sellerDashboard')">Seller Account</button>
+  <div class="logo" aria-label="NEXORA"><span class="logo-mark">N</span><span>NEX<span>ORA</span></span></div>
+  <nav aria-label="প্রধান নেভিগেশন">
+    <button type="button" onclick="showSection('market')">Marketplace</button>
+    <button type="button" onclick="showSection('servicesMarketplace')">সেবা</button>
+    <button type="button" onclick="showSection('transportLogistics')">পরিবহন</button>
+    <button type="button" id="nxHeaderLogin" onclick="showSection('accountSection')">Login / Register</button>
+    <button type="button" id="nxHeaderDashboard" class="hidden" onclick="openMyDashboard()">Dashboard</button>
+    <button type="button" id="nxHeaderAccount" class="hidden" onclick="showSection('accountSection')">Account</button>
+    <button type="button" id="nxHeaderLogout" class="hidden" onclick="document.getElementById('nxLogout')?.click()">Logout</button>
   </nav>
 </header>
 
 <main class="container">
 
-  <section class="hero">
-    <h1>Connect. Trade. Grow.</h1>
-    <p>
-      NEXORA একটি B2B Global Trade Marketplace।
-      ক্রেতা ও বিক্রেতাদের মধ্যে আন্তর্জাতিক বাণিজ্যের সংযোগ তৈরি করাই আমাদের লক্ষ্য।
-    </p>
-    <button class="primary" onclick="showSection('postDemand')">
-      Post Your Requirement
-    </button>
-    <button class="light" onclick="showSection('market')">
-      Explore Products
-    </button>
-  </section>
-
-  <!-- MARKETPLACE -->
+  <!-- PUBLIC WHOLESALE + RETAIL MARKETPLACE -->
   <section id="market" class="section">
     <div class="section-head">
-      <h2>Global Marketplace</h2>
-      <span class="muted" id="productCount"></span>
+      <h2>Marketplace</h2>
+      <span id="productCount" class="muted">Products</span>
     </div>
-
-    <div class="grid">
-      <input id="productSearch" placeholder="Search products..." oninput="renderProducts()">
-      <select id="categoryFilter" onchange="renderProducts()">
-        <option value="">All Categories</option>
-        <option>Food & Agriculture</option>
-        <option>Textile & Garments</option>
-        <option>Electronics</option>
-        <option>Industrial Products</option>
-        <option>Handicrafts</option>
-        <option>Other</option>
-      </select>
+    <section class="nx-market-hero" aria-label="NEXORA marketplace">
+      <div class="nx-market-hero-copy">
+        <span class="nx-market-eyebrow">NEXORA • ONE PLATFORM, MANY POSSIBILITIES</span>
+        <h1>পণ্য, সেবা ও ব্যবসার সমাধান<br><em>এক জায়গায়, সহজে</em></h1>
+        <p>সব ধরনের পণ্য খুঁজুন, প্রয়োজনীয় সেবা নিন এবং ব্যবসার পরিবহন ও লজিস্টিকস সমাধানের সঙ্গে যুক্ত হোন।</p>
+        <div class="nx-market-hero-actions">
+          <button type="button" class="nx-hero-primary" onclick="document.getElementById('productSearch')?.focus();document.getElementById('productSearch')?.scrollIntoView({behavior:'smooth',block:'center'})">পণ্য খুঁজুন <span aria-hidden="true">→</span></button>
+          <button type="button" class="nx-hero-secondary" onclick="document.getElementById('publicDemandBoard')?.scrollIntoView({behavior:'smooth',block:'center'})">ক্রেতার চাহিদা দেখুন</button>
+        </div>
+        <div class="nx-market-benefits"><span>● Marketplace</span><span>● Services</span><span>● Transport & Logistics</span></div>
+      </div>
+      <div class="nx-market-hero-art" aria-hidden="true">
+        <div class="nx-orbit nx-orbit-one"></div><div class="nx-orbit nx-orbit-two"></div>
+        <div class="nx-hero-box nx-box-back">N</div><div class="nx-hero-box nx-box-front">NEXORA<span>GLOBAL TRADE</span></div>
+        <div class="nx-float-chip nx-chip-top">ALL PRODUCTS</div><div class="nx-float-chip nx-chip-bottom">SERVICES • LOGISTICS</div>
+      </div>
+    </section>
+    <section class="nx-discovery-section" aria-label="Explore NEXORA">
+      <div class="nx-discovery-heading">
+        <div><span class="nx-market-eyebrow">EXPLORE NEXORA</span><h2>আপনি কী খুঁজছেন?</h2><p>আপনার প্রয়োজন অনুযায়ী একটি বিভাগ বেছে নিন।</p></div>
+      </div>
+      <div class="nx-discovery-grid">
+        <button type="button" class="nx-discovery-card nx-discovery-marketplace" onclick="showSection('market')">
+          <span class="nx-discovery-art" aria-hidden="true">📦</span><span class="nx-discovery-copy"><small>PRODUCT MARKETPLACE</small><strong>Marketplace</strong><em>সব ধরনের অনুমোদিত পণ্য</em><span>পণ্য খুঁজুন →</span></span>
+        </button>
+        <button type="button" class="nx-discovery-card nx-discovery-services" onclick="showSection('servicesMarketplace')">
+          <span class="nx-discovery-art" aria-hidden="true">🧰</span><span class="nx-discovery-copy"><small>FIND PROFESSIONALS</small><strong>Services</strong><em>বিভিন্ন সেবা</em><span>দক্ষ সেবাদাতা খুঁজুন →</span></span>
+        </button>
+        <button type="button" class="nx-discovery-card nx-discovery-logistics" onclick="showSection('transportLogistics')">
+          <span class="nx-discovery-art" aria-hidden="true">🚚</span><span class="nx-discovery-copy"><small>MOVE WITH CONFIDENCE</small><strong>Transport & Logistics</strong><em>পরিবহন ও ডেলিভারি</em><span>লজিস্টিকস সমাধান দেখুন →</span></span>
+        </button>
+      </div>
+      <p class="nx-discovery-note">সব Buyer ও public visitor সব অনুমোদিত পণ্য দেখতে পারবেন।</p>
+    </section>
+    <section class="nx-category-section" aria-label="পণ্যের বিভাগ">
+      <div class="nx-category-heading"><div><span class="nx-market-eyebrow">DISCOVER BY CATEGORY</span><h3>জনপ্রিয় পণ্য বিভাগ</h3></div><span class="muted">আপনার প্রয়োজনীয় পণ্য খুঁজুন</span></div>
+      <div class="nx-category-rail">
+        <button type="button" data-nx-category="Food & Agriculture"><span>🌾</span><b>Food & Agriculture</b><small>খাদ্য ও কৃষিপণ্য</small></button>
+        <button type="button" data-nx-category="Textile & Garments"><span>🧵</span><b>Textile & Garments</b><small>বস্ত্র ও পোশাক</small></button>
+        <button type="button" data-nx-category="Electronics"><span>⚙️</span><b>Electronics</b><small>ইলেকট্রনিক্স</small></button>
+        <button type="button" data-nx-category="Industrial Products"><span>🏭</span><b>Industrial</b><small>শিল্পপণ্য</small></button>
+        <button type="button" data-nx-category="Handicrafts"><span>🪡</span><b>Handicrafts</b><small>হস্তশিল্প</small></button>
+        <button type="button" data-nx-category="Other"><span>📦</span><b>Other Products</b><small>অন্যান্য পণ্য</small></button>
+      </div>
+    </section>
+    <div class="nx-market-section-title"><div><span class="nx-market-eyebrow">EXPLORE SUPPLIERS</span><h2>পণ্য আবিষ্কার করুন</h2></div><span class="muted">পণ্য বাছাই ও অনুসন্ধান করুন</span></div>
+    <div id="productDetailPanel" class="card nx-product-detail-panel hidden" aria-live="polite"></div>
+    <div class="nx-search-panel">
+      <div class="nx-search-toolbar">
+        <input id="productSearch" type="search" aria-label="পণ্য অনুসন্ধান" placeholder="পণ্যের নাম লিখে অনুসন্ধান করুন…">
+        <details class="nx-advanced-search">
+          <summary><span aria-hidden="true">☷</span> Filter</summary>
+          <div class="nx-filter-popover">
+            <div class="nx-filter-heading"><strong>পণ্য বাছাই করুন</strong><span class="muted">ঐচ্ছিক ফিল্টার</span></div>
+            <div class="nx-filter-grid">
+              <div><label for="categoryFilter">Category</label><select id="categoryFilter">
+                <option value="">সব বিভাগ</option><option>Food & Agriculture</option><option>Textile & Garments</option><option>Electronics</option><option>Industrial Products</option><option>Handicrafts</option><option>Other</option>
+              </select></div>
+              <div><label for="marketCategoryFilter">বিক্রির ধরন</label><select id="marketCategoryFilter">
+                <option value="">পাইকারি ও খুচরা—সব</option><option value="wholesale">পাইকারি</option><option value="retail">খুচরা</option>
+              </select></div>
+              <div><label for="priceMin">সর্বনিম্ন দাম</label><input id="priceMin" type="number" min="0" step="any" placeholder="যেমন 100"></div>
+              <div><label for="priceMax">সর্বোচ্চ দাম</label><input id="priceMax" type="number" min="0" step="any" placeholder="যেমন 500"></div>
+              <div><label for="priceCurrency">মুদ্রা</label><select id="priceCurrency"><option value="">সব মুদ্রা</option><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
+              <div><label for="qualityFilter">পণ্যের মান / Quality</label><input id="qualityFilter" type="search" placeholder="যেমন Premium, Grade A"></div>
+              <div><label for="originFilter">উৎপত্তির দেশ</label><input id="originFilter" type="search" placeholder="যেমন Bangladesh"></div>
+              <div><label for="specFilter">Specifications</label><input id="specFilter" type="search" placeholder="পণ্যের বৈশিষ্ট্য"></div>
+            </div>
+            <div class="nx-filter-actions"><button type="button" class="light" id="resetProductFilters">Reset</button><button type="button" id="applyProductFilters">ফলাফল দেখুন</button><span id="filterHint" class="muted" role="status">ফিল্টার বেছে নিয়ে ফলাফল দেখুন চাপুন।</span></div>
+          </div>
+        </details>
+      </div>
     </div>
+    <div id="productList" class="grid" aria-live="polite"></div>
 
-    <div id="productList" class="grid" style="margin-top:18px"></div>
+    <div id="publicDemandBoard" class="section nx-public-demands">
+      <div class="section-head">
+        <div><h2>Buyer Demands</h2><p class="muted">ক্রেতাদের প্রকাশ্য পণ্যের চাহিদা</p></div>
+        <span class="tag">Public</span>
+      </div>
+      <div id="demandList" class="nx-demand-grid" aria-live="polite">প্রকাশ্য চাহিদা লোড হচ্ছে…</div>
+    </div>
   </section>
 
-  <!-- POST DEMAND -->
-  <section id="postDemand" class="section hidden">
-    <div class="section-head">
-      <h2>Post a Demand</h2>
-      <span class="tag">Buyer Section</span>
+  <!-- ACCOUNT / AUTHENTICATION -->
+  <section id="accountSection" class="section hidden">
+    <div class="section-head"><h2>Login</h2></div>
+    <div class="card">
+      <p id="nxCurrent" class="muted" aria-live="polite">আপনি লগইন করেননি।</p>
+      <p id="nxMessage" class="muted" role="status" aria-live="polite"></p>
+      <div id="nxLogged" class="hidden">
+        <p id="nxProfile" class="muted"></p>
+        <section id="nxBuyerAccountSettings" class="card" aria-labelledby="nxBuyerAccountSettingsTitle">
+          <h4 id="nxBuyerAccountSettingsTitle">Account Security &amp; Contact</h4>
+          <p class="muted">আপনার লগইন ইমেইল ও পাসওয়ার্ড এখানে পরিবর্তন করতে পারবেন। ইমেইল পরিবর্তনে নতুন ঠিকানায় confirmation লাগবে।</p>
+          <form id="nxBuyerEmailForm">
+            <label for="nxBuyerNewEmail">নতুন Login Email</label>
+            <input id="nxBuyerNewEmail" name="email" type="email" autocomplete="email" required maxlength="254">
+            <div class="form-actions"><button class="secondary" type="submit">ইমেইল পরিবর্তনের অনুরোধ</button></div>
+          </form>
+          <form id="nxBuyerPasswordForm">
+            <label for="nxBuyerNewPassword">নতুন Password</label>
+            <input id="nxBuyerNewPassword" name="password" type="password" minlength="6" maxlength="128" autocomplete="new-password" required>
+            <label for="nxBuyerConfirmPassword">নতুন Password নিশ্চিত করুন</label>
+            <input id="nxBuyerConfirmPassword" name="confirm_password" type="password" minlength="6" maxlength="128" autocomplete="new-password" required>
+            <div class="form-actions"><button class="secondary" type="submit">Password পরিবর্তন</button></div>
+          </form>
+          <p id="nxBuyerAccountSettingsStatus" class="muted" role="status" aria-live="polite"></p>
+        </section>
+        <form id="nxRoleRequest">
+          <label>Seller হিসেবে কাজ করতে আবেদন করুন</label>
+          <select name="requested_role" required>
+            <option value="seller">Seller</option>
+          </select>
+          <div class="form-actions"><button class="secondary" type="submit">আবেদন পাঠান</button></div>
+        </form>
+        <p id="nxRoleRequestStatus" class="muted hidden" role="status" aria-live="polite"></p>
+        <button id="nxLogout" class="danger" type="button">Logout</button>
+      </div>
+
+      <!-- Initial account view: Login on the left, Sign Up button only on the right -->
+      <div id="nxLoginView" class="nx-auth-layout">
+        <div id="nxLoginPanel" class="card nx-auth-panel">
+          <form id="nxLogin">
+            <h3>Login</h3>
+            <label>Email *</label><input name="email" type="email" autocomplete="email" required>
+            <label>Password *</label><input name="password" type="password" autocomplete="current-password" required>
+            <div class="nx-login-actions">
+              <button class="primary" type="submit">Login</button>
+              <button class="secondary nx-signup-open" type="button" onclick="document.getElementById('nxLoginView').classList.add('hidden');document.getElementById('nxSignupView').classList.remove('hidden');document.querySelector('#accountSection .section-head h2').textContent='Create Account'">Sign Up</button>
+            </div>
+            <p style="margin:12px 0 0;text-align:right"><button class="light" id="nxForgotOpen" type="button" style="padding:5px 0;background:transparent;color:var(--blue)">Forgot Password?</button></p>
+            <div class="nx-social-divider">অথবা</div>
+            <div class="nx-social-buttons">
+              <button type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
+              <button type="button" data-oauth-provider="facebook">Continue with Facebook</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Password recovery view -->
+      <div id="nxForgotView" class="card hidden">
+        <h3>Reset Password</h3>
+        <p class="muted">আপনার অ্যাকাউন্টের ইমেইল দিন। পাসওয়ার্ড রিসেট করার লিংক পাঠানো হবে।</p>
+        <form id="nxForgotForm">
+          <label>Email *</label>
+          <input name="email" type="email" autocomplete="email" required>
+          <div class="form-actions">
+            <button class="primary" type="submit">Send Reset Link</button>
+            <button class="light" id="nxForgotBack" type="button">Back to Login</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="nxPasswordRecoveryView" class="card hidden">
+        <h3>Set a New Password</h3>
+        <form id="nxPasswordRecoveryForm">
+          <label>New Password *</label>
+          <input name="password" type="password" minlength="8" autocomplete="new-password" required>
+          <label>Confirm New Password *</label>
+          <input name="confirm_password" type="password" minlength="8" autocomplete="new-password" required>
+          <div class="form-actions"><button class="primary" type="submit">Update Password</button></div>
+        </form>
+      </div>
+
+      <!-- Registration opens as a separate view; its fields are not shown on the Login view -->
+      <div id="nxSignupView" class="hidden">
+        <div class="section-head">
+          <h3>Create Your NEXORA Account</h3>
+          <button class="light" type="button" onclick="document.getElementById('nxSignupView').classList.add('hidden');document.getElementById('nxLoginView').classList.remove('hidden');document.querySelector('#accountSection .section-head h2').textContent='Login'">Back to Login</button>
+        </div>
+        <form id="nxSignup" class="card nx-signup-form">
+          <label>আপনার নাম *</label><input name="full_name" required autocomplete="name">
+          <label>Email *</label><input name="email" type="email" required autocomplete="email">
+          <label>Password *</label><input name="password" type="password" minlength="8" required autocomplete="new-password">
+          <label>অ্যাকাউন্টের ধরন *</label>
+          <select name="role" required>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+            <option value="porter">Porter</option>
+          </select>
+          <p id="nxPorterRegistrationNote" class="muted hidden">Porter আবেদন জমা দেওয়ার পর Admin/Transport বিভাগ যাচাই করবে। অনুমোদনের আগে অ্যাকাউন্ট Pending থাকবে এবং Dashboard/Delivery কাজ ব্যবহার করা যাবে না।</p>
+          <p class="muted">সব ব্যবহারকারী অনুমোদিত পণ্য এবং বিজ্ঞাপন দেখতে পারবেন।</p>
+                    <div class="form-actions"><button class="primary" type="submit">Create Account</button></div>
+          <div id="nxSocialDivider" class="nx-social-divider">অথবা</div>
+          <div id="nxSocialButtons" class="nx-social-buttons">
+            <button type="button" data-oauth-provider="google"><span class="nx-google-mark">G</span> Continue with Google</button>
+            <button type="button" data-oauth-provider="facebook">Continue with Facebook</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+  </section>
+
+  <!-- Protected Administration Dashboard on the same NEXORA domain -->
+  <section id="administrationDashboard" class="section hidden nx-admin-workspace">
+    <div class="nx-admin-workspace-head"><div><span class="nx-market-eyebrow">NEXORA INTERNAL WORKSPACE</span><h1 id="nxAdminWorkspaceTitle">Administration Dashboard</h1><p id="nxAdminWorkspaceSubtitle" class="muted">আপনার দায়িত্ব ও অনুমতি অনুযায়ী প্রশাসনিক কাজ।</p></div><span class="nx-admin-workspace-mark">N</span></div>
+    <div id="nxAdmin" class="card hidden">
+      <h3>Admin Dashboard</h3>
+      <p id="nxAdminIdentity" class="muted"></p>
+      <div id="nxAdminPermissionActions" class="hidden"></div>
+      <div id="nxAdminManagement" class="hidden">
+        <section class="card" aria-label="NEXORA governance summary"><h4>পরিচালনা কাঠামো</h4><p><b>Director:</b> NEXORA-এর মূল কাঠামো, নীতিমালা ও অনুমতির সর্বোচ্চ দায়িত্বে।</p><p><b>Managing Director (MD):</b> দৈনন্দিন পরিচালনা ও বিভাগগুলোর সমন্বয় করবেন; মূল কাঠামো পরিবর্তন করতে পারবেন না।</p><p><b>Marketing:</b> Buyer, Seller, ব্যবসা ও অংশীদার সংগ্রহ এবং ব্যবসা বৃদ্ধি।</p><p><b>Transport &amp; Logistics:</b> Retail ও Wholesale ডেলিভারি, Provider/Partner সমন্বয়, Assignment ও Tracking।</p><p><b>Accounts &amp; Finance:</b> আয়-ব্যয়, হিসাব, ফি, পাওনা, Refund ও Settlement নিয়ন্ত্রণ।</p><p class="muted">Director-এর বিদ্যমান Super Admin ক্ষমতা এই কাঠামোর সর্বোচ্চ পদ হিসেবে ব্যবহৃত হচ্ছে। MD-এর স্বতন্ত্র পদ, বিভাগীয় প্রধানের পদ ও নতুন Permission এখনো Database-এ বাস্তবায়িত হয়নি; অনুমোদিত Migration ও পরীক্ষার আগে কাউকে MD ক্ষমতা দেওয়া হবে না।</p></section>
+        <h4>Permission &amp; Administration Account</h4>
+        <p class="muted">এখান থেকেই MD, Marketing, Transport &amp; Logistics, Accounts &amp; Finance এবং ভবিষ্যতে Director অনুমোদিত সব বিভাগের কর্মকর্তা নিয়োগ, Admin Account তৈরি/আমন্ত্রণ, পদ ও বিভাগ নির্ধারণ, Permission প্রদান/পরিবর্তন এবং Account সক্রিয়/নিষ্ক্রিয় করা হবে। MD-সহ কোনো কর্মকর্তাই Director-এর অনুমতি ছাড়া মূল কাঠামো পরিবর্তন করতে পারবেন না। বর্তমানে বিদ্যমান নিয়োগ ফর্মটি শুধু আগে থেকে নিবন্ধিত অ্যাকাউন্টকে বিভাগীয় Admin হিসেবে যুক্ত করে; নতুন কর্মকর্তা invite করে Admin Account তৈরি করার নিরাপদ Backend provisioning এখনো তৈরি হয়নি।</p>
+        <form id="nxAssistantAdminForm" class="card">
+          <label>কর্মকর্তার পূর্ণ নাম *<input name="full_name" type="text" maxlength="150" required placeholder="কর্মকর্তার নাম"></label>
+          <label>কর্মকর্তার ইমেইল *</label>
+          <input name="email" type="email" required placeholder="officer@example.com">
+          <label>কাজের ধরন *</label>
+          <select name="action" required>
+            <option value="create">নতুন কর্মকর্তা নিয়োগ ও আমন্ত্রণ</option>
+            <option value="update">বিভাগ / পদ / অনুমতি পরিবর্তন</option>
+            <option value="deactivate">অ্যাকাউন্ট নিষ্ক্রিয় ও অনুমতি বাতিল</option>
+          </select>
+          <label>বিভাগ *</label>
+          <select id="nxAssistantDepartment" name="department" required><option value="">বিভাগ নির্বাচন করুন</option></select>
+          <label>পদ *</label>
+          <select id="nxAssistantPosition" name="position" required>
+            <option value="department_officer">বিভাগীয় কর্মকর্তা</option>
+            <option value="department_head">বিভাগীয় প্রধান</option>
+            <option value="managing_director">ব্যবস্থাপনা পরিচালক (MD)</option>
+          </select>
+          <label>অনুমতি নির্ধারণ *</label>
+          <div id="nxAssistantPermissions" class="nx-permission-list"><p class="muted">বিভাগ ও পদ নির্বাচন করলে অনুমতিগুলো দেখা যাবে। MD-এর জন্য সব বিভাগের অনুমতি থেকে নির্বাচন করা যাবে।</p></div>
+          <label>কারণ / নিয়োগের নোট<textarea name="reason" rows="2" maxlength="1000" placeholder="নিয়োগ বা Permission পরিবর্তনের কারণ; পরিবর্তন/নিষ্ক্রিয়ের ক্ষেত্রে বাধ্যতামূলক"></textarea></label>
+          <div class="form-actions"><button class="primary" type="submit">নিয়োগ / Permission সংরক্ষণ</button></div>
+          <p class="muted">নতুন কর্মকর্তাকে ইমেইলে নিরাপদ আমন্ত্রণ পাঠানো হবে। পাসওয়ার্ড Director তৈরি বা দেখতে পারবেন না। কর্মকর্তাকে নিজের নিরাপদ লগইন ও MFA সেটআপ করতে হবে।</p>
+        </form>
+        <h4>নিরাপদ Test Account</h4>
+        <p class="muted">শুধু পরীক্ষার জন্য। Reserved example.com ঠিকানা ব্যবহার করুন; এই অ্যাকাউন্টগুলো বাস্তব ইমেইল পাঠাবে না। Buyer ও Seller role পরীক্ষা করা যাবে। Transport Provider enrollment আলাদা প্রক্রিয়া হবে.</p>
+        <form id="nxTestAccountForm" class="card">
+          <label>Test Email *</label>
+          <input name="email" type="email" required pattern="nexora-test\+[^@]+@example\.com" placeholder="nexora-test+buyer@example.com">
+          <label>অস্থায়ী পাসওয়ার্ড (কমপক্ষে ১২ অক্ষর) *</label>
+          <input name="password" type="password" minlength="12" required autocomplete="new-password">
+          <label>পরীক্ষার Role *</label>
+          <select name="role" required>
+            <option value="buyer">Buyer</option>
+            <option value="seller">Seller</option>
+          </select>
+          <label>পরীক্ষার নাম</label>
+          <input name="full_name" maxlength="150" value="NEXORA Test User">
+          <div class="form-actions"><button class="primary" type="submit">Create Test Account</button></div>
+          <p class="muted">পাসওয়ার্ড ডেটাবেসে বা লগে সংরক্ষণ করা হবে না। তৈরি হওয়ার পর Test Account দিয়ে আলাদাভাবে লগইন করে পরীক্ষা করুন।</p>
+        </form>
+        <h4>বর্তমান বিভাগীয় কর্মকর্তা</h4>
+        <div id="nxAdminStaffList" class="muted">Admin তালিকা লোড হচ্ছে…</div>
+      </div>
+      <div id="nxAdminOperations" class="hidden">
+        <h4>ব্যবহারকারী ব্যবস্থাপনা</h4>
+        <div id="nxAdminUsers" class="muted">অনুমতি অনুযায়ী ব্যবহারকারী তালিকা লোড হবে…</div>
+        <h4>ব্যবসা অনুমোদন ও Moderation</h4>
+        <div id="nxAdminBusinesses" class="muted">অনুমতি অনুযায়ী ব্যবসার তালিকা লোড হবে…</div>
+        <h4>পণ্য Moderation</h4>
+        <div id="nxAdminProducts" class="muted">অনুমতি অনুযায়ী পণ্যের তালিকা লোড হবে…</div>
+        <h4>Services Marketplace Review</h4>
+        <p class="muted">নতুন সেবা প্রকাশের আগে বিবরণ, বিভাগ ও সেবার এলাকা যাচাই করুন। ব্যক্তিগত ফোন ও সঠিক ঠিকানা এখানে প্রকাশ করা হয় না।</p>
+        <div id="nxAdminServiceQueue" class="muted">সেবা আবেদন লোড হচ্ছে…</div>
+        <h4>Approved Listing Change Review</h4>
+        <p class="muted">Seller-এর পরিবর্তন প্রস্তাব অনুমোদনের আগে Marketplace-এ বর্তমান তথ্যই থাকবে। Approve করলে পরিবর্তন প্রকাশিত হবে; Reject করলে পুরোনো Listing অপরিবর্তিত থাকবে।</p>
+        <div id="nxAdminListingEditQueue" aria-live="polite" class="muted">Admin MFA ও products.edit / services.edit অনুমতি যাচাইয়ের পর আবেদন দেখা যাবে…</div>
+        <h4>Transport Provider & Vehicle Review</h4>
+        <p class="muted">Provider এবং প্রতিটি Vehicle আলাদাভাবে যাচাই করুন। Reject/Suspend করার সময় কারণ লিখতে হবে। সব সিদ্ধান্ত Audit Log-এ সংরক্ষিত হবে।</p>
+        <div id="nxAdminTransportQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর আবেদন দেখা যাবে…</div>
+        <h4>Delivery Assignment</h4>
+        <p class="muted">শুধু অনুমোদিত Transport Provider এবং তার অনুমোদিত, বর্তমানে Available Vehicle-এ Delivery Job বরাদ্দ করা যাবে। যোগাযোগের তথ্য Admin এবং সংশ্লিষ্ট Provider-এর জন্য সীমিত।</p>
+        <form id="nxAdminDeliveryForm" class="card hidden">
+          <h5>নতুন Delivery Job তৈরি ও বরাদ্দ</h5>
+          <label>External Reference (ঐচ্ছিক)<input name="external_reference" maxlength="120" placeholder="Order / Shipment Reference"></label>
+          <label>প্যাকেজের বিবরণ *<input name="package_description" minlength="3" maxlength="1000" required></label>
+          <label>প্যাকেজ সংখ্যা *<input name="package_count" type="number" min="1" max="10000" step="1" value="1" required></label>
+          <div class="grid">
+            <label>Transport Provider *<select name="provider_id" id="nxDeliveryProvider" required><option value="">Provider নির্বাচন করুন</option></select></label>
+            <label>Approved Vehicle *<select name="vehicle_id" id="nxDeliveryVehicle" required><option value="">প্রথমে Provider নির্বাচন করুন</option></select></label>
+          </div>
+          <h5>Pickup তথ্য</h5>
+          <div class="grid">
+            <label>যোগাযোগের নাম<input name="pickup_contact_name" maxlength="150"></label>
+            <label>ফোন<input name="pickup_contact_phone" maxlength="40"></label>
+          </div>
+          <label>Pickup Address *<input name="pickup_address" minlength="5" maxlength="1000" required></label>
+          <div class="grid">
+            <label>শহর *<input name="pickup_city" maxlength="120" required></label>
+            <label>দেশ *<input name="pickup_country" maxlength="120" value="Bangladesh" required></label>
+          </div>
+          <h5>Delivery তথ্য</h5>
+          <div class="grid">
+            <label>প্রাপকের নাম<input name="recipient_contact_name" maxlength="150"></label>
+            <label>প্রাপকের ফোন<input name="recipient_contact_phone" maxlength="40"></label>
+          </div>
+          <label>Delivery Address *<input name="delivery_address" minlength="5" maxlength="1000" required></label>
+          <div class="grid">
+            <label>শহর *<input name="delivery_city" maxlength="120" required></label>
+            <label>দেশ *<input name="delivery_country" maxlength="120" value="Bangladesh" required></label>
+          </div>
+          <div class="grid">
+            <label>Pickup সময়<input name="requested_pickup_at" type="datetime-local"></label>
+            <label>Delivery Deadline<input name="delivery_deadline" type="datetime-local"></label>
+          </div>
+          <label>বিশেষ নির্দেশনা<textarea name="special_instructions" maxlength="2000"></textarea></label>
+          <button class="primary" type="submit">Delivery Job তৈরি ও বরাদ্দ করুন</button>
+        </form>
+        <div id="nxAdminDeliveryQueue" aria-live="polite" class="muted">Admin MFA ও logistics permission যাচাইয়ের পর Delivery Job দেখা যাবে…</div>
+        <h4>Admin Audit Log</h4>
+        <p class="muted">Admin কার্যক্রমের রেকর্ড। সংবেদনশীল তথ্য সীমিতভাবে দেখানো হবে।</p>
+        <div id="nxAdminAuditLogs" class="muted">Audit Log অনুমতি যাচাই হচ্ছে…</div>
+      </div>
+      <section id="nxAdminLogistics" class="card hidden" aria-hidden="true">
+        <h4>Logistics & Porter Assignment</h4>
+        <p class="muted">অনুমোদিত Logistics permission থাকলে সক্রিয় Porter-কে ডেলিভারি কাজ বরাদ্দ করতে পারবেন। প্রতিটি কাজের সংগ্রহ ও গন্তব্যের যোগাযোগের তথ্য শুধু সংশ্লিষ্ট Porter ও অনুমোদিত Logistics Admin দেখতে পারবেন।</p>
+        <form id="nxAdminPorterJobForm" class="grid">
+          <label>Porter *</label><select name="assigned_porter_id" id="nxAdminPorterSelect" required><option value="">Porter তালিকা লোড হচ্ছে…</option></select>
+          <label>পণ্যের / প্যাকেজের বিবরণ *</label><input name="package_description" maxlength="1000" required>
+          <label>প্যাকেজ সংখ্যা *</label><input name="package_count" type="number" min="1" step="1" value="1" required>
+          <h5>পণ্য সংগ্রহের তথ্য</h5>
+          <label>যোগাযোগের নাম</label><input name="pickup_contact_name" maxlength="150">
+          <label>যোগাযোগের ফোন</label><input name="pickup_contact_phone" maxlength="40">
+          <label>সম্পূর্ণ সংগ্রহের ঠিকানা *</label><input name="pickup_address" maxlength="1000" required>
+          <label>শহর *</label><input name="pickup_city" maxlength="120" required>
+          <label>দেশ *</label><input name="pickup_country" maxlength="120" required>
+          <h5>ডেলিভারি গন্তব্য</h5>
+          <label>প্রাপকের নাম</label><input name="dropoff_contact_name" maxlength="150">
+          <label>প্রাপকের ফোন</label><input name="dropoff_contact_phone" maxlength="40">
+          <label>সম্পূর্ণ ডেলিভারি ঠিকানা *</label><input name="dropoff_address" maxlength="1000" required>
+          <label>শহর *</label><input name="dropoff_city" maxlength="120" required>
+          <label>দেশ *</label><input name="dropoff_country" maxlength="120" required>
+          <label>নির্ধারিত সংগ্রহের সময়</label><input name="scheduled_pickup_at" type="datetime-local">
+          <div class="form-actions"><button class="primary" type="submit">Porter-কে কাজ বরাদ্দ করুন</button></div>
+          <p class="muted">কাজ বরাদ্দের জন্য logistics.assign অনুমতি ও Admin MFA (AAL2) প্রয়োজন।</p>
+        </form>
+        <div id="nxAdminLogisticsStatus" class="muted" aria-live="polite"></div>
+        <hr>
+        <div class="nx-logistics-monitor-head">
+          <div><h4>Delivery Job Monitoring</h4><p class="muted">অনুমোদিত Logistics Admin-এর জন্য বরাদ্দ, চলমান, সম্পন্ন ও সমস্যাযুক্ত ডেলিভারির সারসংক্ষেপ।</p></div>
+          <button type="button" class="light" id="nxAdminLogisticsRefresh">Refresh</button>
+        </div>
+        <div class="nx-logistics-metrics">
+          <div><strong id="nxLogisticsTotal">—</strong><span>মোট কাজ</span></div>
+          <div><strong id="nxLogisticsActive">—</strong><span>চলমান</span></div>
+          <div><strong id="nxLogisticsDelivered">—</strong><span>সম্পন্ন</span></div>
+          <div><strong id="nxLogisticsIssues">—</strong><span>সমস্যা / প্রত্যাখ্যাত</span></div>
+        </div>
+        <label for="nxAdminLogisticsFilter">কাজের অবস্থা</label>
+        <select id="nxAdminLogisticsFilter">
+          <option value="all">সব কাজ</option><option value="assigned">নতুন বরাদ্দ</option>
+          <option value="active">চলমান</option><option value="delivered">সম্পন্ন</option>
+          <option value="issues">সমস্যা / প্রত্যাখ্যাত</option><option value="cancelled">বাতিল</option>
+        </select>
+        <div id="nxAdminLogisticsJobs" class="nx-logistics-jobs" aria-live="polite"><p class="muted">Logistics permission যাচাইয়ের পর কাজের তালিকা দেখা যাবে।</p></div>
+        <h4>সর্বশেষ Status History</h4>
+        <div id="nxAdminLogisticsHistory" class="nx-logistics-history"><p class="muted">ইতিহাস লোড হয়নি।</p></div>
+      </section>
+      <div id="nxRoleRequestsPanel">
+        <h4>Pending Role Requests</h4>
+        <div id="nxRequests" class="muted">আবেদন লোড হচ্ছে…</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUYER-ONLY DASHBOARD — redesigned workspace -->
+  <section id="buyerDashboard" class="section hidden nx-buyer-workspace">
+    <div class="nx-buyer-shellbar">
+      <div class="nx-buyer-brand"><span class="nx-buyer-brandmark">N</span><span>NEXORA <small>BUYER CENTER</small></span></div>
+      <div class="nx-buyer-wallet" aria-label="Wallet and payment feature status">
+        <span class="nx-buyer-wallet-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H19"/><path d="M4 6.5v11A2.5 2.5 0 0 0 6.5 20H20V8H6.5A2.5 2.5 0 0 1 4 6.5Z"/><path d="M20 12h-4a2 2 0 0 0 0 4h4"/><path d="M16 14h.01"/></svg></span>
+        <span class="nx-buyer-wallet-copy"><small>WALLET &amp; PAYMENTS</small><strong>এখনো চালু হয়নি</strong><em>Order request মানেই Payment নয়</em></span>
+      </div>
+      <div class="nx-buyer-shell-actions">
+        <div id="nxBuyerProfileMenu" class="nx-profile-wrap">
+          <button type="button" id="nxBuyerProfileToggle" class="nx-profile-toggle nx-account-menu-trigger" aria-label="Buyer account menu" title="Account menu" aria-expanded="false" aria-controls="nxBuyerProfileDropdown" onclick="toggleBuyerProfileMenu()">
+            <span aria-hidden="true">⋮</span>
+          </button>
+          <div id="nxBuyerProfileDropdown" class="nx-profile-dropdown hidden" role="menu" aria-label="Buyer account menu">
+            <div class="nx-profile-summary"><span id="nxBuyerMenuAvatar" class="nx-avatar nx-avatar-large">B</span><span><strong id="nxBuyerMenuName">Buyer</strong><small>Buyer Account</small></span></div>
+            <button type="button" role="menuitem" onclick="showSection('accountSection');toggleBuyerProfileMenu(false)">Profile</button>
+            <button type="button" role="menuitem" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'});toggleBuyerProfileMenu(false)">My Demands</button>
+            <button type="button" role="menuitem" onclick="showSection('privateChat');toggleBuyerProfileMenu(false)">Messages</button>
+            <button type="button" role="menuitem" class="nx-profile-logout" onclick="toggleBuyerProfileMenu(false);document.getElementById('nxLogout')?.click()">Logout</button>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <p class="muted">
-        আপনার পণ্যের চাহিদা প্রকাশ করুন। প্রাসঙ্গিক বিক্রেতারা আপনার চাহিদার বিপরীতে দাম প্রস্তাব করতে পারবেন।
-      </p>
+    <div class="nx-buyer-layout">
+      <aside class="nx-buyer-sidebar" aria-label="Buyer navigation">
+        <div class="nx-buyer-side-label">WORKSPACE</div>
+        <button type="button" class="active" onclick="document.getElementById('nxBuyerWelcome')?.scrollIntoView({behavior:'smooth'})">⌂ <span>Overview</span></button>
+        <button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})">▦ <span>Find Products</span></button>
+        <button type="button" onclick="document.getElementById('buyerDemandList')?.scrollIntoView({behavior:'smooth'})">▤ <span>My Demands</span></button>
+        <button type="button" onclick="showSection('postDemand')">＋ <span>Post a Demand</span></button>
+        <button type="button" onclick="showSection('privateChat')">✉ <span>Messages</span></button>
+        <div class="nx-buyer-help"><strong>Need sourcing help?</strong><p>পণ্য খুঁজতে বা Seller-এর সঙ্গে যোগাযোগ করতে Marketplace ব্যবহার করুন।</p><button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})">Explore products</button></div>
+      </aside>
 
-      <form id="demandForm">
+      <div class="nx-buyer-main">
+        <div id="nxBuyerWelcome" class="nx-buyer-welcome">
+          <div><span class="nx-buyer-eyebrow">BUYER WORKSPACE</span><h1>আপনার ব্যবসার জন্য সঠিক পণ্য খুঁজুন</h1><p>সব ধরনের পণ্য আবিষ্কার করুন, চাহিদা প্রকাশ করুন এবং Seller-এর কাছে যোগাযোগের অনুরোধ পাঠান।</p></div>
+          <div class="nx-buyer-welcome-art" aria-hidden="true"><span>BUYER</span><b>↗</b><i>SMART MARKETPLACE</i></div>
+        </div>
+
+        <div class="nx-buyer-quick-actions">
+          <button type="button" onclick="document.getElementById('nxBuyerDiscover')?.scrollIntoView({behavior:'smooth'})"><span>⌕</span><strong>পণ্য খুঁজুন</strong><small>সব ধরনের পণ্য</small></button>
+          <button type="button" onclick="showSection('postDemand')"><span>＋</span><strong>চাহিদা পোস্ট করুন</strong><small>Seller-এর কাছ থেকে Offer নিন</small></button>
+          <button type="button" onclick="showSection('privateChat')"><span>✉</span><strong>যোগাযোগ</strong><small>আপনার Inquiry ও Messages</small></button>
+        </div>
+
+        <div class="nx-buyer-stats">
+          <div><span>মোট চাহিদা</span><strong id="buyerDemandTotal">০</strong><small>আপনার পোস্ট করা Demand</small></div>
+          <div><span>চলমান চাহিদা</span><strong id="buyerDemandOpen">০</strong><small>Open requirements</small></div>
+          <div><span>মোট Price Offer</span><strong id="buyerOfferTotal">০</strong><small>Seller-এর প্রস্তাব</small></div>
+        </div>
+
+        <section id="nxBuyerDiscover" class="nx-buyer-discover">
+          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">DISCOVER PRODUCTS</span><h2>আপনার জন্য পণ্য</h2><p>সব অনুমোদিত পণ্য দেখুন</p></div><span id="buyerProductCount" class="nx-buyer-count">Products</span></div>
+          <div class="nx-buyer-search"><input id="buyerProductSearch" type="search" placeholder="পণ্যের নাম বা বিবরণ লিখুন…" aria-label="পণ্য অনুসন্ধান"><button class="primary" type="button" id="buyerProductSearchButton">Search</button></div>
+          <div id="buyerProductList" aria-live="polite"><p class="muted">পণ্য লোড হচ্ছে…</p></div>
+        </section>
+
+        <section class="nx-buyer-demands"><div class="nx-buyer-section-heading"><div><h2>আমার দরদামের প্রস্তাব</h2><p>Marketplace পণ্যে আপনার দেওয়া দাম এবং Seller-এর পাল্টা প্রস্তাব</p></div></div><div id="nxBuyerPriceNegotiations" aria-live="polite"><p class="muted">দরদামের তথ্য এখানে দেখা যাবে।</p></div></section>
+        <section class="nx-buyer-demands"><div class="nx-buyer-section-heading"><div><h2>আমার অর্ডার ও বুকিং</h2><p>কেনাকাটা, সেবা বুকিং ও Verified Review-এর অগ্রগতি</p></div></div><div id="nxBuyerOrders" aria-live="polite"><p class="muted">আপনার অর্ডার এখানে দেখা যাবে।</p></div></section>
+        <section class="nx-buyer-demands">
+          <div class="nx-buyer-section-heading"><div><span class="nx-buyer-eyebrow">YOUR REQUIREMENTS</span><h2>আমার Buyer Demands</h2><p>আপনার নিজের চাহিদা ও Seller-এর Price Offer</p></div><button class="primary" type="button" onclick="showSection('postDemand')">＋ নতুন চাহিদা পোস্ট</button></div>
+          <div id="buyerDemandList" aria-live="polite">আপনার চাহিদা লোড হচ্ছে…</div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <!-- POST DEMAND: focused standalone form only -->
+  <section id="postDemand" class="section hidden nx-demand-only">
+    <div class="nx-demand-page-heading">
+      <span class="nx-demand-eyebrow">NEXORA • BUYER REQUIREMENT</span>
+      <h1>Post a Demand</h1>
+      <p>আপনার প্রয়োজনীয় পণ্যের চাহিদা জমা দিন</p>
+    </div>
+    <div class="nx-demand-form-card">
+<form id="demandForm">
         <div class="grid">
           <div>
             <label>পণ্যের নাম *</label>
@@ -221,12 +1214,13 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
             </select>
           </div>
         </div>
+        <label>পণ্যের Subcategory / নির্দিষ্ট ধরন (ঐচ্ছিক)<input name="subcategory" maxlength="120" placeholder="যেমন: Mobile Phones / Smartphone"></label>
 
-        <label>বিস্তারিত বিবরণ *</label>
-        <textarea name="description" required placeholder="আপনার কী ধরনের পণ্য প্রয়োজন বিস্তারিত লিখুন"></textarea>
+        <label>বিস্তারিত বিবরণ (ঐচ্ছিক)</label>
+        <textarea name="description" placeholder="আরও বিস্তারিত জানাতে চাইলে লিখুন"></textarea>
 
-        <label>প্রয়োজনীয় স্পেসিফিকেশন ও গুণগত মান *</label>
-        <textarea name="specifications" required placeholder="পণ্যের মান, সাইজ, ধরন, বৈশিষ্ট্য ইত্যাদি"></textarea>
+        <label>প্রয়োজনীয় স্পেসিফিকেশন ও গুণগত মান (ঐচ্ছিক)</label>
+        <textarea name="specifications" placeholder="পণ্যের মান, সাইজ, ধরন, বৈশিষ্ট্য ইত্যাদি জানাতে চাইলে লিখুন"></textarea>
 
         <div class="grid">
           <div>
@@ -234,8 +1228,8 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
             <input name="quantity" required placeholder="যেমন: 5000 KG">
           </div>
           <div>
-            <label>বাজেট *</label>
-            <input name="budget" required placeholder="যেমন: 5000">
+            <label>বাজেট (ঐচ্ছিক)</label>
+            <input name="budget" type="number" min="0" step="0.01" placeholder="যেমন: 5000">
           </div>
           <div>
             <label>মুদ্রা *</label>
@@ -266,51 +1260,142 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 
         <div class="form-actions">
           <button class="primary" type="submit">Publish Demand</button>
-          <button class="light" type="reset">Reset</button>
         </div>
       </form>
     </div>
   </section>
 
-  <!-- DEMAND BOARD -->
-  <section id="demandBoard" class="section hidden">
+  <!-- SERVICES MARKETPLACE -->
+  <section id="servicesMarketplace" class="section hidden">
     <div class="section-head">
-      <h2>Public Demand Board</h2>
-      <span class="tag">Open Requirements</span>
+      <div><span class="nx-market-eyebrow">NEXORA SERVICES</span><h2>সেবা মার্কেটপ্লেস</h2><p class="muted">আপনার এলাকার প্রয়োজনীয় সেবাদাতা খুঁজুন।</p></div>
+      <span id="nxServiceCount" class="muted">সেবা</span>
     </div>
-    <p class="muted">
-      এখানে প্রকাশিত ক্রেতাদের চাহিদা সবাই দেখতে পারবেন।
-      নিবন্ধিত Seller-দের জন্য Price Offer সুবিধা থাকবে।
-    </p>
-    <div id="demandList"></div>
+    <div class="card" id="nxServiceFilters">
+      <div class="grid">
+        <label>সেবা খুঁজুন<input id="nxServiceSearch" type="search" placeholder="যেমন: গৃহশিক্ষক, প্লাম্বার, মেকানিক"></label>
+        <label>সেবার বিভাগ<select id="nxServiceCategoryFilter"><option value="">সব বিভাগ</option><option value="household">গৃহস্থালি সেবা</option><option value="tutoring">শিক্ষা ও টিউশন</option><option value="plumbing">প্লাম্বিং</option><option value="electrical">ইলেকট্রিক্যাল</option><option value="mechanic">মেকানিক ও মেরামত</option><option value="appliance_repair">ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত</option><option value="it_support">আইটি ও কম্পিউটার</option><option value="beauty_laundry">বিউটি ও লন্ড্রি</option><option value="other">অন্যান্য</option></select></label>
+        <label>এলাকা / শহর<input id="nxServiceAreaFilter" type="search" placeholder="যেমন: মিরপুর, ঢাকা"></label>
+      </div>
+      <p class="muted">সেবাদাতার ব্যক্তিগত ফোন নম্বর ও সঠিক বাসার ঠিকানা এখানে প্রকাশ করা হয় না।</p>
+    </div>
+    <div id="nxServiceDetailPanel" class="nx-service-detail-panel hidden" aria-live="polite"></div>
+    <div id="nxServiceList" class="grid nx-service-grid"><p class="muted">সেবা লোড হচ্ছে…</p></div>
+  </section>
+
+  <!-- TRANSPORT & LOGISTICS DISCOVERY -->
+  <section id="transportLogistics" class="section hidden nx-logistics-market">
+    <div class="nx-logistics-page-hero">
+      <span class="nx-market-eyebrow">NEXORA TRANSPORT & LOGISTICS</span>
+      <h1>পণ্য পৌঁছে দিন <em>সঠিক গন্তব্যে</em></h1>
+      <p>বড় চালানের পরিবহন থেকে স্থানীয় ডেলিভারি—দুই ধরনের লজিস্টিকস সেবার জন্য NEXORA-এর কাঠামো তৈরি হচ্ছে।</p>
+    </div>
+    <div class="nx-logistics-discovery-grid">
+      <article class="nx-logistics-discovery-card nx-logistics-bulk">
+        <span class="nx-logistics-icon">🚢</span><span class="nx-market-eyebrow">WHOLESALE LOGISTICS</span>
+        <h2>পাইকারি পরিবহন ও আন্তর্জাতিক শিপিং</h2>
+        <p>কুরিয়ার কোম্পানি, কার্গো, ফ্রেইট ফরওয়ার্ডার, শিপিং কোম্পানি, ট্রাক ও কনটেইনার পরিবহন।</p>
+        <ul><li>দেশীয় ও আন্তর্জাতিক চালান</li><li>বাল্ক কার্গো ও ফ্রেইট</li><li>এয়ার, সি ও ল্যান্ড ট্রান্সপোর্ট</li></ul>
+        <span class="nx-logistics-status">পরবর্তী ধাপে সেবাদাতা তালিকা চালু হবে</span>
+      </article>
+      <article class="nx-logistics-discovery-card nx-logistics-local">
+        <span class="nx-logistics-icon">🛵</span><span class="nx-market-eyebrow">RETAIL DELIVERY</span>
+        <h2>স্থানীয় কুরিয়ার ও ডেলিভারি</h2>
+        <p>একই শহরের মধ্যে পণ্য সংগ্রহ, দ্রুত ডেলিভারি এবং ব্যক্তিগত ডেলিভারি পার্টনার।</p>
+        <ul><li>লোকাল কুরিয়ার সার্ভিস</li><li>মোটরবাইক ও সাইকেল ডেলিভারি</li><li>Pickup ও doorstep delivery</li></ul>
+        <span class="nx-logistics-status">পরবর্তী ধাপে সেবাদাতা তালিকা চালু হবে</span>
+      </article>
+    </div>
+    <p class="nx-logistics-disclaimer">এটি বিভাগ পরিচিতি পৃষ্ঠা। এখানে এখনো বাস্তব বুকিং, মূল্য বা Provider availability চালু হয়নি।</p>
   </section>
 
   <!-- SELLER DASHBOARD -->
-  <section id="sellerDashboard" class="section hidden">
+  <section id="sellerDashboard" class="section hidden nx-role-workspace">
+    <div class="nx-role-hero">
+      <div><span class="nx-role-eyebrow">NEXORA SELLER CENTER</span><h1>আপনার ব্যবসা পরিচালনা করুন</h1><p>আপনার ব্যবসা, পণ্য তালিকা এবং Buyer Demand একটি কেন্দ্র থেকে পরিচালনা করুন। Marketplace-এ প্রকাশের আগে Business Profile ও প্রতিটি Product-এর প্রয়োজনীয় Admin approval প্রযোজ্য।</p></div>
+      <div class="nx-role-hero-mark" aria-hidden="true">▣</div>
+    </div>
+    <nav class="nx-role-shortcuts" aria-label="Seller workspace sections">
+      <a href="#sellerOverview">Overview</a>
+      <a href="#businessProfileCard" onclick="event.preventDefault();document.getElementById('businessProfileCard')?.scrollIntoView({behavior:'smooth',block:'start'})">Business Profile</a>
+      <a href="#sellerProductsCard" onclick="event.preventDefault();document.getElementById('sellerProductsCard')?.scrollIntoView({behavior:'smooth',block:'start'})">My Products</a>
+      <a href="#matchedDemands" onclick="event.preventDefault();document.getElementById('matchedDemands')?.scrollIntoView({behavior:'smooth',block:'start'})">Buyer Demands</a>
+    </nav>
+    <div id="sellerOverview" class="nx-seller-overview" aria-label="Seller business overview">
+      <article class="nx-seller-stat"><span>মোট পণ্য</span><strong id="nxSellerTotalProducts">—</strong><small>আপনার তালিকাভুক্ত পণ্য</small></article>
+      <article class="nx-seller-stat"><span>অনুমোদিত পণ্য</span><strong id="nxSellerApprovedProducts">—</strong><small>Marketplace-এ প্রকাশিত</small></article>
+      <article class="nx-seller-stat"><span>পর্যালোচনাধীন</span><strong id="nxSellerPendingProducts">—</strong><small>Admin review অপেক্ষায়</small></article>
+      <article class="nx-seller-stat"><span>Business Profile</span><strong id="nxSellerBusinessStatus" class="nx-seller-status-value">—</strong><small>ব্যবসার অনুমোদন অবস্থা</small></article>
+    </div>
     <div class="section-head">
-      <h2>Seller Dashboard</h2>
+      <h2>Seller Center</h2>
       <span class="tag">Seller Workspace</span>
     </div>
 
     <div class="card">
-      <h3>Matched Buyer Demands</h3>
-      <p class="muted">
-        আপনার যোগ করা পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন চাহিদাগুলো এখানে দেখানো হবে।
-      </p>
+      <h3>Buyer Demand Inbox</h3>
+      <p class="muted">আপনার অনুমোদিত পণ্যের Category ও Subcategory-এর সঙ্গে মেলে এমন সব Buyer Demand এখানে আসবে। প্রতিটি চাহিদার বিপরীতে সরাসরি Quotation পাঠাতে পারবেন।</p>
       <div id="matchedDemands"></div>
     </div>
 
-    <div class="card">
+    <div class="card" id="sellerServicesCard">
+      <div class="section-head"><div><h3>আমার সেবাসমূহ</h3><p class="muted">সেবা যোগ করুন। প্রকাশের আগে Admin অনুমোদন প্রয়োজন।</p></div><button class="primary" type="button" onclick="document.getElementById('nxServiceForm')?.classList.toggle('hidden')">+ সেবা যোগ করুন</button></div>
+      <form id="nxServiceForm" class="hidden">
+        <label>সেবার নাম *<input name="service_name" minlength="2" maxlength="160" required placeholder="যেমন: বাসাবাড়ির প্লাম্বিং সার্ভিস"></label>
+        <label>সেবার বিভাগ *<select name="service_category" required><option value="">বিভাগ নির্বাচন করুন</option><option value="household">গৃহস্থালি সেবা</option><option value="tutoring">শিক্ষা ও টিউশন</option><option value="plumbing">প্লাম্বিং</option><option value="electrical">ইলেকট্রিক্যাল</option><option value="mechanic">মেকানিক ও মেরামত</option><option value="appliance_repair">ইলেকট্রনিক/হোম অ্যাপ্লায়েন্স মেরামত</option><option value="it_support">আইটি ও কম্পিউটার</option><option value="beauty_laundry">বিউটি ও লন্ড্রি</option><option value="other">অন্যান্য</option></select></label>
+        <label>সেবার বিবরণ *<textarea name="description" minlength="20" maxlength="3000" required placeholder="কী ধরনের সেবা দেবেন, অভিজ্ঞতা ও কাজের পরিধি লিখুন"></textarea></label>
+        <div class="grid">
+          <label>দেশ *<input name="country" value="Bangladesh" maxlength="100" required></label>
+          <label>শহর / জেলা *<input name="city" maxlength="100" required placeholder="যেমন: Dhaka"></label>
+        </div>
+        <label>যে এলাকা বা এলাকায় সেবা দেবেন *<input name="service_area" minlength="2" maxlength="300" required placeholder="যেমন: মিরপুর ১–১২, ঢাকা"></label>
+        <div class="grid">
+          <label>মূল্য নির্ধারণ *<select name="price_basis" required><option value="negotiable">আলোচনা সাপেক্ষে</option><option value="per_hour">প্রতি ঘণ্টা</option><option value="per_day">প্রতি দিন</option><option value="per_visit">প্রতি ভিজিট</option><option value="per_job">প্রতি কাজ</option><option value="per_month">প্রতি মাস</option></select></label>
+          <label>মূল্য (ঐচ্ছিক)<input name="price_amount" type="number" min="0" step="0.01" placeholder="৳"></label>
+        </div>
+        <label>মুদ্রা<select name="currency"><option value="BDT">BDT</option></select></label>
+        <label>সেবার ছবি আপলোড করুন (সর্বোচ্চ ৩টি, প্রতিটি ৫ MB)</label>
+        <input name="service_image_files" id="nxServiceImageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+        <div id="nxServiceImagePreview" class="nx-upload-preview" aria-live="polite"></div>
+        <label>সেবা দেওয়ার সময় / Availability<input name="availability" maxlength="300" placeholder="যেমন: প্রতিদিন সকাল ৯টা–সন্ধ্যা ৬টা"></label>
+        <div class="form-actions"><button class="primary" type="submit">সেবা Admin Review-এ পাঠান</button></div>
+      </form>
+      <div id="nxSellerServiceList" class="grid"><p class="muted">আপনার সেবার তালিকা এখানে দেখা যাবে।</p></div>
+    </div>
+
+    <div class="card" id="nxSellerPriceNegotiationsCard"><div class="section-head"><div><h3>Product Price Negotiations</h3><p class="muted">Buyer-দের দরদামের প্রস্তাব গ্রহণ, পাল্টা দাম দেওয়া বা প্রত্যাখ্যান করুন।</p></div></div><div id="nxSellerPriceNegotiations" aria-live="polite"><p class="muted">দরদামের প্রস্তাব লোড হচ্ছে…</p></div></div>
+
+    <div class="card" id="nxSellerOrdersCard"><div class="section-head"><div><h3>আমার অর্ডার ও বুকিং</h3><p class="muted">Buyer-এর অর্ডার গ্রহণ, পাঠানো এবং সম্পন্নের অবস্থা আপডেট করুন।</p></div></div><div id="nxSellerOrders" aria-live="polite"><p class="muted">অর্ডার লোড হচ্ছে…</p></div></div>
+
+    <div class="card" id="sellerProductsCard">
       <div class="section-head">
-        <h3>My Products</h3>
+        <div><h3>My Products</h3><p class="muted">আপনার পণ্য তালিকা ও প্রকাশের অনুমোদন পরিচালনা করুন।</p></div>
         <button class="primary" onclick="toggleProductForm()">+ Add Product</button>
+      </div>
+      <div class="nx-seller-product-tools">
+        <label class="nx-seller-search-label" for="nxSellerProductSearch">পণ্য খুঁজুন</label>
+        <input id="nxSellerProductSearch" type="search" placeholder="পণ্যের নাম, Category বা Product ID লিখুন">
+                <label class="nx-seller-search-label" for="nxSellerProductStatus">অনুমোদন অবস্থা</label>
+        <select id="nxSellerProductStatus">
+          <option value="all">সব পণ্য</option>
+          <option value="approved">অনুমোদিত</option>
+          <option value="pending">পর্যালোচনাধীন</option>
+          <option value="rejected">অননুমোদিত / প্রত্যাখ্যাত</option>
+        </select>
       </div>
 
       <form id="productForm" class="hidden">
         <label>Product Name *</label>
         <input name="name" required>
 
-        <label>Category *</label>
+        <label>বিক্রির ধরন *</label>
+        <select name="market_category" required>
+          <option value="">বিক্রির ধরন নির্বাচন করুন</option>
+          <option value="wholesale">পাইকারি (Wholesale)</option>
+          <option value="retail">খুচরা (Retail)</option>
+        </select>
+
+        <label>Product Category *</label>
         <select name="category" required>
           <option value="">Select Category</option>
           <option>Food & Agriculture</option>
@@ -321,7 +1406,10 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
           <option>Other</option>
         </select>
 
-        <label>Product Images (Image URLs, one per line)</label>
+        <label>পণ্যের ছবি আপলোড করুন (সর্বোচ্চ ৫টি, প্রতিটি ৫ MB)</label>
+        <input name="image_files" id="nxProductImageFiles" type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple>
+        <div id="nxProductImagePreview" class="nx-upload-preview" aria-live="polite"></div>
+        <label>অথবা বাইরের Image URL (ঐচ্ছিক, প্রতি লাইনে একটি)</label>
         <textarea name="images" placeholder="https://example.com/image.jpg"></textarea>
 
         <label>Product Description *</label>
@@ -335,14 +1423,14 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
 
         <div class="grid">
           <div>
-            <label>Price *</label>
-            <input name="price" required>
+            <label>পণ্যের মূল্য *</label>
+            <input name="price" type="number" min="0.01" step="0.01" required placeholder="যেমন: 180">
           </div>
           <div>
             <label>Currency *</label>
             <select name="currency" required>
-              <option>USD</option>
               <option>BDT</option>
+              <option>USD</option>
               <option>EUR</option>
               <option>GBP</option>
               <option>CNY</option>
@@ -357,246 +1445,130 @@ hr{border:0;border-top:1px solid var(--border);margin:18px 0}
       </form>
 
       <div id="sellerProducts"></div>
+      <div class="card" style="margin-top:14px"><h4>আমার Listing Change Requests</h4><div id="nxSellerEditRequests" aria-live="polite"><p class="muted">আপনার পরিবর্তনের আবেদন এখানে দেখা যাবে।</p></div></div>
+    </div>
+  </section>
+
+
+  <!-- TRANSPORT PROVIDER CENTER — separate from account roles -->
+  <section id="transportProviderCenter" class="section hidden">
+    <div class="section-head"><div><span class="tag">NEXORA LOGISTICS</span><h2>Transport Provider Center</h2></div></div>
+    <div class="card">
+      <p class="muted">Transport Provider একটি আলাদা সেবা নিবন্ধন। আপনার Buyer/Seller account role অপরিবর্তিত থাকবে। একটি Provider-এর অধীনে একাধিক Vehicle নিবন্ধন করা যাবে। Provider ও প্রতিটি Vehicle আলাদাভাবে Admin approval পাবে।</p>
+      <p id="nxTransportMessage" class="muted" role="status" aria-live="polite"></p>
+      <div id="nxTransportProviderFormHost"></div>
+      <div id="nxTransportProviderList" aria-live="polite">আপনার Provider আবেদন লোড হচ্ছে…</div>
+    </div>
+  </section>
+
+  <!-- Approval-gated Porter workspace on the shared domain -->
+  <section id="porterDashboard" class="section hidden nx-role-workspace">
+    <div class="nx-role-hero">
+      <div><span class="nx-role-eyebrow">NEXORA PORTER CENTER</span><h1>Porter Dashboard</h1><p>আপনার অনুমোদিত Porter অ্যাকাউন্টের পরিবহন কার্যক্রমের কেন্দ্র।</p></div>
+      <div class="nx-role-hero-mark" aria-hidden="true">↗</div>
+    </div>
+    <div class="card">
+      <h3>Porter Account Status</h3>
+      <div id="nxPorterWorkspaceStatus" aria-live="polite">
+        <p class="muted">আপনার অ্যাকাউন্টের অনুমোদন যাচাই হচ্ছে…</p>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Transport Provider ও Vehicle নিবন্ধন</h3>
+      <p class="muted">আপনার ব্যক্তি-ভিত্তিক Transport Provider Profile এবং Vehicle-এর তথ্য জমা দিতে Transport Provider Center ব্যবহার করুন। Provider ও প্রতিটি Vehicle আলাদাভাবে Admin যাচাই করবে। অনুমোদিত Provider/Vehicle ছাড়া Delivery Assignment পাওয়া যাবে না।</p>
+      <div class="form-actions"><button class="primary" type="button" onclick="showSection('transportProviderCenter')">Transport Provider Center খুলুন</button></div>
+    </div>
+  </section>
+
+  <!-- PRIVATE COMMUNICATIONS -->
+  <section id="privateChat" class="section hidden">
+    <div class="section-head">
+      <h2>Private Chat & Communications</h2>
+      <span class="tag">Private • Invitation Required</span>
+    </div>
+    <div id="chatNotice" class="muted" aria-live="polite"></div>
+    <div id="chatLoginHint" class="card hidden">ব্যক্তিগত Chat ব্যবহার করতে আগে লগইন করুন।</div>
+    <div id="chatWorkspace" class="grid hidden">
+      <div class="card">
+        <h3>New Conversation</h3>
+        <p class="muted">ব্যবহারকারী নির্বাচন করলে যোগাযোগের অনুরোধ যাবে। গ্রহণ না করা পর্যন্ত বার্তা পাঠানো যাবে না।</p>
+        <div id="chatDirectory">ব্যবহারকারী তালিকা লোড হচ্ছে…</div>
+        <hr>
+        <h3>Your Conversations</h3>
+        <div id="chatConversationList">চ্যাট লোড হচ্ছে…</div>
+      </div>
+      <div class="card">
+        <div class="nx-chat-topbar">
+          <h3 id="chatCurrentTitle">একটি Conversation নির্বাচন করুন</h3>
+          <div id="nxChatCallActions" class="nx-chat-call-actions hidden" aria-label="Chat call actions">
+            <button class="nx-chat-call-button" id="startAudioCall" type="button" aria-label="Audio call" title="Audio call"><span aria-hidden="true">☎</span></button>
+            <button class="nx-chat-call-button" id="startVideoCall" type="button" aria-label="Video call" title="Video call"><span aria-hidden="true">▣</span></button>
+          </div>
+        </div>
+        <div id="chatProductContext" class="hidden" aria-label="Conversation product context"></div>
+        <div class="nx-chat-language-settings">
+          <label for="chatPreferredLanguage">আমার Chat-এর পছন্দের ভাষা</label>
+          <select id="chatPreferredLanguage" aria-describedby="chatLanguageHelp">
+            <option value="bn">বাংলা</option>
+            <option value="ar">العربية — আরবি</option>
+            <option value="en">English — ইংরেজি</option>
+            <option value="zh">中文 — চীনা</option>
+            <option value="hi">हिन्दी — হিন্দি</option>
+            <option value="ur">اردو — উর্দু</option>
+            <option value="fr">Français — ফরাসি</option>
+            <option value="es">Español — স্প্যানিশ</option>
+            <option value="de">Deutsch — জার্মান</option>
+            <option value="tr">Türkçe — তুর্কি</option>
+            <option value="ru">Русский — রুশ</option>
+            <option value="pt">Português — পর্তুগিজ</option>
+            <option value="ja">日本語 — জাপানি</option>
+            <option value="ko">한국어 — কোরীয়</option>
+          </select>
+          <p id="chatLanguageHelp" class="muted">আপনার পছন্দ সংরক্ষিত হবে। স্বয়ংক্রিয় অনুবাদ চালু না হওয়া পর্যন্ত মূল বার্তাই দেখানো হবে।</p>
+        </div>
+        <div id="chatMessages" class="chat-messages" aria-live="polite"></div>
+        <form id="chatComposer" class="hidden">
+          <label>Message</label>
+          <textarea name="body" required maxlength="10000" placeholder="আপনার বার্তা লিখুন…"></textarea>
+          <div class="form-actions">
+            <button class="primary" type="submit">Send</button>
+            <label class="light" for="chatFile" style="padding:11px 14px;border-radius:8px;cursor:pointer">Attach File / Image</label>
+            <input id="chatFile" type="file" accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,.docx,.xlsx" class="hidden">
+          </div>
+          <p class="muted">সর্বোচ্চ ফাইল ২০ MB। অনুমোদিত: JPG, PNG, WebP, PDF, TXT, DOCX, XLSX।</p>
+        </form>
+        <div id="chatCallPanel" class="offer nx-chat-call-panel hidden" aria-hidden="true">
+          <div class="form-actions">
+            <button class="danger hidden" id="endCall" type="button">End Call</button>
+          </div>
+          <div id="incomingCall" class="hidden">
+            <p id="incomingCallText">Incoming call…</p>
+            <div class="form-actions">
+              <button class="primary" id="acceptIncomingCall" type="button">Accept</button>
+              <button class="danger" id="declineIncomingCall" type="button">Decline</button>
+            </div>
+          </div>
+          <div class="grid">
+            <div><p class="muted">Your camera</p><video id="localCallVideo" autoplay muted playsinline class="call-video"></video></div>
+            <div><p class="muted">Other participant</p><video id="remoteCallVideo" autoplay playsinline class="call-video"></video></div>
+          </div>
+          <p class="muted" id="callStatus">Call ready when a private conversation is accepted.</p>
+        </div>     </div>
     </div>
   </section>
 
 </main>
 
-<footer>
-  <div class="logo">NEX<span>ORA</span></div>
-  <p>Connecting Buyers & Sellers Across Borders</p>
-  <p class="muted">NEXORA Global Trade Marketplace</p>
-</footer>
 
-<script>
-const KEYS = {
-  products: "nexora_products",
-  demands: "nexora_demands"
-};
 
-function getData(key){
-  try {
-    return JSON.parse(localStorage.getItem(key)) || [];
-  } catch(e) {
-    return [];
-  }
-}
-
-function saveData(key,data){
-  localStorage.setItem(key,JSON.stringify(data));
-}
-
-let products = getData(KEYS.products);
-let demands = getData(KEYS.demands);
-
-function escapeHTML(value){
-  return String(value ?? "").replace(/[&<>"']/g, char => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
-  })[char]);
-}
-
-function showSection(id){
-  document.querySelectorAll("main section").forEach(section=>{
-    if(section.id !== "market" && section.id !== "postDemand" &&
-       section.id !== "demandBoard" && section.id !== "sellerDashboard"){
-      return;
-    }
-    section.classList.toggle("hidden",section.id !== id);
-  });
-
-  if(id === "market") renderProducts();
-  if(id === "demandBoard") renderDemands();
-  if(id === "sellerDashboard") renderSellerDashboard();
-
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-function renderProducts(){
-  const search = document.getElementById("productSearch").value.toLowerCase();
-  const category = document.getElementById("categoryFilter").value;
-
-  const filtered = products.filter(p=>
-    (p.name + " " + p.description + " " + p.origin).toLowerCase().includes(search) &&
-    (!category || p.category === category)
-  );
-
-  document.getElementById("productCount").textContent =
-    filtered.length + " Products";
-
-  document.getElementById("productList").innerHTML =
-    filtered.length ? filtered.map(p=>`
-      <article class="card">
-        ${p.images ? `<img class="product-image" src="${escapeHTML(p.images.split("\n")[0])}" alt="Product image" onerror="this.style.display='none'">` : ""}
-        <span class="tag">${escapeHTML(p.category)}</span>
-        <h3>${escapeHTML(p.name)}</h3>
-        <p class="muted">${escapeHTML(p.description)}</p>
-        <p class="muted">Origin: ${escapeHTML(p.origin)}</p>
-        <p class="price">${escapeHTML(p.price)} ${escapeHTML(p.currency)}</p>
-        <p class="muted">Product ID: ${escapeHTML(p.id)}</p>
-      </article>
-    `).join("") : `<div class="card">কোনো পণ্য পাওয়া যায়নি।</div>`;
-}
-
-document.getElementById("productForm").addEventListener("submit",function(e){
-  e.preventDefault();
-  const data = Object.fromEntries(new FormData(this));
-
-  const product = {
-    ...data,
-    id:"NX-" + Date.now(),
-    createdAt:new Date().toISOString()
-  };
-
-  products.push(product);
-  saveData(KEYS.products,products);
-  this.reset();
-  this.classList.add("hidden");
-  renderSellerDashboard();
-  alert("পণ্য সফলভাবে সংরক্ষিত হয়েছে।");
-});
-
-function toggleProductForm(){
-  document.getElementById("productForm").classList.toggle("hidden");
-}
-
-function renderSellerDashboard(){
-  const list = document.getElementById("sellerProducts");
-
-  list.innerHTML = products.length ? products.map(p=>`
-    <div class="offer">
-      <strong>${escapeHTML(p.name)}</strong>
-      <p class="muted">${escapeHTML(p.category)} | ${escapeHTML(p.origin)}</p>
-      <p class="price">${escapeHTML(p.price)} ${escapeHTML(p.currency)}</p>
-      <p class="muted">Product ID: ${escapeHTML(p.id)}</p>
-      <button class="danger" onclick="deleteProduct('${p.id}')">Delete</button>
-    </div>
-  `).join("") : `<p class="muted">এখনো কোনো পণ্য যোগ করা হয়নি।</p>`;
-
-  renderMatchedDemands();
-}
-
-function deleteProduct(id){
-  if(!confirm("এই পণ্যটি মুছে ফেলতে চান?")) return;
-  products = products.filter(p=>p.id !== id);
-  saveData(KEYS.products,products);
-  renderSellerDashboard();
-  renderProducts();
-}
-
-document.getElementById("demandForm").addEventListener("submit",function(e){
-  e.preventDefault();
-
-  const data = Object.fromEntries(new FormData(this));
-
-  const demand = {
-    ...data,
-    id:"ND-" + Date.now(),
-    status:"Open",
-    offers:[],
-    createdAt:new Date().toISOString()
-  };
-
-  demands.unshift(demand);
-  saveData(KEYS.demands,demands);
-
-  this.reset();
-  alert("আপনার চাহিদা প্রকাশিত হয়েছে।");
-  showSection("demandBoard");
-});
-
-function renderDemands(){
-  const list = document.getElementById("demandList");
-
-  list.innerHTML = demands.length ? demands.map(d=>`
-    <article class="card">
-      <span class="tag">${escapeHTML(d.category)}</span>
-      <span class="tag">${escapeHTML(d.status)}</span>
-      <h3>${escapeHTML(d.name)}</h3>
-      <p>${escapeHTML(d.description)}</p>
-      <p class="muted"><strong>Specifications:</strong> ${escapeHTML(d.specifications)}</p>
-      <div class="grid">
-        <div><p class="muted">Quantity</p><strong>${escapeHTML(d.quantity)}</strong></div>
-        <div><p class="muted">Budget</p><strong>${escapeHTML(d.budget)} ${escapeHTML(d.currency)}</strong></div>
-        <div><p class="muted">Destination</p><strong>${escapeHTML(d.destination)}, ${escapeHTML(d.country)}</strong></div>
-      </div>
-      <p><span class="demand-date">Required by: ${escapeHTML(d.requiredDate)}</span></p>
-      <p class="muted">Demand ID: ${escapeHTML(d.id)}</p>
-      <p><strong>${d.offers.length} Price Offer(s)</strong></p>
-
-      ${d.offers.map(o=>`
-        <div class="offer">
-          <strong>${escapeHTML(o.seller)}</strong>
-          <p class="price">${escapeHTML(o.price)} ${escapeHTML(o.currency)}</p>
-          <p class="muted">Available Quantity: ${escapeHTML(o.quantity)}</p>
-        </div>
-      `).join("")}
-
-      <button class="secondary" onclick="makeOffer('${d.id}')">Submit Price Offer</button>
-    </article>
-  `).join("") : `<div class="card">এখনো কোনো চাহিদা প্রকাশিত হয়নি।</div>`;
-}
-
-function makeOffer(id){
-  const demand = demands.find(d=>d.id===id);
-  if(!demand) return;
-
-  const seller = prompt("আপনার Seller / Business Name লিখুন:");
-  if(!seller) return;
-
-  const price = prompt("আপনার প্রস্তাবিত দাম লিখুন:");
-  if(!price) return;
-
-  const currency = prompt("Currency লিখুন (USD / BDT / EUR):","USD");
-  if(!currency) return;
-
-  const quantity = prompt("আপনি কত পরিমাণ সরবরাহ করতে পারবেন?");
-  if(!quantity) return;
-
-  demand.offers.push({
-    seller,
-    price,
-    currency,
-    quantity,
-    createdAt:new Date().toISOString()
-  });
-
-  saveData(KEYS.demands,demands);
-  renderDemands();
-  alert("আপনার Price Offer যুক্ত হয়েছে।");
-}
-
-function renderMatchedDemands(){
-  const matched = demands.filter(d=>
-    products.some(p=>p.category===d.category)
-  );
-
-  document.getElementById("matchedDemands").innerHTML =
-    matched.length ? matched.map(d=>`
-      <div class="offer">
-        <strong>${escapeHTML(d.name)}</strong>
-        <p class="muted">${escapeHTML(d.category)}</p>
-        <p>${escapeHTML(d.description)}</p>
-        <p><span class="demand-date">Required by: ${escapeHTML(d.requiredDate)}</span></p>
-        <button class="secondary" onclick="showSection('demandBoard')">View Demand & Offer</button>
-      </div>
-    `).join("") : `<p class="muted">আপনার পণ্যের ক্যাটাগরির সঙ্গে মেলে এমন কোনো চাহিদা এখনো পাওয়া যায়নি।</p>`;
-}
-
-// Set minimum date to today
-const today = new Date();
-const localToday = new Date(today.getTime()-today.getTimezoneOffset()*60000)
-  .toISOString().split("T")[0];
-
-document.getElementById("requiredDate").min = localToday;
-
-// Initial rendering
-renderProducts();
-renderDemands();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="auth.js"></script>
+<script src="financial-config.js"></script>
+<script src="marketplace.js"></script>
+<script src="transport-provider.js"></script>
+<script src="delivery-network-admin.js"></script>
+<script src="chat.js"></script>
 
 </body>
 </html>
