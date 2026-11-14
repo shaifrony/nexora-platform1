@@ -486,7 +486,7 @@
     const values = new FormData(form);
     const password = String(values.get("password") || "");
     const confirmation = String(values.get("confirm_password") || "");
-    if (password.length < 10) return setBuyerAccountStatus("নতুন Password কমপক্ষে ১০ অক্ষরের হতে হবে।");
+    if (password.length < 6) return setBuyerAccountStatus("নতুন Password কমপক্ষে ৬ অক্ষরের হতে হবে।");
     if (password !== confirmation) return setBuyerAccountStatus("দুটি Password মিলছে না।");
     setBusy(form, true);
     setBuyerAccountStatus("");
@@ -506,7 +506,7 @@
     const f = new FormData(form);
     const password = String(f.get("password"));
     const confirm = String(f.get("confirm_password"));
-    if (password.length < 8) return say("পাসওয়ার্ড কমপক্ষে ৮ অক্ষরের হতে হবে।");
+    if (password.length < 6) return say("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।");
     if (password !== confirm) return say("দুটি পাসওয়ার্ড মিলছে না।");
     setBusy(form, true); say("");
     try {
