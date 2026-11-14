@@ -202,3 +202,10 @@ No application code or database was changed in this source-verification step. Th
 - Confirmed stale Admin UI aliases: older `marketplace.js` calls `manage_nexora_user`, later Admin UI calls `admin_manage_user`; neither appears in active migrations. Do not create both aliases without reconciling intended status transitions and permission keys. The Admin user-management list reads Buyer/Seller profile identity and therefore requires a strict server-side permission boundary and audit.
 - Added detailed source-derived contracts, mismatches and synthetic security gates to Foundation design spec §11. It remains design-only; no SQL or runtime schema changed.
 - Commit: `7b95b2206d5b4f2fa553f293e63e2fd63351c58f`.
+
+
+## 11. Follow-up permission-key inventory — Admin UI and migration sources (2026-11-14)
+
+Direct source inspection confirmed the current Admin UI references `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, and `businesses.suspend`. Listing edit migrations use `products.edit` and `services.edit`; delivery/provider/Porter flows use `logistics.view` and `logistics.assign`. Migration #34 seeds Marketing, Transport and Finance permissions including partner/staff management and refund/payout keys. The exact full seed inventory must be checked against every active migration before a Foundation seed set is authored.
+
+The UI's client-side grant lookup is not an authorization boundary. The exact server-side permission requirements for legacy `manage_nexora_user`, newer `admin_manage_user` and `manage_marketplace_listing` calls remain unresolved. Do not enable these actions or create aliases until the intended status transitions, permission keys and audit semantics are specified. See Foundation spec §11.6.
