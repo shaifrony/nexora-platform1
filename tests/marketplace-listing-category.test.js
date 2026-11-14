@@ -341,9 +341,12 @@ test("Negotiation UI exposes response actions only to the party whose turn it is
 });
 
 test("Buyer negotiation submission validates positive quantity and price before RPC", () => {
-  const submit = marketplaceUi.slice(marketplaceUi.indexOf('form.addEventListener("submit"'), marketplaceUi.indexOf("async function loadBuyerPriceNegotiations()"));
+  const start = marketplaceUi.indexOf('$("nxProductNegotiationForm")');
+  const submit = marketplaceUi.slice(start, marketplaceUi.indexOf("      return;", start));
+  assert.notEqual(start, -1);
   assert.match(submit, /Number\.isFinite\(quantity\)/);
-  assert.match(submit, /quantity<=0/);
+  assert.match(submit, /quantity<min/);
+  assert.match(submit, /available!==null&&quantity>available/);
   assert.match(submit, /Number\.isFinite\(price\)/);
   assert.match(submit, /price<=0/);
   assert.match(submit, /start_product_price_negotiation/);
