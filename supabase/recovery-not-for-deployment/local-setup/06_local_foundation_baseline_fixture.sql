@@ -1,3 +1,8 @@
+-- SUPERSEDED LOCAL COMPATIBILITY FIXTURE — DO NOT USE AS CURRENT FOUNDATION
+-- Its Buyer/Seller category fields/checks conflict with the approved unified Marketplace.
+-- Current design reference: 09_nexora_test_foundation_baseline_spec.md
+-- Retained only as historical local-test evidence; do not apply to hosted Supabase.
+--
 -- NEXORA NEW LOCAL FOUNDATION BASELINE FIXTURE
 -- NOT ORIGINAL / NOT RECOVERED / NOT DEPLOYABLE.
 -- SAFE TARGET: local PostgreSQL database named nexora_test ONLY.
