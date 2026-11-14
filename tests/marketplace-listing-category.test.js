@@ -289,3 +289,32 @@ test("Negotiation actions append immutable event and chat history through protec
   assert.match(productNegotiationSql, /security invoker set search_path=''/i);
   assert.match(productNegotiationSql, /grant execute on function public\.respond_to_product_price_negotiation\(uuid,text,numeric,numeric,text,text\) to authenticated/i);
 });
+
+
+const multilingualChatSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261115120000_multilingual_chat_foundation.sql"),
+  "utf8"
+);
+
+test("Language preferences are private and users can only manage their own preference row", () => {
+  assert.match(multilingualChatSql, /alter table public\.user_language_preferences enable row level security/i);
+  assert.match(multilingualChatSql, /revoke all on public\.user_language_preferences from public, anon/i);
+  assert.match(multilingualChatSql, /language_preferences_read_own[\s\S]*?using \(user_id = \(select auth\.uid\(\)\)\)/i);
+  assert.match(multilingualChatSql, /language_preferences_insert_own[\s\S]*?with check \(user_id = \(select auth\.uid\(\)\)\)/i);
+  assert.match(multilingualChatSql, /language_preferences_update_own[\s\S]*?using \(user_id = \(select auth\.uid\(\)\)\)[\s\S]*?with check \(user_id = \(select auth\.uid\(\)\)\)/i);
+  assert.match(multilingualChatSql, /preferred_language text not null default 'en'[\s\S]*?check \(preferred_language ~ '\^\[a-z\]\{2,3\}\(-\[A-Z\]\{2\}\)\?\$'\)/i);
+});
+
+test("Message translations are readable only by accepted conversation participants and are not client-writable", () => {
+  assert.match(multilingualChatSql, /alter table public\.message_translations enable row level security/i);
+  assert.match(multilingualChatSql, /revoke all on public\.message_translations from public, anon, authenticated/i);
+  assert.match(multilingualChatSql, /grant select on public\.message_translations to authenticated/i);
+  assert.match(multilingualChatSql, /message_translations_participant_read[\s\S]*?cp\.conversation_id = message_translations\.conversation_id[\s\S]*?cp\.user_id = \(select auth\.uid\(\)\)[\s\S]*?cp\.invitation_status = 'accepted'/i);
+});
+
+test("Translation rows are tied to the exact source message and conversation, with one translation per target language", () => {
+  assert.match(multilingualChatSql, /create unique index if not exists messages_id_conversation_unique[\s\S]*?on public\.messages\(id, conversation_id\)/i);
+  assert.match(multilingualChatSql, /foreign key \(message_id, conversation_id\)[\s\S]*?references public\.messages\(id, conversation_id\) on delete cascade/i);
+  assert.match(multilingualChatSql, /unique\(message_id, target_language\)/i);
+  assert.match(multilingualChatSql, /translated_body text not null check \(length\(translated_body\) <= 10000\)/i);
+});
