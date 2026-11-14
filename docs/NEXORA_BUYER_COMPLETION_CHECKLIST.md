@@ -450,3 +450,4 @@ Implementation rules:
 - [ ] Add Business detail review UI using public Business ID and neutral reviewer label; do not reveal Buyer identity or order data.
 - [ ] Pass 20 isolated replay/API cases in `docs/NEXORA_BUSINESS_VERIFIED_REVIEW_DESIGN.md`, including concurrent completion/submission and explicit denied private-column reads.
 - Business review design is documented only; no schema/frontend change or hosted DB operation has occurred.
+- Recovery-only candidates prepared but not executed: `31_listing_reviews_column_grants_recovery_candidate.sql` and `32_listing_reviews_column_grants_recovery_test.sql`. The review privacy gate remains open until isolated replay and Auth JWT/PostgREST tests pass.
