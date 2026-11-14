@@ -67,8 +67,8 @@
     const instant = at == null ? Date.now() : Date.parse(at);
     assert(Number.isFinite(instant), "A valid schedule-selection date is required.");
     const eligible = schedules.filter((schedule) => {
-      validateSchedule(schedule);
       if (schedule.status !== "approved") return false;
+      validateSchedule(schedule);
       const start = Date.parse(schedule.effective_from);
       const end = schedule.effective_until == null ? Infinity : Date.parse(schedule.effective_until);
       return start <= instant && instant < end;
@@ -114,11 +114,12 @@
     const commissionBase = input.amount_bases_minor[commissionBasis];
     const marketplaceCommission = calculateBasisPoints(commissionBase, commissionRate);
     const buyerFeeBasis = schedule.fees.buyer_agent_fee.basis;
+    const buyerFeeBase = input.buyer_agent_used
+      ? (assert(Object.prototype.hasOwnProperty.call(input.amount_bases_minor, buyerFeeBasis),
+          "Missing amount base for Buyer Agent fee: " + buyerFeeBasis), input.amount_bases_minor[buyerFeeBasis])
+      : 0;
     const buyerAgentFee = input.buyer_agent_used
-      ? calculateBasisPoints(
-          (assert(Object.prototype.hasOwnProperty.call(input.amount_bases_minor, buyerFeeBasis),
-            "Missing amount base for Buyer Agent fee: " + buyerFeeBasis), input.amount_bases_minor[buyerFeeBasis]),
-          schedule.fees.buyer_agent_fee.rate_bps)
+      ? calculateBasisPoints(buyerFeeBase, schedule.fees.buyer_agent_fee.rate_bps)
       : 0;
     const transport = input.transport_charge_minor;
     const split = schedule.fees.transport_split;
@@ -131,10 +132,16 @@
     return Object.freeze({
       currency: schedule.currency,
       marketplace_commission_basis: commissionBasis,
+      marketplace_commission_rate_bps: commissionRate,
       marketplace_commission_base_minor: commissionBase,
-      buyer_agent_fee_basis: input.buyer_agent_used ? buyerFeeBasis : null,
       marketplace_commission_minor: marketplaceCommission,
+      buyer_agent_fee_basis: input.buyer_agent_used ? buyerFeeBasis : null,
+      buyer_agent_fee_rate_bps: input.buyer_agent_used ? schedule.fees.buyer_agent_fee.rate_bps : 0,
+      buyer_agent_fee_base_minor: buyerFeeBase,
       buyer_agent_fee_minor: buyerAgentFee,
+      transport_carrier_share_bps: split.carrier_bps,
+      transport_local_distribution_share_bps: split.local_distribution_bps,
+      transport_nexora_share_bps: split.nexora_bps,
       transport_charge_minor: transport,
       transport_carrier_share_minor: carrierShare,
       transport_local_distribution_share_minor: localDistributionShare,
