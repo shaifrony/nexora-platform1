@@ -839,3 +839,37 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - The earlier Preview deployment `dpl_8hDqLCsi3tiAxXeTjX2QdkqwJpEs` (commit `aaefd128542d6d75ac01a9292c9b366b016104c1`) was READY and had the stable Development alias, but it predates the final Admin-file and fail-closed allowlist commits. Do not treat the alias as fully validated for authenticated use until a fresh deployment of the current branch head succeeds.
 - Current source-level configuration and sandbox syntax/routing tests are complete; physical Android and authenticated Test Project E2E remain blocked by deployment quota and the need to verify the final Preview.
 - Wait 24 hours or ask the user to resolve the Vercel plan/quota requirement. Do not automatically upgrade the plan or spend money.
+
+
+## 2026-11-14 — NEXORA-TEST database and migration readiness audit (read-only)
+
+### Test project state
+- Confirmed project `NEXORA-TEST` (`lhxmqoyxoywntmkmmnjb`) is `ACTIVE_HEALTHY`, PostgreSQL 17.11.0.019.
+- `list_migrations` returns **zero application migrations**.
+- Read-only catalog query confirms **0 public application base tables, 0 public columns, 0 public RLS policies**. Auth/Storage platform schemas are provisioned by Supabase; these platform-internal tables are not NEXORA application tables.
+- Supabase Security, Performance and Health advisors currently return **no lint findings** for this empty project. This does not validate the NEXORA schema because no application tables/migrations are installed.
+- No SQL DDL/DML, migration, Auth user, Storage object or test data was written to the hosted Test Project.
+
+### Current repository migration inventory
+- Rechecked current `nexora-development` tree at HEAD `2dae7431a5fa9d428369bc98565ef6bbd48716eb`.
+- Active `supabase/migrations/`: **38 SQL files, 38 distinct version prefixes**; newest is `20261115120000_multilingual_chat_foundation.sql`.
+- The active sequence has no duplicate version collision. Two archived duplicate conversation migration pairs and the 11 missing-history recovery drafts remain outside the active migrations directory.
+- `supabase/config.toml` is not present in the tracked `supabase/` directory, so a reproducible CLI project config still needs to be prepared and reviewed before a hosted migration workflow.
+- Current Supabase CLI v3 behavior was rechecked against the Nov 4 changelog: DB commands target local by default; hosted target requires explicit `--remote`; hosted mutations require confirmation and `--yes` for unattended runs. Sources: Supabase changelog Nov 4 2026 and CLI v3 migration guide.
+
+### Critical bootstrap/dependency finding
+- The 38 active SQL files are **feature/incremental migrations, not a complete clean-database bootstrap**.
+- Earliest migration `20261112045441_revoke_public_rls_auto_enable_execute.sql` assumes `public.rls_auto_enable()` already exists.
+- Core Marketplace migration `20261112050345_create_marketplace_core_schema.sql` assumes existing `public.profiles`, `public.is_nexora_admin()`, and Supabase Auth identity context.
+- Follow-up RLS migration `20261112050553_optimize_marketplace_rls_and_fk_indexes.sql` assumes `profiles`, `role_requests`, `profile_change_requests`, and related admin helpers.
+- Communications migrations require `profiles`, existing conversation prerequisites and the `supabase_realtime` publication.
+- Transport, Porter, officer-management and later commerce migrations depend on the missing foundation tables/functions: `profiles`, `admin_staff`, `admin_departments`, permission catalogue/grants, audit logs, `is_nexora_admin()`, `has_nexora_permission()`, and Auth trigger function `handle_new_user()`.
+- The source tree does not contain the original foundational DDL. The existing `local-setup/06_local_foundation_baseline_fixture.sql` is explicitly a **new local-only test fixture**, not recovered original SQL and not deployable; it targets a local PostgreSQL compatibility environment, not a hosted Supabase project. Do not execute it against NEXORA-TEST as-is.
+- Eleven historical Live migration versions have no exact source in the repository. Ten are catalog-reconstructed drafts; one Buyer Demand body is source-recovered with a version mismatch (repository `153000`, Live history `153453`). The recovery README explicitly says none of these drafts has been executed or certified as exact historical SQL. Keep all recovery drafts outside active migrations and do not replay them to manufacture history.
+
+### Audit conclusion / safe next gate
+- **BLOCKED: direct `supabase db push --remote` of the 38 migrations to the empty NEXORA-TEST project is unsafe and expected to fail at the missing foundation prerequisites.**
+- The empty project's zero advisor findings are not evidence of application-schema safety.
+- Before applying anything, create a separately reviewed, clearly labelled **Test-only foundation baseline** for the hosted Supabase platform (Auth, roles, schemas, Admin authorization, Auth trigger, RLS and Realtime prerequisites). Compare it with the local-only fixture and schema-only catalog evidence; do not copy any Live user rows, auth identities, private messages, calls, or Storage objects. Keep recovered-history drafts excluded.
+- Only after that baseline is independently reviewed should we rehearse the 38 active migrations in a disposable local Supabase stack and then on NEXORA-TEST, using explicit project targeting and synthetic identities/data. Calling remains paused.
+- This was a read-only audit: no migration, hosted schema/data, `main`, Production, DNS or paid plan was changed.
