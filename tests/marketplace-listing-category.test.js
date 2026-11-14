@@ -1005,5 +1005,5 @@ test("Seller quotation insert rejects a Buyer Demand with invalid or non-positiv
     demandOrderSql.indexOf("revoke all on function private.initialise_seller_offer_negotiation()")
   );
   assert.ok(trigger.includes("v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric"));
-  assert.match(trigger, /if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity must start with a positive numeric amount'/i);
+  assert.ok(trigger.includes("if v_demand_qty is null or v_demand_qty<=0 then\n    raise exception 'Buyer Demand quantity must start with a positive numeric amount'"));
 });
