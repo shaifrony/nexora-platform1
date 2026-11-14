@@ -1602,3 +1602,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Verified Review audit found table-wide SELECT on `public.listing_reviews` exposed Buyer ID and moderation columns. Replaced it with a safe public column allowlist; UI query already uses only the permitted fields. Added seven review eligibility/privacy/UI tests.
 - GitHub Actions Development CI [#43647560156](https://github.com/shaifrony/nexora-platform1/actions/runs/43647560156) passed **90/90** dependency-free source tests, JavaScript syntax and migration filename/order guard. This includes the order/inventory coverage and the review privacy hardening tests.
 - No SQL migration applied and no hosted database grants were changed. Runtime JWT/RLS/PostgREST, inventory/order concurrency and browser E2E remain pending; `main`, Production, DNS and public aliases unchanged.
+
+
+## 2026-11-15 — Public identity and Buyer Demand projection regression coverage
+- Added three source regression tests verifying that `public_profiles` exposes only ID/full name to authenticated users; `public_businesses` contains only the limited approved business identity/location projection and removes records when approval is revoked; and `public_buyer_demands` is security-invoker with no Buyer ID/name/contact fields while preserving required date and safe anon/authenticated grants.
+- The first run exposed a test-only formatting mismatch: the public profile view formats `SELECT` and `FROM` on separate lines. Updated the assertion to allow SQL whitespace; the migration source was already correct.
+- GitHub Actions Development CI [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) for commit `4a3ee309ab3407883669c65528e7fd7100f45fc7` completed successfully: **93/93 tests passed**, JavaScript syntax and migration filename/order guard passed.
+- No schema, migration, hosted DB or Production changes were made by this test addition. These are source regression checks, not live role/JWT/RLS tests.
