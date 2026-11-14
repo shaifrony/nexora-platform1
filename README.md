@@ -16,3 +16,15 @@ See:
 - [Organization governance](docs/NEXORA_ORGANIZATION_GOVERNANCE.md)
 
 All changes are staged on `nexora-development`; the domain and role-based dashboard routing are not live until tested and deployed with approval.
+
+## Local unit tests
+
+The repository includes dependency-free Node.js regression tests for the pure financial configuration module and fail-closed Supabase environment routing.
+
+Run from the repository root with Node.js 20 or later:
+
+```bash
+node --test tests/*.test.js
+```
+
+These tests do not replace disposable Supabase migration replay, Auth/JWT/PostgREST/RLS verification, Storage/Realtime checks or browser end-to-end testing. Do not treat a passing unit suite as production-readiness evidence.
