@@ -1535,3 +1535,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Initial CI run exposed an over-escaped regex in the new test block; corrected it in a follow-up commit.
 - Corrected-commit GitHub Actions run `43645651951` completed successfully. This validates JavaScript syntax and repository-level source regression tests only; it is not a live RLS/JWT/PostgREST integration test.
 - No SQL migration or hosted database changed. All commits remain on `nexora-development`; `main` and Production untouched.
+
+
+## 2026-11-15 — Admin-reviewed Product and Service listing edits
+- Added six dependency-free source regression tests for the existing listing-edit workflow: Seller ownership/approved-listing eligibility, explicit Product/Service payload allowlists and validation, one-pending-request uniqueness, permissioned active-Admin review, approve-vs-reject behavior with audit logging, and before/after history triggers.
+- GitHub Actions run `43645864453` for commit `765273e265c4551d93033e6b04dc262e70c0a91e` completed successfully (JavaScript syntax, dependency-free tests, migration filename/order guard).
+- Scope is repository source regression coverage; no live Supabase/PostgREST/JWT integration was run. No migration applied and no hosted data changed.
+- Work remains on `nexora-development`; `main`, Production, DNS and public deployment aliases untouched.
