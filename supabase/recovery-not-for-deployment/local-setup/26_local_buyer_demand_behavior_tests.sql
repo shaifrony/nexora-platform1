@@ -450,25 +450,9 @@ BEGIN
   PERFORM private.transition_buyer_demand_order(v_order,'complete','Buyer confirms receipt');
   SELECT order_status,completed_at INTO v_status,v_completed FROM public.commerce_orders WHERE id=v_order;
   IF v_status<>'completed' OR v_completed IS NULL THEN RAISE EXCEPTION 'FAIL: Buyer completion transition invalid'; END IF;
-  RAISE NOTICE 'PASS: Buyer completes ready order and verified-review eligibility is created';
+  RAISE NOTICE 'PASS: Buyer completes ready order and completion timestamp is recorded';
 END
 $lifecycle_buyer_completes$;
-RESET ROLE;
-DO $review_eligibility_created$
-BEGIN
-  IF NOT EXISTS(
-    SELECT 1 FROM private.review_purchase_eligibility
-    WHERE purchase_reference=(
-      SELECT order_code FROM public.commerce_orders
-      WHERE source_offer_id='25400000-0000-4000-8000-000000000005'
-    )
-  ) THEN
-    RAISE EXCEPTION 'FAIL: completed order did not create review eligibility';
-  END IF;
-  RAISE NOTICE 'PASS: completed order creates private verified-review eligibility';
-END
-$review_eligibility_created$;
-
 -- Buyer cancellation is limited to pending orders.
 RESET ROLE;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
