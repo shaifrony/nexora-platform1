@@ -131,13 +131,15 @@ begin
  select payload->>'code' into v_code from otp_result_2;
  v_result:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001',v_code,null,'Buyer receipt verified');
  if (v_result->>'verified')::boolean is distinct from true then raise exception 'FAIL: valid OTP did not verify'; end if;
- if (select job_status from public.delivery_jobs where id='74000000-0000-4000-8000-000000000001')<>'delivered' then
-  raise exception 'FAIL: successful OTP did not set delivered status';
- end if;
  v_result:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001',v_code,null,null);
  if coalesce((v_result->>'verified')::boolean,false) then raise exception 'FAIL: OTP was reusable'; end if;
 end
 $success$;
 reset role;
+do $assert_delivered$ begin
+ if (select job_status from public.delivery_jobs where id='74000000-0000-4000-8000-000000000001')<>'delivered' then
+  raise exception 'FAIL: successful OTP did not set delivered status';
+ end if;
+end $assert_delivered$;
 
 \echo 'PASS: Buyer ownership, private OTP storage, rate/attempt controls, legacy bypass denial, assigned Provider verification and one-time receipt confirmation'
