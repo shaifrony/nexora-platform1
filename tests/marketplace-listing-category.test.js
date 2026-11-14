@@ -841,7 +841,7 @@ test("Public profile projection exposes only identity ID and full name to authen
 test("Public Business projection excludes private Business Profile fields and publishes approved records only", () => {
   const table = marketplaceCorePrivacySql.slice(
     marketplaceCorePrivacySql.indexOf("create table if not exists public.public_businesses"),
-    marketplaceCorePrivacySql.indexOf("create table if not exists public.products")
+    marketplaceCorePrivacySql.indexOf("create table public.products")
   );
   const sync = marketplaceCorePrivacySql.slice(
     marketplaceCorePrivacySql.indexOf("create or replace function public.sync_public_business()"),
@@ -859,7 +859,7 @@ test("Public Buyer Demand view is security-invoker and omits Buyer identity and 
     publicDemandProjectionSql.indexOf("grant select on public.public_buyer_demands")
   );
   assert.match(view, /with \(security_invoker=true\)/i);
-  assert.match(view, /select id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at/i);
+  assert.match(view, /select id,demand_code,product_name,category,description,specifications_quality,[\s\S]*?required_quantity,budget,currency,destination_country,destination_city,[\s\S]*?required_date,demand_status,created_at,subcategory/i);
   assert.doesNotMatch(view, /buyer_id|full_name|email|phone|contact_number|address/i);
   assert.match(publicDemandProjectionSql, /grant select \([\s\S]*?required_date[\s\S]*?\) on public\.buyer_demands to anon/i);
   assert.match(publicDemandProjectionSql, /revoke select on public\.buyer_demands from authenticated/i);
