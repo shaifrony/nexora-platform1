@@ -451,3 +451,11 @@ Implementation rules:
 - [ ] Pass 20 isolated replay/API cases in `docs/NEXORA_BUSINESS_VERIFIED_REVIEW_DESIGN.md`, including concurrent completion/submission and explicit denied private-column reads.
 - Business review design is documented only; no schema/frontend change or hosted DB operation has occurred.
 - Recovery-only candidates prepared but not executed: `31_listing_reviews_column_grants_recovery_candidate.sql` and `32_listing_reviews_column_grants_recovery_test.sql`. The review privacy gate remains open until isolated replay and Auth JWT/PostgREST tests pass.
+
+## 2026-11-15 — Current evidence boundary and superseded historical test notes
+
+- Current active migration inventory is **39 migrations / 39 unique timestamps**, latest `20261115120000_multilingual_chat_foundation.sql`. Earlier statements in this checklist referring to a 38-migration replay or a 38-migration local Supabase integration describe a historical chain and must not be treated as verification of the current 39-migration HEAD.
+- The latest reproducible full-chain rehearsal recorded in the Work Tracker is PGlite 0.5.16 / PostgreSQL 18.6 WASM: Foundation candidate #13 + 39/39 active migrations + recovery-only Admin candidate #14, with 41/41 public tables RLS-enabled, 96 policies, 45 SECURITY DEFINER functions with explicit search_path, and 8/8 synthetic security checks. PGlite is not a full Supabase Auth/PostgREST/Storage/Realtime runtime; do not upgrade this evidence into hosted or full-platform acceptance.
+- A prior disposable local Supabase/Auth/PostgREST run recorded against the historical 38-migration chain remains historical evidence only. It does not prove the current 39-migration chain, latest multilingual-chat migration, or current hosted project state.
+- NEXORA-TEST remains a read-only empty baseline in the latest recorded check; no active migration or recovery candidate is approved for hosted application. The Foundation/replay gate remains closed pending a genuine isolated Supabase runtime and the remaining server-side moderation contracts/browser journeys.
+- The current Marketplace rule is dual listing categories per Product (`wholesale` / `retail` / `legacy_unclassified`), not wholesale-only. Any older wholesale-only notes in this checklist are superseded by the current Work Tracker and Marketplace specification.
