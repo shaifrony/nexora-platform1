@@ -1,89 +1,74 @@
-# NEXORA — Buyer Order History & Customer-safe Delivery Tracking Design
+# NEXORA — Buyer Order History & Customer-safe Delivery Tracking
 
-**Status:** Design contract v1 — documentation only. Not SQL, not deployable, not applied.
-**Branch:** `nexora-development`
-**Date:** 2026-11-14
+**Status:** Customer-safe tracking projection implemented on `nexora-development`; staged only, not deployed.
+**Updated:** 2026-11-15
 
-## 1. Buyer Order History UI
+## 1. Buyer Order History
 
-The Buyer order panel now includes:
-- A compact count summary for the currently fetched set (new, active, completed).
-- Status filtering: all, pending, accepted, ready for Buyer confirmation, completed, cancelled and rejected.
-- The latest 50 orders, newest first. The UI explicitly says it is showing the latest 50; it does not mislabel that subset as the lifetime total.
-- Per-order status explanation, authoritative order timestamps, subtotal/delivery charge/grand total, Seller update, and Buyer next action.
-- A Buyer must not confirm completion merely because a Seller or delivery operator marked a parcel delivered. Actual receipt and inspection remain the Buyer's decision.
+The Buyer dashboard now:
+- Shows the latest 50 orders, newest first, with status filters and an explicit latest-50 label.
+- Shows order subtotal, delivery charge, grand total, status timeline, Seller update and next action.
+- Fetches customer-safe delivery updates for the visible order IDs through one narrow RPC call.
+- Groups multiple shipment/job updates under the owning Commerce Order by non-sensitive job reference.
+- Keeps Buyer completion separate from delivery-reported status. A Buyer must receive and inspect the goods before confirming the order complete.
 
-The current order schema has no product snapshot/name field. The card therefore identifies the order by its order code and listing type rather than attempting an unverified product-name join. A future order snapshot design may store a safe title at order creation.
+The card continues to use order code and listing type; it does not infer a product name from an unverified join.
 
-## 2. Current delivery schema findings
+## 2. Privacy boundary
 
-The staged design currently links `delivery_jobs.commerce_order_id` to Commerce Orders and supports multiple jobs per order (there is an index, not a uniqueness guarantee). Delivery status history is stored in `delivery_tracking_events`.
+Raw operational tables remain private to the existing logistics roles:
+- No Buyer SELECT policy was added to `delivery_jobs`, `delivery_tracking_events`, or assignment history.
+- Pickup/delivery names, phone numbers, exact addresses, GPS, provider identity, Admin identity, assignment history, internal notes and raw external tracking codes are not returned to Buyers.
+- The projection lives in `private.delivery_customer_updates`, has no browser table grants, and rejects UPDATE/DELETE.
+- The authenticated RPC checks that the caller is an active Buyer and returns updates only when `commerce_orders.buyer_id = auth.uid()`.
 
-The current tracking event row contains operational fields such as `location_description`, `note`, and `external_tracking_code`. The current RLS read policies are for authorized logistics Admin staff and assigned independent Providers. There is no Buyer read policy in the staged tracking migration.
+## 3. Implemented migration
 
-Delivery jobs also contain pickup/delivery addresses and contact names/phone numbers. Those are operationally sensitive and must not be exposed through a broad Buyer SELECT policy.
+Staged migration: `supabase/migrations/20261115130000_buyer_safe_delivery_updates.sql`.
 
-**Decision:** Do not grant Buyers SELECT on raw `delivery_jobs`, `delivery_tracking_events`, provider assignment history, or operational contact fields. Do not add a broad Buyer RLS policy to the existing raw tracking table.
+An AFTER UPDATE trigger on `delivery_jobs.job_status` maps trusted operational states to a fixed customer vocabulary and authored Bangla message. It never copies operational `note`, `location_description`, address or contact fields.
 
-## 3. Customer-safe tracking contract
+| Operational state | Buyer-facing state |
+|---|---|
+| assigned / accepted | preparing |
+| picked_up | picked_up |
+| in_transit | in_transit |
+| out_for_delivery | out_for_delivery |
+| partially_delivered | partially_delivered |
+| delivered | delivered |
+| delivery_failed / disputed | delivery_issue |
+| returned | returned |
+| cancelled | cancelled |
 
-When Foundation and migration-history blockers are resolved, implement an additive customer-facing projection rather than exposing raw operational records.
+Only jobs linked to a Commerce Order create customer-facing updates. Multiple jobs per order are supported. An order with no published update returns no fabricated tracking event; the UI says that no customer update is available yet.
 
-Recommended new append-only table: `public.delivery_customer_updates` (name provisional).
+**Important:** `delivered` means the delivery operator reported delivery. It does not transition the Commerce Order to `completed`, release review eligibility, or bypass the Buyer confirmation action.
 
-Minimum fields:
-- `id`, `job_id`, `commerce_order_id`
-- `customer_status`: constrained customer vocabulary such as `preparing`, `picked_up`, `in_transit`, `out_for_delivery`, `delivered`, `delivery_issue`, `returned`, `cancelled`
-- `customer_message`: explicitly authored and reviewed customer-facing text; never copied automatically from internal `note`
-- `customer_location_label`: optional coarse location/area only; never GPS coordinates or a private pickup/delivery address
-- `public_tracking_code`: optional only when the courier/provider explicitly confirms it is customer-shareable
-- `created_at`, `published_at`, `created_by`
+## 4. Validation
 
-The projection must support more than one delivery job per order, e.g. split/partial shipments. The Buyer sees the updates grouped under their own Commerce Order, with each shipment/job separately identified by a non-sensitive public reference.
+Development CI run [#43652641287](https://github.com/shaifrony/nexora-platform1/actions/runs/43652641287), commit `14969619faa85d105d8ea9d08fb31b98d5a955fd`:
+- JavaScript syntax passed.
+- 120/120 dependency-free regression tests passed.
+- Buyer Demand PostgreSQL integration passed.
+- Product Price Negotiation PostgreSQL integration passed.
+- Buyer-safe delivery projection migration executed against an isolated disposable PostgreSQL database.
+- SQL assertions passed for status mapping, append-only records, Buyer A/Buyer B isolation, no direct private-table access, and no anonymous RPC execution.
+- 40 active migration filenames/order checks passed.
 
-## 4. Read API and authorization
+The delivery projection test uses a minimal PostgreSQL fixture. It is not a full migration-chain replay or full Supabase Auth/PostgREST/browser E2E test.
 
-Preferred interface: a narrow authenticated RPC such as `get_my_order_delivery_updates(p_order_id uuid)` that:
-1. Requires a real signed-in user (`auth.uid()` not null).
-2. Verifies the requested order exists and `commerce_orders.buyer_id = auth.uid()`.
-3. Joins only customer-published updates for jobs linked to that exact order.
-4. Returns only the customer-safe fields above, ordered by `published_at`/creation time.
-5. Returns no pickup/recipient names, phone numbers, exact addresses, internal notes, Admin identity, provider personal data, assignment history, or hidden/unpublished updates.
-6. Does not infer that a delivery job exists when none has been created.
+## 5. Remaining B-04 delivery work
 
-Keep raw operational tables' existing Admin/Provider policies unchanged. If implemented as a SECURITY DEFINER function, place the implementation in the non-exposed `private` schema, set an empty/strict `search_path`, explicitly validate `auth.uid()` and Buyer ownership inside the function, revoke default PUBLIC/anon execution, and expose only a narrowly scoped authenticated wrapper. Review function ownership and execute grants; do not use SECURITY DEFINER merely to work around an RLS error.
+Not yet implemented in this increment:
+1. Buyer receipt OTP / alternative proof-of-delivery and secure one-time verification.
+2. Admin/Delivery Coordinator order-to-job creation and assignment UX completion.
+3. Provider/NEXORA Team/Courier operational end-to-end flows from the Buyer Order card through receipt.
+4. Delivery charge quote, Buyer checkout, payment ledger and settlement.
+5. Partial shipment quantity reconciliation, disputes, failed delivery and returns.
+6. Full isolated migration-chain rehearsal, Supabase Auth/JWT/PostgREST/RLS negative tests and browser/mobile E2E.
 
-## 5. Event publication and status mapping
+Do not expose raw delivery tables to Buyers to complete these items. Keep customer-safe projections additive and narrowly scoped.
 
-- Operational tracking transitions remain authoritative in `delivery_tracking_events`.
-- A separate publication step creates a customer update only after a trusted Admin/Provider status update succeeds.
-- Never publish raw operator `note` or `location_description` automatically.
-- A safe mapping layer converts operational statuses to customer statuses. Unknown/internal states remain hidden until explicitly mapped.
-- `delivered` means the delivery operator reported delivery; it does **not** set Commerce Order to `completed`.
-- Only the Buyer can complete the Commerce Order using the existing server-validated transition after actual receipt, subject to the order's current allowed state.
-- Disputed, returned, failed, or partially delivered cases need clear Buyer instructions and a future support/dispute workflow; do not falsely mark the whole order complete.
+## 6. Release safety
 
-## 6. Required security and acceptance tests
-
-Use synthetic Buyer A, Buyer B, Seller, Provider and Admin accounts in an isolated disposable database only.
-
-1. Buyer A can fetch updates for A's order; Buyer B cannot fetch A's order by changing the UUID.
-2. Buyer cannot fetch another Buyer's job, raw tracking event, assignment history, exact address, phone or internal note.
-3. Anonymous user cannot call the RPC.
-4. Seller cannot read Buyer-only customer projection unless a separately approved role contract explicitly allows it.
-5. Assigned Provider/Admin can continue their existing operational access; customer projection does not weaken operational policies.
-6. An order with no delivery job returns an explicit “tracking not available yet” state, not a fabricated status.
-7. Split shipments show separate shipment histories without exposing another order's updates.
-8. Hidden/unpublished updates never appear; customer messages are length-limited and sanitized.
-9. Operational `delivered` never completes the Commerce Order; Buyer completion remains a separate action.
-10. Verify RLS, grants, RPC execution privileges, PostgREST response shape, negative authorization cases and mobile UI.
-
-## 7. Current release gate
-
-Blocked pending:
-- Foundation baseline reconciliation and migration history repair/rehearsal.
-- Resolution of the two active migrations sharing version `20261114180000`; do not rename manually or invent timestamps.
-- A CLI-generated migration and isolated disposable database test.
-- Runtime Auth/PostgREST/RLS/RPC and Buyer-vs-other-user negative tests.
-
-No SQL, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment was changed for this design.
+All changes remain staged on `nexora-development`. No hosted Supabase migration, NEXORA-TEST/live database mutation, Production deployment, DNS/public alias change or `main` change was made. Do not apply the migration or deploy without explicit user approval.
