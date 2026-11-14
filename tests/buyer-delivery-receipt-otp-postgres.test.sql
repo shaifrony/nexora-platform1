@@ -1,8 +1,8 @@
 \set ON_ERROR_STOP on
 \pset pager off
 
-do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
-do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
+do $block$ begin create role anon nologin; exception when duplicate_object then null; end $$;
+do $block$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
 create schema if not exists auth;
 create schema if not exists private;
 create or replace function auth.uid() returns uuid language sql stable set search_path=''
@@ -57,15 +57,15 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
 create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
-do $$ begin
+do $block$ begin
  if (select length(payload->>'code') from otp_result)<>10 then raise exception 'FAIL: Buyer did not receive a 10-character OTP'; end if;
-end $;
+end $block$;
 reset role;
 do $ begin
  if (select code_hash from private.delivery_receipt_challenges limit 1)=(select payload->>'code' from otp_result) then
    raise exception 'FAIL: raw OTP was stored';
  end if;
-end $;
+end $block$;
 set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
 do $ begin
@@ -77,7 +77,7 @@ reset role;
 -- The old status RPC cannot bypass receipt verification, and its renamed implementation is private.
 set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000011',false);
-do $$ begin
+do $block$ begin
  perform public.update_delivery_network_job_status(
   '74000000-0000-4000-8000-000000000001','delivered',null,null,null
  );
@@ -87,7 +87,7 @@ do $ begin
  if has_function_privilege('authenticated','private.update_delivery_network_job_status_legacy(uuid,text,text,text,text)','EXECUTE') then
   raise exception 'FAIL: authenticated can execute renamed legacy transition function';
  end if;
-end $;
+end $block$;
 reset role;
 
 -- The assigned Provider verifies the Buyer code once; wrong codes consume attempts.
