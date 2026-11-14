@@ -1145,3 +1145,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added Foundation spec §18 with owner approval, approved catalogue, source blockers, recovery-only bootstrap dependency order and stop conditions; updated compatibility matrix §18.
 - No SQL/migration/code/DB mutation performed. Current environment lacks Supabase CLI, Docker and psql, so no local parser/replay/runtime test is possible here. NEXORA-TEST remains untouched; no Live/Production/main/DNS/deployment changes.
 - Next: resolve #34 source compatibility on `nexora-development`, obtain a disposable local Supabase runtime, then author a recovery-only Foundation SQL candidate outside `supabase/migrations/` and validate Foundation + all 38 feature migrations with synthetic security tests.
+
+## 2026-11-14 — Migration #34 Governance compatibility repair contract
+
+- Owner-approved seven-department Governance was rechecked against the exact #34 SQL source.
+- Chose not to edit the historical timestamped migration in place or invent a forward migration timestamp. The source may already have been applied in an environment; changing its file would not update that database and could make fresh replay diverge.
+- Added a recovery-only repair contract to Foundation spec §19 and Compatibility Matrix §19: canonical department upserts; deterministic Logistics permission ownership; six operational department allowlist; Product & Business and Trust & Safety catalog ownership; inactive/ungrantable moderation mutation permissions until narrow RPCs exist; active catalog + department checks in server-side grant validation; Director/AAL2, transaction, row-lock and audit invariants.
+- Specified positive and negative synthetic tests for every department, cross-department permission attempts, inactive permission grants, Director-only boundaries, AAL1/inactive staff, invalid targets and transaction/audit consistency.
+- No SQL candidate or active migration was created. No repository application source was modified. No NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment mutation occurred.
+- Environment gate remains: no local Supabase CLI, Docker, `psql` or checked-out working tree. Generate and test the recovery-only SQL only in a disposable local Supabase environment; do not substitute the empty hosted NEXORA-TEST project.
