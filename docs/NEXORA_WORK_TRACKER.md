@@ -1125,3 +1125,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Read-only NEXORA-TEST recheck: 0 migration-history rows, 0 tables in inspected `public`/`private` schemas, 0 security advisor lints. No hosted schema mutation.
 - Added Foundation spec §16 with remaining department/governance decisions: Logistics vs Transport, Product/Business department, User/Business/Product moderation ownership, Audit Log access and listing approval powers.
 - Foundation recovery-only SQL is not yet safe to author/apply: department scope conflicts remain and no local runtime is available. Do not substitute hosted NEXORA-TEST for disposable local testing.
+
+## 2026-11-14 — Recommended Admin department governance proposal
+
+- Added Foundation spec §17 and Compatibility Matrix §17 as a conservative proposal, not approved policy and not SQL.
+- Recommendation: keep Logistics separate from Transport; explicitly seed `logistics` and `product_business`; Transport manages providers/vehicles/staff; Trust & Safety owns user/business/product moderation; Marketing remains leads/campaigns only; Accounts retains finance.
+- Proposed Trust & Safety keys: `users.view/suspend/restore/cancel`, `businesses.view/suspend`, `products.view/suspend/restore/cancel`; reversible cancellation only, never Auth hard-delete. Product/Service edit keys belong to Product & Business.
+- Director-only initial boundary: public Seller/Business/Product/Service approval, Admin appointment, Buyer→Seller role review and audit log viewing. No default staff audit-log permission.
+- Documented restrictions: no private Buyer contact/profile dump, no private chat/call access, no finance cross-access, no implicit cross-department grants, no generic mutation RPC and no alias-by-guessing.
+- Await explicit owner confirmation before executable SQL. No SQL, source code, migration, database or deployment changed.
