@@ -939,3 +939,15 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
   - Buyer Dashboard reads own Demands and associated Seller offers, supports accept/counter/reject and close/cancel; separate product negotiation and order history/status actions are present.
 - UI caveat: Buyer Center currently displays a Wallet Balance placeholder (`৳ —`) without a verified live balance source in the reviewed Buyer code. Do not treat this as a working wallet or enable payment claims; defer/label clearly until an approved wallet/payment implementation exists.
 - This inventory is source-only. It does not prove signup/Auth trigger behavior, API permissions, RLS, Realtime, Storage, or browser UX after the script repair.
+
+
+## 2026-11-14 — Buyer Module completion execution started
+
+- Reconfirmed scope: Buyer Module first. Seller, Porter and Admin feature changes are deferred unless a concrete Buyer prerequisite requires them.
+- Re-read the current Buyer completion checklist and inspected the current branch source for index.html, auth.js, marketplace.js, chat.js, and supabase-config.js.
+- Confirmed the core Buyer UI/source paths exist for account signup/login, product discovery, product details, Buyer Demand with required date, own Demand/quotation view, product-price negotiation, order list and participant-consent Chat. This is a source inventory only; it does not establish end-to-end functionality.
+- Identified a misleading Buyer Dashboard wallet presentation: it displayed WALLET BALANCE, a placeholder amount and Available Balance even though no wallet ledger/payment integration is implemented. Updated the Buyer shell to explicitly say “WALLET & PAYMENTS — এখনো চালু হয়নি — Order request মানেই Payment নয়”.
+- Commit: 7c79161248193c2aac996e968d4897bc850dab37 (index.html).
+- Remaining critical gates are unchanged: trusted Foundation/schema and migration-history reconciliation; isolated full-chain rehearsal; real Supabase Auth/JWT/PostgREST/RLS verification; two-session concurrency; Buyer browser/mobile acceptance tests; order delivery tracking integration; support/complaint path; and verified-review E2E.
+- Do not claim Buyer Module complete. The current action is a source-level accuracy fix; no runtime test was run in this step.
+- No SQL or migration was generated or executed; NEXORA-TEST remains empty; no Live/Production, main, DNS, paid service or deployment was changed.
