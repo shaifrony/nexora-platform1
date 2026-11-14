@@ -73,7 +73,7 @@
       return start <= instant && instant < end;
     });
     assert(eligible.length > 0, "No approved financial schedule is effective for this date.");
-    eligible.sort((a, b) => b.version - a.version);
+    assert(eligible.length === 1, "Multiple approved financial schedules overlap for this date.");
     return eligible[0];
   }
 
@@ -107,6 +107,11 @@
       : 0;
     const transport = input.transport_charge_minor;
     const split = schedule.fees.transport_split;
+    const carrierShare = calculateBasisPoints(transport, split.carrier_bps);
+    const localDistributionShare = calculateBasisPoints(transport, split.local_distribution_bps);
+    // Assign rounding remainder to NEXORA so the three allocations always equal the charge exactly.
+    const nexoraShare = transport - carrierShare - localDistributionShare;
+    assert(nexoraShare >= 0, "Rounded transport allocations exceed the transport charge.");
 
     return Object.freeze({
       currency: schedule.currency,
@@ -114,9 +119,9 @@
       marketplace_commission_minor: marketplaceCommission,
       buyer_agent_fee_minor: buyerAgentFee,
       transport_charge_minor: transport,
-      transport_carrier_share_minor: calculateBasisPoints(transport, split.carrier_bps),
-      transport_local_distribution_share_minor: calculateBasisPoints(transport, split.local_distribution_bps),
-      transport_nexora_share_minor: calculateBasisPoints(transport, split.nexora_bps),
+      transport_carrier_share_minor: carrierShare,
+      transport_local_distribution_share_minor: localDistributionShare,
+      transport_nexora_share_minor: nexoraShare,
       schedule_id: schedule.schedule_id,
       schedule_version: schedule.version
     });
