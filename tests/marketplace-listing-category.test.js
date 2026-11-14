@@ -562,3 +562,87 @@ test("Buyer and Seller Demand quotation forms present and enforce the Buyer-requ
   assert.match(seller, /quantity>currentQuantity/);
   assert.match(inbox, /Math\.min\(Number\(offer\.available_quantity\),Number\(d\.required_quantity\)\)/);
 });
+
+
+const privateCommunicationsSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112050854_create_private_communications.sql"),
+  "utf8"
+);
+const hardenedCommunicationsSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112050951_harden_private_communications_rls.sql"),
+  "utf8"
+);
+const inviteVisibilitySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112051022_allow_invitees_to_view_chat_invitation.sql"),
+  "utf8"
+);
+const productConversationSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261113203025_product_linked_private_conversations.sql"),
+  "utf8"
+);
+const chatUi = fs.readFileSync(path.join(__dirname, "..", "chat.js"), "utf8");
+
+test("Private Chat membership helper grants access only to accepted participants", () => {
+  const helper = hardenedCommunicationsSql.slice(
+    hardenedCommunicationsSql.indexOf("create or replace function private.is_conversation_member("),
+    hardenedCommunicationsSql.indexOf("create or replace function private.is_conversation_creator(")
+  );
+  assert.match(helper, /security definer set search_path=''/i);
+  assert.match(helper, /cp\.user_id=\(select auth\.uid\(\)\) and cp\.invitation_status='accepted'/i);
+  assert.match(hardenedCommunicationsSql, /grant execute on function private\.is_conversation_member\(uuid\) to authenticated/i);
+  assert.match(hardenedCommunicationsSql, /revoke all on function private\.is_conversation_member\(uuid\) from public,anon/i);
+});
+
+test("Chat invitations can be created only by the conversation creator and invitees start pending", () => {
+  assert.match(hardenedCommunicationsSql, /create policy participants_invite_by_creator[\s\S]*?invited_by=\(select auth\.uid\(\)\)[\s\S]*?invitation_status='accepted'[\s\S]*?invitation_status='pending'[\s\S]*?private\.is_conversation_creator\(conversation_id\)/i);
+  assert.match(hardenedCommunicationsSql, /create policy participants_update_own_status[\s\S]*?user_id=\(select auth\.uid\(\)\) and invitation_status in \('pending','accepted'\)[\s\S]*?invitation_status in \('accepted','declined','left'\)/i);
+});
+
+test("Private messages are readable and sendable only by accepted members of an active conversation", () => {
+  assert.match(hardenedCommunicationsSql, /create policy messages_participant_read[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
+  assert.match(hardenedCommunicationsSql, /create policy messages_participant_send[\s\S]*?sender_id=\(select auth\.uid\(\)\)[\s\S]*?c\.status='active'[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
+  assert.match(hardenedCommunicationsSql, /grant update \(body,edited_at,deleted_at\) on public\.messages to authenticated/i);
+  assert.doesNotMatch(privateCommunicationsSql, /create policy .*admin.* on public\.(conversations|conversation_participants|messages)/i);
+});
+
+test("Chat files and call signaling require accepted conversation participants", () => {
+  assert.match(hardenedCommunicationsSql, /create policy attachments_participant_read[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
+  assert.match(hardenedCommunicationsSql, /create policy attachments_sender_insert[\s\S]*?uploaded_by=\(select auth\.uid\(\)\)[\s\S]*?private\.is_conversation_member\(conversation_id\)/i);
+  assert.match(hardenedCommunicationsSql, /create policy call_signals_sender_insert[\s\S]*?sender_id=\(select auth\.uid\(\)\)[\s\S]*?recipient_id<>\(select auth\.uid\(\)\)[\s\S]*?private\.is_conversation_member\(conversation_id\)[\s\S]*?target\.invitation_status='accepted'/i);
+  assert.match(privateCommunicationsSql, /create policy nexora_chat_files_read[\s\S]*?cp\.invitation_status='accepted'/i);
+});
+
+test("Product inquiry is limited to active Buyers and approved Products, Businesses and Sellers", () => {
+  const fn = productConversationSql.slice(
+    productConversationSql.indexOf("create or replace function private.create_product_inquiry("),
+    productConversationSql.indexOf("revoke all on function private.create_product_inquiry")
+  );
+  assert.match(fn, /p\.role = 'buyer' and p\.account_status = 'active'/i);
+  assert.match(fn, /p\.listing_status = 'approved'/i);
+  assert.match(fn, /b\.approval_status = 'approved'/i);
+  assert.match(fn, /p\.role = 'seller' and p\.account_status = 'active'/i);
+  assert.match(fn, /v_product\.seller_id = v_user_id/i);
+  assert.match(fn, /invitation_status, joined_at[\s\S]*?'accepted'[\s\S]*?'pending'/i);
+});
+
+test("Product inquiry stores one optional first message only for a newly created private thread", () => {
+  const fn = productConversationSql.slice(
+    productConversationSql.indexOf("create or replace function private.create_product_inquiry("),
+    productConversationSql.indexOf("revoke all on function private.create_product_inquiry")
+  );
+  assert.match(fn, /on conflict \(created_by, context_seller_id, context_product_id\)[\s\S]*?do nothing/i);
+  assert.match(fn, /if v_conversation_id is null then[\s\S]*?select c\.id into v_conversation_id/i);
+  assert.match(fn, /else[\s\S]*?insert into public\.conversation_participants[\s\S]*?if v_message <> '' then[\s\S]*?insert into public\.messages/i);
+});
+
+test("Chat UI hides the composer and call controls until an invitation is accepted", () => {
+  const open = chatUi.slice(
+    chatUi.indexOf("async function openConversation("),
+    chatUi.indexOf("async function respondInvite(")
+  );
+  assert.match(open, /mine\?\.invitation_status==="pending"/);
+  assert.match(open, /chatComposer.*classList\.add\("hidden"\)/);
+  assert.match(open, /chatCallPanel.*classList\.add\("hidden"\)/);
+  assert.match(open, /mine\?\.invitation_status!=="accepted"/);
+  assert.match(open, /await loadMessages\(id\)/);
+});
