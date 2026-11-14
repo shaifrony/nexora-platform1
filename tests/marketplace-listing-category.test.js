@@ -812,3 +812,55 @@ test("Product and Service review UI requests eligibility and submits only throug
   assert.match(ui, /submit_verified_listing_review/);
   assert.match(ui, /only NEXORA|completed|Verified Review/i);
 });
+
+
+const publicIdentitySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112050241_secure_public_profile_identity_projection.sql"),
+  "utf8"
+);
+const publicDemandProjectionSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114160000_demand_inbox_quotations_subcategories.sql"),
+  "utf8"
+);
+const marketplaceCorePrivacySql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261112050345_create_marketplace_core_schema.sql"),
+  "utf8"
+);
+
+test("Public profile projection exposes only identity ID and full name to authenticated users", () => {
+  const view = publicIdentitySql.slice(
+    publicIdentitySql.indexOf("create or replace view public.public_profiles"),
+    publicIdentitySql.indexOf("grant select on public.public_profiles")
+  );
+  assert.match(view, /select id, full_name from public\.public_identities/i);
+  assert.match(publicIdentitySql, /grant select on public\.public_profiles to authenticated/i);
+  assert.match(publicIdentitySql, /revoke all on public\.public_profiles from public, anon/i);
+  assert.doesNotMatch(view, /email|phone|address|role|account_status/i);
+});
+
+test("Public Business projection excludes private Business Profile fields and publishes approved records only", () => {
+  const table = marketplaceCorePrivacySql.slice(
+    marketplaceCorePrivacySql.indexOf("create table if not exists public.public_businesses"),
+    marketplaceCorePrivacySql.indexOf("create table if not exists public.products")
+  );
+  const sync = marketplaceCorePrivacySql.slice(
+    marketplaceCorePrivacySql.indexOf("create or replace function public.sync_public_business()"),
+    marketplaceCorePrivacySql.indexOf("revoke all on function public.sync_public_business()")
+  );
+  assert.match(table, /business_id uuid[\s\S]*?seller_id uuid[\s\S]*?display_name text[\s\S]*?country text[\s\S]*?city text/i);
+  assert.doesNotMatch(table, /phone|email|address|tax|bank|account_number/i);
+  assert.match(sync, /if new\.approval_status <> 'approved' then[\s\S]*?delete from public\.public_businesses/i);
+  assert.match(sync, /insert into public\.public_businesses\(business_id,seller_id,display_name,country,city,updated_at\)/i);
+});
+
+test("Public Buyer Demand view is security-invoker and omits Buyer identity and contact columns", () => {
+  const view = publicDemandProjectionSql.slice(
+    publicDemandProjectionSql.indexOf("create or replace view public.public_buyer_demands"),
+    publicDemandProjectionSql.indexOf("grant select on public.public_buyer_demands")
+  );
+  assert.match(view, /with \(security_invoker=true\)/i);
+  assert.match(view, /select id,demand_code,product_name,category,subcategory,description,specifications_quality,required_quantity,budget,currency,destination_country,destination_city,required_date,demand_status,created_at/i);
+  assert.doesNotMatch(view, /buyer_id|full_name|email|phone|contact_number|address/i);
+  assert.match(publicDemandProjectionSql, /grant select \([\s\S]*?required_date[\s\S]*?\) on public\.buyer_demands to anon/i);
+  assert.match(publicDemandProjectionSql, /revoke select on public\.buyer_demands from authenticated/i);
+});
