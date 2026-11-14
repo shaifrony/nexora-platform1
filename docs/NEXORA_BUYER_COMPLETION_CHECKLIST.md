@@ -441,3 +441,12 @@ Implementation rules:
 - Browser/mobile E2E remains unverified because this sandbox has no browser binary or Playwright/Cypress runtime. Static checks do not count as browser E2E.
 - The previous statement that the public projection was supplied only by recovery patch #30 was also incorrect; it is in the active migration chain as detailed above. Recovery patch #30 is a separate local-only Buyer Demand offer SELECT-policy correction and remains non-deployable.
 - Verified review scope remains unresolved for Buyer Demand orders without a guaranteed product association. A distinct Business-level review subject remains the conservative design direction; no review schema changes were made.
+
+## 2026-11-14 — Business review security gate
+- [ ] Add Business as a verified-review subject using `business_profiles.id` for completed Buyer Demand orders; never fabricate a Product ID.
+- [ ] Harden `listing_reviews` API column grants before further review rollout. Current table-level SELECT grants plus published-row RLS expose private columns such as `buyer_id`, `reviewed_by`, and `moderation_note` to direct API selection.
+- [ ] Generate eligibility server-side only after a Buyer Demand order actually transitions to completed; backfill eligible completed orders idempotently.
+- [ ] Extend existing review eligibility/submit RPCs with Buyer/Business ownership, self-review, active Buyer, atomic consume, and one-review-per-Buyer/Business enforcement.
+- [ ] Add Business detail review UI using public Business ID and neutral reviewer label; do not reveal Buyer identity or order data.
+- [ ] Pass 20 isolated replay/API cases in `docs/NEXORA_BUSINESS_VERIFIED_REVIEW_DESIGN.md`, including concurrent completion/submission and explicit denied private-column reads.
+- Business review design is documented only; no schema/frontend change or hosted DB operation has occurred.
