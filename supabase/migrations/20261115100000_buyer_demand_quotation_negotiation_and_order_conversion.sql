@@ -65,11 +65,17 @@ revoke all on public.seller_offer_negotiations from public,anon,authenticated;
 grant select on public.seller_offer_negotiations to authenticated;
 create policy seller_offer_negotiations_participant_read
 on public.seller_offer_negotiations for select to authenticated
-using (exists(
-  select 1 from public.seller_offers o
-  join public.buyer_demands d on d.id=o.demand_id
-  where o.id=offer_id and (o.seller_id=(select auth.uid()) or d.buyer_id=(select auth.uid()))
-));
+using (
+  exists(
+    select 1 from public.seller_offers o
+    where o.id=offer_id and o.seller_id=(select auth.uid())
+  )
+  or exists(
+    select 1 from public.seller_offers o
+    join public.buyer_demands d on d.id=o.demand_id
+    where o.id=offer_id and d.buyer_id=(select auth.uid())
+  )
+);
 
 -- Initialise the current terms from the Seller's original quotation, including total-price offers.
 update public.seller_offers o
