@@ -37,7 +37,7 @@ function input(overrides = {}) {
   return {
     order_id: "order-1",
     schedule: schedule(),
-    sale_type: "wholesale",
+    market_category: "wholesale",
     amount_bases_minor: { gross_sale: 100000 },
     transport_charge_minor: 10001,
     buyer_agent_used: true,
@@ -49,7 +49,26 @@ test("accepts a structurally valid financial schedule", () => {
   assert.equal(finance.validateSchedule(schedule()), true);
 });
 test("rejects unknown sale types", () => {
-  assert.throws(() => finance.calculateOrderFees(input({ sale_type: "mixed" })), /sale_type/);
+  assert.throws(() => finance.calculateOrderFees(input({ market_category: "mixed" })), /market_category/);
+});
+
+test("normalizes the established market_category field", () => {
+  assert.equal(finance.normalizeMarketCategory("wholesale"), "wholesale");
+  assert.equal(finance.normalizeMarketCategory("retail"), "retail");
+});
+
+test("rejects legacy_unclassified as a fee calculation category", () => {
+  assert.throws(() => finance.normalizeMarketCategory("legacy_unclassified"), /market_category/);
+});
+
+test("rejects conflicting market_category and legacy sale_type inputs", () => {
+  assert.throws(() => finance.calculateOrderFees(input({ market_category: "retail" })), /must match/);
+});
+
+test("accepts legacy sale_type input only when market_category is absent", () => {
+  const { market_category, ...legacyInput } = input();
+  legacyInput.sale_type = "wholesale";
+  assert.equal(finance.calculateOrderFees(legacyInput).market_category, "wholesale");
 });
 test("calculates wholesale commission and Buyer Agent fee only when used", () => {
   const result = finance.calculateOrderFees(input());
@@ -105,6 +124,7 @@ test("creates an immutable order fee snapshot tied to schedule version", () => {
   const snapshot = finance.createOrderFeeSnapshot(input());
   assert.equal(snapshot.order_id, "order-1");
   assert.equal(snapshot.schedule_version, 1);
+  assert.equal(snapshot.market_category, "wholesale");
   assert.equal(snapshot.sale_type, "wholesale");
   assert.equal(Object.isFrozen(snapshot), true);
 });
