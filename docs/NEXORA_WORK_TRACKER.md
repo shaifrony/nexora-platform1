@@ -1097,3 +1097,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Inspected #12: `private.is_nexora_active_admin_staff()` checks AAL2 + active Admin profile + active staff row, but is not a full Director/permission resolver. Existing policies OR this helper with missing `public.is_nexora_super_admin()`; multiple workflows depend on missing `private.has_nexora_permission(text)`.
 - Added Foundation spec §13 and compatibility matrix §13. No code, SQL, migration, trigger, database or deployment changed; no runtime tests were run.
 - Next: establish an authoritative Auth/RLS infrastructure baseline (historical recovery or explicitly new design), then create a local-only Foundation candidate only after complete dependency reconciliation and disposable replay.
+
+## 2026-11-14 — Auth/RLS Foundation design v1
+
+- Added Foundation spec §14 and compatibility matrix §14 with a non-deployable design for the missing Auth signup trigger, RLS auto-enable event trigger, canonical Admin resolver, explicit Data API grants, replay ordering and verification gates.
+- Auth trigger design: exactly one AFTER INSERT trigger on `auth.users` invokes #35 `handle_new_user()`; no client EXECUTE; profile + Porter pending review atomic; Admin/unknown roles rejected; failures roll back signup.
+- RLS event-trigger design: implement real `public.rls_auto_enable()` expected by #1; owner-controlled DDL event trigger only for table creation tags; enable RLS on new ordinary/partitioned `public` tables, but do not invent policies/grants or FORCE RLS.
+- Admin resolver design: canonical private AAL2 + active profile/staff + protected Director + active catalog + explicit department grant; deny wins; compatibility wrappers cannot bypass.
+- New platform constraint recorded: Supabase Data API auto-exposure for new public tables was disabled/enforced by 2026-10-30; explicitly audit GRANTs + RLS on a fresh project.
+- Important replay finding: a new timestamped Foundation migration after latest feature migration cannot repair earlier timestamp-ordered dependencies. Do not fabricate history. Recovery-only bootstrap may be considered only in a disposable local DB before full feature replay.
+- Design/documentation only. No SQL, code, migration, trigger, DB, NEXORA-TEST, Production, main, DNS or deployment changed; no runtime tests performed.
+- Next: search any remaining authoritative baseline source; if unavailable, create a clearly labeled recovery-only bootstrap candidate after completing exact dependency inventory and local environment availability check.
