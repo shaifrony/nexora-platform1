@@ -52,6 +52,16 @@ insert into public.delivery_jobs(id,job_reference,commerce_order_id,job_status,a
  ('74000000-0000-4000-8000-000000000001','NXD-OTP-OWN','72000000-0000-4000-8000-000000000001','out_for_delivery','73000000-0000-4000-8000-000000000001'),
  ('74000000-0000-4000-8000-000000000002','NXD-OTP-OTHER','72000000-0000-4000-8000-000000000002','out_for_delivery','73000000-0000-4000-8000-000000000001');
 
+-- Direct table writes cannot mark a shipment delivered without a verified challenge.
+do $block$ begin
+ begin
+  update public.delivery_jobs set job_status='delivered'
+   where id='74000000-0000-4000-8000-000000000001';
+  raise exception 'FAIL: direct delivery_jobs update bypassed receipt proof';
+ exception when insufficient_privilege then null;
+ end;
+end $block$;
+
 -- Only the owning active Buyer can request a code, and raw code is not stored.
 set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
