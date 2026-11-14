@@ -830,3 +830,12 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Vercel automatically built the earlier source commits as READY Preview deployments and the stable branch alias was attached to the Development commit. A raw unauthenticated HTTP probe to that alias was redirected by Vercel Deployment Protection; no protection setting was weakened. Final fail-closed allowlist commit: `7bff5370c1d6c2da6f9efa1190996581931078f5`; its Preview build/alias must be rechecked before any authenticated use.
 - **Not yet verified:** authenticated browser login, REST/PostgREST, Storage, Realtime, and actual Android device flows against the hosted Test Project. No user should sign in or upload anything until the latest Preview is confirmed READY on the branch alias and isolated DB schema is safely prepared.
 - No Live data was copied; no hosted Test migrations applied yet. Calling remains paused.
+
+
+## 2026-11-14 — Preview deployment quota blocks final rollout
+
+- Attempted to create a Preview deployment for the latest `nexora-development` source after the fail-closed allowlist update. Vercel returned **402 payment_required**: Free daily deployment API quota exceeded (>100); retry available after **24 hours**.
+- No billing/plan setting was changed, no paid service enabled, and no further deployment retries will be attempted during the quota window.
+- The earlier Preview deployment `dpl_8hDqLCsi3tiAxXeTjX2QdkqwJpEs` (commit `aaefd128542d6d75ac01a9292c9b366b016104c1`) was READY and had the stable Development alias, but it predates the final Admin-file and fail-closed allowlist commits. Do not treat the alias as fully validated for authenticated use until a fresh deployment of the current branch head succeeds.
+- Current source-level configuration and sandbox syntax/routing tests are complete; physical Android and authenticated Test Project E2E remain blocked by deployment quota and the need to verify the final Preview.
+- Wait 24 hours or ask the user to resolve the Vercel plan/quota requirement. Do not automatically upgrade the plan or spend money.
