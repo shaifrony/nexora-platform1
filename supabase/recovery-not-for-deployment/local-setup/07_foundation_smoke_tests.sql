@@ -1,5 +1,5 @@
 -- NEXORA LOCAL FOUNDATION SMOKE TESTS
--- Run only after 06_local_foundation_baseline_fixture.sql.
+-- Run only after 12_rls_auto_enable_recovery_candidate.sql and 13_foundation_bootstrap_recovery_candidate.sql.
 -- Tests local PostgreSQL trigger/constraint behavior only; not real Supabase Auth/RLS/JWT/MFA.
 \set ON_ERROR_STOP on
 \pset pager off
@@ -10,8 +10,9 @@ BEGIN
     RAISE EXCEPTION 'SAFETY STOP: expected nexora_test';
   END IF;
   IF to_regclass('public.profiles') IS NULL
-     OR to_regprocedure('public.handle_new_user()') IS NULL THEN
-    RAISE EXCEPTION 'Run 06_local_foundation_baseline_fixture.sql first';
+     OR to_regprocedure('public.handle_new_user()') IS NULL
+     OR to_regclass('public.porter_account_reviews') IS NULL THEN
+    RAISE EXCEPTION 'Run recovery candidates #12 and #13 first';
   END IF;
 END
 $guard$;
@@ -23,7 +24,7 @@ INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
 VALUES(
  '10000000-0000-4000-8000-000000000001',
  'local-buyer@nexora.invalid',
- '{"role":"buyer","full_name":"Local Buyer","buyer_category":"wholesale"}'::jsonb,
+ '{"role":"buyer","full_name":"Local Buyer"}'::jsonb,
  '{}'::jsonb
 );
 
@@ -32,7 +33,7 @@ INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
 VALUES(
  '10000000-0000-4000-8000-000000000002',
  'local-seller@nexora.invalid',
- '{"role":"seller","full_name":"Local Seller","seller_categories":["wholesale"]}'::jsonb,
+ '{"role":"seller","full_name":"Local Seller"}'::jsonb,
  '{}'::jsonb
 );
 
@@ -73,15 +74,12 @@ BEGIN
     SELECT 1 FROM public.profiles
     WHERE id='10000000-0000-4000-8000-000000000001'
       AND role='buyer' AND account_status='active'
-      AND buyer_category IS NULL AND seller_categories='{}'::text[]
   ) THEN RAISE EXCEPTION 'Buyer signup assertion failed'; END IF;
 
   IF NOT EXISTS (
     SELECT 1 FROM public.profiles
     WHERE id='10000000-0000-4000-8000-000000000002'
       AND role='seller' AND account_status='active'
-      AND buyer_category IS NULL
-      AND seller_categories='{}'::text[]
   ) THEN RAISE EXCEPTION 'Seller signup assertion failed'; END IF;
 
   SELECT account_status INTO v_status
@@ -119,7 +117,7 @@ BEGIN
   END;
   IF NOT v_rejected THEN RAISE EXCEPTION 'Public Admin signup was not rejected'; END IF;
 
-  -- Retail metadata is ignored; the Buyer profile remains universal.
+  -- Legacy Retail metadata is ignored; it does not create account-category fields.
   INSERT INTO auth.users(id,email,raw_user_meta_data,raw_app_meta_data)
   VALUES(
     '10000000-0000-4000-8000-000000000006',
@@ -136,21 +134,17 @@ BEGIN
     SELECT 1 FROM public.profiles
     WHERE id='10000000-0000-4000-8000-000000000006'
       AND role='buyer' AND account_status='active'
-      AND buyer_category IS NULL AND seller_categories='{}'::text[]
   ) THEN RAISE EXCEPTION 'Legacy Retail metadata was not safely ignored'; END IF;
 END
 $negative_tests$;
 
--- A user cannot self-promote their profile role.
+-- A user cannot self-promote their profile role: test with the authenticated DB role, not postgres.
+SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+SET LOCAL ROLE authenticated;
 DO $protected_field_test$
 DECLARE
   v_rejected boolean:=false;
 BEGIN
-  PERFORM set_config(
-    'request.jwt.claim.sub',
-    '10000000-0000-4000-8000-000000000001',
-    true
-  );
   BEGIN
     UPDATE public.profiles
     SET role='admin'
@@ -161,10 +155,11 @@ BEGIN
   IF NOT v_rejected THEN RAISE EXCEPTION 'Self role-change was not rejected'; END IF;
 END
 $protected_field_test$;
+RESET ROLE;
 
 SELECT
   'PASS' AS result,
-  'Buyer/Seller/Porter signup, universal category metadata handling, OAuth Buyer-only, Admin rejection, Porter pending gate, and role immutability' AS checks;
+  'Buyer/Seller/Porter signup, legacy account-category metadata ignored, OAuth Buyer-only, Admin rejection, Porter pending gate, and authenticated role immutability' AS checks;
 
 ROLLBACK;
 
