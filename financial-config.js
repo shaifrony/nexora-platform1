@@ -43,12 +43,13 @@
     assert(isPlainObject(fees.marketplace_commission), "marketplace_commission configuration is required.");
     assertBps(fees.marketplace_commission.wholesale_bps, "Wholesale commission");
     assertBps(fees.marketplace_commission.retail_bps, "Retail commission");
-    assert(fees.marketplace_commission.basis === "goods_subtotal_after_discount", "Unsupported marketplace commission basis.");
+    assert(typeof fees.marketplace_commission.wholesale_basis === "string" && fees.marketplace_commission.wholesale_basis.trim(), "Wholesale commission basis is required.");
+    assert(typeof fees.marketplace_commission.retail_basis === "string" && fees.marketplace_commission.retail_basis.trim(), "Retail commission basis is required.");
 
     assert(isPlainObject(fees.buyer_agent_fee), "buyer_agent_fee configuration is required.");
     assert(fees.buyer_agent_fee.required_when_agent_used === true, "Buyer Agent fee must be mandatory when Buyer Agent service is used.");
     assertBps(fees.buyer_agent_fee.rate_bps, "Buyer Agent fee");
-    assert(fees.buyer_agent_fee.basis === "goods_subtotal_after_discount", "Unsupported Buyer Agent fee basis.");
+    assert(typeof fees.buyer_agent_fee.basis === "string" && fees.buyer_agent_fee.basis.trim(), "Buyer Agent fee basis is required.");
 
     assert(isPlainObject(fees.transport_split), "transport_split configuration is required.");
     const split = fees.transport_split;
@@ -93,17 +94,31 @@
     validateSchedule(schedule);
     assert(schedule.status === "approved", "Only an approved financial schedule can price an order.");
     assert(SALE_TYPES.has(input.sale_type), "sale_type must be wholesale or retail.");
-    assertMinorUnits(input.goods_subtotal_after_discount_minor, "Goods subtotal after discount");
+    assert(isPlainObject(input.amount_bases_minor), "Configurable fee amount bases are required.");
+    Object.entries(input.amount_bases_minor).forEach(([key, value]) => {
+      assert(key.trim(), "Fee amount-base keys cannot be empty.");
+      assertMinorUnits(value, "Fee amount base " + key);
+    });
     assertMinorUnits(input.transport_charge_minor, "Transport charge");
     assert(typeof input.buyer_agent_used === "boolean", "buyer_agent_used must be explicitly true or false.");
 
+    const commissionConfig = schedule.fees.marketplace_commission;
     const commissionRate = input.sale_type === "wholesale"
-      ? schedule.fees.marketplace_commission.wholesale_bps
-      : schedule.fees.marketplace_commission.retail_bps;
-    const base = input.goods_subtotal_after_discount_minor;
-    const marketplaceCommission = calculateBasisPoints(base, commissionRate);
+      ? commissionConfig.wholesale_bps
+      : commissionConfig.retail_bps;
+    const commissionBasis = input.sale_type === "wholesale"
+      ? commissionConfig.wholesale_basis
+      : commissionConfig.retail_basis;
+    assert(Object.prototype.hasOwnProperty.call(input.amount_bases_minor, commissionBasis),
+      "Missing amount base for marketplace commission: " + commissionBasis);
+    const commissionBase = input.amount_bases_minor[commissionBasis];
+    const marketplaceCommission = calculateBasisPoints(commissionBase, commissionRate);
+    const buyerFeeBasis = schedule.fees.buyer_agent_fee.basis;
     const buyerAgentFee = input.buyer_agent_used
-      ? calculateBasisPoints(base, schedule.fees.buyer_agent_fee.rate_bps)
+      ? calculateBasisPoints(
+          (assert(Object.prototype.hasOwnProperty.call(input.amount_bases_minor, buyerFeeBasis),
+            "Missing amount base for Buyer Agent fee: " + buyerFeeBasis), input.amount_bases_minor[buyerFeeBasis]),
+          schedule.fees.buyer_agent_fee.rate_bps)
       : 0;
     const transport = input.transport_charge_minor;
     const split = schedule.fees.transport_split;
@@ -115,7 +130,10 @@
 
     return Object.freeze({
       currency: schedule.currency,
-      goods_subtotal_after_discount_minor: base,
+      marketplace_commission_basis: commissionBasis,
+      marketplace_commission_base_minor: commissionBase,
+      buyer_agent_fee_basis: input.buyer_agent_used ? buyerFeeBasis : null,
+      buyer_agent_fee_minor: buyerAgentFee,
       marketplace_commission_minor: marketplaceCommission,
       buyer_agent_fee_minor: buyerAgentFee,
       transport_charge_minor: transport,
