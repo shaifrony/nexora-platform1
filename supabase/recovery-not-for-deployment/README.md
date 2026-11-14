@@ -87,9 +87,17 @@ No PostgreSQL parser or isolated replay test was available, so no draft is certi
 - The new specification is design only: no SQL has been generated or executed against NEXORA-TEST. Do not replay feature migrations until the compatibility matrix and runtime gates are complete.
 
 
-## 38-Migration and Frontend Compatibility Matrix
+## 39-Migration and Frontend Compatibility Matrix
 
 - Current static audit: [`local-setup/10_migration_frontend_compatibility_matrix.md`](local-setup/10_migration_frontend_compatibility_matrix.md).
-- It maps all 38 active migration files, required Foundation/platform/earlier-migration dependencies, Admin permission functions, Auth trigger prerequisites, and current frontend RPC/table call mismatches.
+- It maps all 39 active migration files, required Foundation/platform/earlier-migration dependencies, Admin permission functions, Auth trigger prerequisites, and current frontend RPC/table call mismatches.
 - Audit conclusion is BLOCKED for a clean empty Test DB: the feature migrations assume a pre-existing Foundation; the legacy Porter frontend still references table/RPC names absent from the active migration set.
 - Static source audit only. No SQL was generated/executed and no hosted database was changed.
+
+
+## 2026-11-15 inventory correction
+
+- The current active migration inventory is 39 files / 39 unique versions. The prior 38-file matrix omitted `20261114175118_add_dual_listing_market_category.sql`; the matrix v2 now includes it at timestamp-order position #32 and includes migration #39 `20261115120000_multilingual_chat_foundation.sql`.
+- Earlier 38/38 replay statements are not proof of the current 39-file chain. The current isolated runtime gate remains open; do not apply recovery-only SQL to hosted Supabase.
+- NEXORA-TEST was rechecked read-only: `ACTIVE_HEALTHY`, no application migration history and no public application tables. No schema was applied.
+- The current baseline spec clarifies that Wholesale/Retail is per Listing, not a Buyer/Seller account category or visibility restriction.
