@@ -1488,3 +1488,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Scheduled GitHub Actions are not a suitable branch-only scheduler because scheduled workflows run against the default branch; do not modify `main` to enable them.
 - **Status: Architecture staged; runtime blocked pending Vercel Sandbox quota resolution and isolated implementation environment.** No deployment, billing/plan change, repository secret change, `main` write, Production/Live/DNS change, or hosted Supabase write occurred.
 - Next safe step after quota resolution: initialize the isolated eve agent project, verify package/API versions in its sandbox, implement read-only GitHub access, then add a narrowly allowlisted writer that can commit only to `nexora-development`.
+
+
+## 2026-11-15 — Development branch CI
+- Added `.github/workflows/development-ci.yml` on `nexora-development` only.
+- CI triggers on pushes to `nexora-development` and pull requests targeting that branch; it does not add a scheduled workflow or require a change to `main`.
+- Uses read-only `contents: read` permissions, Node.js 20, `node --check` for repository JavaScript files, and the existing dependency-free `node --test tests/*.test.js` suite.
+- Workflow is committed but has not yet been executed by GitHub Actions; first successful run is still required before marking CI verified.
+- This provides automatic verification on development changes, not a continuously running AI coding agent. Agent runtime remains blocked by Vercel Hobby Sandbox snapshot-storage quota.
