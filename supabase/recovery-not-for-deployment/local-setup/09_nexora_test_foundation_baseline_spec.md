@@ -686,3 +686,18 @@ A recovery-only post-#34 compatibility patch (or an explicitly reviewed source c
 ### 19.4 Environment gate
 
 The current session has no local Supabase CLI, Docker, `psql`, or checked-out working tree. The hosted NEXORA-TEST project remains intentionally empty and is not a substitute for disposable local replay. Therefore no SQL candidate, active migration, hosted query mutation, migration replay, or runtime verification is claimed. Generate the actual recovery-only SQL only in a suitable disposable local Supabase environment and validate it there before considering any hosted action.
+
+## 20. Disposable local Supabase replay preflight — observed result (2026-11-14)
+
+**Status: runtime acquired and isolated replay attempted; blocked at the first active migration. No Foundation SQL was authored or applied.**
+
+- The previously named `nexora-disposable-db-preflight` Sandbox was non-persistent and had no saved snapshot; Vercel returned `snapshot_not_found` when resume was attempted.
+- Reused the already-existing persistent `nexora-backend-routing-check` Sandbox in the same Vercel project. Its snapshot was resumed successfully; no new Sandbox was created.
+- Cloned the repository and explicitly checked out `nexora-development`. The repository worktree remained clean; the active migration directory still contained exactly 38 SQL files.
+- Created a separate disposable workspace at `/tmp/nexora-replay`, copied the 38 active migration files there, initialized an isolated Supabase project config, and used Supabase CLI v3.1.0 with the experimental native local runtime. No cloud project ref or hosted DB credentials were configured for this replay.
+- Local stack startup stopped on the first active migration, `20261112045441_revoke_public_rls_auto_enable_execute.sql`, with PostgreSQL error `42883: function public.rls_auto_enable() does not exist`. This confirms the documented missing Foundation prerequisite; it does not validate later migrations.
+- The local stack was destroyed and the stack list verified empty. A read-only query could not inspect the failed stack afterward because it was no longer running; therefore no applied-migration count is claimed.
+- The exact function body remains unrecovered. Section 14.2 is the design contract for a newly authored recovery-only implementation: owner-controlled event trigger, public ordinary/partitioned tables only, extension/system objects excluded, RLS enabled (not FORCE), no API execution grant, and no implicit policy/grant creation. Do not create a stub or label a candidate as recovered historical SQL.
+- No active migration, repository source file, hosted database, NEXORA-TEST, Live/Production, `main`, DNS or deployment was changed. No security/E2E pass is claimed.
+
+**Next safe step:** prepare a clearly marked recovery-only Foundation bootstrap candidate outside `supabase/migrations/`, implementing the approved §14 contracts and the #34 repair contract in §19; validate it from a fresh disposable local stack before attempting the complete 38-file replay. Hosted NEXORA-TEST remains gated on a separate review and explicit authorization.
