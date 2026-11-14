@@ -368,9 +368,11 @@ $expired_offer$;
 
 -- Inactive-account enforcement and the complete Buyer Demand order lifecycle.
 RESET ROLE;
+INSERT INTO public.buyer_demands(id,buyer_id,product_name,category,subcategory,description,required_quantity,currency,destination_country,destination_city,required_date)
+VALUES('25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000001','B03 Lifecycle Demand','Electronics','Mobile Phones','Lifecycle and state-transition test','100 units','BDT','Bangladesh','Dhaka',current_date+7);
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
 INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
-VALUES('25400000-0000-4000-8000-000000000005','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000013',12500,'BDT','40','Lifecycle quote');
+VALUES('25400000-0000-4000-8000-000000000005','25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000013',12500,'BDT','40','Lifecycle quote');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
 DO $lifecycle_buyer_accepts$
@@ -459,7 +461,7 @@ $lifecycle_buyer_completes$;
 RESET ROLE;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000012',true);
 INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
-VALUES('25400000-0000-4000-8000-000000000006','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000012',12600,'BDT','25','Cancellation quote');
+VALUES('25400000-0000-4000-8000-000000000006','25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000012',12600,'BDT','25','Cancellation quote');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
 DO $buyer_cancels_pending$
@@ -477,7 +479,7 @@ $buyer_cancels_pending$;
 RESET ROLE;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000013',true);
 INSERT INTO public.seller_offers(id,demand_id,seller_id,offer_price,currency,available_quantity,message)
-VALUES('25400000-0000-4000-8000-000000000007','25300000-0000-4000-8000-000000000001','25000000-0000-4000-8000-000000000013',12700,'BDT','30','Rejection quote');
+VALUES('25400000-0000-4000-8000-000000000007','25300000-0000-4000-8000-000000000003','25000000-0000-4000-8000-000000000013',12700,'BDT','30','Rejection quote');
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','25000000-0000-4000-8000-000000000001',true);
 DO $buyer_accepts_rejection_quote$
