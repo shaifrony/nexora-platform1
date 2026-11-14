@@ -981,3 +981,19 @@ test("Demand negotiation and order creation revalidate the quoted Seller's activ
   assert.match(fn, /p_action in \('accept','counter'\)[\s\S]*?p\.role='seller' and p\.account_status='active'[\s\S]*?public\.public_businesses b where b\.seller_id=v_offer\.seller_id/i);
   assert.match(fn, /quoted Seller must remain active with an approved Business Profile/i);
 });
+
+
+test("Buyer and Seller Demand dashboards parse numeric quantities followed by units", () => {
+  const buyer = marketplaceUi.slice(
+    marketplaceUi.indexOf("function renderBuyerDashboard(offers)"),
+    marketplaceUi.indexOf("async function respondToDemandQuotation(")
+  );
+  const seller = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerDemandInbox()"),
+    marketplaceUi.indexOf("const serviceCategoryLabels")
+  );
+  assert.match(buyer, /Number\.parseFloat\(String\(d\.required_quantity\|\|""\)\.replace\(\/,/g,""\)\)/);
+  assert.match(buyer, /Number\.isFinite\(demandQuantity\)&&demandQuantity>0/);
+  assert.match(seller, /Number\.parseFloat\(String\(d\.required_quantity\|\|""\)\.replace\(\/,/g,""\)\)/);
+  assert.match(seller, /maxNegotiableQuantity>0/);
+});
