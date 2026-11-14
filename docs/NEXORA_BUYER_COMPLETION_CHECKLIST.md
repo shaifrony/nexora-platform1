@@ -381,3 +381,13 @@ Implementation rules:
 - Static verification: `marketplace.js` compiles with `new Function`; latest-50 label/limit, seven filter states, real status filtering, empty state, timeline fields, Seller update and no raw delivery table query verified. No browser, PostgREST, RLS, Auth or database runtime tests performed.
 - Buyer source commit: cce44c4359ad6429192198dcd429aac8c7f2a793. Tracking design commit: 825e1390b180de253bec5ab949a54e75add22672.
 - No SQL/migration, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed. Foundation/migration-history blockers remain.
+
+
+## 2026-11-14 — Buyer Order item + Seller identity snapshot audit
+
+- Reviewed the staged Commerce Order table and final direct order creation function. The current order row has a polymorphic listing reference but no item-name or Seller public-display-name snapshot columns; the Buyer order query correctly avoids guessing a listing join or reading private Seller profile fields.
+- Confirmed the direct Product/Service order creation path can capture server-validated listing identity, but the final Buyer Demand quotation-conversion function and exact public Business projection schema still require source-level verification.
+- Added `docs/NEXORA_BUYER_ORDER_IDENTITY_SNAPSHOT_DESIGN.md` with an additive snapshot contract for item name, approved public Seller display name and capture timestamp; server-only writes; immutable historical values; explicit NULL fallback for legacy orders; and negative authorization/privacy tests.
+- No frontend query or UI was changed because the snapshot columns do not exist yet. No current listing/business name is backfilled into historical orders as if it were the original value.
+- Static source review only; no runtime/DB tests. Migration history/Foundation blockers remain. No SQL, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment changed.
+- Design document commit: `b64b02b3f50e0e0cf0d68635acf66a526986cafe`.
