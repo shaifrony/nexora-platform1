@@ -13,9 +13,9 @@ cd "$WORK_DIR"
 echo "Downloading immutable local-only SQL files ..."
 curl -fL --retry 3 "$BASE/cf3dc4991cad964d664ecb47f031c72e19914114/supabase/recovery-not-for-deployment/local-setup/25_local_buyer_demand_fixture.sql" -o 25_local_buyer_demand_fixture.sql
 curl -fL --retry 3 "$BASE/5e0c4cc14c0e078097d3a8ae9b4df1bc29183e9a/supabase/recovery-not-for-deployment/local-setup/24_local_buyer_demand_privacy_audit.sql" -o 24_local_buyer_demand_privacy_audit.sql
-curl -fL --retry 3 "$BASE/730edc4607fda3e1b907aa2b4a88db23901f3d80/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
-curl -fL --retry 3 "$BASE/442827e1927ba8fa47cea8eac563e6c66f1975df/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql
-curl -fL --retry 3 "$BASE/d47c7d76baf3cdf7eb9784a8755b8c4bb12decb4/supabase/recovery-not-for-deployment/local-setup/30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
+curl -fL --retry 3 "$BASE/23c017ef0a51c25d51e72c5f11d47ed4c56d9ae1/supabase/recovery-not-for-deployment/local-setup/26_local_buyer_demand_behavior_tests.sql" -o 26_local_buyer_demand_behavior_tests.sql
+curl -fL --retry 3 "$BASE/442827e1927ba8fa47cea8eac563e6c66f1975df/supabase/recovery-not-for-deployment/local-setup/28_local_buyer_demand_policy_dependency_patch.sql" -o 28_local_buyer_demand_policy_dependency_patch.sql
+curl -fL --retry 3 "$BASE/d47c7d76baf3cdf7eb9784a8755b8c4bb12decb4/supabase/recovery-not-for-deployment/local-setup/30_buyer_demand_offer_select_policy_recovery_patch.sql" -o 30_buyer_demand_offer_select_policy_recovery_patch.sql
 
 echo
 echo "Preflight: verifying local target and prerequisites ..."
@@ -27,7 +27,7 @@ fi
 
 FOUNDATION_OK="$(psql -X -d "$DB" -v ON_ERROR_STOP=1 -Atqc "SELECT to_regclass('public.profiles') IS NOT NULL AND to_regprocedure('auth.uid()') IS NOT NULL AND to_regprocedure('public.is_nexora_admin()') IS NOT NULL;")"
 if [ "$FOUNDATION_OK" != "t" ]; then
-  echo "STOP: local foundation fixture 06 is missing. No SQL was executed."
+  echo "STOP: local Foundation fixture 06 is missing. No SQL was executed."
   exit 1
 fi
 
@@ -46,29 +46,27 @@ fi
 OPEN_SESSIONS="$(psql -X -d "$DB" -v ON_ERROR_STOP=1 -Atqc "SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid();")"
 if [ "$OPEN_SESSIONS" != "0" ]; then
   echo "STOP: $OPEN_SESSIONS other PostgreSQL session(s) are connected to $DB."
-  echo "Close other psql sessions with \q, then rerun. No SQL was executed."
+  echo "Close other psql sessions with \\q, then rerun. No SQL was executed."
   exit 1
 fi
 
 echo "Preflight PASS."
-FIXTURE_CREATED=0
 if [ "$DEMAND_OBJECTS" = "0" ]; then
   echo "Creating only the local Buyer Demand fixture ..."
   psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 25_local_buyer_demand_fixture.sql
-  FIXTURE_CREATED=1
 else
-  echo "Existing complete local Demand schema detected; skipping fixture creation."
+  echo "Full Buyer Demand schema already exists; skipping fixture creation."
 fi
 
-echo
-if [ "$FIXTURE_CREATED" = "1" ]; then
-  echo "Applying fixture-only narrow policy dependency repair (seller_id remains private) ..."
+FULL_SCHEMA="$(psql -X -d "$DB" -v ON_ERROR_STOP=1 -Atqc "SELECT to_regclass('public.commerce_orders') IS NOT NULL AND to_regprocedure('private.respond_to_demand_offer(uuid,text,numeric,numeric,text)') IS NOT NULL;")"
+if [ "$FULL_SCHEMA" != "t" ]; then
+  echo "Applying fixture-only policy dependency repair ..."
   psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 28_local_buyer_demand_policy_dependency_patch.sql
 else
   echo "Skipping fixture-only policy patch because the full migration schema is already present."
 fi
 
-echo "Applying Buyer quotation privacy patch (Buyer ID remains private) ..."
+echo "Applying Buyer quotation and negotiation-history privacy patch (recovery-only) ..."
 psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 30_buyer_demand_offer_select_policy_recovery_patch.sql
 
 echo
@@ -76,7 +74,7 @@ echo "Running read-only privacy / RLS / routing catalog audit ..."
 psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 24_local_buyer_demand_privacy_audit.sql
 
 echo
-echo "Running local Buyer ownership, public privacy, Seller Inbox, routing and quotation behavior tests ..."
+echo "Running local Buyer ownership, public privacy, Seller Inbox, routing, quotation, negotiation and order lifecycle tests ..."
 psql -X -d "$DB" -v ON_ERROR_STOP=1 -f 26_local_buyer_demand_behavior_tests.sql
 
 echo
