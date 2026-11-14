@@ -51,7 +51,11 @@ create unique index if not exists listing_reviews_one_per_buyer_listing_idx
 
 alter table public.listing_reviews enable row level security;
 revoke all on public.listing_reviews from public, anon, authenticated;
-grant select on public.listing_reviews to anon,authenticated;
+-- Public reviews never expose the Buyer's internal identity or moderation metadata.
+grant select (
+  id, listing_type, listing_id, rating, review_title, review_body,
+  reviewer_label, purchased_quantity, review_status, created_at
+) on public.listing_reviews to anon,authenticated;
 
 create policy listing_reviews_public_anonymous_read
 on public.listing_reviews for select to anon
