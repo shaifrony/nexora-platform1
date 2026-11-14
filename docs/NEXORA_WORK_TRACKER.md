@@ -1394,3 +1394,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Re-ran node --check across all JavaScript files and git diff --check; both passed. The local checkout is clean on nexora-development.
 - The Vercel Sandbox can run Node tests but cannot run a container runtime: Podman installation succeeded, but sandbox kernel restrictions denied /dev/net/tun and container proc mounts. No local Supabase stack was started and no remote DB was modified.
 - The finance module now treats market_category as canonical and sale_type as a compatibility alias; conflicting values fail closed.
+
+
+### Wholesale/Retail listing frontend foundation — 2026-11-14
+- Added required Seller Listing form selection for Wholesale or Retail; each create request now validates and writes the selected market_category.
+- Added Marketplace category filter (default shows both), category badges on public cards/detail, Buyer dashboard, Seller dashboard, and Admin product review/management queues.
+- Product queries now request market_category. Legacy rows are displayed as 'ধরন নির্ধারিত হয়নি' rather than guessed into Wholesale or Retail.
+- Added tests/marketplace-listing-category.test.js to verify form requirements, write validation, query coverage, category filtering and safe legacy display.
+- IMPORTANT: this frontend now depends on the pending database market_category column. It must not be deployed or activated against a database that has not received the reviewed schema migration. No DB change or deployment was performed.
