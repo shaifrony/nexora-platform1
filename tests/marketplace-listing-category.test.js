@@ -1092,3 +1092,28 @@ test("delivery customer updates use reviewed status mapping and never copy inter
   assert.match(buyerSafeDeliverySql, /insert into private\.delivery_customer_updates\(\s*job_id,commerce_order_id,customer_status,customer_message\s*\)/i);
   assert.doesNotMatch(buyerSafeDeliverySql, /new\.note|new\.location_description|new\.pickup_address|new\.delivery_address/i);
 });
+
+
+const buyerReceiptOtpSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261115140000_buyer_delivery_receipt_otp.sql"),
+  "utf8"
+);
+
+test("Buyer receipt OTP is owner-scoped, short-lived, one-time and attempt-limited", () => {
+  assert.match(buyerReceiptOtpSql, /p\.role='buyer' and p\.account_status='active'/i);
+  assert.match(buyerReceiptOtpSql, /o\.buyer_id=v_actor and j\.job_status='out_for_delivery'/i);
+  assert.match(buyerReceiptOtpSql, /interval '10 minutes'/i);
+  assert.match(buyerReceiptOtpSql, /interval '60 seconds'/i);
+  assert.match(buyerReceiptOtpSql, /attempts\+1>=5/i);
+  assert.match(buyerReceiptOtpSql, /consumed_at=now\(\),verified_at=now\(\)/i);
+  assert.match(buyerReceiptOtpSql, /revoke all on private\.delivery_receipt_challenges from public,anon,authenticated/i);
+});
+
+test("No legacy or direct delivery status path can bypass Buyer receipt verification", () => {
+  assert.match(buyerReceiptOtpSql, /rename to update_delivery_network_job_status_legacy/i);
+  assert.match(buyerReceiptOtpSql, /if p_next_status='delivered' then/i);
+  assert.match(buyerReceiptOtpSql, /create trigger delivery_jobs_require_verified_receipt/i);
+  assert.match(buyerReceiptOtpSql, /A valid Buyer receipt verification is required/i);
+  assert.match(buyerReceiptOtpSql, /create or replace function public\.update_delivery_network_job_status/i);
+  assert.match(buyerReceiptOtpSql, /revoke all on function private\.update_delivery_network_job_status_legacy/i);
+});
