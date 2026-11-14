@@ -1365,3 +1365,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 ### Regression test run instructions — 2026-11-14
 - Added README instructions to run the dependency-free unit suite with node --test tests/*.test.js (Node.js 20+).
 - The README explicitly distinguishes unit tests from Supabase migration replay, Auth/JWT/PostgREST/RLS, Storage/Realtime and browser E2E acceptance.
+
+
+### Direct branch regression verification — 2026-11-14
+- Fast-forwarded the existing clean sandbox checkout to the current nexora-development HEAD (fe7da81) using only origin/nexora-development; no main checkout or merge was performed.
+- Ran the committed repository tests directly against the actual checked-out source: node --test tests/*.test.js — 20 passed, 0 failed.
+- Ran node --check over every tracked/untracked JavaScript source outside .git and node_modules — all passed.
+- Removed only the generated untracked supabase/.temp/cli-latest file created by CLI help/version probing. Final local Git worktree is clean.
+- This remains unit/static verification. No local Supabase container could start in this sandbox: Podman is installed, but the Vercel sandbox denies /dev/net/tun and container proc mounts. No remote DB or deployment was touched.
