@@ -1055,3 +1055,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added §9 to `supabase/recovery-not-for-deployment/local-setup/10_migration_frontend_compatibility_matrix.md` with the verified evidence and safe replacement contract. Commit: `10ee4e89e5a12cfd116acd20251df8ec3c67ceea`.
 - No source application code was changed in this pass. No SQL, NEXORA-TEST schema, Live/Production, `main`, DNS, paid service or deployment changed.
 - Next priority remains Buyer Department and the Foundation gate; do not spend Buyer-critical time implementing the legacy Admin Logistics panel until the Buyer Order/Delivery contracts and Foundation replay are ready.
+
+
+## 2026-11-14 — Foundation role-request & Admin contract reconciliation
+
+- Read Supabase skill before the Supabase-related work. All source operations were GitHub branch reads/writes; no hosted SQL was executed.
+- Inspected exact current frontend Seller request contract: owner submits only Seller/pending; pending uniqueness constraint expected; Admin review calls `review_role_request(request_id, decision)` with `approved|rejected`. The historical migration defining this RPC/table is absent from the 38 active migrations, so this is a confirmed UI contract but not recovered SQL.
+- Inspected #34 Director officer-management implementation and recorded its exact staff/grant/audit column requirements, Director representation (`super_admin` + `director`), department/position constraints, and transactional grant replacement behavior.
+- Identified an additional stale frontend mismatch: `marketplace.js` calls `manage_nexora_user`, while newer Admin paths call `admin_manage_user`; neither exists in the active migration set. They must be reconciled into one server-authorized, audited contract rather than implemented as blind aliases.
+- Expanded Foundation spec §11 with exact frontend-derived contracts, permission resolver minimum semantics, Admin compatibility requirements, mismatch list and synthetic security tests. Spec remains design-only / not SQL / not deployable / not applied. Commit: `7b95b2206d5b4f2fa553f293e63e2fd63351c58f`.
+- Expanded compatibility matrix §10 with the same evidence. Commit: `1571e45045aac6c3d492592e213332e5d7c92881`.
+- No app JS/HTML, SQL migration, NEXORA-TEST schema/data, Live/Production, `main`, DNS, paid service or deployment changed. No runtime tests were claimed.
+- Next: source-audit the remaining Admin user-management actions/permission seeds against every active migration, then build a local-only Foundation candidate only after the complete contract is closed. Do not touch NEXORA-TEST until disposable local Supabase Auth/RLS tests pass and explicit approval is given.
