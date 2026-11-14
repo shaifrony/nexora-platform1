@@ -92,7 +92,7 @@ Some candidates have narrow local PostgreSQL/Supabase rehearsal evidence, but th
 - Current static audit: [`local-setup/10_migration_frontend_compatibility_matrix.md`](local-setup/10_migration_frontend_compatibility_matrix.md).
 - It maps all 39 active migration files, required Foundation/platform/earlier-migration dependencies, Admin permission functions, Auth trigger prerequisites, and current frontend RPC/table call mismatches.
 - Audit conclusion is BLOCKED for a clean empty Test DB: the feature migrations assume a pre-existing Foundation; the legacy Porter frontend still references table/RPC names absent from the active migration set.
-- Static source audit only. No SQL was generated/executed and no hosted database was changed.
+- Source audit plus a limited PGlite PostgreSQL 18.6 rehearsal: Foundation candidate #13 + all 39 active migrations + candidate #14 executed; 8/8 synthetic security assertions passed. This is not a full Supabase runtime. No SQL was executed against NEXORA-TEST or any hosted database.
 
 
 ## 2026-11-15 inventory correction
@@ -101,3 +101,12 @@ Some candidates have narrow local PostgreSQL/Supabase rehearsal evidence, but th
 - Earlier 38/38 replay statements are not proof of the current 39-file chain. The current isolated runtime gate remains open; do not apply recovery-only SQL to hosted Supabase.
 - NEXORA-TEST was rechecked read-only: `ACTIVE_HEALTHY`, no application migration history and no public application tables. No schema was applied.
 - The current baseline spec clarifies that Wholesale/Retail is per Listing, not a Buyer/Seller account category or visibility restriction.
+
+
+## 2026-11-15 PGlite rehearsal update
+
+- A fresh isolated Vercel sandbox ran PGlite 0.5.16 / PostgreSQL 18.6 WASM. Foundation candidate #13, all 39 active migrations and recovery candidate #14 executed successfully in this limited runtime; 9/9 Foundation tables, 5/5 helper functions, 41/41 public-table RLS, 96 public policies and 45 SECURITY DEFINER functions with explicit search_path were observed. Eight synthetic privacy/authorization assertions passed.
+- PGlite does not provide the full Supabase Auth/PostgREST/Storage/Realtime stack or PostgreSQL event triggers. For this rehearsal only, unavailable extension installs were omitted and `rls_auto_enable()` was a no-op stub; therefore this is not full Supabase validation and does not authorize hosted execution.
+- Native PostgreSQL event-trigger candidate #12 has a separate earlier standalone semantic rehearsal. It was not installed into PGlite.
+- The native Supabase CLI stack could not be started in this sandbox: Docker/Podman/Supabase CLI were unavailable and Ubuntu package repository DNS resolution failed. The full Supabase runtime gate remains open.
+- NEXORA-TEST remains read-only and unchanged. Do not apply recovery-only candidates #12/#13/#14 to hosted projects. A separately reviewed Test-only baseline may be considered only after the full isolated Supabase runtime and remaining permission/RPC contracts pass.
