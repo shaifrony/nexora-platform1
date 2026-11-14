@@ -68,7 +68,7 @@ select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001'
 create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
 do $block$ begin
- if (select length(payload->>'code') from otp_result)<>10 then raise exception 'FAIL: Buyer did not receive a 10-character OTP'; end if;
+ if (select length(payload->>'code') from otp_result)<>16 then raise exception 'FAIL: Buyer did not receive a 16-character OTP'; end if;
 end $block$;
 reset role;
 do $ begin
@@ -107,7 +107,7 @@ do $wrong$
 declare v jsonb; i integer;
 begin
  for i in 1..4 loop
-  v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','0000000000');
+  v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','0000000000000000');
   if coalesce((v->>'verified')::boolean,true) then raise exception 'FAIL: wrong OTP verified'; end if;
  end loop;
 end
