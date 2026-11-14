@@ -5,6 +5,7 @@ do $block$ begin create role anon nologin; exception when duplicate_object then 
 do $block$ begin create role authenticated nologin; exception when duplicate_object then null; end $block$;
 create schema if not exists auth;
 create schema if not exists private;
+grant usage on schema private to authenticated;
 create or replace function auth.uid() returns uuid language sql stable set search_path=''
 as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 create or replace function auth.jwt() returns jsonb language sql stable set search_path=''
