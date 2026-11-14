@@ -10,9 +10,9 @@
 
 ## 1. Executive result
 
-**Status: BLOCKED — do not run the 38 migrations against the empty NEXORA-TEST project yet.**
+**Status: BLOCKED — do not run the 39 migrations against the empty NEXORA-TEST project yet.**
 
-The active migration directory contains 38 files with unique versions, but the sequence is not self-contained. It assumes an earlier Foundation schema and custom helper functions which are not created by any of the 39 active migrations.
+The active migration directory contains 39 files with unique versions, but the sequence is not self-contained. It assumes an earlier Foundation schema and custom helper functions which are not created by any of the 39 active migrations.
 
 The missing prerequisites include:
 
@@ -138,7 +138,7 @@ These are referenced by `marketplace.js`, but no active migration creates those 
 
 ## 5. Migration-order and product-model observations
 
-1. **No active Foundation migration:** 38 files are feature migrations layered on a prior database.
+1. **No active Foundation migration:** 39 files are feature migrations layered on a prior database.
 2. **RLS auto-enable bootstrap:** #01 expects an event-trigger helper before any other file; its exact historical source is missing.
 3. **Auth trigger gap:** #20 replaces `handle_new_user()`; #36 extends it for Porter, but neither creates/binds the original trigger in a fresh empty project.
 4. **Admin permission gap:** critical functions are referenced but absent from the active set. #12 creates only the AAL2 helper, not the permission resolver or Director resolver.
@@ -218,7 +218,7 @@ The UI's client-side grant lookup is not an authorization boundary. The exact se
 - Signup function history: #19 defines Buyer/Seller-only `public.handle_new_user()`; #36 replaces it with Buyer/Seller/Porter allowlist, defaults OAuth to Buyer, and keeps Porter pending with a review row. Admin is never a public signup role. Both versions revoke direct client EXECUTE. The Foundation must still verify/install the Auth trigger binding on `auth.users`; function source alone does not prove trigger installation.
 - `public.rls_auto_enable()` is referenced only by migration #1's EXECUTE revoke and has no definition in the active migration set. This is an unresolved historical/Foundation dependency. Do not add a no-op or remove the revoke without a tested replacement.
 - Active permission seeds: #19 `logistics.view|assign` (department `logistics`); #24 `services.edit` (`product_business`); #35 Marketing, Transport and Finance keys. #35 repeats the Logistics keys under `transport` with `ON CONFLICT DO NOTHING`, so it does not change their earlier `logistics` department.
-- Frontend keys `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit` are not seeded by the active 38 migrations. These are unresolved catalog requirements. Confirm department, sensitivity and RPC enforcement before seeding.
+- Frontend keys `users.view|suspend|restore|cancel`, `products.suspend|restore|cancel`, `businesses.suspend`, and `products.edit` are not seeded by the active 39 migrations. These are unresolved catalog requirements. Confirm department, sensitivity and RPC enforcement before seeding.
 - `is_nexora_admin()`, `is_nexora_super_admin()` and `has_nexora_permission(text)` are consumed by feature migrations but remain Foundation prerequisites; canonicalize their fail-closed behavior, AAL2 and protected Director rules before any replay.
 - No SQL, app code, local/hosted DB, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment was changed. This pass is source audit + documentation only; no runtime test was run.
 
@@ -285,7 +285,7 @@ Choose canonical departments for Logistics/Transport, Product/Business, user gov
 - Trust & Safety key set is proposed/approved at the catalogue level, but each mutation remains unavailable until its narrow server RPC, action/target allowlist, row lock, reason and audit path are implemented and tested. `users.cancel` is reversible deactivation, never Auth hard delete.
 - Source blocker: migration #35 `manage_nexora_officer` only permits `marketing|transport|accounts`, omits `logistics|product_business|trust_safety`, and attempts to seed `logistics.*` under `transport` with `ON CONFLICT DO NOTHING`. This must be corrected in reviewed source/replay strategy before the new catalogue can be used.
 - Other blockers: missing role-request historical SQL (must implement confirmed frontend contract as new recovery baseline); stale/missing user/listing moderation RPCs; no local Supabase CLI/Docker/psql runtime in current environment.
-- Bootstrap order documented in Foundation spec §18.4: platform preflight → schemas/least privilege → profiles → departments/staff/catalog/grants → audit/lifecycle tables → canonical resolver → Auth function/trigger → RLS event trigger + table RLS → explicit grants/policies → assertions → all 38 migration replay → synthetic security/E2E.
+- Bootstrap order documented in Foundation spec §18.4: platform preflight → schemas/least privilege → profiles → departments/staff/catalog/grants → audit/lifecycle tables → canonical resolver → Auth function/trigger → RLS event trigger + table RLS → explicit grants/policies → assertions → all 39 migration replay → synthetic security/E2E.
 - No SQL candidate is labelled deployable; no hosted project was changed. Next step is source correction plan for #35 and a suitable disposable local Supabase runtime, then generate a recovery-only candidate outside `supabase/migrations/`.
 
 ## 19. Migration #35 Governance compatibility repair — source contract
@@ -329,7 +329,7 @@ Required tests: six operational departments accept valid officers; Logistics per
 ## 21. Foundation bootstrap recovery candidate — fresh replay result (2026-11-14)
 
 - Applied only in a disposable local PostgreSQL 17/Supabase CLI v3.1.0 stack: RLS helper candidate #12 followed by Foundation candidate #13.
-- All **38/39 active migrations** replayed successfully, from `20261112045441` through `20261115120000`. The Foundation candidate supplies `public.is_nexora_super_admin()` as required by active migration #10/#12 in addition to the private resolver.
+- At the time of this historical rehearsal, all **38/38 then-present active migrations** replayed successfully, from `20261112045441` through `20261115120000`. The later-added migration `20261114175118_add_dual_listing_market_category.sql` was not part of that run; this is not evidence of a 39/39 replay. The Foundation candidate supplies `public.is_nexora_super_admin()` as required by active migration #10/#12 in addition to the private resolver.
 - 15/15 synthetic Foundation assertions passed, covering Auth signup roles, Porter pending state, no public Admin signup, Director MFA, department permissions, Buyer profile RLS, duplicate pending role request and atomic Buyer→Seller review/audit.
 - Supabase `db lint`: no schema errors. Public table RLS audit: 41/41 enabled. SECURITY DEFINER search_path audit: 46/46 explicit. One Auth signup trigger. Internal trigger functions are not executable by API roles.
 - The local stack was destroyed; stack list empty. These are recovery-only candidates, not deployable SQL.
