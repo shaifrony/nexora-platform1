@@ -15,7 +15,7 @@ language sql stable set search_path='' as $$ select false $$;
 
 create table public.profiles(id uuid primary key,role text not null,account_status text not null);
 create table public.commerce_orders(id uuid primary key,buyer_id uuid not null references public.profiles(id));
-create table public.transport_providers(id uuid primary key,owner_user_id uuid not null);
+create table public.transport_providers(id uuid primary key,owner_user_id uuid not null,application_status text not null default 'approved');
 create table public.admin_staff(user_id uuid primary key,admin_code text,is_active boolean);
 create table public.admin_audit_logs(actor_user_id uuid,actor_admin_code text,action_key text,target_type text,target_id text,details jsonb);
 create table public.delivery_jobs(
@@ -39,6 +39,7 @@ as $legacy_public$ select private.update_delivery_network_job_status($1,$2,$3,$4
 grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
 
 \ir ../supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql
+\ir ../supabase/migrations/20261115150000_receipt_otp_work_queues.sql
 
 insert into public.profiles values
  ('71000000-0000-4000-8000-000000000001','buyer','active'),
@@ -52,6 +53,28 @@ insert into public.transport_providers values
 insert into public.delivery_jobs(id,job_reference,commerce_order_id,job_status,assigned_provider_id) values
  ('74000000-0000-4000-8000-000000000001','NXD-OTP-OWN','72000000-0000-4000-8000-000000000001','out_for_delivery','73000000-0000-4000-8000-000000000001'),
  ('74000000-0000-4000-8000-000000000002','NXD-OTP-OTHER','72000000-0000-4000-8000-000000000002','out_for_delivery','73000000-0000-4000-8000-000000000001');
+
+-- Buyer receipt queue exposes only the authenticated Buyer's own shipment identifiers.
+set role authenticated;
+select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001',false);
+do $buyer_queue$ begin
+ if (select count(*) from public.get_my_order_receipt_jobs(array['72000000-0000-4000-8000-000000000001'::uuid]))<>1 then
+  raise exception 'FAIL: Buyer receipt queue did not return own shipment';
+ end if;
+ if (select count(*) from public.get_my_order_receipt_jobs(array['72000000-0000-4000-8000-000000000002'::uuid]))<>0 then
+  raise exception 'FAIL: Buyer receipt queue exposed another Buyer shipment';
+ end if;
+end $buyer_queue$;
+reset role;
+-- Only the owner of an approved assigned independent Provider sees its receipt queue.
+set role authenticated;
+select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000011',false);
+do $provider_queue$ begin
+ if (select count(*) from public.get_my_assigned_receipt_jobs())<>2 then
+  raise exception 'FAIL: assigned Provider queue did not return its eligible shipments';
+ end if;
+end $provider_queue$;
+reset role;
 
 -- Direct table writes cannot mark a shipment delivered without a verified challenge.
 do $block$ begin
