@@ -804,3 +804,15 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Therefore, the preview cannot be treated as an isolated backend for Android Chat/Auth/Storage testing. Do **not** ask the user to sign up, send messages, upload files, or otherwise exercise authenticated flows against that preview.
 - Physical Android testing remains blocked until an isolated test Supabase backend is provided and wired into a non-production preview (or the user explicitly approves a separately scoped test project). No new Supabase project or paid service was created.
 - This is distinct from the completed Android-sized Chromium emulation against the disposable local Supabase stack. No physical-device test is claimed.
+
+
+## 2026-11-14 — Separate NEXORA-TEST Supabase project created
+
+- User explicitly approved creating a separate Free Supabase Test Project under the NEXORA organization.
+- Supabase quoted the project cost as **$0/month**; zero-cost confirmation was obtained before creation.
+- Created project **NEXORA-TEST** in Singapore region `ap-southeast-1`; project ref: `lhxmqoyxoywntmkmmnjb`; status verified **ACTIVE_HEALTHY**; PostgreSQL 17.11.
+- The new project has its own API URL and publishable key. Do not expose keys in this tracker or in chat; only a publishable key may be used by a browser client after test-environment isolation is established. No service-role/secret key was retrieved or exposed.
+- No Live/Production database schema, rows, Auth identities, Storage objects or private conversations were copied. No migration has yet been applied to the new hosted Test Project.
+- Vercel Preview environment inspection found no existing branch-scoped variables. The current `auth.js` still hardcodes the original hosted Supabase URL and publishable key; therefore, do not use the existing Preview for authenticated testing yet.
+- Next safe step: design and implement an explicit branch-only Test backend configuration for `nexora-development`, verify Production/main cannot select the Test backend, then apply/rehearse schema only after establishing a safe isolated migration baseline. Do not set ineffective Vercel env variables for this static frontend without first adding a supported build-time configuration path.
+- No Vercel environment variables, deployment, repository application source, SQL migration, main, Production, DNS or paid service changed during project creation.
