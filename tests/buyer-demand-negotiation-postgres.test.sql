@@ -246,7 +246,7 @@ begin
   exception when insufficient_privilege then
     v_denied:=true;
   end;
-  if not v_denied then raise exception 'FAIL: unrelated Buyer accepted another Buyer's quotation'; end if;
+  if not v_denied then raise exception 'FAIL: unrelated Buyer accepted a quotation owned by another Buyer'; end if;
 
   -- Buyer cancellation is allowed only while the generated order is pending.
   perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
