@@ -323,3 +323,35 @@ The current frontend additionally checks `users.view|suspend|restore|cancel`, `p
 - No active migration defines the frontend's Seller role-review RPC `review_role_request(uuid,text)`, or the stale Admin aliases `manage_nexora_user` / `admin_manage_user`. Do not create speculative aliases.
 
 **Status:** source-level audit only. This is not deployable SQL. No local or hosted database was changed, and no runtime/Auth trigger test was run. Keep NEXORA-TEST empty until the local Foundation replay and synthetic Auth/RLS gates pass.
+
+## 13. Auth trigger and permission resolver dependency audit — follow-up (2026-11-14)
+
+### 13.1 Auth trigger binding is absent from the active migration chain
+
+A second source scan of all 38 active migration files distinguished ordinary application triggers from the Supabase Auth signup trigger:
+
+- Active migrations create `profiles_sync_public_identity` on `public.profiles` and `business_profiles_sync_public_business` on `public.business_profiles`, plus application-specific triggers.
+- No active migration creates an `auth.users` trigger invoking `public.handle_new_user()`; no active migration creates an event trigger for automatic RLS enablement.
+- #19 and #35 define/replace the function body, but function existence is not evidence that the trigger binding exists. The active migration chain alone therefore cannot guarantee profile provisioning on signup.
+- The canonical Foundation must explicitly install or verify exactly one `auth.users` AFTER INSERT trigger, verify function owner and SECURITY DEFINER privileges, and test rollback/failure behavior. Do not assume the trigger is managed out-of-band unless an authoritative, versioned source proves it.
+
+### 13.2 Existing active-Admin helper is not the canonical Director/permission resolver
+
+Migration #12 defines `private.is_nexora_active_admin_staff()` and checks JWT AAL2, active `admin_staff`, and active Admin profile. This helper is a useful historical compatibility dependency, but:
+- It does not verify the protected Director appointment.
+- It does not check `position_key`, protected governance constraints, permission catalog state, department scope or explicit grants.
+- Several RLS policies separately OR this helper with `public.is_nexora_super_admin()`; that public predicate's definition is absent from the active feature migration set.
+- Feature workflows call `private.has_nexora_permission(text)`, whose definition is also absent from the active feature migration set.
+
+Foundation should retain `private.is_nexora_active_admin_staff()` only as a narrow compatibility wrapper over the canonical resolver, or replace its policies after a complete dependency review. It must not become an alternate authorization path that allows AAL2 active staff to bypass permissions.
+
+### 13.3 Trigger/RLS bootstrap release gates
+
+Before any candidate Foundation SQL is considered:
+1. Recover authoritative historical trigger/event-trigger source if available; otherwise explicitly design a new versioned replacement.
+2. Prove signup creates exactly one profile and, for Porter, exactly one pending review row; invalid roles and Admin metadata cannot create privileged accounts.
+3. Prove every exposed public table has RLS enabled and every relevant policy is installed; verify the RLS automation mechanism on tables created after Foundation.
+4. Test trigger owner, function owner, grants, empty search_path, SECURITY DEFINER boundaries and error rollback.
+5. Replay the complete 38-migration chain against a disposable local database and run synthetic Buyer/Seller/Porter/Admin AAL1/AAL2 tests before considering NEXORA-TEST.
+
+**Status:** source scan and design documentation only. No trigger, event trigger, SQL migration or database was changed. No runtime claim is made.
