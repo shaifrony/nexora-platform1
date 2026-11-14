@@ -891,7 +891,7 @@ test("Authenticated Product reads are column-allowlisted and exclude Admin revie
 
 test("Authenticated Service listing reads omit review metadata and Seller notes use an owner-scoped RPC", () => {
   assert.match(serviceListingPrivacySql, /revoke select on public\.service_listings from authenticated/i);
-  const grant = serviceListingPrivacySql.match(/grant select \(([\s\S]*?)\) on public\.service_listings to authenticated/i);
+  const grant = serviceListingPrivacySql.match(/grant select \(([^)]*)\) on public\.service_listings to authenticated/i);
   assert.ok(grant, "Service listing column allowlist must exist");
   for (const privateField of ["admin_note","reviewed_by","reviewed_at","business_id"]) {
     assert.ok(!grant[1].includes(privateField), "Service listing read allowlist must omit " + privateField);
