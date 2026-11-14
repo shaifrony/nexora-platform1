@@ -20,7 +20,7 @@ returns trigger
 language plpgsql
 security definer
 set search_path=''
-as $
+as $receipt_guard$
 begin
  if new.job_status='delivered' and old.job_status is distinct from 'delivered' then
    if not exists(
@@ -33,7 +33,7 @@ begin
  end if;
  return new;
 end;
-$;
+$receipt_guard$;
 revoke all on function private.require_verified_delivery_receipt() from public,anon,authenticated;
 drop trigger if exists delivery_jobs_require_verified_receipt on public.delivery_jobs;
 create trigger delivery_jobs_require_verified_receipt
@@ -194,7 +194,7 @@ grant execute on function public.verify_delivery_receipt_code(uuid,text,text,tex
 create or replace function public.update_delivery_network_job_status(
  p_job_id uuid,p_next_status text,p_location_description text default null,p_note text default null,p_external_tracking_code text default null
 ) returns jsonb language sql security invoker set search_path=''
-as $ select private.update_delivery_network_job_status($1,$2,$3,$4,$5); $;
+as $status_guard$ select private.update_delivery_network_job_status($1,$2,$3,$4,$5); $status_guard$;
 revoke all on function public.update_delivery_network_job_status(uuid,text,text,text,text) from public,anon;
 grant execute on function public.update_delivery_network_job_status(uuid,text,text,text,text) to authenticated;
 
