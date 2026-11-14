@@ -1164,3 +1164,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Did not stub or fabricate the missing function, rewrite migration #1, or alter active SQL. Destroyed the disposable local stack and verified no local stack remained. No applied-migration count is claimed because the failed stack was not running when queried.
 - No repository source/migration, NEXORA-TEST, Live/Production, `main`, DNS or deployment changed. No hosted mutation occurred.
 - Next: author a recovery-only Foundation bootstrap candidate outside `supabase/migrations/` from the reviewed §14 contracts and §19 governance repair, then validate it on a fresh disposable native stack before replaying all 38 migrations.
+
+
+## 2026-11-14 — RLS helper candidate verified; replay advances to Foundation dependency
+
+- Resumed the existing persistent `nexora-backend-routing-check` Sandbox; no new Sandbox was created. Worked only on `nexora-development`.
+- Built `supabase/recovery-not-for-deployment/local-setup/12_rls_auto_enable_recovery_candidate.sql` from approved Foundation §14.2. It is explicitly recovery-only, not recovered historical SQL, not an active migration and not deployable.
+- Disposable PostgreSQL 17 / Supabase CLI v3.1.0 runtime: 12/12 assertions passed (ordinary tables, multi-statement creation, CTAS, SELECT INTO, partitioned parent/child, non-public exclusion, trusted owners, trigger enabled, no API EXECUTE, no-policy `anon` read denied, no recursive trigger creation). Extension-owned table behavior is still an explicit untested case.
+- Fresh replay with the candidate preinstalled: migration `20261112045441` passed; migration `20261112050241` then failed because `public.profiles` is missing. Verified exact local migration history count = 1. This is progress past the first blocker, not a full replay.
+- Destroyed the disposable replay stack and verified `stack list` is empty. No active migration was changed; no NEXORA-TEST, Live/Production, `main`, DNS or deployment mutation occurred.
+- Next: build the approved Foundation baseline in the disposable local environment, including profiles, governance/auth prerequisites and fail-closed security contracts; then rerun all 38 migrations and synthetic security tests. Do not use hosted NEXORA-TEST as a substitute for local validation.
