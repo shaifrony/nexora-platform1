@@ -1528,3 +1528,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - GitHub Actions run [#43645145543](https://github.com/shaifrony/nexora-platform1/actions/runs/43645145543) completed successfully; JavaScript syntax, dependency-free regression suite and migration filename/order guard all passed.
 - Commit: `84091510a0d1bbe34b59f46a18424cf371811900`.
 - These are source-level regression checks only; they do not replace PostgreSQL/Supabase execution, RLS integration tests or role-impersonation tests. No migration was applied to any database.
+
+
+## 2026-11-15 — Seller approval and public listing regression coverage
+- Added five dependency-free regression tests covering Business Profile owner self-approval prevention, Product Listing owner self-approval prevention, approved-only public Business projection, approved Business requirement for Seller product creation, and active Super Admin checks in the review UI.
+- Initial CI run exposed an over-escaped regex in the new test block; corrected it in a follow-up commit.
+- Corrected-commit GitHub Actions run `43645651951` completed successfully. This validates JavaScript syntax and repository-level source regression tests only; it is not a live RLS/JWT/PostgREST integration test.
+- No SQL migration or hosted database changed. All commits remain on `nexora-development`; `main` and Production untouched.
