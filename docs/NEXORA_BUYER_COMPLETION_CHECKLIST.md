@@ -335,3 +335,10 @@ Implementation rules:
 - Buyer Demand currently marks product name, category, subcategory, description, specifications, quantity, currency, destination country/city and required date as required. Some may be operationally necessary, but must be checked against schema constraints before relaxing. Budget remains optional.
 - Demand quotation acceptance/counter flow uses browser prompt/confirm dialogs for quantity, price and note. This is functional source but not an easy/mobile-friendly experience; replace only after preserving all server-side constraints and adding accessible inline controls.
 - No source change to these flows in this audit; the exact Foundation/migration and runtime test blockers still apply.
+
+
+### Buyer Demand form simplification — 2026-11-14
+- Following the Buyer-first principle, made Subcategory, Description and Specifications optional in the Buyer Demand form. Core matching/fulfilment fields remain required: product name, category, quantity, currency, destination country/city and required-by date. Budget remains optional.
+- Confirmed from the active Marketplace schema: description is NOT NULL but accepts an empty string; specifications_quality is nullable; subcategory is added as nullable and the demand-to-Seller matching logic treats blank subcategory as broad category matching. Frontend submission already sends trimmed empty strings; no schema mutation needed.
+- Static checks: marketplace.js compiles; form exists; three optional fields no longer required; essential fields and required date remain required; script tags balanced. No browser/runtime test performed.
+- Commit: index.html `7f9249e406a87dc1c5b583e224375ffda48212fc`.
