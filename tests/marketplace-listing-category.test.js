@@ -646,3 +646,86 @@ test("Chat UI hides the composer and call controls until an invitation is accept
   assert.match(open, /mine\?\.invitation_status!=="accepted"/);
   assert.match(open, /await loadMessages\(id\)/);
 });
+
+
+const commerceOrderSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114140000_commerce_orders_and_review_completion.sql"),
+  "utf8"
+);
+const inventoryOrderSql = fs.readFileSync(
+  path.join(__dirname, "..", "supabase", "migrations", "20261114150000_product_inventory_moq_quantity_pricing.sql"),
+  "utf8"
+);
+
+test("Product order creation locks the approved listing and enforces MOQ and available stock", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.create_commerce_order("),
+    inventoryOrderSql.indexOf("-- Replace transition logic")
+  );
+  assert.match(fn, /role='buyer' and p\.account_status='active'/i);
+  assert.match(fn, /from public\.products pr[\s\S]*?listing_status='approved'[\s\S]*?for update/i);
+  assert.match(fn, /public\.public_businesses b where b\.business_id=v_product\.business_id/i);
+  assert.match(fn, /p_quantity < v_product\.minimum_order_quantity/i);
+  assert.match(fn, /p_quantity > \(v_product\.stock_quantity - v_product\.reserved_quantity\)/i);
+  assert.match(fn, /update public\.products set reserved_quantity=reserved_quantity\+p_quantity/i);
+  assert.match(fn, /v_seller=v_buyer/i);
+  assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
+});
+
+test("Product order snapshots the highest qualifying quantity-tier unit price", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.create_commerce_order("),
+    inventoryOrderSql.indexOf("-- Replace transition logic")
+  );
+  assert.match(fn, /for v_tier in select value from jsonb_array_elements\(v_product\.price_tiers\)/i);
+  assert.match(fn, /if p_quantity >= v_tier_min/i);
+  assert.match(fn, /v_price := \(v_tier->>'unit_price'\)::numeric/i);
+  assert.match(fn, /insert into public\.commerce_orders\(listing_type,listing_id,buyer_id,seller_id,quantity,unit_price,currency/i);
+});
+
+test("Seller inventory updates require active ownership and cannot reduce stock below reservations", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.set_product_inventory("),
+    inventoryOrderSql.indexOf("revoke all on function private.set_product_inventory")
+  );
+  assert.match(fn, /where id=p_product_id for update/i);
+  assert.match(fn, /v_product\.seller_id <> v_actor/i);
+  assert.match(fn, /p\.role='seller' and p\.account_status='active'/i);
+  assert.match(fn, /p_stock_quantity < v_product\.reserved_quantity/i);
+  assert.match(fn, /Stock tracking cannot be disabled while orders have reserved stock/i);
+  assert.match(fn, /o\.order_status in \('pending','accepted','ready_for_confirmation'\)/i);
+});
+
+test("Order transition requires an active assigned Buyer or Seller and preserves the role-specific state machine", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.transition_commerce_order("),
+    inventoryOrderSql.indexOf("revoke all on function private.create_commerce_order")
+  );
+  assert.match(fn, /p\.id=v_actor and p\.account_status='active'/i);
+  assert.match(fn, /p\.role='buyer' and p\.id=v_order\.buyer_id/i);
+  assert.match(fn, /p\.role='seller' and p\.id=v_order\.seller_id/i);
+  assert.match(fn, /v_actor<>v_order\.seller_id or v_order\.order_status<>'pending'/i);
+  assert.match(fn, /v_actor<>v_order\.seller_id or v_order\.order_status<>'accepted'/i);
+  assert.match(fn, /v_actor<>v_order\.buyer_id or v_order\.order_status<>'ready_for_confirmation'/i);
+  assert.match(fn, /v_actor<>v_order\.buyer_id or v_order\.order_status<>'pending'/i);
+});
+
+test("Order cancellation/rejection releases stock and completion deducts reserved stock atomically", () => {
+  const fn = inventoryOrderSql.slice(
+    inventoryOrderSql.indexOf("create or replace function private.transition_commerce_order("),
+    inventoryOrderSql.indexOf("revoke all on function private.create_commerce_order")
+  );
+  assert.match(fn, /select \* into v_product from public\.products where id=v_order\.listing_id for update/i);
+  assert.match(fn, /if v_next='completed' then[\s\S]*?stock_quantity=stock_quantity-v_order\.quantity,[\s\S]*?reserved_quantity=reserved_quantity-v_order\.quantity/i);
+  assert.match(fn, /elsif v_next in \('cancelled','rejected'\) then[\s\S]*?reserved_quantity=reserved_quantity-v_order\.quantity/i);
+  assert.match(fn, /insert into public\.commerce_order_events/i);
+  assert.match(fn, /insert into private\.review_purchase_eligibility/i);
+});
+
+test("Commerce orders cannot be inserted directly by clients and are visible only to Buyer/Seller participants", () => {
+  assert.match(commerceOrderSql, /revoke all on public\.commerce_orders,public\.commerce_order_events from public,anon,authenticated/i);
+  assert.match(commerceOrderSql, /grant select on public\.commerce_orders,public\.commerce_order_events to authenticated/i);
+  assert.match(commerceOrderSql, /commerce_orders_buyer_seller_read[\s\S]*?buyer_id=\(select auth\.uid\(\)\) or seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(commerceOrderSql, /commerce_order_events_participant_read[\s\S]*?o\.buyer_id=\(select auth\.uid\(\)\) or o\.seller_id=\(select auth\.uid\(\)\)/i);
+  assert.match(inventoryOrderSql, /revoke all on function public\.create_commerce_order\(text,uuid,numeric,text,text\) from public,anon/i);
+});
