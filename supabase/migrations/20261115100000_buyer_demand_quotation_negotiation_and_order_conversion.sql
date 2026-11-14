@@ -196,6 +196,12 @@ begin
      or (v_role='seller' and v_offer.seller_id<>v_actor) then
     raise exception 'Only the Buyer who posted this Demand or the quoted Seller may negotiate' using errcode='42501';
   end if;
+  if p_action in ('accept','counter') and (
+    not exists(select 1 from public.profiles p where p.id=v_offer.seller_id and p.role='seller' and p.account_status='active')
+    or not exists(select 1 from public.public_businesses b where b.seller_id=v_offer.seller_id)
+  ) then
+    raise exception 'The quoted Seller must remain active with an approved Business Profile to negotiate or create an order' using errcode='42501';
+  end if;
 
   select * into v_latest from public.seller_offer_negotiations
   where offer_id=p_offer_id order by created_at desc,id desc limit 1;
