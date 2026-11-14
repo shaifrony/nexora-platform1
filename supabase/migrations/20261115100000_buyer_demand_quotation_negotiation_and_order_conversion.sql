@@ -94,6 +94,7 @@ as $
 declare
   v_demand public.buyer_demands%rowtype;
   v_qty numeric(18,3);
+  v_demand_qty numeric(18,3);
   v_unit numeric(18,2);
 begin
   -- Serialize quotation creation against Buyer closing/cancelling the Demand.
@@ -103,6 +104,10 @@ begin
   end if;
   if upper(new.currency)<>upper(v_demand.currency) then
     raise exception 'Quotation currency must match the Buyer Demand currency' using errcode='22023';
+  end if;
+  v_demand_qty:=nullif(substring(regexp_replace(btrim(v_demand.required_quantity),',','','g') from '^[0-9]+([.][0-9]+)?'),'')::numeric;
+  if v_demand_qty is null or v_demand_qty<=0 then
+    raise exception 'Buyer Demand quantity must start with a positive numeric amount' using errcode='22023';
   end if;
   v_qty:=nullif(new.available_quantity,'')::numeric;
   if v_qty is null or v_qty<=0 then
