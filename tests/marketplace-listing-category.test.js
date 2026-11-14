@@ -520,3 +520,35 @@ test("Seller cannot spoof protected Buyer Demand quotation state or agreed terms
   assert.doesNotMatch(fn, /coalesce\(new\.(current_quantity|current_unit_price)/i);
   assert.match(demandOrderSql, /before insert on public\.seller_offers\s*for each row execute function private\.initialise_seller_offer_negotiation\(\)/i);
 });
+
+
+test("Buyer Demand negotiation caps every counter-offer and accepted order at the posted required quantity", () => {
+  const fn = demandOrderSql.slice(
+    demandOrderSql.indexOf("create or replace function private.respond_to_demand_offer("),
+    demandOrderSql.indexOf("create or replace function private.transition_buyer_demand_order(")
+  );
+  assert.match(fn, /v_demand_qty:=nullif\(btrim\(v_demand\.required_quantity\),'\)'::numeric/i);
+  assert.match(fn, /p_quantity>least\(coalesce\(nullif\(v_offer\.available_quantity,'\)'::numeric,0\),v_demand_qty\)/i);
+  assert.match(fn, /least\(v_latest\.proposed_quantity,v_demand_qty\)/i);
+  assert.match(fn, /least\(nullif\(v_offer\.available_quantity,'\)'::numeric,v_demand_qty\)/i);
+  assert.match(fn, /v_qty>v_demand_qty/i);
+});
+
+test("Buyer and Seller Demand quotation forms present and enforce the Buyer-required quantity ceiling", () => {
+  const buyer = marketplaceUi.slice(
+    marketplaceUi.indexOf("function renderBuyerDashboard(offers)"),
+    marketplaceUi.indexOf("async function respondToDemandQuotation(")
+  );
+  const seller = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function respondToDemandQuotationSeller("),
+    marketplaceUi.indexOf("async function loadSellerDemandInbox(")
+  );
+  const inbox = marketplaceUi.slice(
+    marketplaceUi.indexOf("async function loadSellerDemandInbox()"),
+    marketplaceUi.indexOf("const serviceCategoryLabels")
+  );
+  assert.match(buyer, /Math\.min\(qty,demandQuantity\)/);
+  assert.match(buyer, /data-max-quantity=.*Math\.min\(qty,demandQuantity\)/);
+  assert.match(seller, /quantity>currentQuantity/);
+  assert.match(inbox, /Math\.min\(Number\(offer\.available_quantity\),Number\(d\.required_quantity\)\)/);
+});
