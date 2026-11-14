@@ -1518,3 +1518,5 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Workflow change commit: `549bd4584544154084f64edd16d81e4237a429c9`.
 - CI run: pending at tracker update time; do not call this guard verified until the matching run completes successfully.
 - No SQL migration content, hosted database, Production/Live, DNS or `main` branch was changed.
+
+- Follow-up: first execution exposed an over-escaped JavaScript regex in the workflow. Corrected it in `a751a9317568451b9dfbc69e66d0491956bd0dc0`; the matching Development CI run [#43644925203](https://github.com/shaifrony/nexora-platform1/actions/runs/43644925203) completed successfully. The active migration filename/order guard is now verified in GitHub Actions.
