@@ -814,6 +814,9 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
               <div><label for="categoryFilter">Category</label><select id="categoryFilter">
                 <option value="">সব বিভাগ</option><option>Food & Agriculture</option><option>Textile & Garments</option><option>Electronics</option><option>Industrial Products</option><option>Handicrafts</option><option>Other</option>
               </select></div>
+              <div><label for="marketCategoryFilter">বিক্রির ধরন</label><select id="marketCategoryFilter">
+                <option value="">পাইকারি ও খুচরা—সব</option><option value="wholesale">পাইকারি</option><option value="retail">খুচরা</option>
+              </select></div>
               <div><label for="priceMin">সর্বনিম্ন দাম</label><input id="priceMin" type="number" min="0" step="any" placeholder="যেমন 100"></div>
               <div><label for="priceMax">সর্বোচ্চ দাম</label><input id="priceMax" type="number" min="0" step="any" placeholder="যেমন 500"></div>
               <div><label for="priceCurrency">মুদ্রা</label><select id="priceCurrency"><option value="">সব মুদ্রা</option><option value="BDT">BDT</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div>
@@ -1385,7 +1388,13 @@ main>section.section:not(#market) label{color:#34495e;font-weight:700}
         <label>Product Name *</label>
         <input name="name" required>
 
-        
+        <label>বিক্রির ধরন *</label>
+        <select name="market_category" required>
+          <option value="">বিক্রির ধরন নির্বাচন করুন</option>
+          <option value="wholesale">পাইকারি (Wholesale)</option>
+          <option value="retail">খুচরা (Retail)</option>
+        </select>
+
         <label>Product Category *</label>
         <select name="category" required>
           <option value="">Select Category</option>
