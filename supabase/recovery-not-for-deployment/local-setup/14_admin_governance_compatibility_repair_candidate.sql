@@ -1,6 +1,6 @@
--- RECOVERY-ONLY compatibility repair for migration #34.
+-- RECOVERY-ONLY compatibility repair for migration #35.
 -- NOT historical SQL. NOT an active migration. NOT deployable without a separate review.
--- Apply only after all 38 migrations in a fresh disposable local Supabase stack.
+-- Apply only after all 39 migrations in a fresh disposable local Supabase stack.
 -- Keeps the existing RPC signature and transactional behavior while aligning department
 -- allowlists and permission validation with the owner-approved seven-department model.
 
