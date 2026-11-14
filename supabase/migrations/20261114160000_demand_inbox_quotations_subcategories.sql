@@ -578,11 +578,13 @@ set search_path=''
 as $
   select s.id,s.admin_note,s.reviewed_at
   from public.service_listings s
-  where s.seller_id=(select auth.uid())
-    and exists(
+  where (
+    (s.seller_id=(select auth.uid()) and exists(
       select 1 from public.profiles p
       where p.id=(select auth.uid()) and p.role='seller' and p.account_status='active'
-    )
+    ))
+    or (public.is_nexora_admin() and (select auth.jwt()->>'aal')='aal2')
+  )
   order by s.updated_at desc;
 $;
 revoke all on function public.get_my_service_listing_review_notes() from public,anon;
