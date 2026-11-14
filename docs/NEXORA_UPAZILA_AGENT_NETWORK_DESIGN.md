@@ -156,3 +156,95 @@ An authorized Agent may be assigned one or more transaction-specific capacities,
 13. **Inter-area delivery:** does the supplying Agent deliver to a Drop Point, the receiving-area Agent, or a nominated transporter? Who is responsible for final-mile delivery to the local business?
 14. **Agent commission split:** how should NEXORA charge and Buyer-side, Seller-side, collection and transport Agents be paid when several Agents contribute to one order? Define no-double-charge rules.
 15. **Order authority and payment:** what evidence/confirmation is required from the local business before the Agent commits to a purchase order or payment obligation?
+
+## 10. User-confirmed Agent-to-Agent distribution and illustrative revenue allocation (2026-11-14)
+
+**This section supersedes conflicting earlier assumptions in this document** about the unregistered supplier being a NEXORA Seller account, the Agent only acting as a disclosed sales representative, and the inter-area/final-mile responsibility being undecided.
+
+### 10.1 Seller and distribution responsibilities
+
+- For the small-farmer/small-business assisted route, the farmer/business does not need a NEXORA login or a separate Unregistered Seller Record. The Agent is the direct Seller on NEXORA, lists the goods through the Agent account and is accountable to NEXORA for the listing, sale, order fulfilment and supplier-side settlement/records. The Agent must keep their own lawful source, purchase, consent and supplier-payment records; this does not create a NEXORA supplier profile.
+- The Agent who sells the goods is the **Selling Agent**. That Agent pays the onward transport charge for the sold order.
+- NEXORA takes responsibility for arranging and coordinating movement from the Selling Agent's handover point to the receiving Agent in the destination area, including any assigned carrier/transport provider.
+- The destination **Local Distribution Agent** receives the goods from the inter-area transport leg, checks and records the handover, splits/consolidates local consignments when needed, and delivers the goods to the Buyer.
+- The Local Distribution Agent is paid for the local distribution/delivery work actually completed. The inter-area carrier/transport provider is paid separately for the transport leg actually completed.
+- The same person may perform more than one separately assigned task, but the ledger must not pay twice for the same work. A Selling Agent is not paid a delivery share merely because they sold the goods; they can receive a transport/delivery payment only if separately assigned and the work is independently evidenced.
+- For the independent Direct Seller route, the registered Seller remains the seller; NEXORA may assign Agents for collection, inter-area transport and local distribution. Direct Seller's sale proceeds and Agent service payments remain separate ledger items. The detailed direct-Seller fee schedule may use its own Admin-configured rate.
+
+### 10.2 Example Admin-configurable rates (illustrative defaults only)
+
+These are sample starting values for planning and UI/data configuration. They are **not approved commercial prices, not a launch commitment, and not hard-coded constants**. Authorized Admin/Accounts governance must be able to change them through a versioned, audited fee schedule.
+
+| Configuration key | Illustrative default | Calculation base |
+|---|---:|---|
+| Agent-Seller marketplace commission | 3% | Goods subtotal after item discount; excludes delivery and packaging charges |
+| Direct-Seller marketplace commission | 3% | Goods subtotal after item discount; excludes delivery and packaging charges |
+| Inter-area transport provider share | 50% | Collected onward transport charge |
+| Local Distribution Agent share | 36% | Collected onward transport charge |
+| NEXORA logistics coordination margin | 14% | Collected onward transport charge |
+
+The three transport allocation percentages must total exactly 100%. If the destination Agent also performs a separately chargeable handling task, the fee schedule may add a distinct line item or reallocate the shares; never pay an unconfigured duplicate share.
+
+### 10.3 Example calculation (BDT)
+
+Assume one completed order:
+
+| Item | BDT |
+|---|---:|
+| Selling Agent's acquisition cost from source | 8,000 |
+| Goods selling price to Buyer | 10,000 |
+| Selling Agent's gross trading margin | 2,000 |
+| Selling Agent's packaging/handling expense | 200 |
+| NEXORA marketplace commission (3% × 10,000) | 300 |
+| Onward transport charge paid by Selling Agent | 500 |
+
+Selling Agent illustrative net contribution before their other overhead/tax: **2,000 - 200 - 300 - 500 = BDT 1,000**. Any first-mile procurement cost from source to the Selling Agent's own collection point must also be included in the Agent's acquisition/operating cost if it is not already included in the BDT 8,000 acquisition figure.
+
+Transport charge allocation:
+
+| Recipient | Rate | BDT |
+|---|---:|---:|
+| Inter-area carrier/transport provider | 50% | 250 |
+| Destination Local Distribution Agent | 36% | 180 |
+| NEXORA logistics coordination margin | 14% | 70 |
+| **Total** | **100%** | **500** |
+
+NEXORA illustrative gross revenue for this order is **BDT 370** (BDT 300 marketplace commission + BDT 70 logistics margin). This is gross revenue, not net profit; payment-provider fees, operations, support, technology, taxes, insurance/claims and other business costs must be deducted to calculate net profit. The transport charge is not wholly NEXORA revenue.
+
+### 10.4 Data/configuration contract (example only; not a live fee engine)
+
+```json
+{
+  "currency": "BDT",
+  "status": "illustrative_default_not_for_live_settlement",
+  "marketplace_commission": {
+    "agent_seller_percent": 3,
+    "direct_seller_percent": 3,
+    "basis": "goods_subtotal_after_item_discount_excluding_delivery_and_packaging"
+  },
+  "onward_transport_allocation_percent": {
+    "inter_area_transport_provider": 50,
+    "local_distribution_agent": 36,
+    "nexora_logistics_coordination_margin": 14,
+    "must_total": 100
+  },
+  "settlement": {
+    "selling_agent_pays_transport_charge": true,
+    "local_agent_paid_only_after_verified_delivery": true,
+    "transport_provider_paid_after_verified_transport_leg": true,
+    "snapshot_rate_version_on_order_acceptance": true,
+    "no_retroactive_rate_changes": true
+  }
+}
+```
+
+### 10.5 Required Admin controls and ledger data
+
+- Admin/Accounts can configure separate marketplace commission rates by seller operating model and transport allocation shares. The UI must show percentage, calculation base, currency, effective-from timestamp, version, status and explanatory notes.
+- Validate commission percentages are within 0–100; transport shares total exactly 100; reject negative values, invalid precision, overlapping active effective periods and incomplete configurations.
+- Sensitive rate changes require authorized permission and maker-checker approval. Every change records actor, approver, before/after values, reason and timestamp.
+- Each accepted order snapshots the exact rate-schedule version and all calculated BDT amounts. Later Admin edits apply only to new eligible orders; never recalculate an accepted order from the latest rate.
+- Keep separate ledger lines for goods subtotal, marketplace commission, Seller net proceeds, Selling Agent-paid transport charge, carrier share, Local Distribution Agent share, NEXORA logistics margin, packaging/handling, discounts, refunds, tax (if applicable), claims and adjustments.
+- Carrier and Local Distribution Agent payment eligibility depends on their own verified custody/delivery events. A delivery failure, partial delivery, return or dispute must pause or proportionally adjust affected service payments under an approved rule; no automatic full payout on assignment alone.
+- No Agent may approve their own fee, payout, adjustment or dispute. Accounts/Finance and authorized Admins use maker-checker controls.
+- The rates above are documentation/sample data only. No schema, migration, RPC, payment integration, wallet, payout, production pricing or live settlement has been implemented. Existing migration/foundation reconciliation and isolated replay gates still apply. Legal, tax, consumer-protection and payment-provider review is required before live collection/settlement.
