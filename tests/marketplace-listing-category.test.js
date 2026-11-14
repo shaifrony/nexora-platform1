@@ -746,7 +746,13 @@ test("Purchase eligibility records remain private and writable only by trusted s
 test("Public reviews expose only published rows while Buyers can read their own moderation state", () => {
   assert.match(verifiedReviewSql, /listing_reviews_public_anonymous_read[\s\S]*?review_status = 'published'/i);
   assert.match(verifiedReviewSql, /listing_reviews_public_or_owner_read[\s\S]*?review_status = 'published'[\s\S]*?buyer_id = \(select auth\.uid\(\)\)[\s\S]*?public\.is_nexora_admin\(\)[\s\S]*?aal2/i);
-  assert.match(verifiedReviewSql, /grant select on public\.listing_reviews to anon,authenticated/i);
+  assert.match(verifiedReviewSql, /grant select \(\s*id, listing_type, listing_id, rating, review_title, review_body,\s*reviewer_label, purchased_quantity, review_status, created_at\s*\) on public\.listing_reviews to anon,authenticated/i);
+  assert.doesNotMatch(verifiedReviewSql, /grant select on public\.listing_reviews to anon,authenticated/i);
+  const publicGrant = verifiedReviewSql.match(/grant select \(([\s\S]*?)\) on public\.listing_reviews to anon,authenticated/i);
+  assert.ok(publicGrant, "public review column allowlist must exist");
+  for (const privateField of ["buyer_id","reviewed_by","reviewed_at","moderation_note","updated_at"]) {
+    assert.ok(!publicGrant[1].includes(privateField), "public review grant must omit " + privateField);
+  }
   assert.match(verifiedReviewSql, /revoke all on public\.listing_reviews from public, anon, authenticated/i);
 });
 
