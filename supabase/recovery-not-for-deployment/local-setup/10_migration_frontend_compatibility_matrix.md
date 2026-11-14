@@ -192,3 +192,13 @@ The previous finding in §4.1–4.2 is now narrowed with direct source inspectio
 - Until the Admin panel is migrated and tested against the unified schema, keep its old panel explicitly blocked/hidden rather than allowing it to issue failing legacy queries. This is separate from Buyer Department priority; do not divert Buyer delivery tracking into the Admin panel.
 
 No application code or database was changed in this source-verification step. The exact Admin UI replacement is a follow-up implementation item after Buyer-critical work and Foundation runtime gates.
+
+
+## 10. Follow-up source verification — Seller role request and Admin contracts (2026-11-14)
+
+- Inspected current `auth.js`: Seller request owner reads `role_requests(user_id,requested_role,status,created_at)`; submits only Seller/pending; frontend expects a unique pending-per-user constraint named `one_pending_role_request_per_user`; Director review RPC signature is `review_role_request(request_id uuid, decision text)`, decisions `approved|rejected`.
+- The original historical SQL for `role_requests` / `review_role_request` is absent from the active migration set. It is a confirmed frontend contract, not recovered historical implementation. New Foundation implementation must atomically approve Buyer→Seller or reject without role change, enforce AAL2 + Director, lock/reject replayed requests and audit.
+- Inspected #34 officer management: exact staff fields include `admin_code`, `admin_level`, `department_key`, `is_active`, `created_by`, `staff_email`, `position_key`, `reports_to_user_id`; grants use `admin_user_id,permission_key,is_allowed,granted_by`; audit writes `actor_user_id,actor_admin_code,action_key,target_type,target_id,reason,details`. Director is currently represented by `admin_level='super_admin'` and `position_key='director'`.
+- Confirmed stale Admin UI aliases: older `marketplace.js` calls `manage_nexora_user`, later Admin UI calls `admin_manage_user`; neither appears in active migrations. Do not create both aliases without reconciling intended status transitions and permission keys. The Admin user-management list reads Buyer/Seller profile identity and therefore requires a strict server-side permission boundary and audit.
+- Added detailed source-derived contracts, mismatches and synthetic security gates to Foundation design spec §11. It remains design-only; no SQL or runtime schema changed.
+- Commit: `7b95b2206d5b4f2fa553f293e63e2fd63351c58f`.
