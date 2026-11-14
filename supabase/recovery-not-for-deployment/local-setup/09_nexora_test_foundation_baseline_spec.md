@@ -21,7 +21,7 @@ The following are the current authoritative decisions and supersede conflicting 
 7. Calling is paused, not deleted. Keep existing call tables/functions/migrations intact; do not extend or test Calling in this baseline.
 8. Private Chat, Message, File/Image Sharing and Conversation Privacy remain separate feature migrations and are tested only with synthetic identities/data.
 
-The older proposal's Wholesale-only Buyer/Seller account-category requirements and the local fixture's corresponding category check are **superseded**. Do not implement account-category fields in the Foundation. Per-listing `market_category` is a separate feature contract supplied by migration #33.
+The older proposal's Wholesale-only Buyer/Seller account-category requirements and the local fixture's corresponding category check are **superseded**. Do not implement account-category fields in the Foundation. Per-listing `market_category` is a separate feature contract supplied by migration #32.
 
 ## 1. Baseline boundary and schema layout
 
