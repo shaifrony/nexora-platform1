@@ -421,3 +421,85 @@ Permitted next design path:
 - Only after local Foundation + all 38 feature migrations + synthetic E2E pass may NEXORA-TEST be considered, with separate explicit approval.
 
 **Decision:** this design resolves the intended shape of the Auth/RLS baseline, but the missing Foundation source, clean replay and local runtime evidence remain blockers. No SQL, code, trigger, migration, database, hosted project or deployment was changed in this step.
+
+## 15. Canonical Admin Permission Catalog and RPC contract audit (2026-11-14)
+
+**Status: source-derived contract audit and proposed reconciliation only. No permission seeds, RPCs, tables or SQL were changed.**
+
+### 15.1 Exact permission keys seeded by active migrations
+
+| Key | Seed source | Department as inserted | Sensitive |
+|---|---|---|---|
+| `logistics.view` | #19 `20261113220000_delivery_assignment_system.sql` | `logistics` | true in #19 |
+| `logistics.assign` | #19 | `logistics` | true in #19 |
+| `services.edit` | #25 `20261114120000_listing_edit_review_workflow.sql` | `product_business` | true |
+| `marketing.leads.view` | #34 `20261114200000_centralized_officer_account_management.sql` | `marketing` | false |
+| `marketing.leads.manage` | #34 | `marketing` | true |
+| `marketing.campaigns.manage` | #34 | `marketing` | true |
+| `transport.partners.view` | #34 | `transport` | false |
+| `transport.partners.manage` | #34 | `transport` | true |
+| `transport.staff.manage` | #34 | `transport` | true |
+| `finance.view` | #34 | `accounts` | false |
+| `finance.transactions.view` | #34 | `accounts` | false |
+| `finance.transactions.manage` | #34 | `accounts` | true |
+| `finance.refunds.request` | #34 | `accounts` | true |
+| `finance.refunds.approve` | #34 | `accounts` | true |
+| `finance.payouts.manage` | #34 | `accounts` | true |
+
+**Critical department conflict:** #19 initially inserts `logistics.view` and `logistics.assign` under department `logistics`. #34 later attempts to insert those same keys under `transport` using `ON CONFLICT(permission_key) DO NOTHING`; therefore it does not move the existing rows. #34's officer assignment validates permission department equality for non-MD staff, so a Transport officer cannot be granted these Logistics keys under the current catalog rows. Do not silently reassign them: decide whether Logistics remains a separate department or whether #19/#34 are reconciled to one canonical department key, then test existing policy/RPC references.
+
+**Missing department dependency:** #25 seeds `services.edit` under `product_business`, but #34's department seed list contains only `managing_director`, `marketing`, `transport`, and `accounts`. Foundation must explicitly define the `product_business` department (or migrate the permission to a chosen existing department) before the permission is assignable. #34 also does not seed `products.edit`, despite #25 checking it for Product image delete.
+
+### 15.2 Frontend permission keys with no matching active migration seed
+
+The following are read by current Admin UI code, but no seed for these keys was found in the audited active migration set:
+- `users.view`, `users.suspend`, `users.restore`, `users.cancel`
+- `businesses.view`, `businesses.suspend`
+- `products.view`, `products.suspend`, `products.restore`, `products.cancel`
+- `products.edit`
+- `security.audit_logs.view`
+
+Consequences:
+- Assistant Admin panels can appear empty/hidden because no valid grants can be issued from a missing catalog row.
+- `products.edit` storage deletion policy can never pass through a correctly catalogued grant until the key is seeded and granted.
+- Super Admin UI bypasses some client display gates, but that does not repair missing server RPCs or missing policies.
+- Permission catalog absence must remain fail-closed; do not invent broad grants or treat an empty grant set as allow.
+
+Proposed canonical catalog additions, subject to exact RPC and RLS review:
+- Marketing/Buyer-Seller account operations: `users.view`, `users.suspend`, `users.restore`, `users.cancel` — department owner must be explicitly selected (likely Marketing only if its mandate includes account moderation; otherwise create a separate user-governance department).
+- Business review: `businesses.view`, `businesses.suspend` — map to the department responsible for Seller/Business onboarding, with approve/reject retained as protected Director-only actions unless a dedicated permission is approved.
+- Product moderation: `products.view`, `products.suspend`, `products.restore`, `products.cancel` — department owner explicitly decided; destructive cancel must be sensitive and reason/audit-required.
+- Listing edit: `products.edit` plus existing `services.edit` — use one consistent product/business department key.
+- Audit: `security.audit_logs.view` — sensitive, read-only, restricted to Director or explicitly authorized audit staff; do not grant by default.
+
+### 15.3 Frontend RPC mismatches confirmed
+
+| Frontend RPC | Parameters observed | Active migration result | Required action |
+|---|---|---|---|
+| `review_role_request` | `request_id uuid`, `decision text` (`approved`/`rejected`) | No active definition | Foundation candidate contract; lock pending row, require AAL2 protected Director, verify Seller request and applicant state, atomic Buyer→Seller on approval, rejection leaves Buyer unchanged, audit decision. |
+| `manage_nexora_user` | `p_user_id uuid`, `p_action text`, `p_reason text` | No active definition | Do not create until action/status semantics, permission keys, audit and legacy caller are reconciled. |
+| `admin_manage_user` | Previously observed as a newer frontend call variant | No active definition | Stale/alternate name; do not create an alias to `manage_nexora_user` without a single canonical contract. |
+| `manage_marketplace_listing` | `p_target_type text`, `p_target_id uuid`, `p_action text`, `p_reason text` | No active definition | Do not implement a generic polymorphic mutation until Product/Business action matrix, permission mapping and per-type validation are explicit. |
+| `manage_nexora_officer` | email, action, department, position, permissions, reason | #34 defines private + public wrapper | Current #34 enforces Director/AAL2 and validates catalog department, but its catalog conflicts above must be resolved before use. |
+
+The current frontend user moderation and listing moderation handlers call missing RPCs. Client-side permission gates are presentation only and cannot authorize these mutations.
+
+### 15.4 Exact role-request table and review invariants
+
+Frontend contract:
+- Owner selects own `role_requests(user_id, requested_role, status, created_at)`, latest pending request.
+- Owner insert is limited to `user_id=auth.uid()`, `requested_role='seller'`, `status='pending'`.
+- Expected partial unique index/constraint name: `one_pending_role_request_per_user`.
+- Review RPC: `review_role_request(request_id uuid, decision text)`, decision allowlist `approved|rejected`.
+
+Foundation must define the exact table/column contract, owner-only insert/read policy, protected reviewer fields, pending-only uniqueness and an atomic row-locked Director-only review function. No user-supplied role/status/reviewer columns. On approval, require the applicant is still an active Buyer and atomically transition the profile to Seller; on rejection, retain Buyer role. Both decisions append audit history. Repeated/concurrent review attempts must fail safely.
+
+### 15.5 Release gate
+
+Before a Foundation bootstrap candidate is authored:
+1. Resolve canonical department ownership for every permission key, including Logistics vs Transport and Product/Business.
+2. Add only keys backed by an identified UI action and server-side RPC/policy; remove stale frontend checks only through a separate reviewed code change.
+3. Define the exact action-to-permission mapping and ensure every sensitive RPC independently calls the canonical resolver.
+4. Reconcile or disable missing user/listing moderation RPC paths; no alias-by-guessing.
+5. Implement and test `review_role_request` contract, row locking, pending uniqueness, role transition and audit.
+6. Run synthetic positive/negative tests for each key and department. Until then, missing keys deny and all affected UI actions remain nonfunctional rather than bypassing security.
