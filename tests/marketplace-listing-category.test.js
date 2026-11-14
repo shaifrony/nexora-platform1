@@ -956,3 +956,9 @@ test("Buyer Demand negotiation RPC caps Buyer and Seller counter quantities at r
   assert.match(fn, /least\(v_latest\.proposed_quantity,v_demand_qty\)/i);
   assert.match(fn, /v_qty>v_demand_qty[\s\S]*?v_qty>coalesce\(nullif\(v_offer\.available_quantity,'\'\)::numeric,0\)/i);
 });
+
+
+test("Buyer Demand requested quantity parser accepts numeric amounts followed by units", () => {
+  assert.match(demandOrderSql, /v_demand_qty:=nullif\(substring\(regexp_replace\(btrim\(v_demand\.required_quantity\),',','','g'\) from '\^\[0-9\]\+\(\[\.\]\[0-9\]\+\)\?'\),' '\)::numeric/i);
+  assert.match(demandOrderSql, /if v_demand_qty is null or v_demand_qty<=0 then raise exception 'Buyer Demand quantity is invalid'/i);
+});
