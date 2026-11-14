@@ -1272,3 +1272,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Strengthened test #32 to check all table-level privilege classes (SELECT/INSERT/UPDATE/DELETE/TRUNCATE/REFERENCES/TRIGGER), inspect every live column against the explicit public allowlist (so future columns default to denied), and execute the safe-column query plus summary RPC under both `anon` and `authenticated`.
 - Static review confirms the recovery candidate revokes table-level privileges and the five existing private-column SELECT grants before granting only the ten allowlisted columns. The patch and expanded SQL test have **not** been executed against PostgreSQL in this resumed session: this Sandbox has no local PostgreSQL client or running database service, and Docker/Podman are unavailable. The previous disposable PostgreSQL replay and Buyer JWT/PostgREST tests remain valid for the state tested at that time, but do not verify this later review-grant patch.
 - No active migration or frontend code changed. Candidate #31/#32 remain recovery-only and unexecuted; no hosted DB, `main`, Live/Production, DNS, deployment, or paid service changed.
+
+
+## 2026-11-14 — Upazila Agent network and direct-seller fulfilment requirement
+
+- Added user-approved product requirement/design: NEXORA will appoint one or more authorized Agents per Upazila to collect goods from farmers/businesses, record receipt and quantity, package/label goods, deliver them to NEXORA-designated Drop Points, and deliver NEXORA-authorized seller payouts with recipient acknowledgement.
+- Sellers may alternatively fulfil orders directly; Agent-assisted collection is optional, not a mandatory marketplace gate.
+- Agent is a distinct field-operations/payout role, not automatically equivalent to the existing Porter/Transport Provider. Onward transport from Drop Point remains a separately assigned leg.
+- Added `docs/NEXORA_UPAZILA_AGENT_NETWORK_DESIGN.md` covering operational sequence, custody and quantity reconciliation, partial/damaged/short goods, least-privilege territory access, seller payout controls, audit, governance, and unresolved operational/compliance decisions.
+- Existing Delivery Network foundations do not establish that Agent collection, packaging, Drop Point custody, seller payout delivery or payout reconciliation are implemented. This is a new requirement; implementation remains pending.
+- Open decisions include payout method and trigger, Agent compensation and packaging cost, Drop Point ownership/operation/liability, Upazila coverage, whether Buyer Demand orders are included, and direct-seller handover route.
+- No role, SQL/schema/RPC/migration, payment or payout integration, database, frontend, deployment, Production, `main`, DNS or paid service was changed. This commit records requirements/design only.
