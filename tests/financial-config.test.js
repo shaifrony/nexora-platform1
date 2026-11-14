@@ -62,7 +62,7 @@ test("rejects legacy_unclassified as a fee calculation category", () => {
 });
 
 test("rejects conflicting market_category and legacy sale_type inputs", () => {
-  assert.throws(() => finance.calculateOrderFees(input({ market_category: "retail" })), /must match/);
+  assert.throws(() => finance.calculateOrderFees(input({ sale_type: "retail" })), /must match/);
 });
 
 test("accepts legacy sale_type input only when market_category is absent", () => {
@@ -81,7 +81,7 @@ test("does not charge Buyer Agent fee when no Buyer Agent is used", () => {
   assert.equal(result.buyer_agent_fee_basis, null);
 });
 test("selects retail commission independently from wholesale", () => {
-  const result = finance.calculateOrderFees(input({ sale_type: "retail" }));
+  const result = finance.calculateOrderFees(input({ market_category: "retail" }));
   assert.equal(result.marketplace_commission_rate_bps, 400);
   assert.equal(result.marketplace_commission_minor, 4000);
 });
