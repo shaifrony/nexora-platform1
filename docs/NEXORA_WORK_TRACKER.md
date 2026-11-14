@@ -1186,3 +1186,16 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Supabase `db lint`: no schema errors. Public tables: 41/41 RLS enabled. SECURITY DEFINER functions: 46/46 explicit search_path. Exactly one Auth signup trigger; no API EXECUTE on internal trigger functions.
 - Total local assertions across RLS helper, Foundation and Governance suites: 46 passed. Final local stack destroyed; stack list empty.
 - Remaining: extension-owned DDL test; protected first Director bootstrap; non-Director cross-department exception (currently fail-closed); missing Admin RPC contracts; complete Buyer browser journey. No hosted DB, `main`, Live/Production, DNS or deployments changed.
+
+
+## 2026-11-14 — Buyer Demand quotation privacy policy fixed in local recovery test
+
+- Continued Buyer-first validation on the existing persistent Sandbox and only on nexora-development.
+- Fresh disposable local native PostgreSQL 17 stack: Foundation/RLS candidates #12/#13, all 38 active migrations, and Admin Governance recovery candidate #14 applied successfully.
+- Audit 24 first revealed stale policy-name expectations; corrected the recovery-only audit to match the final active policy names. The audit then passed.
+- Behavior suite 26 was aligned with the final schema (business_profiles.id, public_businesses sync trigger, no Product sale-channel field, numeric available_quantity string).
+- The behavior suite exposed a real quotation SELECT RLS defect: the Seller-offer policy queried private buyer_demands.buyer_id directly although authenticated intentionally lacks that column privilege. This broke offer SELECT during policy evaluation.
+- Added recovery-only patch 30 with a narrow SECURITY DEFINER private.is_buyer_demand_owner(uuid) helper; empty search_path, active Buyer check, explicit owner, anon/PUBLIC EXECUTE revoked, authenticated-only EXECUTE. Buyer identity remains private.
+- After patch 30, read-only audit 24 and transactional behavior suite 26 both passed. Synthetic checks cover Demand routing, anonymous projection, Buyer ownership, Seller inbox isolation, quotation creation/read, unrelated Buyer denial, unmatched Seller denial, duplicate offer denial, Buyer-ID spoof denial, required-date validation and grants.
+- No active migration was edited; #30 remains recovery-only until a natural forward-migration timestamp can be generated after the current latest version. Real JWT/PostgREST/browser/mobile tests remain open.
+- No hosted NEXORA-TEST, Live/Production, main, DNS or deployment changes.
