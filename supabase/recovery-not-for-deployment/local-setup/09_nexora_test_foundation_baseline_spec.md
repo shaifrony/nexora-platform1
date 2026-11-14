@@ -1,7 +1,7 @@
 # NEXORA-TEST Foundation Baseline — Reviewed Design Specification
 
-**Status:** DESIGN BASELINE v1 — NOT SQL / NOT DEPLOYABLE / NOT APPLIED  
-**Date:** 2026-11-14  
+**Status:** DESIGN BASELINE v2 — NOT SQL / NOT DEPLOYABLE / NOT APPLIED  
+**Date:** 2026-11-15  
 **Target:** Supabase project `NEXORA-TEST` only  
 **Repository branch:** `nexora-development`  
 **Purpose:** Define the minimum identity, account lifecycle, Admin authorization and audit foundation required before replaying the 39 active feature migrations.
