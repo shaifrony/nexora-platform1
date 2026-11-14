@@ -1,0 +1,41 @@
+name: NEXORA Development CI
+
+on:
+  push:
+    branches:
+      - nexora-development
+  pull_request:
+    branches:
+      - nexora-development
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexora-development-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Static checks and dependency-free tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out development branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -print0)
+
+      - name: Run dependency-free regression tests
+        run: node --test tests/*.test.js
