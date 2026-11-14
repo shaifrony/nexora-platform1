@@ -317,7 +317,9 @@ Required tests: six operational departments accept valid officers; Logistics per
 - No active SQL, repo source, hosted DB, NEXORA-TEST, Live/Production, `main`, DNS or deployment changed. No successful replay/security test is claimed.
 
 
-## 20. Runtime verification — RLS bootstrap dependency and Foundation stop point (2026-11-14)
+## 20. Historical runtime report — RLS bootstrap dependency and Foundation stop point (2026-11-14)
+
+**Evidence status correction (2026-11-15):** The older report below claims a local Supabase CLI stack run. This conflicts with the latest work-tracker/environment record and no retained execution log is available in the current session. Do not treat the reported 1/38 Supabase replay as verified. The separately corroborated candidate #12 result is the standalone disposable PostgreSQL 18.6 semantic rehearsal recorded in the latest tracker; it does not prove a Supabase stack run.
 
 - Recovery-only helper candidate: `supabase/recovery-not-for-deployment/local-setup/12_rls_auto_enable_recovery_candidate.sql`.
 - 12/12 local PostgreSQL 17 assertions passed for public ordinary/partitioned tables, CTAS, SELECT INTO, non-public exclusion, trusted ownership, enabled trigger, function ACL, no-policy API denial and non-recursive trigger behavior. Extension-owned table behavior remains untested.
@@ -326,20 +328,22 @@ Required tests: six operational departments accept valid officers; Logistics per
 - Gate status: RLS helper candidate has a successful narrow local preflight; Foundation schema/Auth/Admin resolver and full replay remain blocked. Do not apply this candidate to NEXORA-TEST or Live/Production.
 
 
-## 21. Foundation bootstrap recovery candidate — fresh replay result (2026-11-14)
+## 21. Historical Foundation bootstrap replay claim — unverified (2026-11-14)
 
-- Applied only in a disposable local PostgreSQL 17/Supabase CLI v3.1.0 stack: RLS helper candidate #12 followed by Foundation candidate #13.
-- At the time of this historical rehearsal, all **38/38 then-present active migrations** replayed successfully, from `20261112045441` through `20261115120000`. The later-added migration `20261114175118_add_dual_listing_market_category.sql` was not part of that run; this is not evidence of a 39/39 replay. The Foundation candidate supplies `public.is_nexora_super_admin()` as required by active migration #10/#12 in addition to the private resolver.
-- 15/15 synthetic Foundation assertions passed, covering Auth signup roles, Porter pending state, no public Admin signup, Director MFA, department permissions, Buyer profile RLS, duplicate pending role request and atomic Buyer→Seller review/audit.
-- Supabase `db lint`: no schema errors. Public table RLS audit: 41/41 enabled. SECURITY DEFINER search_path audit: 46/46 explicit. One Auth signup trigger. Internal trigger functions are not executable by API roles.
-- The local stack was destroyed; stack list empty. These are recovery-only candidates, not deployable SQL.
+**Evidence status correction (2026-11-15):** This section was retained from an earlier matrix revision, but it conflicts with the latest work tracker, which records Foundation candidate #13 as unexecuted. No matching retained command output is available. Treat every result below as an unverified historical report, not a passed gate.
 
-## 22. Migration #35 Governance compatibility patch — verification (2026-11-14)
+- Earlier matrix text reported that RLS helper candidate #12 followed by Foundation candidate #13 had been applied in a disposable local PostgreSQL 17/Supabase CLI v3.1.0 stack.
+- The same earlier report claimed a **38/38** replay from `20261112045441` through `20261115120000`, plus the listed Foundation and lint/RLS/ACL results. The later-added migration `20261114175118_add_dual_listing_market_category.sql` was not part of that 38-file set. Because candidate #13 execution itself is disputed, none of these results is accepted as verified evidence until reproduced with retained logs.
+- The same earlier report claimed 15/15 synthetic Foundation assertions, `db lint` success, 41/41 public-table RLS, 46/46 explicit SECURITY DEFINER search paths, one Auth trigger and restricted trigger-function ACLs. These claims require a fresh reproducible run before use.
+- Candidate #13 remains a new reconstruction, not historical SQL and not deployable.
 
-- Candidate #14 repairs the existing `private.manage_nexora_officer` function after the 39-migration replay without editing historical migration #35.
-- Six operational departments accepted; Managing Director Office remains position-specific. Active permission catalog and exact department validation enforced. Trust & Safety moderation permissions remain inactive/ungrantable pending narrow audited RPCs.
-- 16/16 create/deactivate/department/permission/audit assertions and 3/3 update/AAL1/sensitive-reason assertions passed locally.
-- Combined local test suites: 46 assertions passed. Extension-owned table event-trigger behavior, protected initial Director bootstrap, remaining Admin RPC contracts and end-to-end Buyer browser validation remain open.
+## 22. Historical Admin Governance patch test claim — unverified (2026-11-14)
+
+**Evidence status correction (2026-11-15):** The older section below records local candidate #14 test results, but the latest tracker does not provide matching retained execution output. Treat these as reported historical results only; reproduce them in the current isolated Supabase environment before relying on them.
+
+- Earlier matrix text reported that candidate #14 repairs the existing `private.manage_nexora_officer` function after the 39-migration replay without editing historical migration #35.
+- The earlier report claimed six operational departments were accepted, exact department validation enforced, Trust & Safety moderation permissions remained inactive, and 16/16 + 3/3 assertions passed. These results are not independently verified in the current session.
+- Candidate #14 remains recovery-only and must be reproduced after the current 39-migration replay; extension-owned table event-trigger behavior, protected initial Director bootstrap, remaining Admin RPC contracts and end-to-end Buyer browser validation remain open.
 - No hosted database or production surface was changed.
 
 
@@ -358,7 +362,7 @@ Required tests: six operational departments accept valid officers; Logistics per
 - The active directory now contains **39** SQL files with **39 unique timestamp prefixes**. The omitted file in the previous 38-row matrix was `20261114175118_add_dual_listing_market_category.sql`; it is now included as migration #32, and all later matrix sequence numbers/references are shifted by one.
 - Migration #39, `20261115120000_multilingual_chat_foundation.sql`, depends on Foundation `profiles` and the earlier communications tables `messages`, `conversations`, and `conversation_participants`. It creates owner-scoped language preferences and participant-scoped read-only message translations. Translation rollout remains disabled; this migration is not permission to enable translation in Production.
 - A fresh read-only inventory on `nexora-development` confirms 39 active SQL files and 39 unique versions, latest `20261115120000`. Static parser success recorded in the work tracker is not a database replay.
-- Earlier sections in this file report a 38/38 replay and candidate #14 local tests. Those reports predate the 39-file inventory and conflict with the latest work-tracker environment note that the current sandbox cannot start a disposable Supabase stack. Treat those historical replay claims as **not sufficient evidence for the current 39-file chain**. The complete 39-file chain must be reproduced on a fresh isolated Supabase runtime with retained command output before any hosted Test change.
+- Earlier sections in this file contain historical claims for a 1/38 replay, a 38/38 replay and candidate #14 local tests. Those claims conflict with the latest work-tracker status (candidate #13 unexecuted; no current disposable Supabase stack available) and have been explicitly marked unverified. The only currently corroborated Foundation-helper rehearsal is candidate #12's standalone PostgreSQL 18.6 semantic test, not a Supabase stack replay. Treat all other historical results as **not sufficient evidence for the current 39-file chain**. The complete 39-file chain must be reproduced on a fresh isolated Supabase runtime with retained command output before any hosted Test change.
 - The current NEXORA-TEST read-only check still reports `ACTIVE_HEALTHY`, zero application migration-history rows and zero public application tables. No schema was applied during this inventory reconciliation.
 - Supabase CLI v3 now targets local by default; hosted database mutations require explicit `--remote` targeting and confirmation. New public tables are no longer automatically exposed to the Data API by default. The Foundation must use explicit grants plus RLS and must never rely on implicit Data API exposure.
 - **Current gate:** Foundation SQL remains a new reconstruction, not historical recovery. Do not apply recovery-only files #12/#13/#14 to hosted Supabase. Do not apply the Foundation or any of the 39 feature migrations to NEXORA-TEST until the full source/permission contract and genuine isolated Supabase runtime gates pass.
