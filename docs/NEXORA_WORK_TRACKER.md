@@ -1795,3 +1795,20 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [x] Development CI #43662754467 passed: 129/129 source tests, six disposable PostgreSQL suites, JavaScript syntax and 45 migration filename/order checks.
 - [ ] Finish staff operational status/proof-of-delivery field workflow, SMS/WhatsApp OTP delivery, partial delivery/disputes and final Order completion.
 - [ ] Full Supabase migration-chain/Auth/PostgREST/RLS and browser/device E2E; no hosted migration or Production deployment without explicit approval.
+
+
+## 2026-11-15 — Delivery Staff Operations, Proof, Partial Delivery & Disputes (Development staged)
+- [x] Added `20261115190000_delivery_staff_status_proof_partial_and_disputes.sql` on `nexora-development`.
+- [x] Added an identity-bound worker queue RPC returning only the worker's assigned jobs and the operational contact/address fields needed to perform that delivery.
+- [x] Added guarded worker status RPC and append-only tracking events attributed to `delivery_staff`. Workers cannot set `delivered`; Buyer receipt OTP remains the final confirmation.
+- [x] Added a private Storage bucket for job-folder photo/signature evidence; upload is limited to assigned active staff or AAL2 logistics Admin; reads are limited to the related Buyer/Seller, assigned worker or AAL2 logistics viewer. No update/delete policy is created.
+- [x] Added append-only proof metadata with photo paths, recipient signature path, acknowledgement, delivered quantity and package count. Cumulative delivered quantity is locked/revalidated against the Commerce Order quantity; a partial proof moves the job to `partially_delivered`.
+- [x] Added dispute initiation for the linked Buyer/Seller, assigned worker or AAL2 logistics Admin, with one active dispute per job; AAL2 `logistics.assign` Admin can review, resolve or reject with audit logging.
+- [x] Added scoped worker queue, proof-history and dispute-history RPCs; raw private tables are not granted to browser roles.
+- [x] Added a disposable PostgreSQL SQL integration fixture and Node source-level regression tests.
+- [ ] Execute the new SQL integration fixture in CI. The GitHub Actions workflow file could not be updated by the connected repository action's safety gate; do not bypass that restriction. Existing Node test glob will automatically include the new source test, but the SQL fixture is not yet wired into CI.
+- [ ] Run the SQL fixture on disposable PostgreSQL and fix any runtime/schema issues.
+- [ ] Build the Worker Dashboard UI for status updates, photo/signature upload, partial quantities, proof history and dispute creation; build Admin dispute queue/review UI and Buyer/Seller dispute/proof views.
+- [ ] Test Supabase Storage policies and signed access on an isolated Supabase project; no hosted environment touched.
+- [ ] Browser E2E, accessibility, mobile upload and negative authorization tests remain pending.
+- [ ] Do not apply migration to hosted Supabase or Production without explicit approval.
