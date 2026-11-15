@@ -131,3 +131,53 @@ jobs:
           }
           console.log("Validated " + files.length + " active migration filenames.");
           NODE
+
+  recovery-snapshot:
+    name: Create recoverable development source snapshot
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/nexora-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Check out exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Create source snapshot and Git history bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-output
+          git archive --format=tar.gz --prefix=nexora-source/ HEAD -o recovery-output/nexora-source.tar.gz
+          git bundle create recovery-output/nexora-history.bundle --all
+          git bundle verify recovery-output/nexora-history.bundle
+          git rev-parse HEAD > recovery-output/commit-sha.txt
+          printf 'branch=%s\\ncommit=%s\\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" > recovery-output/RESTORE-METADATA.txt
+          cat > recovery-output/RESTORE-INSTRUCTIONS.txt <<'EOF'
+          NEXORA DEVELOPMENT RECOVERY SNAPSHOT
+          
+          1. Keep this artifact in a secure location; it contains the tracked source snapshot and Git history.
+          2. To restore the complete Git repository, download nexora-history.bundle and run:
+             git clone nexora-history.bundle nexora-platform1
+          3. Then run:
+             cd nexora-platform1
+             git checkout nexora-development
+          4. To inspect the source-only snapshot, extract nexora-source.tar.gz.
+          5. Recreate local environment variables from the owner's password manager/secure recovery record.
+          6. Never put .env files, service-role keys, passwords, tokens or recovery codes into Git.
+          7. This artifact does NOT back up Supabase database rows or Storage objects.
+          EOF
+
+      - name: Upload tested recovery snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexora-development-recovery-${{ github.sha }}
+          path: recovery-output/
+          if-no-files-found: error
+          retention-days: 90
+
