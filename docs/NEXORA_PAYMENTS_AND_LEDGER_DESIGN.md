@@ -178,6 +178,12 @@ Required correction:
 
 The next database implementation should be an append-only, per-Order Seller settlement workflow with private RLS-enabled tables and service-only mutation RPCs. It must not be callable by Buyer/Seller/Porter browser roles to approve or move money.
 
+The current source has two specific receipt-completion gaps that the next migration must close:
+- After multiple partial proof records cumulatively reach the Order quantity, `record_delivery_proof` leaves the Job in `partially_delivered`; the final proof does not promote it to a receipt-pending/full-quantity state.
+- `verify_delivery_receipt_code` currently accepts `partially_delivered` and sets `delivered` without checking the cumulative proof total. Therefore a Buyer OTP can currently turn a short-delivery Job into `delivered`. The OTP challenge's `verified_at` is cleared immediately, so no durable receipt-confirmation record remains for settlement audit.
+
+The migration-specific regression fixture must cover: (a) partial 3/10 + OTP stays partial; (b) second proof 7/10 makes cumulative 10/10 but still requires a fresh final Buyer OTP; (c) final OTP creates an immutable receipt record and only then marks delivered; (d) over-delivery remains rejected; (e) repeat OTP is rejected without duplicating receipt; (f) active dispute blocks final completion/settlement; and (g) short, missing or mismatched proof cannot mark delivered. Keep OTP raw code out of storage and receipt history; persist only challenge ID/digest metadata, proof IDs, cumulative quantity, Buyer/Order/Job IDs, and confirmation actor/time.
+
 Eligibility is a conjunction, not a single status:
 1. Exactly one linked Delivery Job exists for the Order.
 2. The payment intent is captured and the captured amount/currency exactly matches the immutable Buyer-total snapshot.
