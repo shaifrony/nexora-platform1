@@ -137,3 +137,11 @@ Before any real buyer delivery is enabled:
 - Admin Delivery Network UI now lets an AAL2 Admin choose a ready Product Order, prefill Seller pickup and Buyer destination details, manually verify missing phone/city data, and create the linked job. Selecting Manual Request clears Order-derived values to prevent stale addresses or references from being reused accidentally.
 - Disposable PostgreSQL CI test denies missing `logistics.assign` and AAL2, verifies only ready Product Orders are listed, confirms the new Delivery Job is linked to the selected Order, and rejects pending and Service Orders. Development CI [#43660807743](https://github.com/shaifrony/nexora-platform1/actions/runs/43660807743) passed 122 dependency-free tests, five disposable PostgreSQL suites, JavaScript syntax and 44 migration filename/order checks.
 - This is staged Development code only. Full Supabase Auth/PostgREST/RLS and browser/device E2E remain outstanding. No hosted migration or Production deployment was performed.
+
+
+## 2026-11-15 — Admin Order linking and Buyer receipt queue integration
+
+- Admin Delivery Network now loads eligible Product Order candidates through a narrow AAL2 + `logistics.assign` RPC; Admin can select an Order and prefill Seller pickup and Buyer destination details. Manual Request selection clears stale Order-derived fields.
+- The linked-create RPC locks and revalidates the Order before creating the Delivery Job with `commerce_order_id`; this makes the shipment discoverable through the existing Buyer-owned receipt queue and buyer-safe tracking projection.
+- The disposable PostgreSQL test now checks Admin permission/MFA enforcement, eligible Order filtering, pending/Service Order rejection, successful Order linkage and that only the owning Buyer can discover the linked Receipt OTP job.
+- The browser UI has a source regression test for server-authorized Order loading and the linked-create call. Full browser/device E2E and hosted Supabase validation remain release gates.
