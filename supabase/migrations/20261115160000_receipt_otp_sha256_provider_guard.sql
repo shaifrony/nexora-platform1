@@ -80,7 +80,8 @@ begin
    join public.profiles owner_profile on owner_profile.id=tp.owner_user_id
    where j.id=p_job_id and tp.application_status='approved'
      and owner_profile.account_status='active'
-     and tp.owner_user_id=v_actor;
+     and tp.owner_user_id=v_actor
+   for share of tp, owner_profile;
    if v_owner is distinct from v_actor then
      raise exception 'Only the active owner of the approved assigned Provider or authorized Admin can verify receipt' using errcode='42501';
    end if;
