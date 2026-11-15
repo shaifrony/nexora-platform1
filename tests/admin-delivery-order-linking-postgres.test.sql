@@ -77,6 +77,7 @@ insert into public.commerce_orders(
  ('83000000-0000-4000-8000-000000000003','NXO-SERVICE','service','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002','81000000-0000-4000-8000-000000000003',1,'BDT','Buyer destination address, Dhaka','ready_for_confirmation',now()),
  ('83000000-0000-4000-8000-000000000004','NXO-OTHER-BUYER','product','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000004','81000000-0000-4000-8000-000000000003',5,'BDT','Another Buyer destination, Dhaka','pending',now());
 
+\ir ../supabase/migrations/20261115150000_receipt_otp_work_queues.sql
 \ir ../supabase/migrations/20261115170000_admin_delivery_order_linking.sql
 
 -- No permission, insufficient MFA, and inactive membership must not expose the queue.
