@@ -554,7 +554,7 @@ returns table(
  order_id uuid,job_id uuid,job_reference text,job_status text,proof_records jsonb,disputes jsonb
 )
 language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_actor uuid:=auth.uid();v_role text;
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
@@ -586,14 +586,14 @@ begin
  join public.delivery_jobs j on j.commerce_order_id=o.id
  order by o.id,j.created_at,j.id;
 end;
-$;
+$$;
 revoke all on function private.get_my_order_delivery_operations(uuid[]) from public,anon,authenticated;
 grant execute on function private.get_my_order_delivery_operations(uuid[]) to authenticated;
 
 create or replace function public.get_my_order_delivery_operations(p_order_ids uuid[])
-returns table(order_id uuid,job_id uuid,job_reference text,proof_records jsonb,disputes jsonb)
+returns table(order_id uuid,job_id uuid,job_reference text,job_status text,proof_records jsonb,disputes jsonb)
 language sql security invoker set search_path=''
-as $ select * from private.get_my_order_delivery_operations($1); $;
+as $$ select * from private.get_my_order_delivery_operations($1); $;
 revoke all on function public.get_my_order_delivery_operations(uuid[]) from public,anon;
 grant execute on function public.get_my_order_delivery_operations(uuid[]) to authenticated;
 
