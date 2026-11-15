@@ -543,6 +543,60 @@
     }catch(err){host.textContent="দরদামের তথ্য লোড হয়নি: "+err.message;}
   }
 
+
+  async function getOrderDeliveryOperations(orderIds){
+    const byOrder=new Map();if(!orderIds.length)return byOrder;
+    const {data,error}=await client().rpc("get_my_order_delivery_operations",{p_order_ids:orderIds});
+    if(error)throw error;
+    (data||[]).forEach(job=>{
+      if(!byOrder.has(job.order_id))byOrder.set(job.order_id,[]);
+      byOrder.get(job.order_id).push(job);
+    });
+    return byOrder;
+  }
+  function orderDeliveryOperationsHtml(jobs){
+    return (jobs||[]).map(job=>{
+      const proofs=Array.isArray(job.proof_records)?job.proof_records:[];
+      const disputes=Array.isArray(job.disputes)?job.disputes:[];
+      const activeDispute=disputes.some(d=>["open","under_review"].includes(d.dispute_status));
+      const disputable=["out_for_delivery","partially_delivered","delivered","disputed","delivery_failed","returned"].includes(job.job_status);
+      const proofHtml=proofs.map(p=>{
+        const paths=[...(p.photo_paths||[]),...(p.signature_path?[p.signature_path]:[])];
+        return '<div class="offer"><b>Proof of Delivery · '+esc(formatOrderDate(p.created_at))+'</b>'+
+          '<p>পৌঁছে দেওয়া: '+esc(p.delivered_quantity)+' · প্যাকেজ: '+esc(p.delivered_package_count)+'</p>'+
+          '<p>গ্রহণকারী: '+esc(p.recipient_name||"উল্লেখ নেই")+' · গ্রহণ স্বীকার: '+(p.recipient_acknowledged?"হ্যাঁ":"না")+'</p>'+
+          (p.note?'<p class="muted">'+esc(p.note)+'</p>':'')+
+          '<div class="form-actions">'+paths.map(path=>'<img data-order-proof-path="'+esc(path)+'" alt="Delivery proof" loading="lazy" style="width:100%;max-width:150px;height:110px;object-fit:contain;border:1px solid var(--border);border-radius:8px">').join("")+'</div></div>';
+      }).join("");
+      const disputeHtml=disputes.map(d=>'<div class="offer"><b>Dispute · '+esc(d.dispute_status)+'</b><p>'+esc(d.reason_code)+' · '+esc(d.description)+'</p>'+(d.resolution?'<p class="muted">সমাধান: '+esc(d.resolution)+'</p>':'<p class="muted">পর্যালোচনার অপেক্ষায়</p>')+'</div>').join("");
+      const disputeForm=disputable&&!activeDispute?
+        '<form class="offer" data-order-dispute-form="'+esc(job.job_id)+'"><h5>ডেলিভারি সমস্যা / Dispute</h5><label>সমস্যার ধরন<select name="reason_code" required><option value="missing_items">পণ্য কম/অনুপস্থিত</option><option value="damaged_items">পণ্য ক্ষতিগ্রস্ত</option><option value="wrong_items">ভুল পণ্য</option><option value="quantity_mismatch">পরিমাণে অমিল</option><option value="recipient_denies_receipt">গ্রহণ অস্বীকার</option><option value="late_delivery">ডেলিভারি দেরি</option><option value="proof_concern">প্রমাণ নিয়ে আপত্তি</option><option value="other">অন্যান্য</option></select></label><label>বিস্তারিত (কমপক্ষে ১০ অক্ষর)<textarea name="description" minlength="10" maxlength="2000" required></textarea></label><button class="light" type="submit">Dispute জমা দিন</button><p class="muted" role="status" aria-live="polite"></p></form>':'';
+      return '<section class="nx-order-timeline"><b>চালান: '+esc(job.job_reference)+'</b><p class="muted">ডেলিভারি অবস্থা: '+esc(job.job_status)+'</p>'+
+        (proofHtml||'<p class="muted">এখনো কোনো Proof of Delivery নেই।</p>')+
+        (disputeHtml||'<p class="muted">কোনো Dispute নেই।</p>')+disputeForm+'</section>';
+    }).join("");
+  }
+  async function wireOrderDeliveryOperations(host,reload){
+    host.querySelectorAll("[data-order-proof-path]").forEach(async img=>{
+      const {data,error}=await client().storage.from("nexora-delivery-evidence").createSignedUrl(img.dataset.orderProofPath,300);
+      if(!error&&data?.signedUrl)img.src=data.signedUrl;
+      else img.hidden=true;
+    });
+    host.querySelectorAll("[data-order-dispute-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();const button=form.querySelector("button[type=submit]"),status=form.querySelector('[role=status]'),fd=new FormData(form);
+      button.disabled=true;status.textContent="Dispute জমা হচ্ছে…";
+      try{
+        const {error}=await client().rpc("raise_delivery_dispute",{
+          p_job_id:form.dataset.orderDisputeForm,p_reason_code:String(fd.get("reason_code")),
+          p_description:String(fd.get("description")||"").trim()
+        });
+        if(error)throw error;
+        status.textContent="Dispute জমা হয়েছে। NEXORA পর্যালোচনা করবে।";
+        await reload();
+      }catch(err){status.textContent="Dispute জমা হয়নি: "+err.message;button.disabled=false;}
+    }));
+  }
+
   async function loadBuyerOrders(){
     const host=$("nxBuyerOrders");if(!host)return;
     if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
@@ -556,6 +610,8 @@
       let trackingUnavailable=false;
       const receiptJobsByOrder=new Map();
       let receiptJobsUnavailable=false;
+      let operationsByOrder=new Map();
+      let operationsUnavailable=false;
       if(rows.length){
         const trackingResult=await client().rpc("get_my_order_delivery_updates",{p_order_ids:rows.map(o=>o.id)});
         if(trackingResult.error){trackingUnavailable=true;console.warn("NEXORA delivery tracking:",trackingResult.error.message);}
@@ -569,6 +625,8 @@
           if(!receiptJobsByOrder.has(job.order_id))receiptJobsByOrder.set(job.order_id,[]);
           receiptJobsByOrder.get(job.order_id).push(job);
         });
+        try{operationsByOrder=await getOrderDeliveryOperations(rows.map(o=>o.id));}
+        catch(operationsError){operationsUnavailable=true;console.warn('NEXORA delivery proof/disputes:',operationsError.message);}
       }
       const deliveryStatusLabels={
         preparing:"ডেলিভারি প্রস্তুতি",
@@ -623,6 +681,7 @@
             ?'<div class="offer"><b>পণ্য গ্রহণ নিশ্চিতকরণ · '+esc(job.job_reference)+'</b><p class="muted">পণ্য হাতে পেয়ে যাচাই করার পর OTP তৈরি করুন। কোডটি শুধু আপনার স্ক্রিনে দেখানো হবে; দায়িত্বপ্রাপ্ত Provider-কে সরাসরি দিন।</p><button type="button" class="light" data-receipt-request="'+esc(job.job_id)+'">রিসিপ্ট OTP তৈরি করুন</button><p class="muted" data-receipt-code="'+esc(job.job_id)+'" aria-live="polite"></p></div>'
             :'').join("");
         const updates=trackingByOrder.get(o.id)||[];
+        const operationsHtml=operationsUnavailable?'<p class="muted">Proof/Dispute তথ্য আপাতত লোড করা যাচ্ছে না।</p>':orderDeliveryOperationsHtml(operationsByOrder.get(o.id)||[]);
         const trackingHtml=trackingUnavailable
           ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>'
           :updates.length
@@ -633,11 +692,12 @@
           '<p>পণ্যের মূল্য: '+esc(Number.isFinite(itemSubtotal)?itemSubtotal.toFixed(2):"—")+' '+esc(o.currency)+'</p>'+
           '<p>ডেলিভারি চার্জ: '+esc(delivery.toFixed(2))+' '+esc(o.currency)+'</p>'+
           '<strong>সর্বমোট: '+esc(Number.isFinite(total)?total.toFixed(2):"—")+' '+esc(o.currency)+'</strong>'+
-          nextAction+history+trackingHtml+receiptHtml+
+          nextAction+history+trackingHtml+receiptHtml+operationsHtml+
           (o.seller_note?'<p class="muted"><b>Seller-এর আপডেট:</b> '+esc(o.seller_note)+'</p>':'')+
           '<p class="muted">এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়।</p>'+
           action+'</article>';
       }).join("")+'</div><p class="muted" data-buyer-order-empty hidden>এই অবস্থায় কোনো অর্ডার নেই।</p>';
+      await wireOrderDeliveryOperations(host,loadBuyerOrders);
       const filterSelect=$("nxBuyerOrderStatusFilter");
       if(filterSelect)filterSelect.addEventListener("change",()=>{
         const cards=[...host.querySelectorAll("[data-buyer-order-card]")];
@@ -714,9 +774,13 @@
         .eq("seller_id",user().id).order("created_at",{ascending:false}).limit(100);
       if(error)throw error;
       const rows=data||[];
+      let operationsByOrder=new Map();let operationsUnavailable=false;
+      try{operationsByOrder=await getOrderDeliveryOperations(rows.map(o=>o.id));}
+      catch(operationsError){operationsUnavailable=true;console.warn('NEXORA seller delivery proof/disputes:',operationsError.message);}
       const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
       rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
-      host.innerHTML='<div class="nx-order-summary"><span>মোট '+rows.length+'</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div><label>অর্ডার ফিল্টার <select id="nxSellerOrderStatusFilter"><option value="all">সব অর্ডার</option><option value="pending">নতুন অর্ডার</option><option value="accepted">গ্রহণ করা</option><option value="ready_for_confirmation">Buyer নিশ্চিত করবেন</option><option value="completed">সম্পন্ন</option><option value="cancelled">বাতিল</option><option value="rejected">প্রত্যাখ্যাত</option></select></label><div id="nxSellerOrderRows">'+(rows.map(o=>'<article class="card nx-order-card" data-seller-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"Buyer Demand অর্ডার":"সেবা বুকিং")+' · '+(o.source_offer_total!==null&&o.source_offer_total!==undefined?'পরিমাণ '+esc(o.quantity)+' · সম্মত পণ্যমূল্য '+esc(o.source_offer_total)+' '+esc(o.currency):'পরিমাণ '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency))+'</p><strong>'+esc(o.grand_total??o.total_price)+' '+esc(o.currency)+'</strong>'+(Number(o.delivery_charge||0)>0?'<p class="muted">পণ্যের মূল্য: '+esc(o.source_offer_total??o.total_price)+' '+esc(o.currency)+' · ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>':'')+'<p><b>ডেলিভারি/সেবার স্থান:</b> '+esc(o.fulfilment_location)+'</p>'+(o.buyer_note?'<p><b>Buyer-এর নোট:</b> '+esc(o.buyer_note)+'</p>':'')+(o.order_status==="pending"?'<div class="form-actions"><button class="primary" data-order-action="accept" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার গ্রহণ</button><button class="danger" data-order-action="reject" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">প্রত্যাখ্যান</button></div>':'')+(o.order_status==="accepted"?'<button class="primary" data-order-action="ready" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">'+(o.listing_type==="service"?"সেবা সম্পন্ন হয়েছে":"পণ্য পাঠানো হয়েছে")+'</button>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো অর্ডার আসেনি।</p>')+'</div>';
+      host.innerHTML='<div class="nx-order-summary"><span>মোট '+rows.length+'</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div><label>অর্ডার ফিল্টার <select id="nxSellerOrderStatusFilter"><option value="all">সব অর্ডার</option><option value="pending">নতুন অর্ডার</option><option value="accepted">গ্রহণ করা</option><option value="ready_for_confirmation">Buyer নিশ্চিত করবেন</option><option value="completed">সম্পন্ন</option><option value="cancelled">বাতিল</option><option value="rejected">প্রত্যাখ্যাত</option></select></label><div id="nxSellerOrderRows">'+(rows.map(o=>'<article class="card nx-order-card" data-seller-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div><p>'+esc(o.listing_type==="product"?"পণ্য অর্ডার":o.listing_type==="buyer_demand"?"Buyer Demand অর্ডার":"সেবা বুকিং")+' · '+(o.source_offer_total!==null&&o.source_offer_total!==undefined?'পরিমাণ '+esc(o.quantity)+' · সম্মত পণ্যমূল্য '+esc(o.source_offer_total)+' '+esc(o.currency):'পরিমাণ '+esc(o.quantity)+' × '+esc(o.unit_price)+' '+esc(o.currency))+'</p><strong>'+esc(o.grand_total??o.total_price)+' '+esc(o.currency)+'</strong>'+(Number(o.delivery_charge||0)>0?'<p class="muted">পণ্যের মূল্য: '+esc(o.source_offer_total??o.total_price)+' '+esc(o.currency)+' · ডেলিভারি চার্জ: '+esc(o.delivery_charge)+' '+esc(o.currency)+'</p>':'')+'<p><b>ডেলিভারি/সেবার স্থান:</b> '+esc(o.fulfilment_location)+'</p>'+(o.buyer_note?'<p><b>Buyer-এর নোট:</b> '+esc(o.buyer_note)+'</p>')+(operationsUnavailable?'<p class="muted">Proof/Dispute তথ্য আপাতত লোড করা যাচ্ছে না।</p>':orderDeliveryOperationsHtml(operationsByOrder.get(o.id)||''))+(o.order_status==="pending"?'<div class="form-actions"><button class="primary" data-order-action="accept" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">অর্ডার গ্রহণ</button><button class="danger" data-order-action="reject" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">প্রত্যাখ্যান</button></div>':'')+(o.order_status==="accepted"?'<button class="primary" data-order-action="ready" data-order-id="'+esc(o.id)+'" data-order-type="'+esc(o.listing_type)+'">'+(o.listing_type==="service"?"সেবা সম্পন্ন হয়েছে":"পণ্য পাঠানো হয়েছে")+'</button>':'')+'</article>').join("")||'<p class="muted">এখনো কোনো অর্ডার আসেনি।</p>')+'</div>';
+      await wireOrderDeliveryOperations(host,loadSellerOrders);
       const filter=$("nxSellerOrderStatusFilter");
       if(filter)filter.addEventListener("change",()=>host.querySelectorAll("[data-seller-order-card]").forEach(card=>{card.hidden=filter.value!=="all"&&card.dataset.status!==filter.value;}));
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction,b.dataset.orderType)));
