@@ -79,6 +79,7 @@ insert into public.commerce_orders(
 
 \ir ../supabase/migrations/20261115150000_receipt_otp_work_queues.sql
 \ir ../supabase/migrations/20261115170000_admin_delivery_order_linking.sql
+\ir ../supabase/migrations/20261115200000_unique_delivery_job_per_order.sql
 
 -- No permission, insufficient MFA, and inactive membership must not expose the queue.
 set role authenticated;
@@ -126,6 +127,30 @@ do $linked$ begin
   raise exception 'FAIL: Delivery Job was not linked to the source Commerce Order';
  end if;
 end $linked$;
+
+-- A second Delivery Job for the same Order must be rejected; partial deliveries
+-- are tracked as proof records on the original job, not as duplicate jobs.
+set role authenticated;
+select set_config('request.jwt.claim.sub','81000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{"aal":"aal2"}',false);
+select set_config('test.admin.permission','true',false);
+do $duplicate_link$ begin
+ begin
+  perform public.create_delivery_network_job_from_order(
+   '83000000-0000-4000-8000-000000000001',
+   'NXO-READY-DUPLICATE','Duplicate attempt',1,
+   'Seller Business',null,'Sales Centre, Mirpur','Dhaka','Bangladesh',
+   'Buyer One',null,'Buyer destination address, Dhaka','Dhaka','Bangladesh',
+   null,null,null,'wholesale'
+  );
+  raise exception 'FAIL: duplicate Delivery Job was created for one Commerce Order';
+ exception when unique_violation then null;
+ end;
+ if (select count(*) from public.delivery_jobs where commerce_order_id='83000000-0000-4000-8000-000000000001')<>1 then
+  raise exception 'FAIL: duplicate Delivery Job persisted';
+ end if;
+end $duplicate_link$;
+reset role;
 
 -- The linked job must appear in the owning Buyer's narrow Receipt OTP queue only.
 set role authenticated;
