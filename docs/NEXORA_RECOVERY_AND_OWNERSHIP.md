@@ -40,7 +40,7 @@ NEXORA must remain recoverable if the owner's phone or computer is lost, stolen,
 
 - GitHub is the primary remote source repository.
 - At each meaningful milestone, ensure all intended work is committed and pushed to `nexora-development`.
-- Periodically create an encrypted full Git mirror/clone on a separate device or encrypted drive. A ZIP download is not a full history backup.
+- Development CI now creates a source archive plus a Git history bundle after successful validation on pushes to `nexora-development`; each artifact is retained for 90 days. Download it from the successful GitHub Actions run and copy it to a separate encrypted device/cloud vault. The CI artifact is a convenience copy, not a permanent independent backup.
 - Verify a backup by cloning it into a clean folder and checking out `nexora-development`.
 - Never put `.env`, service-role keys, access tokens, private customer exports, or unredacted logs in the repository backup unless they are separately encrypted and explicitly required; normally exclude them.
 
@@ -55,7 +55,7 @@ git -C nexora-restore-check checkout nexora-development
 
 Because the repository is public today, the clone can be read without a login. Changes still require authorized GitHub access.
 
-## Database and uploaded-file backup gate (before real customers)
+## Automated CI recovery snapshot\n\nOn every successful push to `nexora-development`, the `recovery-snapshot` job creates `nexora-source.tar.gz`, `nexora-history.bundle`, the exact commit SHA and restore instructions. The artifact name includes the tested commit SHA and GitHub retains it for 90 days. The job runs only after the full validation job succeeds. Download and copy the artifact to an encrypted device or independent secure storage before the retention period expires. It does not contain Supabase database rows, Storage objects, secrets or owner account recovery codes.\n\n## Database and uploaded-file backup gate (before real customers)
 
 Before launching with real customer data:
 
