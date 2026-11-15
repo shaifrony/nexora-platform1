@@ -1,6 +1,6 @@
 # NEXORA Payments, Finance Ledger and Settlement — Design Gate
 
-Status: **Architecture defined; implementation pending.** This document is a design boundary, not evidence that payments are collected or funds are held. It is staged on `nexora-development` only.
+Status: **Initial provider-neutral database foundation implemented; provider integration and full finance workflows remain pending.** This document is a design boundary, not evidence that payments are collected or funds are held. It is staged on `nexora-development` only.
 
 ## 1. Non-negotiable invariants
 
@@ -98,3 +98,20 @@ The exact chart of accounts and whether NEXORA is agent, marketplace facilitator
 - Whether manual/offline payments are supported and the evidence + maker-checker policy.
 
 Until these are decided, implement provider-neutral ledger and reconciliation foundations only; do not hard-code a gateway, claim online payment support, or enable live money movement.
+
+
+## 9. First Development implementation — 2026-11-15
+
+Migration `20261115220000_payment_intent_webhook_foundation.sql` now stages the first provider-neutral database foundation on `nexora-development`:
+
+- Private, RLS-enabled `payment_intents`, `payment_transactions`, `provider_webhook_events`, currency precision, chart-of-account, journal and journal-line tables. Browser roles receive no direct table privileges.
+- `public.create_payment_intent` is Buyer-authenticated, requires an active Buyer and Seller plus an accepted/ready Order, snapshots the Order amount, enforces a request idempotency key and permits only one unresolved intent per Order. `public.get_my_payment_intents` exposes only minimal status fields to the linked Buyer/Seller.
+- `public.attach_payment_provider_reference` and `public.ingest_verified_payment_event` are service-role-only. The Edge/server adapter MUST verify the provider signature and provider-side transaction status before calling the normalized event RPC; this SQL RPC is not a cryptographic signature verifier. Raw webhook bodies are not stored; only a SHA-256 payload fingerprint and normalized fields are retained.
+- Duplicate provider event IDs are idempotent and normalized-content conflicts fail closed. Unmatched events can be replayed after the provider reference is attached. Amount/currency mismatches, late captures, additional captures and invalid state transitions enter `requires_review`; they do not silently mark funds as received.
+- Currency minor-unit exponents are explicit. Current Commerce Order prices have two decimal places, so only configured two-decimal currencies are enabled. JPY (0 decimals), KWD/BHD (3 decimals) remain disabled until the underlying price model supports their precision.
+- Service-role-only journal posting validates equal debit/credit totals in one currency, protects posted journals/lines from mutation, supports idempotent posting and creates an immutable mirrored reversal entry.
+- `public.expire_stale_payment_intents` is a service-role-only maintenance RPC; it must be invoked by a trusted scheduler/worker. No scheduler has been configured.
+
+Focused tests: `tests/payment-finance-foundation.test.js` and `tests/payment-finance-foundation-postgres.test.sql`. The SQL suite passed locally against a disposable PostgreSQL 18.6 database. CI integration has been added but must pass on the exact pushed commit before this milestone is marked CI-verified.
+
+Still not implemented: provider-specific cryptographic adapter/checkout, gateway sandbox verification, payment reconciliation reports, refunds, chargebacks, seller payable calculations, payout/settlement, maker-checker approval UI, legal/accounting fund-flow decisions, full Supabase Auth/JWT/PostgREST/RLS integration, and browser/mobile end-to-end validation. No hosted Supabase migration, live payment, or Production change has been made.

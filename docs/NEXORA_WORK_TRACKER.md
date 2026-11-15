@@ -197,7 +197,6 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - During the multilingual architecture source recheck, found that `private.append_product_negotiation_chat_event` in `20261115110000_product_price_negotiation.sql` still had an invalid single-$ PL/pgSQL body delimiter.
 - Corrected it to a matching `$$ ... $$` dollar-quoted body and re-fetched the branch file. Static delimiter check now reports no malformed single-dollar function block and a valid matching double-dollar block.
 - This is source inspection only; the migration was not executed and no SQL behavior is claimed as tested.
-
 ## 2026-11-13 — Translation provider evaluation gate
 - Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.
 - Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.
@@ -397,8 +396,7 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 - Compared the source declarations of the branch-only feature migrations with the Live public relation inventory (metadata only).
 - Confirmed Live has 20 public tables and 2 views. Core Marketplace, Buyer Demand, Seller Offers, conversations and Admin foundation relations exist.
 - Confirmed the following feature tables are absent from Live metadata: `transport_providers`, `transport_vehicles`, `delivery_jobs`, `delivery_job_events`, `service_listings`, `listing_edit_requests`, `listing_edit_request_events`, `review_purchase_eligibility`, `listing_reviews`, `commerce_orders`, `commerce_order_events`, `buyer_demand_inbox`, `delivery_network_partners`, `delivery_network_staff`, `delivery_job_assignment_history`, `delivery_tracking_events`, `porter_account_reviews`, `seller_offer_negotiations`, `product_price_negotiations`, `product_price_negotiation_events`, `user_language_preferences`, and `message_translations`.
-- Confirmed `20261113100000_create_porter_delivery_workflow.sql` is explicitly marked SUPERSEDED/no-op and must never be executed.
-- Confirmed `20261113235900_product_market_category.sql` currently contains no product sale-category column change despite its filename; it changes public product/business policies and grants and replaces Product Inquiry RPC logic. Live already has overlapping visibility policies and an earlier Product Inquiry RPC, so this file is blocked from blind replay.
+- Confirmed `20261113100000_create_porter_delivery_workflow.sql` is explicitly marked SUPERSEDED/no-op and must never be executed.- Confirmed `20261113235900_product_market_category.sql` currently contains no product sale-category column change despite its filename; it changes public product/business policies and grants and replaces Product Inquiry RPC logic. Live already has overlapping visibility policies and an earlier Product Inquiry RPC, so this file is blocked from blind replay.
 - Confirmed the `nexora-listing-images` Storage bucket was not found in Storage bucket metadata; its migration also depends on absent `service_listings`.
 - Confirmed product-linked conversation migration extends an existing Live `conversations` table, while delivery migrations depend on absent delivery base tables. These are partial/new feature groups and remain unexecuted.
 - Detailed per-file classification and limits are recorded in Recovery Plan section 18.
@@ -598,7 +596,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 
 
 ## 2026-11-14 — Migration CLI runner feasibility check
-
 - Re-read the installed Supabase skill and rechecked the official Supabase CLI v3 changelog and migration guide. The CLI migration command must generate the new version; no timestamp was hand-invented.
 - Tested a no-secret, branch-scoped GitHub Actions helper workflow intended only to install Supabase CLI and run `supabase migration new product_linked_private_conversations`. The workflow file was committed temporarily to `nexora-development`, but GitHub did not create a run for it. The repository's existing Pages workflow runs from the default-branch workflow configuration; a workflow introduced only on the non-default development branch cannot be used as an executable runner in this repository's current configuration.
 - Removed the temporary helper workflow immediately; no persistent workflow/configuration change remains. Removal commit: `4a24c1ef59884a7c8988058aa7618056c26d7325`. Temporary workflow commit: `0b87d56aed277270826180b7b34d4946826a292d`.
@@ -799,7 +796,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Sandbox stopped. No Live/hosted DB, migration history, user data, `main`, Production, DNS or paid services touched.
 - Physical Android-device E2E remains pending; prior Android-sized Chromium emulation is not represented as a real phone test.
 
-
 ## 2026-11-14 — Physical Android E2E access/safety gate
 
 - Read-only Vercel deployment inventory confirms a READY preview deployment for `nexora-development`; however, the current frontend source still contains the hosted Supabase project URL and publishable key in `auth.js`. Vercel project environment-variable listing returned no preview overrides.
@@ -999,7 +995,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Checklist updated. Commit: `89a78e69f9e53b5db7a94e092114b714335ee3a7`.
 - No SQL, NEXORA-TEST, Live/Production, `main`, DNS, paid service or deployment change.
 
-
 ## 2026-11-14 — Buyer Order Dashboard clarity pass
 
 - Improved Buyer order cards with plain-language status labels and a next-step explanation for each supported order state: pending, accepted, ready for confirmation, completed, cancelled and rejected.
@@ -1197,8 +1192,7 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Audit 24 first revealed stale policy-name expectations; corrected the recovery-only audit to match the final active policy names. The audit then passed.
 - Behavior suite 26 was aligned with the final schema (business_profiles.id, public_businesses sync trigger, no Product sale-channel field, numeric available_quantity string).
 - The behavior suite exposed a real quotation SELECT RLS defect: the Seller-offer policy queried private buyer_demands.buyer_id directly although authenticated intentionally lacks that column privilege. This broke offer SELECT during policy evaluation.
-- Added recovery-only patch 30 with a narrow SECURITY DEFINER private.is_buyer_demand_owner(uuid) helper; empty search_path, active Buyer check, explicit owner, anon/PUBLIC EXECUTE revoked, authenticated-only EXECUTE. Buyer identity remains private.
-- After patch 30, read-only audit 24 and transactional behavior suite 26 both passed. Synthetic checks cover Demand routing, anonymous projection, Buyer ownership, Seller inbox isolation, quotation creation/read, unrelated Buyer denial, unmatched Seller denial, duplicate offer denial, Buyer-ID spoof denial, required-date validation and grants.
+- Added recovery-only patch 30 with a narrow SECURITY DEFINER private.is_buyer_demand_owner(uuid) helper; empty search_path, active Buyer check, explicit owner, anon/PUBLIC EXECUTE revoked, authenticated-only EXECUTE. Buyer identity remains private.- After patch 30, read-only audit 24 and transactional behavior suite 26 both passed. Synthetic checks cover Demand routing, anonymous projection, Buyer ownership, Seller inbox isolation, quotation creation/read, unrelated Buyer denial, unmatched Seller denial, duplicate offer denial, Buyer-ID spoof denial, required-date validation and grants.
 - No active migration was edited; #30 remains recovery-only until a natural forward-migration timestamp can be generated after the current latest version. Real JWT/PostgREST/browser/mobile tests remain open.
 - No hosted NEXORA-TEST, Live/Production, main, DNS or deployment changes.
 
@@ -1396,7 +1390,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Re-ran node --check across all JavaScript files and git diff --check; both passed. The local checkout is clean on nexora-development.
 - The Vercel Sandbox can run Node tests but cannot run a container runtime: Podman installation succeeded, but sandbox kernel restrictions denied /dev/net/tun and container proc mounts. No local Supabase stack was started and no remote DB was modified.
 - The finance module now treats market_category as canonical and sale_type as a compatibility alias; conflicting values fail closed.
-
 
 ### Wholesale/Retail listing frontend foundation — 2026-11-14
 - Added required Seller Listing form selection for Wholesale or Retail; each create request now validates and writes the selected market_category.
@@ -1597,7 +1590,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - The first CI run overlapped the migration commit before the test assertion correction and was superseded; the corrected branch run [#43647560156](https://github.com/shaifrony/nexora-platform1/actions/runs/43647560156) for commit `d2d252cfb4d54e714babcb9d55182836ccee05b0` completed successfully: **90/90 tests passed**, JavaScript syntax and migration filename/order guard passed.
 - This is source-level verification only. No hosted database grant was changed; no migration applied. Real anon/authenticated role tests and browser review E2E remain pending.
 
-
 ## 2026-11-15 — Commerce order and Verified Review privacy closeout
 - Added a final active-role guard to the effective Product/Service Commerce Order transition RPC: only the active assigned Buyer or active assigned Seller can change order state. The earlier base migration is superseded by the final inventory migration definition; the final definition is now hardened.
 - Added six order/inventory source regression tests for MOQ, stock reservation, tier-price snapshotting, Seller inventory ownership/active status, active order-transition actor, reservation release/deduction, completion review eligibility and participant-only order reads. Corrected one test to inspect the public RPC ACL in the migration that actually defines that wrapper.
@@ -1797,8 +1789,7 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [ ] Full Supabase migration-chain/Auth/PostgREST/RLS and browser/device E2E; no hosted migration or Production deployment without explicit approval.
 
 
-## 2026-11-15 — Delivery Staff Operations, Proof, Partial Delivery & Disputes (Development staged)
-- [x] Added `20261115190000_delivery_staff_status_proof_partial_and_disputes.sql` on `nexora-development`.
+## 2026-11-15 — Delivery Staff Operations, Proof, Partial Delivery & Disputes (Development staged)- [x] Added `20261115190000_delivery_staff_status_proof_partial_and_disputes.sql` on `nexora-development`.
 - [x] Added an identity-bound worker queue RPC returning only the worker's assigned jobs and the operational contact/address fields needed to perform that delivery.
 - [x] Added guarded worker status RPC and append-only tracking events attributed to `delivery_staff`. Workers cannot set `delivered`; Buyer receipt OTP remains the final confirmation.
 - [x] Added a private Storage bucket for job-folder photo/signature evidence; upload is limited to assigned active staff or AAL2 logistics Admin; reads are limited to the related Buyer/Seller, assigned worker or AAL2 logistics viewer. No update/delete policy is created.
@@ -1862,3 +1853,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - **Implementation remains pending**; no payment gateway, payment capture, refund, payout, live credential or financial ledger is claimed to exist. This design-only commit does not change database schema or hosted services.
 - The repository remains on `nexora-development`; no hosted Supabase, NEXORA-TEST, `main`, DNS or Production change.
 - Current Development CI must be checked for this commit before marking it validated.
+
+## 2026-11-15 — Provider-neutral Payment Intent and Ledger foundation
+
+- Added `supabase/migrations/20261115220000_payment_intent_webhook_foundation.sql` using the Supabase CLI migration generator; timestamp is after the current active migration chain.
+- Implemented private RLS-enabled payment intent, transaction, verified webhook inbox, currency precision, chart-of-account, journal and journal-line storage. No direct browser table access is granted.
+- Added Buyer-scoped idempotent payment intent creation/read RPCs, service-role-only provider reference attachment and normalized verified-event ingestion, unmatched-event replay, expiry maintenance, and fail-closed review states for mismatches/late captures.
+- Added service-role-only balanced double-entry posting, idempotency, posted-entry immutability and mirrored reversal records. This is ledger infrastructure, not a complete accounting, refund or settlement workflow.
+- Added focused Node source tests and disposable PostgreSQL integration tests; local PostgreSQL 18.6 execution passed. The CI workflow now runs the same SQL test against its isolated PostgreSQL service; verify the resulting run on the pushed SHA before claiming CI success.
+- Provider signature verification must happen in a trusted server/Edge adapter before the normalized webhook RPC. No provider has been selected/configured; no funds are moved and no hosted Supabase/Production changes were made.
+- Remaining: provider adapter and sandbox, reconciliation, refunds/chargebacks, seller payable/payout/settlement, dual approval, full Supabase Auth/JWT/PostgREST/RLS and browser/mobile E2E, and business/legal/accounting fund-flow decisions.

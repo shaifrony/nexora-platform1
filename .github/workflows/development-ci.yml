@@ -118,6 +118,16 @@ jobs:
           createdb nexora_staff_operations_test
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/delivery-staff-operations-postgres.test.sql
 
+      - name: Execute Payment Intent and Finance Ledger foundation against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_payment_finance_test
+        run: |
+          createdb nexora_payment_finance_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/payment-finance-foundation-postgres.test.sql
+
       - name: Validate active migration filenames and ordering
         shell: bash
         run: |
