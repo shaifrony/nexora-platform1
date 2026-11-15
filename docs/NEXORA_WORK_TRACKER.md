@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-15 (PGlite 39/39 replay and security rehearsal)
+Updated: 2026-11-15 (Development CI 129/129; six disposable PostgreSQL suites; 45 migrations)
 
 Latest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md). Buyer phase checklist: [NEXORA Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md).
 
@@ -22,7 +22,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Buyer Demands & quotations | Partial | Buyer Demand required date, safe public projection, Seller inbox, quotation/counter-offer turn-taking and source-linked order conversion are staged. Initial-state spoofing, Buyer-required quantity ceiling and Demand/Offer lock ordering hardened. Expanded source suite 96/96 passes; hosted JWT/RLS/PostgREST and browser E2E remain pending; see NEXORA_BUYER_DEMAND_PROGRESS.md |
 | Commerce orders | Partial | Product/Service/Demand order lifecycle, MOQ/stock reservation and tier pricing staged; active assigned Buyer/Seller transition checks and expanded source suite 96/96 passes. Runtime concurrency/E2E, payments/disputes/refunds remain pending |
 | Verified reviews | Partial | Completed-purchase eligibility and one-review-per-listing staged; public review column grants exclude Buyer ID and moderation metadata. Source regression coverage passes; role/RLS and browser E2E pending |
-| Delivery Network | Partial | Admin AAL2 can link ready Product Orders to Delivery Jobs; Buyer-safe tracking and Buyer/Provider/Admin Receipt OTP are staged. Team/courier worker identities, delivery finance, external APIs and full E2E remain pending |
+| Delivery Network | Partial | Admin AAL2 Order linking, Buyer-safe tracking, Buyer/Provider/Admin Receipt OTP, verified identity binding for NEXORA Team/Courier workers and worker receipt queue are staged and disposable-PostgreSQL-tested; full staff field operations, finance, APIs and E2E remain pending |
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
 | Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
@@ -69,7 +69,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## M3 — Transport & Logistics
 - [x] Partner/team/provider model, delivery jobs, assignment and tracking staged.
-- [x] Buyer receipt OTP request/verification foundation and Buyer/approved Provider-owner/Admin UI staged; Admin AAL2 ready-Product-Order → Delivery Job linking added and disposable PostgreSQL-tested. [ ] NEXORA team/courier-worker identity-bound verification, SMS/WhatsApp delivery and browser E2E.
+- [x] Buyer receipt OTP request/verification, Buyer/approved Provider-owner/Admin UI, Admin AAL2 ready-Product-Order → Delivery Job linking, and identity-bound NEXORA Team/Courier staff binding/dispatch/receipt queue staged and disposable PostgreSQL-tested. [ ] Full staff field status/proof workflow, SMS/WhatsApp delivery and browser E2E.
 - [ ] Delivery charge and financial settlement.
 - [ ] Courier API/webhooks.
 - [ ] Retail/Wholesale E2E and negative authorization tests.
@@ -1781,3 +1781,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [x] Admin UI supports Order selection and prefill; Manual Delivery Request clears Order-derived values.
 - [x] Disposable PostgreSQL coverage includes Buyer receipt queue ownership isolation for the linked Delivery Job; CI source regression covers the Admin UI.
 - [ ] Confirm latest CI run after the Buyer ownership-isolation fixture correction; then reconcile documentation with its final result.
+
+
+## 2026-11-15 — Identity-bound Delivery Staff receipt verification
+- [x] Add unique Auth identity binding to the existing Delivery Staff roster without adding a public role or granting Provider-owner permissions.
+- [x] Bind only through one matching confirmed Auth email/phone; require active staff, approved partner, active Buyer/Seller/Porter profile, AAL2 Admin and `logistics.assign`.
+- [x] Support verified field workers under both NEXORA Team and approved Courier Company partners; unbound workers cannot be selected for named-staff dispatch.
+- [x] Add own-assignment-only staff receipt queue and database-side identity/partner/job revalidation before OTP verification; audit actor as `delivery_staff`.
+- [x] Disposable PostgreSQL tests validate verified/unverified binding, both partner types, queue isolation, cross-worker denial and OTP receipt success.
+- [x] Development CI #43662559823 passed: 129/129 source tests, six disposable PostgreSQL suites, JavaScript syntax and 45 migration filename/order checks.
+- [ ] Finish staff operational status/proof-of-delivery field workflow, SMS/WhatsApp OTP delivery, partial delivery/disputes and final Order completion.
+- [ ] Full Supabase migration-chain/Auth/PostgREST/RLS and browser/device E2E; no hosted migration or Production deployment without explicit approval.
