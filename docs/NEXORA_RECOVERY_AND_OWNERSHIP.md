@@ -9,7 +9,7 @@ NEXORA must remain recoverable if the owner's phone or computer is lost, stolen,
 ## Current verified position
 
 - Development code is stored in the GitHub repository `shaifrony/nexora-platform1`, on `nexora-development`.
-- The latest verified Development CI run at this guide's creation was successful: run #43662876833, commit `9280dcabebf237391de03feadf8934eb852ce074`.
+- Latest verified Development CI recovery check: run #43663966808 completed successfully on commit `2132147b236047b375555711bb23ecc42d551dfb`; both validation and recovery-snapshot jobs succeeded. The source archive + Git history bundle artifact was confirmed present (2,174,401 bytes), created 2026-11-15 and set to expire 2027-02-13.
 - `main` is a separate branch. Development work must not be pushed to `main` without explicit approval.
 - The repository currently reports public visibility. Treat all committed source as publicly readable. Never commit passwords, API secrets, service-role keys, private customer data, OTPs, recovery codes, or production environment files. If a secret is ever committed, rotate/revoke it; deleting the visible line alone is insufficient.
 - Hosted Supabase backup configuration, live database restore testing, and production deployment are not confirmed complete. Do not imply that live customer data is backed up until those steps are configured and verified.
@@ -55,7 +55,11 @@ git -C nexora-restore-check checkout nexora-development
 
 Because the repository is public today, the clone can be read without a login. Changes still require authorized GitHub access.
 
-## Automated CI recovery snapshot\n\nOn every successful push to `nexora-development`, the `recovery-snapshot` job creates `nexora-source.tar.gz`, `nexora-history.bundle`, the exact commit SHA and restore instructions. The artifact name includes the tested commit SHA and GitHub retains it for 90 days. The job runs only after the full validation job succeeds. Download and copy the artifact to an encrypted device or independent secure storage before the retention period expires. It does not contain Supabase database rows, Storage objects, secrets or owner account recovery codes.\n\n## Database and uploaded-file backup gate (before real customers)
+## Automated CI recovery snapshot
+
+On every successful push to `nexora-development`, the `recovery-snapshot` job creates `nexora-source.tar.gz`, `nexora-history.bundle`, the exact commit SHA and restore instructions. The artifact name includes the tested commit SHA and GitHub retains it for 90 days. The job runs only after the full validation job succeeds. Download and copy the artifact to an encrypted device or independent secure storage before the retention period expires. It does not contain Supabase database rows, Storage objects, secrets or owner account recovery codes.
+
+## Database and uploaded-file backup gate (before real customers)
 
 Before launching with real customer data:
 
