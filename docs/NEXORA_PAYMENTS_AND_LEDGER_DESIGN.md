@@ -196,6 +196,15 @@ Recommended states: blocked, eligible, pending_approval, approved, submitted, pa
 
 The accounting flow must separate, by currency, at least: provider clearing/receivable, Seller payable, NEXORA commission revenue, delivery-partner payable, tax payable, refund/chargeback liabilities and payout cash/clearing. Journal posting must use the existing balanced, immutable post_finance_journal mechanism. No amount or percentage is to be hard-coded before the commercial fee schedule and carrier allocation policy are approved.
 
+### 12.3.1 Payment-intent state-transition audit
+
+The webhook state-machine audit found two additional cases to close in the next payment migration:
+
+- A `failed` provider event currently falls through when the matched intent is already `requires_review`; the common completion update can then overwrite the risk-hold state with `failed`. A later failed callback must never erase an earlier amount/currency mismatch or other unresolved review hold. Terminal/exception states (`requires_review`, `cancelled`, `expired`, and already captured) must be handled explicitly before accepting any new outcome.
+- `expire_stale_payment_intents` expires only `created` and `pending_provider`; an `authorized` intent can remain open indefinitely after its expiry timestamp and continue occupying the one-open-intent-per-Order constraint. Authorization expiry must be reconciled with provider void/reversal confirmation; do not simply mark an authorization expired locally while the provider may still hold funds.
+
+Required regression tests: (1) amount-mismatch capture sets `requires_review`, then a distinct failed event cannot downgrade it; (2) late failure after cancellation/expiry cannot rewrite terminal state; (3) authorized intent past expiry remains explicitly held until provider void/reversal is verified, and cannot silently block a retry forever; (4) repeated and out-of-order callbacks remain idempotent and audited. The service-role adapter must verify provider signature and transaction status before calling the normalized-event RPC; the RPC's service-role check is not itself cryptographic signature verification.
+
 ### 12.4 Current implementation status and safe boundary
 
 - This audit and specification are documentation only. No settlement tables/RPCs, OTP behavior changes, payment-intent correction, payout adapter, or ledger automation have been deployed or committed.
