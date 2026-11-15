@@ -65,6 +65,8 @@ begin
     or length(coalesce(p_note,''))>1500 then
    raise exception 'Invalid receipt verification input' using errcode='22023';
  end if;
+ -- Lock the job before checking assignment and before locking its OTP challenge.
+ select job_status into v_old from public.delivery_jobs where id=p_job_id for update;
  if private.has_nexora_permission('logistics.assign') then
    if (select auth.jwt()->>'aal') is distinct from 'aal2' then
      raise exception 'Admin MFA (AAL2) is required' using errcode='42501';
@@ -87,8 +89,7 @@ begin
    end if;
    v_actor_type:='independent_provider';
  end if;
- select job_status into v_old from public.delivery_jobs where id=p_job_id for update;
- if v_old not in ('out_for_delivery','partially_delivered') then
+ if v_old is null or v_old not in ('out_for_delivery','partially_delivered') then
    raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
  end if;
  select * into v_challenge from private.delivery_receipt_challenges c
