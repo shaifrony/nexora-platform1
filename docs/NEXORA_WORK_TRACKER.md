@@ -1910,3 +1910,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 
 - Further receipt-state finding: OTP requests are allowed only for `out_for_delivery`, but verification accepts `partially_delivered`; after the first partial proof, Buyer cannot request a fresh OTP for a later drop. The proof RPC also accepts `delivered` Jobs and can move them back to `partially_delivered` after additional proof. The next design must model per-drop confirmation separately from final full-quantity receipt and make final receipt irreversible except an audited dispute/reversal workflow. Added to Payments & Ledger Design section 12.3.
+
+
+- Critical additional delivery bypass confirmed: the older Admin/Provider `update_delivery_network_job_status` RPC still permits direct `delivered` transitions from `out_for_delivery`, `partially_delivered`, and `disputed`. The newer worker RPC blocks direct delivery completion but does not replace this older function. Next migration must remove direct `delivered` from all ordinary status paths; only guarded Buyer OTP after exact full-quantity proof and no active dispute may finalize receipt. Recorded in Payments & Ledger Design section 12.3.
