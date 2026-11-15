@@ -22,7 +22,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Buyer Demands & quotations | Partial | Buyer Demand required date, safe public projection, Seller inbox, quotation/counter-offer turn-taking and source-linked order conversion are staged. Initial-state spoofing, Buyer-required quantity ceiling and Demand/Offer lock ordering hardened. Expanded source suite 96/96 passes; hosted JWT/RLS/PostgREST and browser E2E remain pending; see NEXORA_BUYER_DEMAND_PROGRESS.md |
 | Commerce orders | Partial | Product/Service/Demand order lifecycle, MOQ/stock reservation and tier pricing staged; active assigned Buyer/Seller transition checks and expanded source suite 96/96 passes. Runtime concurrency/E2E, payments/disputes/refunds remain pending |
 | Verified reviews | Partial | Completed-purchase eligibility and one-review-per-listing staged; public review column grants exclude Buyer ID and moderation metadata. Source regression coverage passes; role/RLS and browser E2E pending |
-| Delivery Network | Partial | Partner/team, assignment and tracking staged; receipt, finance and API integration pending |
+| Delivery Network | Partial | Admin AAL2 can link ready Product Orders to Delivery Jobs; Buyer-safe tracking and Buyer/Provider/Admin Receipt OTP are staged. Team/courier worker identities, delivery finance, external APIs and full E2E remain pending |
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
 | Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
@@ -69,7 +69,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## M3 — Transport & Logistics
 - [x] Partner/team/provider model, delivery jobs, assignment and tracking staged.
-- [ ] Buyer receipt confirmation and completion report.
+- [x] Buyer receipt OTP request/verification foundation and Buyer/approved Provider-owner/Admin UI staged; Admin AAL2 ready-Product-Order → Delivery Job linking added and disposable PostgreSQL-tested. [ ] NEXORA team/courier-worker identity-bound verification, SMS/WhatsApp delivery and browser E2E.
 - [ ] Delivery charge and financial settlement.
 - [ ] Courier API/webhooks.
 - [ ] Retail/Wholesale E2E and negative authorization tests.
@@ -91,7 +91,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 
 ## Blockers
 1. Hosted Supabase migration history is behind staged migrations; do not apply only the latest migration.
-2. No isolated development DB for integration testing; hosted JWT/PostgREST/RLS verification remains unavailable.
+2. Focused disposable PostgreSQL integration fixtures run in CI; full isolated Supabase CLI chain replay and hosted Auth/JWT/PostgREST/RLS verification remain outstanding.
 3. Previous Vercel deploy hit a rolling 24-hour cap; no deploy retry without approval.
 4. Separate Admin prototype is reference only and must not be deployed.
 
@@ -1761,3 +1761,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 - Reconciled `docs/NEXORA_DELIVERY_NETWORK.md` with the current staged 128-bit/SHA-256 Buyer → approved Provider owner/Admin flow; removed the obsolete MD5/16-character and “UI not implemented” descriptions.
 - Confirmed from the Delivery Network design that NEXORA team and courier-partner workers are currently roster-only records with no sign-in/field identity. Their OTP verification remains blocked until a separate scoped identity design exists; do not reuse Provider-owner permissions.
+
+
+## 2026-11-15 — Admin Order-to-Delivery linking and Receipt OTP integration
+
+- Added `20261115170000_admin_delivery_order_linking.sql`: active Admin membership + `logistics.assign` + JWT AAL2 are required to list eligible orders or create a linked Delivery Job.
+- Only `ready_for_confirmation` Product Orders are eligible. The Admin candidate RPC returns only operationally necessary fields (product/order reference, quantity/currency, Buyer fulfilment destination and Seller business pickup address); Buyer contact phone is not exposed.
+- The linked-create RPC row-locks and revalidates the source Order before delegating to the existing Delivery Network creation function with `commerce_order_id`, allowing Buyer-safe tracking and the Buyer-owned Receipt OTP queue to discover the shipment.
+- Admin UI supports Order selection and prefill; Admin must verify/fill missing Buyer phone and destination city/country. Choosing Manual Delivery Request clears all Order-prefilled values to avoid stale destination/reference reuse.
+- Added `tests/admin-delivery-order-linking-postgres.test.sql` and wired it into Development CI. It checks permission/MFA denial, active Admin membership, eligible Product Order filtering, successful Order linkage, and rejection of pending Product and Service Orders.
+- Development CI [#43660807743](https://github.com/shaifrony/nexora-platform1/actions/runs/43660807743) passed: 122 dependency-free tests, Buyer Demand, Product Price Negotiation, Buyer-safe Delivery Updates, Buyer Receipt OTP and Admin Order-linking disposable PostgreSQL suites, JavaScript syntax and 44 migration filename/order checks.
+- Latest code remains on `nexora-development`; no hosted Supabase migration, NEXORA-TEST mutation, main-branch change or intentional Production deployment was made. GitHub Pages automation must be checked separately because branch pushes previously triggered a Pages deployment workflow.
+- Remaining: full Supabase CLI migration-chain replay, hosted Auth/PostgREST/RLS and browser/device E2E; identity-bound receipt verification for NEXORA own-team and courier-company workers; external SMS/WhatsApp OTP delivery; delivery charges, payments/settlement, disputes/returns and courier API adapters.
