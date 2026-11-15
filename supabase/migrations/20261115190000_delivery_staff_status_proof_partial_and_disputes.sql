@@ -513,7 +513,7 @@ returns table(
  raiser_role text,dispute_status text,resolution text,created_at timestamptz,updated_at timestamptz
 )
 language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_actor uuid:=auth.uid();
 begin
  if v_actor is null or (select auth.jwt()->>'aal') is distinct from 'aal2'
@@ -532,7 +532,7 @@ begin
    d.created_at desc
  limit 200;
 end;
-$;
+$$;
 revoke all on function private.get_admin_delivery_disputes() from public,anon,authenticated;
 grant execute on function private.get_admin_delivery_disputes() to authenticated;
 
@@ -542,7 +542,7 @@ returns table(
  raiser_role text,dispute_status text,resolution text,created_at timestamptz,updated_at timestamptz
 )
 language sql security invoker set search_path=''
-as $ select * from private.get_admin_delivery_disputes(); $;
+as $$ select * from private.get_admin_delivery_disputes(); $$;
 revoke all on function public.get_admin_delivery_disputes() from public,anon;
 grant execute on function public.get_admin_delivery_disputes() to authenticated;
 
