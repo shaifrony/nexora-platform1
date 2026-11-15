@@ -95,14 +95,18 @@ create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
 do $block$ begin
  if (select length(payload->>'code') from otp_result)<>32 or (select payload->>'code' !~ '^[0-9A-F]{32}$' from otp_result) then raise exception 'FAIL: Buyer did not receive a 32-character hexadecimal OTP'; end if;
- if (select length(code_hash) from private.delivery_receipt_challenges limit 1)<>64 then raise exception 'FAIL: OTP digest is not SHA-256'; end if;
+end $block$;
+reset role;
+do $digest_assert$ begin
+ if (select length(code_hash) from private.delivery_receipt_challenges limit 1)<>64 then
+  raise exception 'FAIL: OTP digest is not SHA-256';
+ end if;
  if (select code_hash from private.delivery_receipt_challenges limit 1)<>
    (select encode(extensions.digest((payload->>'code')||'74000000-0000-4000-8000-000000000001'||
      '71000000-0000-4000-8000-000000000001'||'NEXORA-RECEIPT-V1','sha256'),'hex') from otp_result) then
-   raise exception 'FAIL: stored OTP digest does not match SHA-256';
+  raise exception 'FAIL: stored OTP digest does not match SHA-256';
  end if;
-end $block$;
-reset role;
+end $digest_assert$;
 do $block$ begin
  if (select code_hash from private.delivery_receipt_challenges limit 1)=(select payload->>'code' from otp_result) then
    raise exception 'FAIL: raw OTP was stored';
