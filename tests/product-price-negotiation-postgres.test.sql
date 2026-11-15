@@ -69,6 +69,7 @@ end;
 $$;
 
 \ir ../supabase/migrations/20261115110000_product_price_negotiation.sql
+\ir ../supabase/migrations/20261115210000_active_commerce_participant_guard.sql
 
 insert into public.profiles(id,role,account_status) values
  ('51000000-0000-4000-8000-000000000001','buyer','active'),
