@@ -1900,3 +1900,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Found that a `failed` provider callback can currently overwrite an existing `requires_review` payment-intent status because that outcome does not explicitly reject the review state before the common status update. This could clear an unresolved mismatch hold; next migration must fail closed and retain the hold.
 - Found that stale-intent expiry only covers `created` and `pending_provider`; an `authorized` intent can remain open after expiry and occupy the Order's one-open-intent slot. Correct handling must verify provider void/reversal, not merely expire locally.
 - Added exact regression requirements to Payments & Ledger Design section 12.3.1. Audit only: no payment code or migration changed. The findings require a new naturally ordered migration and focused PostgreSQL regression tests before use with real payment providers.
+
+
+## 2026-11-15 — Reconciliation integrity audit
+
+- Cross-batch duplicate detection currently checks repeated provider transaction references only inside the incoming batch. An overlapping/re-imported statement can therefore match a transaction already matched in an earlier batch. The next implementation must flag the second occurrence and retain the first batch/row reference.
+- Concurrent resolution of the final exception rows can race because each reviewer locks only its own row before counting remaining open rows. Serialize batch finalization on the parent batch row and recompute under lock.
+- Added the exact regression requirements to Payments & Ledger Design section 12.3.2. No SQL or hosted changes made in this audit.
