@@ -256,7 +256,7 @@
       db().from("transport_providers").select("id,display_name,city,application_status").eq("application_status","approved").limit(200),
       db().from("transport_vehicles").select("id,provider_id,vehicle_type,registration_number,approval_status,is_available").eq("approval_status","approved").eq("is_available",true).limit(300),
       db().from("delivery_network_partners").select("id,partner_code,display_name,partner_kind,partner_status").eq("partner_status","approved").limit(200),
-      db().from("delivery_network_staff").select("id,partner_id,full_name,staff_status").eq("staff_status","active").limit(300)
+      db().from("delivery_network_staff").select("id,staff_code,partner_id,full_name,staff_status,auth_user_id").eq("staff_status","active").limit(300)
     ]);
     const err=[jobs,providers,vehicles,partners,staff].find(r=>r.error);
     if(err){host.textContent="Assignment Queue লোড হয়নি: "+err.error.message;return;}
