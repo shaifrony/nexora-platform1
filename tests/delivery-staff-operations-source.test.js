@@ -61,3 +61,22 @@ test("Admin dispute queue requires AAL2 and logistics.view permission", () => {
   assert.match(sql, /Active Admin MFA and logistics\.view permission required/);
   assert.match(sql, /create or replace function public\.get_admin_delivery_disputes/);
 });
+
+const adminUi = fs.readFileSync(path.join(process.cwd(), "delivery-network-admin.js"), "utf8");
+const workerUi = fs.readFileSync(path.join(process.cwd(), "transport-provider.js"), "utf8");
+
+test("worker workspace uses scoped queue, guarded status, private evidence and dispute RPCs", () => {
+  assert.match(workerUi, /get_my_assigned_delivery_jobs/);
+  assert.match(workerUi, /update_my_delivery_job_status/);
+  assert.match(workerUi, /record_delivery_proof/);
+  assert.match(workerUi, /nexora-delivery-evidence/);
+  assert.match(workerUi, /raise_delivery_dispute/);
+  assert.match(workerUi, /get_my_delivery_proof_records/);
+  assert.match(workerUi, /get_my_delivery_disputes/);
+});
+
+test("Admin UI loads and reviews disputes only through guarded RPCs", () => {
+  assert.match(adminUi, /get_admin_delivery_disputes/);
+  assert.match(adminUi, /review_delivery_dispute/);
+  assert.match(adminUi, /nxDeliveryDisputesList/);
+});
