@@ -111,7 +111,7 @@ do $over_delivery$ begin
    array['a5000000-0000-4000-8000-000000000001/photo-1.jpg'],null,'Excess quantity attempt'
   );
   raise exception 'FAIL: cumulative delivered quantity exceeded ordered quantity';
- exception when check_violation then null;
+ exception when invalid_parameter_value then null;
  end;
 end $over_delivery$;
 reset role;
