@@ -1893,3 +1893,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - `verify_delivery_receipt_code` accepts any `partially_delivered` Job and marks it `delivered` without checking cumulative proof quantity. Thus a valid OTP can currently mark a short-delivery Job as delivered. The challenge `verified_at` is cleared immediately and no immutable receipt-confirmation record remains.
 - The Payments & Ledger Design section 12.3 now records the exact regression matrix: partial 3/10 with OTP remains partial; second proof 7/10 reaches 10/10 but still requires a fresh final Buyer OTP; final OTP writes immutable receipt evidence and only then marks delivered; over-delivery, repeat OTP, active dispute, missing/short/mismatched proof all fail closed.
 - This is a source audit and documentation update only. No existing migration was edited and no SQL/application behavior or hosted service was changed. Implementation remains gated on the official Supabase CLI generating a migration version later than the active chain head.
+
+
+## 2026-11-15 — Payment-intent transition audit
+
+- Found that a `failed` provider callback can currently overwrite an existing `requires_review` payment-intent status because that outcome does not explicitly reject the review state before the common status update. This could clear an unresolved mismatch hold; next migration must fail closed and retain the hold.
+- Found that stale-intent expiry only covers `created` and `pending_provider`; an `authorized` intent can remain open after expiry and occupy the Order's one-open-intent slot. Correct handling must verify provider void/reversal, not merely expire locally.
+- Added exact regression requirements to Payments & Ledger Design section 12.3.1. Audit only: no payment code or migration changed. The findings require a new naturally ordered migration and focused PostgreSQL regression tests before use with real payment providers.
