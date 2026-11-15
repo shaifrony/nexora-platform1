@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-15 (Development CI 144/144; eight disposable PostgreSQL suites; 49 migrations; CI #43672885634)
+Updated: 2026-11-15 (Development CI 148/148; nine disposable PostgreSQL suites; 50 migrations; CI #43674068727)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -197,8 +197,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - During the multilingual architecture source recheck, found that `private.append_product_negotiation_chat_event` in `20261115110000_product_price_negotiation.sql` still had an invalid single-$ PL/pgSQL body delimiter.
 - Corrected it to a matching `$$ ... $$` dollar-quoted body and re-fetched the branch file. Static delimiter check now reports no malformed single-dollar function block and a valid matching double-dollar block.
 - This is source inspection only; the migration was not executed and no SQL behavior is claimed as tested.
-## 2026-11-13 — Translation provider evaluation gate- Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.- Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.
-- Updated `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` with evidence, privacy boundaries and a human-reviewed pilot quality gate.
+## 2026-11-13 — Translation provider evaluation gate- Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.- Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.- Updated `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` with evidence, privacy boundaries and a human-reviewed pilot quality gate.
 - Decision: no provider selected, no Edge Function or provider adapter enabled, no private messages sent to external services. Self-hosted Argos remains a conditional proof-of-concept candidate only; hosting is not free by default.
 - No SQL, provider quality test, Edge Function deployment, browser test or hosted test was run. Live Supabase, Production, DNS and `main` untouched.
 
@@ -399,7 +398,6 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 - Detailed per-file classification and limits are recorded in Recovery Plan section 18.
 **Current status:** branch-only migration inventory and initial object mapping complete; exact function/trigger/policy/grant replacement audit remains. The `20261114180000` version collision still blocks all migration runners. No file renamed/deleted, no SQL run, no Live writes, no user data queried, no paid Development Branch created.
 
-
 ## 2026-11-14 — Product conversation migration effect audit
 
 - Verified branch HEAD before audit: `3dc6b5be89254b978e864d23fbf16dedd11beef5`.
@@ -598,7 +596,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Result: a GitHub-hosted CLI runner is not currently available without changing the default branch or obtaining another supported CLI runtime. Both are outside current authorization/constraints. Therefore the duplicate version `20261114180000` remains unresolved; do not manually rename or invent a replacement timestamp. Next safe path is to use an already-authorized supported CLI runner/runtime that can execute `supabase migration new` without touching a database, then transfer the CLI-generated filename and proceed with source-only rename.
 
 ## 2026-11-14 — Additional isolated CLI-runtime check
-
 - Rechecked the development branch head before work: `8ecb39a223d7d1b309d8d1e69a70a6114019bd59`. Re-fetched both colliding migration files and confirmed they remain distinct SQL bodies; the Product Conversation migration is still the only candidate for a later CLI-generated version, while unified delivery assignment retains the earlier slot needed by the downstream delivery-tracking migration.
 - Tested the available isolated execution container for a no-cost, database-free Supabase CLI path. It is Linux x86_64 with Node/npm, but has no Supabase CLI, Docker Engine or PostgreSQL executable; npm cache contains no Supabase CLI package. Outbound DNS resolution for GitHub fails (`curl: (6) Could not resolve host: github.com`), so the official CLI binary/package cannot be fetched in this runtime.
 - This is an execution-environment limitation, not a migration error. No timestamp was guessed, no migration file was renamed, and no DB connection, SQL execution, migration-history change, paid resource, `main`, Production or Live change occurred.
@@ -797,7 +794,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - This is distinct from the completed Android-sized Chromium emulation against the disposable local Supabase stack. No physical-device test is claimed.
 
 ## 2026-11-14 — Separate NEXORA-TEST Supabase project created
-
 - User explicitly approved creating a separate Free Supabase Test Project under the NEXORA organization.
 - Supabase quoted the project cost as **$0/month**; zero-cost confirmation was obtained before creation.
 - Created project **NEXORA-TEST** in Singapore region `ap-southeast-1`; project ref: `lhxmqoyxoywntmkmmnjb`; status verified **ACTIVE_HEALTHY**; PostgreSQL 17.11.
@@ -998,7 +994,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 
 ## 2026-11-14 — Buyer Order History filters & safe Delivery Tracking design
-
 - Buyer Order panel now shows a compact summary and filters for all, pending, accepted, ready for Buyer confirmation, completed, cancelled and rejected orders. The UI explicitly labels the result set as the latest 50 orders, newest first; it does not imply the summary is a lifetime count. Empty filter results are handled.
 - Existing real order timestamps and Seller update remain visible. No product title, Seller identity or delivery state is fabricated; the polymorphic listing schema does not currently provide a safe product-title snapshot on the order row.
 - Added `docs/NEXORA_BUYER_DELIVERY_TRACKING_ACCESS_DESIGN.md` defining a customer-safe, append-only tracking projection, narrow Buyer-owned-order RPC, split-shipment handling, no raw contact/address/internal-note exposure, and synthetic negative authorization tests.
@@ -1197,7 +1192,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 
 ## 2026-11-14 — Buyer Demand lifecycle and concurrent order tests passed
-
 - Extended recovery-only behavior test 26 to verify inactive Buyer negotiation denial, inactive Seller order-acceptance denial, Seller pending → accepted → ready transitions, Buyer ready → completed transition, Buyer cancellation of pending order, and Seller rejection with a mandatory reason.
 - Re-ran read-only privacy/routing audit 24 and behavior suite 26 on a fresh disposable PostgreSQL 17 stack after all 38 active migrations and recovery candidates #12–#14. All 34 PostgreSQL PASS notices succeeded; the behavior suite rolled back and synthetic Auth users, Demands and offers returned to zero.
 - Ran a separate two-session row-lock race test on one quotation. Concurrent Buyer acceptance yielded exactly one commerce order, one accepted negotiation turn and one `created` order event. The second transaction waited for the first lock, then was rejected because the quotation had already been ordered.
@@ -1398,7 +1392,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - PostgreSQL 18.6 disposable synthetic fixture test passed for backfill, RLS-scoped pending classification, new-listing validation, published Listing immutability, order snapshot derivation and snapshot immutability.
 - This is SQL-level synthetic verification only—not full Supabase/PostgREST/Auth/Storage integration, not a migration replay, and not an applied database change. Candidate remains outside supabase/migrations and must be reviewed/replayed with the full Foundation + 38-migration chain before conversion to an active migration.
 
-
 ### Reproducible category candidate verification and migration gate — 2026-11-14
 - Replayed the committed recovery candidate and its committed disposable PostgreSQL test file together on a fresh PostgreSQL 18.6 database. The script completed with PASS for legacy backfill, Seller-scoped pending classification, rejection of unclassified new listings, approved Listing category immutability, Order snapshot derivation from the approved Listing (client-supplied value ignored), and Order snapshot immutability.
 - Re-ran the repository Node suite from the current branch: 29/29 passed. All JavaScript syntax checks and git diff --check passed; local worktree is clean.
@@ -1596,7 +1589,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added three source regression tests for Product and Service safe-column grants, private review-note RPC scope, and Seller UI wiring. One initial test matched an earlier Product subcategory grant and over-captured the Service grant; corrected the capture to the Service-specific column list.
 - GitHub Actions Development CI [#43648182187](https://github.com/shaifrony/nexora-platform1/actions/runs/43648182187) for commit `ab8a3781dfea6b0bd0f1b9ecc238d158d0b8be71` completed successfully: **96/96 tests passed**, JavaScript syntax and migration filename/order guard passed.
 - No migration was applied and no hosted database grants changed. Runtime column-privilege tests under anon/authenticated JWTs and browser E2E remain pending.
-
 
 ## 2026-11-15 — Product/Service review metadata isolation and Seller note access
 - Hardened authenticated Product and Service listing SELECT privileges to explicit marketplace-safe column allowlists. Direct Data API reads no longer expose `admin_note`, `reviewed_by` or `reviewed_at`; Product Seller/Admin UI fields and public listing fields remain available.
@@ -1799,7 +1791,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Documentation-only change on `nexora-development`; no SQL migration, hosted database, NEXORA-TEST, `main`, DNS or Production was changed.
 - Development CI run #43667886523 passed on the exact documentation commit `9dd0316e60918a2cf1ccfd30b947d5bcf236502a`; the earlier run #43667843594 was superseded/cancelled by the subsequent tracker update.
 
-
 ## 2026-11-15 — Inventory/MOQ guide alignment
 
 - Corrected `docs/NEXORA_INVENTORY_MOQ_PRICING.md`: the current staged migration accepts Seller-defined positive MOQ for both Wholesale and Retail product listings; it does not impose Retail MOQ = 1.
@@ -1851,5 +1842,5 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added `supabase/migrations/20261115230000_payment_reconciliation_batch_queue.sql` via Supabase CLI migration generation.
 - Added private RLS-enabled reconciliation batches/rows, idempotent statement ingestion, transaction/amount/currency/status/event matching, duplicate and unmatched detection, and server-only exception review.
 - Reconciliation remains observational: no Payment Intent state, ledger, refund, payout or funds movement is modified by this workflow. Report windows are provenance metadata only; missing internal transactions, provider fees/net settlements and bank-settlement completeness are not yet reconciled.
-- Added static Node and disposable PostgreSQL integration tests; local PostgreSQL execution passed. Added the dedicated PostgreSQL test step to Development CI; exact pushed-commit result pending.
+- Added static Node and disposable PostgreSQL integration tests; local PostgreSQL execution passed. GitHub Actions CI #43674068727 passed on exact implementation commit 803724a681015f9dcdd0f20b4609b341d679d0b1 (148 dependency-free JavaScript tests, nine disposable PostgreSQL suites, and active migration filename/order validation).
 - Provider-specific statement parsing, bank settlement reconciliation and adapter integration remain pending provider selection and fund-flow decisions.
