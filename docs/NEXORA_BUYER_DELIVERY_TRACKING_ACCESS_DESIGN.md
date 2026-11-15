@@ -70,7 +70,7 @@ Approved independent Provider owners see only their own assigned eligible jobs t
 
 The new job-discovery RPCs return only order/job identifiers, job reference and status; they do not expose exact addresses, Buyer identity/contact, provider contacts or tracking internals. The database remains authoritative for ownership, assignment, Provider approval and active-account checks at verification time, status, attempts, expiry and one-time consumption. SHA-256 digest storage uses a 64-character constraint; the legacy 32-character MD5 constraint is replaced by the hardening migration.
 
-**Limitations:** No SMS/WhatsApp provider is configured; the Buyer shares the code directly with the assigned Provider. This interface covers approved independent Provider owners and authorized Admins only. NEXORA own-team staff and courier-company staff do not yet have an identity-bound verification flow and cannot use this Provider-owner RPC. Admin MFA must already be at AAL2; this UI does not initiate MFA enrollment or step-up.
+**Limitations:** No SMS/WhatsApp provider is configured; the Buyer shares the code directly with the assigned Provider. This interface covers approved independent Provider owners and authorized Admins only. NEXORA own-team staff and courier-company staff do not yet have an identity-bound verification flow and cannot use this Provider-owner RPC. The shared authentication panel in `auth.js` already supports Admin TOTP enrollment and AAL2 step-up. The receipt form relies on that app-wide flow and the database's AAL2 guard; it does not implement a separate MFA challenge.
 
 ## 6. Remaining B-04 delivery work
 
