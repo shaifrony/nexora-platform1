@@ -8,6 +8,7 @@
   const esc = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const isAdmin = () => profile()?.role === "admin" && profile()?.account_status === "active";
   let ready = false;
+  let orderCandidates = [];
 
   function mount() {
     const anchor = $("nxAdminTransportQueue");
@@ -56,6 +57,8 @@
         <hr>
         <h5>নতুন Delivery Request তৈরি</h5>
         <form id="nxNetworkJobForm" class="card">
+          <label>প্রস্তুত Product Order (ঐচ্ছিক)<select name="commerce_order_id" id="nxDeliveryOrderSelect"><option value="">Manual Delivery Request</option></select></label>
+          <p class="muted">Order নির্বাচন করলে পণ্যের নাম, Buyer-এর দেওয়া গন্তব্য এবং Seller-এর Sales Centre ঠিকানা প্রাথমিকভাবে বসবে। ফোন ও গন্তব্যের শহর Admin যাচাই করে পূরণ করবেন।</p>
           <div class="grid">
             <label>Delivery Type *<select name="delivery_mode"><option value="retail">Retail</option><option value="wholesale">Wholesale</option></select></label>
             <label>Package Description *<input name="package_description" minlength="3" maxlength="1000" required></label>
@@ -85,6 +88,7 @@
     $("nxDeliveryPartnerForm")?.addEventListener("submit", savePartner);
     $("nxDeliveryStaffForm")?.addEventListener("submit", saveStaff);
     $("nxNetworkJobForm")?.addEventListener("submit", createJob);
+    $("nxDeliveryOrderSelect")?.addEventListener("change", applySelectedOrder);
     ready = true;
   }
 
@@ -117,9 +121,40 @@
       <div class="form-actions">${p.partner_status!=="approved"?'<button type="button" class="primary" data-partner-status="approved" data-id="'+esc(p.id)+'">Approve</button>':''}
       ${p.partner_status!=="suspended"?'<button type="button" class="danger" data-partner-status="suspended" data-id="'+esc(p.id)+'">Suspend</button>':''}</div></article>`).join(""):'<p class="muted">এখনো কোনো Team বা Partner যোগ করা হয়নি।</p>';
     sHost.innerHTML=staff.length?staff.map(s=>`<article class="offer"><strong>${esc(s.full_name)}</strong><p class="muted">${esc(s.staff_code)} · ${esc(s.contact_phone)} · ${esc(s.employment_type)} · ${esc(s.staff_status)}</p><p class="muted">${esc((s.service_cities||[]).join(", "))} · ${esc(s.vehicle_type||"")}</p></article>`).join(""):'<p class="muted">এখনো কোনো নিজস্ব কর্মী নিবন্ধিত নেই।</p>';
+    await loadOrderCandidates();
     await loadJobs();
     pHost.querySelectorAll("[data-partner-status]").forEach(btn=>btn.addEventListener("click",()=>changePartnerStatus(btn)));
   }
+  async function loadOrderCandidates() {
+    const select=$("nxDeliveryOrderSelect");
+    if(!select||!db())return;
+    const {data,error}=await db().rpc("get_admin_delivery_order_candidates");
+    if(error){orderCandidates=[];select.innerHTML='<option value="">Manual Delivery Request (Order list unavailable)</option>';return;}
+    orderCandidates=data||[];
+    select.innerHTML='<option value="">Manual Delivery Request</option>'+orderCandidates.map(o=>
+      '<option value="'+esc(o.order_id)+'">'+esc(o.order_code)+' · '+esc(o.listing_name)+' · Qty '+esc(o.quantity)+' · আগের Shipment '+esc(o.existing_delivery_jobs)+'</option>'
+    ).join("");
+  }
+  function applySelectedOrder() {
+    const form=$("nxNetworkJobForm"),select=$("nxDeliveryOrderSelect");
+    if(!form||!select)return;
+    const order=orderCandidates.find(o=>o.order_id===select.value);
+    if(!order)return;
+    const set=(name,value)=>{const field=form.elements.namedItem(name);if(field&&value!==null&&value!==undefined)field.value=String(value);};
+    set("external_reference",order.order_code);
+    set("package_description",order.listing_name+" · Order "+order.order_code+" · Quantity "+order.quantity);
+    set("package_count",1);
+    set("pickup_contact_name",order.seller_business_name);
+    set("pickup_address",order.pickup_address);
+    set("pickup_city",order.pickup_city);
+    set("pickup_country",order.pickup_country);
+    set("recipient_contact_name",order.buyer_name);
+    set("delivery_address",order.fulfilment_location);
+    if(Number(order.existing_delivery_jobs)>0){
+      message("এই Order-এর সঙ্গে আগে থেকেই "+order.existing_delivery_jobs+"টি Delivery Job যুক্ত আছে। Split shipment হলে নতুন Job তৈরি করুন; ঠিকানা ও পরিমাণ যাচাই করুন।");
+    } else {message("Order-এর তথ্য বসানো হয়েছে। Buyer-এর ফোন এবং গন্তব্যের শহর/দেশ যাচাই করে পূরণ করুন।",true);}
+  }
+
   async function savePartner(event) {
     event.preventDefault(); if(!isAdmin()) return message("Admin account প্রয়োজন।");
     const form=event.currentTarget, f=new FormData(form), modes=[...form.querySelectorAll('[name="service_modes"]:checked')].map(o=>o.value);
@@ -172,10 +207,16 @@
       p_delivery_address:String(f.get("delivery_address")||"").trim(),p_delivery_city:String(f.get("delivery_city")||"").trim(),
       p_delivery_country:String(f.get("delivery_country")||"").trim(),
       p_requested_pickup_at:null,p_delivery_deadline:null,p_special_instructions:null,
-      p_delivery_mode:f.get("delivery_mode"),p_commerce_order_id:null
+      p_delivery_mode:f.get("delivery_mode")
     };
+    const orderId=String(f.get("commerce_order_id")||"").trim();
     const btn=form.querySelector("button[type=submit]");btn.disabled=true;
-    try{const {error}=await db().rpc("create_delivery_network_job",p);if(error)throw error;form.reset();message("Unassigned Delivery Request তৈরি হয়েছে। এখন Provider assign করুন।",true);await loadJobs();}
+    try{
+      const {error}=orderId
+        ?await db().rpc("create_delivery_network_job_from_order",{p_commerce_order_id:orderId,...p})
+        :await db().rpc("create_delivery_network_job",{...p,p_commerce_order_id:null});
+      if(error)throw error;
+      form.reset();message(orderId?"Commerce Order-এর সঙ্গে Delivery Job যুক্ত হয়েছে।":"Unassigned Delivery Request তৈরি হয়েছে। এখন Provider assign করুন।",true);await load();
     catch(err){message("Delivery Request তৈরি হয়নি: "+err.message);}
     finally{btn.disabled=false;}
   }
