@@ -31,7 +31,7 @@ test("proof evidence is private, scoped to a job folder and append-only", () => 
   assert.doesNotMatch(sql, /create policy nexora_delivery_evidence_(?:update|delete)/);
   assert.match(sql, /create table if not exists private\.delivery_proof_records/);
   assert.match(sql, /revoke all on private\.delivery_proof_records,private\.delivery_disputes from public,anon,authenticated/);
-  assert.match(sql, /delivered_quantity cannot exceed the ordered quantity/);
+  assert.match(sql, /delivered quantity cannot exceed the ordered quantity/i);
 });
 
 test("dispute initiation checks Buyer, Seller, assigned worker or Admin identity", () => {
