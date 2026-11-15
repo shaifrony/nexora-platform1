@@ -27,7 +27,7 @@
     button.id="nxTransportProviderNav";
     button.type="button";
     button.className="secondary";
-    button.textContent="Transport Provider Center";
+    button.textContent="Transport & Delivery Work Center";
     button.addEventListener("click",()=>window.showSection?.("transportProviderCenter"));
     nav.appendChild(button);
   }
@@ -117,6 +117,26 @@
     }));
   }
 
+  async function loadAssignedStaffReceiptJobs(){
+    const host=$("nxDeliveryStaffReceiptJobs")?.querySelector("[data-staff-receipt-list]");
+    if(!host||!db()||!activeAccount())return;
+    const {data,error}=await db().rpc("get_my_assigned_staff_receipt_jobs");
+    if(error){host.textContent="Delivery staff queue লোড হয়নি: "+error.message;return;}
+    const jobs=data||[];
+    host.innerHTML=jobs.length?jobs.map(j=>'<form class="offer" data-staff-receipt-form="'+esc(j.job_id)+'"><strong>'+esc(j.job_reference)+'</strong><p class="muted">'+esc(j.partner_name)+' · '+esc(j.job_status)+'</p><label>Buyer Receipt OTP<input name="code" minlength="32" maxlength="32" pattern="[0-9A-Fa-f]{32}" autocomplete="one-time-code" required></label><label>Delivery note (ঐচ্ছিক)<input name="note" maxlength="1500"></label><button class="primary" type="submit">OTP যাচাই করে Delivered করুন</button><p class="muted" role="status" aria-live="polite"></p></form>').join(""):'<p class="muted">আপনার verified staff account-এ এখনো কোনো OTP-যোগ্য Delivery Job বরাদ্দ নেই।</p>';
+    host.querySelectorAll("[data-staff-receipt-form]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();const button=form.querySelector("button[type=submit]"),status=form.querySelector('[role="status"]'),data=new FormData(form);
+      button.disabled=true;status.textContent="OTP যাচাই হচ্ছে…";
+      try{
+        const {data:result,error:rpcError}=await db().rpc("verify_delivery_receipt_code",{p_job_id:form.dataset.staffReceiptForm,p_code:String(data.get("code")||"").trim(),p_location_description:null,p_note:String(data.get("note")||"").trim()||null});
+        if(rpcError)throw rpcError;
+        if(result?.verified){status.textContent="OTP সঠিক। আপনার পরিচয়যুক্ত Delivery Staff হিসেবে Receipt নিশ্চিত হয়েছে।";form.querySelectorAll("input,button").forEach(x=>x.disabled=true);await loadAssignedStaffReceiptJobs();}
+        else status.textContent="OTP যাচাই হয়নি। "+(result?.reason||("অবশিষ্ট চেষ্টা: "+(result?.attempts_remaining??"—")));
+      }catch(err){status.textContent="যাচাই হয়নি: "+err.message;}
+      finally{button.disabled=false;}
+    }));
+  }
+
   async function loadVehicles(providerId) {
     const host=$("nxTransportVehicles-"+providerId);
     if(!host || !db()) return;
@@ -137,6 +157,7 @@
     if(!host) return;
     if(!activeAccount()){host.textContent="সক্রিয় Buyer, Seller অথবা অনুমোদিত Porter অ্যাকাউন্টে লগইন করুন।";return;}
     if(!db()){host.textContent="Database connection পাওয়া যায়নি।";return;}
+    await loadAssignedStaffReceiptJobs();
     host.textContent="আপনার Provider আবেদন লোড হচ্ছে…";
     const uid=user().id;
     const {data,error}=await db().from("transport_providers")
@@ -212,15 +233,16 @@
 
   window.addEventListener("nexora:auth-change",()=>{
     addWorkspaceLink();renderShell();
+    if(activeAccount()) loadAssignedStaffReceiptJobs();
     if(activeAccount() && loadedUserId!==user().id) loadProviders();
     else if(!activeAccount()){providers=[];loadedUserId=null;}
   });
   document.addEventListener("click",event=>{
     if(event.target.closest("#nxTransportProviderNav")) {
-      renderShell();loadProviders();
+      renderShell();loadProviders();loadAssignedStaffReceiptJobs();
     }
   });
   addWorkspaceLink();
   renderShell();
-  if(activeAccount()) loadProviders();
+  if(activeAccount()){loadProviders();loadAssignedStaffReceiptJobs();}
 })();
