@@ -58,7 +58,7 @@ declare
 begin
  if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
  if length(coalesce(p_code,''))<>32
-    or p_code !~ '^[0-9A-Fa-f]{32}
+    or p_code !~ '^[0-9A-Fa-f]{32}$'
     or length(coalesce(p_location_description,''))>500
     or length(coalesce(p_note,''))>1500 then
    raise exception 'Invalid receipt verification input' using errcode='22023';
