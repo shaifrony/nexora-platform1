@@ -146,11 +146,13 @@ do $duplicate_link$ begin
   raise exception 'FAIL: duplicate Delivery Job was created for one Commerce Order';
  exception when unique_violation then null;
  end;
+end $duplicate_link$;
+reset role;
+do $duplicate_link_count$ begin
  if (select count(*) from public.delivery_jobs where commerce_order_id='83000000-0000-4000-8000-000000000001')<>1 then
   raise exception 'FAIL: duplicate Delivery Job persisted';
  end if;
-end $duplicate_link$;
-reset role;
+end $duplicate_link_count$;
 
 -- The linked job must appear in the owning Buyer's narrow Receipt OTP queue only.
 set role authenticated;
