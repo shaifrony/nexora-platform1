@@ -1922,3 +1922,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Important: this is a UI safety improvement only. The older backend `update_delivery_network_job_status` RPC still allows those transitions and must be replaced by the next naturally ordered migration; the UI change is not a security boundary.
 
 - Validation for the Admin UI guard commit `225b72a937af9d477c77b1b3b8449a7376b77167`: GitHub Actions run `43677278112` completed successfully. JavaScript syntax, dependency-free tests (including the new Admin transition regression), all focused PostgreSQL suites, and migration filename ordering passed. The recoverable development source snapshot job also succeeded.
+
+
+- Dispute lifecycle audit: `review_delivery_dispute` closes the dispute record but leaves the Job status unchanged; the Admin/Provider status RPC does not allow `disputed -> in_transit`. After removing the unsafe direct-delivered UI choice, resolved/rejected shipments can remain operationally stuck. Next migration should add a guarded, audited resume-to-`in_transit` action only when no active dispute remains; this must not count as Buyer receipt. Recorded in Payments & Ledger Design section 12.3.
