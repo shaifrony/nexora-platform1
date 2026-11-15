@@ -128,3 +128,22 @@ Migration `20261115230000_payment_reconciliation_batch_queue.sql` adds a private
 - Reconciliation is deliberately observational: it does not change payment capture state, create ledger entries, trigger refunds, or move money. The report window is retained as provenance metadata; this is not yet two-way completeness checking or bank-settlement matching. Missing internal captures, provider fees/net settlements and payout transfers remain outside this implementation. Provider-specific report parsing and trusted adapter integration remain unimplemented.
 
 Focused SQL test: `tests/payment-reconciliation-postgres.test.sql`; static test: `tests/payment-reconciliation.test.js`. Local disposable PostgreSQL execution passed. GitHub Actions CI #43674068727 passed on exact implementation commit `803724a681015f9dcdd0f20b4609b341d679d0b1`.
+
+
+## 11. Confirmed Bangladesh launch funds-flow policy — 2026-11-15
+
+The business owner has confirmed the intended commercial flow:
+
+**Buyer → NEXORA → Seller**
+
+- NEXORA is intended to receive the Buyer's payment first; the platform, not the Seller directly, is the intended first recipient in the product's commercial flow.
+- Seller payout is not eligible merely because the Buyer paid, the Order was accepted, a courier marked a parcel delivered, or a delivery charge was quoted.
+- Seller payout becomes eligible only after successful delivery to the Buyer is confirmed. The current staged delivery design's Buyer receipt OTP is the intended primary confirmation signal; any exception/manual confirmation must be separately authorized, reasoned and audited.
+- A disputed, failed, unverified or otherwise unresolved delivery/payment must remain on hold and must not be treated as payout-eligible.
+- The system must calculate Seller payable from verified captured funds and the applicable agreed commission/charges, not from Order totals alone. The actual commission, taxes, fees, refunds, reserves and settlement amounts still require approved policy and contractual inputs.
+- Partial-delivery settlement is not yet decided. Do not release the full Seller payable on a partial proof; keep the unresolved portion on hold until the complete-delivery and dispute outcome rules are explicitly defined.
+- Refunds, chargebacks, payout approval and provider/bank settlement remain separate state machines with independent evidence and maker-checker controls.
+
+**Important legal and implementation boundary:** this is the confirmed intended product flow, not a finding that NEXORA currently has legal authority to custody, pool or disburse customer funds. Before choosing a provider or enabling real money, obtain Bangladesh legal/accounting advice and provider approval on the permitted merchant-of-record/funds-flow model, licensing/authorization, safeguarded account structure, KYC/AML, consumer protection, tax/VAT, refund/chargeback obligations and seller contracts. If a licensed provider must hold or split funds, implement the approved provider-controlled flow rather than assuming NEXORA can hold funds itself.
+
+No gateway, live collection, custody, payout or hosted database change is enabled by this decision.
