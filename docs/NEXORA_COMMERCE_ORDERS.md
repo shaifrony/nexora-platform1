@@ -68,3 +68,9 @@
 ## Release safety
 
 All schema/UI work is staged on `nexora-development`. Do not apply migrations to hosted Supabase, mutate NEXORA-TEST, change `main`, or deploy Production without explicit user approval. The hosted migration history is not reconciled with the staged migration chain; do not apply only the latest migration.
+
+
+## Delivery Job cardinality
+
+- A Commerce Product Order can be linked to no more than one Delivery Job. Partial delivery quantities, photos/signatures and disputes are tracked within that job's append-only proof/dispute history.
+- The database enforces this with a partial unique index and a duplicate-link trigger. If the migration detects existing duplicate links, it aborts with a reconciliation message rather than deleting or rewriting jobs.
