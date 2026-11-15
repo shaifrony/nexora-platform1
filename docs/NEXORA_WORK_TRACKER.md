@@ -2,7 +2,7 @@
 
 Updated: 2026-11-15 (Development CI 129/129; six disposable PostgreSQL suites; 45 migrations)
 
-Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). This documents device-loss recovery, GitHub/offline source backups, account security, and the database/Storage backup gates required before real-customer launch. It does not claim hosted backups are already configured.\n\nLatest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md). Buyer phase checklist: [NEXORA Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md).
+Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.\n\nLatest marketplace progress: [Business Profile & Product Form Progress](NEXORA_BUSINESS_PROFILE_AND_PRODUCT_FORM_PROGRESS.md). Buyer Demand review: [NEXORA Buyer Demand Progress](NEXORA_BUYER_DEMAND_PROGRESS.md). Buyer phase checklist: [NEXORA Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md).
 
 Review RPC local validation closeout: [NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md](NEXORA_REVIEW_RPC_LOCAL_VALIDATION_CLOSEOUT.md). Base and extended local logic suites plus the focused two-session order-acceptance race passed on disposable PostgreSQL 17. The later review-column privacy candidate #31/#32 is a separate, not-yet-executed gate. Hosted deployment remains blocked.
 
