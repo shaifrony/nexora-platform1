@@ -1907,3 +1907,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Cross-batch duplicate detection currently checks repeated provider transaction references only inside the incoming batch. An overlapping/re-imported statement can therefore match a transaction already matched in an earlier batch. The next implementation must flag the second occurrence and retain the first batch/row reference.
 - Concurrent resolution of the final exception rows can race because each reviewer locks only its own row before counting remaining open rows. Serialize batch finalization on the parent batch row and recompute under lock.
 - Added the exact regression requirements to Payments & Ledger Design section 12.3.2. No SQL or hosted changes made in this audit.
+
+
+- Further receipt-state finding: OTP requests are allowed only for `out_for_delivery`, but verification accepts `partially_delivered`; after the first partial proof, Buyer cannot request a fresh OTP for a later drop. The proof RPC also accepts `delivered` Jobs and can move them back to `partially_delivered` after additional proof. The next design must model per-drop confirmation separately from final full-quantity receipt and make final receipt irreversible except an audited dispute/reversal workflow. Added to Payments & Ledger Design section 12.3.
