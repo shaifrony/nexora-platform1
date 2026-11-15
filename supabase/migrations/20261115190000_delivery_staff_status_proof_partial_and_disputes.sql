@@ -546,4 +546,55 @@ as $$ select * from private.get_admin_delivery_disputes(); $$;
 revoke all on function public.get_admin_delivery_disputes() from public,anon;
 grant execute on function public.get_admin_delivery_disputes() to authenticated;
 
+
+-- Buyer/Seller order-scoped evidence and dispute history; never accepts a job ID
+-- from the client, and only returns jobs linked to the caller's own Commerce Orders.
+create or replace function private.get_my_order_delivery_operations(p_order_ids uuid[])
+returns table(
+ order_id uuid,job_id uuid,job_reference text,proof_records jsonb,disputes jsonb
+)
+language plpgsql security definer set search_path=''
+as $
+declare v_actor uuid:=auth.uid();v_role text;
+begin
+ if v_actor is null then raise exception 'Login required' using errcode='42501'; end if;
+ select p.role into v_role from public.profiles p
+ where p.id=v_actor and p.account_status='active' and p.role in ('buyer','seller');
+ if v_role is null then raise exception 'Active Buyer or Seller account required' using errcode='42501'; end if;
+ if p_order_ids is null or cardinality(p_order_ids)>100 then
+   raise exception 'Provide up to 100 Order IDs' using errcode='22023';
+ end if;
+ return query
+ select o.id,j.id,j.job_reference,
+   coalesce((select jsonb_agg(jsonb_build_object(
+     'proof_id',p.id,'delivered_quantity',p.delivered_quantity,
+     'delivered_package_count',p.delivered_package_count,'recipient_name',p.recipient_name,
+     'recipient_acknowledged',p.recipient_acknowledged,'photo_paths',p.photo_paths,
+     'signature_path',p.signature_path,'note',p.note,'created_at',p.created_at
+   ) order by p.created_at,p.id) from private.delivery_proof_records p where p.job_id=j.id),'[]'::jsonb),
+   coalesce((select jsonb_agg(jsonb_build_object(
+     'dispute_id',d.id,'reason_code',d.reason_code,'description',d.description,
+     'raiser_role',d.raiser_role,'dispute_status',d.dispute_status,
+     'resolution',d.resolution,'created_at',d.created_at,'updated_at',d.updated_at
+   ) order by d.created_at desc,d.id) from private.delivery_disputes d where d.job_id=j.id),'[]'::jsonb)
+ from (
+   select distinct requested.order_id from unnest(p_order_ids) requested(order_id)
+   where requested.order_id is not null
+ ) requested
+ join public.commerce_orders o on o.id=requested.order_id
+   and (o.buyer_id=v_actor or o.seller_id=v_actor)
+ join public.delivery_jobs j on j.commerce_order_id=o.id
+ order by o.id,j.created_at,j.id;
+end;
+$;
+revoke all on function private.get_my_order_delivery_operations(uuid[]) from public,anon,authenticated;
+grant execute on function private.get_my_order_delivery_operations(uuid[]) to authenticated;
+
+create or replace function public.get_my_order_delivery_operations(p_order_ids uuid[])
+returns table(order_id uuid,job_id uuid,job_reference text,proof_records jsonb,disputes jsonb)
+language sql security invoker set search_path=''
+as $ select * from private.get_my_order_delivery_operations($1); $;
+revoke all on function public.get_my_order_delivery_operations(uuid[]) from public,anon;
+grant execute on function public.get_my_order_delivery_operations(uuid[]) to authenticated;
+
 commit;
