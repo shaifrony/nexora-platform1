@@ -60,7 +60,8 @@ insert into public.profiles values
  ('81000000-0000-4000-8000-000000000001','admin','active','NEXORA Admin'),
  ('81000000-0000-4000-8000-000000000002','buyer','active','Buyer One'),
  ('81000000-0000-4000-8000-000000000004','buyer','active','Buyer Two'),
- ('81000000-0000-4000-8000-000000000003','seller','active','Seller One');
+ ('81000000-0000-4000-8000-000000000003','seller','active','Seller One'),
+ ('81000000-0000-4000-8000-000000000004','buyer','active','Buyer Two');
 insert into public.admin_staff values('81000000-0000-4000-8000-000000000001','ADM-TEST',true);
 insert into public.business_profiles values(
  '81000000-0000-4000-8000-000000000003','Seller Business','Sales Centre, Mirpur','Dhaka','Bangladesh'
@@ -134,7 +135,7 @@ do $buyer_queue$ begin
   raise exception 'FAIL: Buyer could not discover the newly linked Delivery Job';
  end if;
  if (select count(*) from public.get_my_order_receipt_jobs(array['83000000-0000-4000-8000-000000000004'::uuid]))<>0 then
-  raise exception 'FAIL: Buyer could discover another Buyer's Order shipment';
+  raise exception 'FAIL: Buyer could discover another Buyer order shipment';
  end if;
 end $buyer_queue$;
 reset role;
