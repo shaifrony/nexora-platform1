@@ -1117,3 +1117,18 @@ test("No legacy or direct delivery status path can bypass Buyer receipt verifica
   assert.match(buyerReceiptOtpSql, /create or replace function public\.update_delivery_network_job_status/i);
   assert.match(buyerReceiptOtpSql, /revoke all on function private\.update_delivery_network_job_status_legacy/i);
 });
+
+
+test("Direct Buyer product orders validate MOQ and available stock before calling the order RPC", () => {
+  const detail = marketplaceUi.slice(
+    marketplaceUi.indexOf("function renderProducts()"),
+    marketplaceUi.indexOf("async function loadDemands()")
+  );
+  assert.match(detail, /name="quantity" type="number" min="\$\{esc\(selected\.minimum_order_quantity\|\|1\)\}" max="\$\{selected\.stock_tracking\?esc\(Math\.max\(0,Number\(selected\.stock_quantity\)-Number\(selected\.reserved_quantity\)\)\):""\}"/);
+  const submit = detail.slice(detail.indexOf('$("nxProductOrderForm")?.addEventListener("submit"'), detail.indexOf('$("nxProductNegotiationForm")?.addEventListener("submit"'));
+  assert.match(submit, /Number\.isFinite\(quantity\)/);
+  assert.match(submit, /quantity<min/);
+  assert.match(submit, /available!==null&&quantity>available/);
+  assert.match(submit, /পরিমাণ MOQ এবং উপলব্ধ স্টকের মধ্যে হতে হবে/);
+  assert.match(submit, /submitCommerceOrder\("product",selected\.id,quantity/);
+});
