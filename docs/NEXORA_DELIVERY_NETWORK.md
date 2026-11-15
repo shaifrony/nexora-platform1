@@ -15,13 +15,13 @@
 - Existing `transport_providers` remains the registration model for independent people and transport businesses.
 - Partner and staff reads require `logistics.view`; changes require active Admin membership, AAL2, and `logistics.assign`.
 - Every privileged change is recorded in `admin_audit_logs`.
-- No public role is added for delivery staff in this phase. This avoids changing Buyer/Seller/Admin role semantics. Staff login/field app is a later phase and must use a separate scoped identity design.
+- No new public role is added for delivery staff. A worker may use an existing active Buyer/Seller/Porter account only after an AAL2 Admin binds the roster record through a unique verified Auth email/phone match. The worker receives only the jobs assigned to that staff record and does not inherit Provider-owner permissions.
 
 ## Important limitations
 - Courier API credentials are deliberately not stored in this phase. Store secrets only in a server-side secret store when an actual partner integration is approved.
 - API tracking mode is metadata only until a provider-specific adapter is implemented.
 - The Phase 1 migration depends on the existing staged Transport Provider and Admin permission foundation. The hosted database currently does not contain those staged tables, so do not apply this migration by itself to production.
-- Delivery staff records are a managed roster only; they cannot yet sign in, accept assignments, or submit proof of delivery.
+- Identity-bound NEXORA Team/Courier staff can sign in through the existing account and access only their own receipt-verification queue. Named-staff dispatch requires an active linked account. Full staff status updates, acceptance, photo/signature proof and other field-app workflows remain unimplemented.
 - AAL2 Admin can create a Delivery Job linked to a ready Product Commerce Order; Buyer delivery-charge checkout is not implemented yet.
 
 ## Remaining phases
@@ -55,7 +55,7 @@
 - `delivered` is a logistics status only. It does not mark a Commerce Order completed; Buyer handover verification and completion report are a separate next phase.
 
 
-## Implementation status (Development Branch, 2026-11-13)
+## Implementation status (Development Branch, 2026-11-15)
 ### Staged in code
 - Phase 1: partner/team roster tables, Admin UI, partner approval/status, own-team staff roster.
 - Phase 2: unassigned Delivery Request creation, Admin assignment to independent Provider / NEXORA team / courier partner, append-only assignment history.
