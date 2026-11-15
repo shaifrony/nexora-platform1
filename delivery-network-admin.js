@@ -217,7 +217,7 @@
         :await db().rpc("create_delivery_network_job",{...p,p_commerce_order_id:null});
       if(error)throw error;
       form.reset();message(orderId?"Commerce Order-এর সঙ্গে Delivery Job যুক্ত হয়েছে।":"Unassigned Delivery Request তৈরি হয়েছে। এখন Provider assign করুন।",true);await load();
-    catch(err){message("Delivery Request তৈরি হয়নি: "+err.message);}
+    } catch(err){message("Delivery Request তৈরি হয়নি: "+err.message);}
     finally{btn.disabled=false;}
   }
   async function loadJobs() {
