@@ -4,14 +4,14 @@ This feature is staged on `nexora-development` only.
 
 ## Seller listing fields
 - The hosted schema already had a `minimum_order_quantity` column from an earlier schema change; this feature reuses it and strengthens its validation in the staged migration.
-- Wholesale listings can set a minimum order quantity (MOQ).
-- Retail listings are constrained to MOQ 1.
+- Seller sets the minimum order quantity (MOQ) per product listing; the current database rule requires a positive MOQ for both sale types and does not force Retail MOQ to 1.
+- The Seller's Wholesale/Retail sale-type choice is a listing-level commercial descriptor only. It does not create separate Buyer accounts or restrict which approved products a Buyer can discover or order.
 - Sellers may optionally track stock. When disabled, stock is treated as untracked/unlimited; when enabled, a numeric stock quantity is required.
 - Optional quantity-price tiers use JSON records shaped as `[{ "min_quantity": 100, "unit_price": 95 }]`. The highest qualifying tier is used as the order's unit-price snapshot.
 - The Seller UI accepts one tier per line as `quantity=unit price`, for example `100=95` and `500=90`.
 
 ## Order inventory lifecycle
-1. Product order creation locks the product row, validates Buyer category and MOQ, checks available stock, calculates the tier price, and reserves stock in the same transaction.
+1. Product order creation locks the product row, validates an active Buyer, approved product and approved Seller business, enforces the Seller-defined MOQ, checks available stock, calculates the tier price, and reserves stock in the same transaction.
 2. Seller accept / mark-ready does not change the reservation.
 3. Buyer cancellation while pending or Seller rejection releases the reservation.
 4. Buyer completion deducts stock and releases the reservation in the same transaction; verified-review eligibility is still created on completion.
@@ -28,5 +28,6 @@ This feature is staged on `nexora-development` only.
 - No payment, escrow, refund, shipping booking, or inventory purchase/receipt workflow.
 - No multi-warehouse stock, stock movement ledger, SKU/variant inventory, or automatic low-stock alerts.
 - Tier prices are unit-price snapshots in the order; no currency conversion or tax/shipping calculations.
+- The order RPC does not authorize access based on a Buyer Wholesale/Retail category; all active Buyers can order any approved listing when its Seller-defined MOQ and stock rules are met.
 - UI stock editor currently uses a simple prompt-based control; a richer stock ledger interface can follow.
 - This migration has not been applied to any hosted database. SQL execution and browser end-to-end tests remain pending.
