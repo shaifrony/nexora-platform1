@@ -112,6 +112,6 @@ Migration `20261115220000_payment_intent_webhook_foundation.sql` now stages the 
 - Service-role-only journal posting validates equal debit/credit totals in one currency, protects posted journals/lines from mutation, supports idempotent posting and creates an immutable mirrored reversal entry.
 - `public.expire_stale_payment_intents` is a service-role-only maintenance RPC; it must be invoked by a trusted scheduler/worker. No scheduler has been configured.
 
-Focused tests: `tests/payment-finance-foundation.test.js` and `tests/payment-finance-foundation-postgres.test.sql`. The SQL suite passed locally against a disposable PostgreSQL 18.6 database. CI integration has been added but must pass on the exact pushed commit before this milestone is marked CI-verified.
+Focused tests: `tests/payment-finance-foundation.test.js` and `tests/payment-finance-foundation-postgres.test.sql`. The SQL suite passed locally against a disposable PostgreSQL 18.6 database. GitHub Actions CI #43672885634 passed on the exact implementation commit `afb09e4bb0374fbe1b74a97e503d8ac5f0faac5e`.
 
 Still not implemented: provider-specific cryptographic adapter/checkout, gateway sandbox verification, payment reconciliation reports, refunds, chargebacks, seller payable calculations, payout/settlement, maker-checker approval UI, legal/accounting fund-flow decisions, full Supabase Auth/JWT/PostgREST/RLS integration, and browser/mobile end-to-end validation. No hosted Supabase migration, live payment, or Production change has been made.
