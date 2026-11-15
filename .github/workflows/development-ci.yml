@@ -88,6 +88,16 @@ jobs:
           createdb nexora_receipt_test
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/buyer-delivery-receipt-otp-postgres.test.sql
 
+      - name: Execute Admin Order-to-Delivery linking migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_admin_delivery_test
+        run: |
+          createdb nexora_admin_delivery_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/admin-delivery-order-linking-postgres.test.sql
+
       - name: Validate active migration filenames and ordering
         shell: bash
         run: |
