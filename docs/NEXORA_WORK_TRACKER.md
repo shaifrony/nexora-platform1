@@ -24,7 +24,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Buyer Demands & quotations | Partial | Buyer Demand required date, safe public projection, Seller inbox, quotation/counter-offer turn-taking and source-linked order conversion are staged. Initial-state spoofing, Buyer-required quantity ceiling and Demand/Offer lock ordering hardened. Expanded source suite 96/96 passes; hosted JWT/RLS/PostgREST and browser E2E remain pending; see NEXORA_BUYER_DEMAND_PROGRESS.md |
 | Commerce orders | Partial | Product/Service/Demand order lifecycle, MOQ/stock reservation and tier pricing staged; active assigned Buyer/Seller transition checks and expanded source suite 96/96 passes. Runtime concurrency/E2E, payments/disputes/refunds remain pending |
 | Verified reviews | Partial | Completed-purchase eligibility and one-review-per-listing staged; public review column grants exclude Buyer ID and moderation metadata. Source regression coverage passes; role/RLS and browser E2E pending |
-| Delivery Network | Partial | Admin AAL2 Order linking, Buyer-safe tracking, Buyer/Provider/Admin Receipt OTP, verified identity binding for NEXORA Team/Courier workers and worker receipt queue are staged and disposable-PostgreSQL-tested; full staff field operations, finance, APIs and E2E remain pending |
+| Delivery Network | Partial | Admin AAL2 Order linking, Buyer-safe tracking, Buyer/Provider/Admin Receipt OTP, identity-bound staff queue, worker status/proof/partial/dispute UI and Admin dispute review queue are staged; new disposable PostgreSQL suite passes on commit 9034ab5; full Supabase Storage/Auth/PostgREST and browser/device E2E remain pending |
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
 | Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
@@ -1806,9 +1806,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [x] Added dispute initiation for the linked Buyer/Seller, assigned worker or AAL2 logistics Admin, with one active dispute per job; AAL2 `logistics.assign` Admin can review, resolve or reject with audit logging.
 - [x] Added scoped worker queue, proof-history and dispute-history RPCs; raw private tables are not granted to browser roles.
 - [x] Added a disposable PostgreSQL SQL integration fixture and Node source-level regression tests.
-- [ ] Execute the new SQL integration fixture in CI. The GitHub Actions workflow file could not be updated by the connected repository action's safety gate; do not bypass that restriction. Existing Node test glob will automatically include the new source test, but the SQL fixture is not yet wired into CI.
-- [ ] Run the SQL fixture on disposable PostgreSQL and fix any runtime/schema issues.
-- [ ] Build the Worker Dashboard UI for status updates, photo/signature upload, partial quantities, proof history and dispute creation; build Admin dispute queue/review UI and Buyer/Seller dispute/proof views.
+- [x] Wired the Delivery Staff SQL fixture into Development CI using the existing isolated PostgreSQL service; the workflow executes the migration fixture after the prior Delivery Network/OTP migrations.
+- [x] Fixed SQL dollar quoting, private-schema usage grants, test-role boundaries and expected validation SQLSTATE; reordered dispute authorization so unrelated users cannot infer whether a job already has an active dispute.
+- [x] CI #43665893504 passed on commit 9034ab5: JavaScript syntax, 135 dependency-free tests, seven disposable PostgreSQL migration suites including the new Delivery Staff operations fixture, and migration filename/order validation. This run preceded the later Admin dispute queue/UI additions; a fresh CI run is required for those changes.
+- [x] Existing Transport Provider Center now exposes the identity-bound worker queue with status updates, photo/signature upload, partial quantity proof, OTP final receipt, proof/dispute history and dispute creation.
+- [x] Added an AAL2 + logistics.view Admin dispute queue RPC and Admin UI for under-review/resolved/rejected decisions; final CI and UI regression validation pending.
 - [ ] Test Supabase Storage policies and signed access on an isolated Supabase project; no hosted environment touched.
+- [ ] Buyer/Seller-facing proof and dispute views, browser/device E2E, accessibility and mobile upload tests remain pending.
 - [ ] Browser E2E, accessibility, mobile upload and negative authorization tests remain pending.
 - [ ] Do not apply migration to hosted Supabase or Production without explicit approval.
