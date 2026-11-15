@@ -1925,3 +1925,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 
 - Dispute lifecycle audit: `review_delivery_dispute` closes the dispute record but leaves the Job status unchanged; the Admin/Provider status RPC does not allow `disputed -> in_transit`. After removing the unsafe direct-delivered UI choice, resolved/rejected shipments can remain operationally stuck. Next migration should add a guarded, audited resume-to-`in_transit` action only when no active dispute remains; this must not count as Buyer receipt. Recorded in Payments & Ledger Design section 12.3.
+
+
+## 2026-11-15 — Buyer payable amount defect confirmed
+
+- Re-read the full active Buyer Demand conversion migration and found that it adds `delivery_charge`, authoritative `source_offer_total`, and generated delivery-inclusive `grand_total`. The earlier audit missed this migration.
+- `create_payment_intent` still snapshots legacy `total_price` rather than `grand_total`. This excludes delivery charges and can misstate Buyer Demand goods subtotal when `source_offer_total` differs from quantity × unit_price.
+- Corrected the inaccurate statements in Payments & Ledger Design section 12.1 and the earlier tracker entry. Required next migration: use `grand_total`, persist immutable itemized Buyer-payable amounts, and test both delivery-charge and Buyer Demand subtotal cases. No payment code or existing migration was changed in this audit.
