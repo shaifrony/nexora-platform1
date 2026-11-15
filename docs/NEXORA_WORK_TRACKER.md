@@ -1934,3 +1934,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected the inaccurate statements in Payments & Ledger Design section 12.1 and the earlier tracker entry. Required next migration: use `grand_total`, persist immutable itemized Buyer-payable amounts, and test both delivery-charge and Buyer Demand subtotal cases. No payment code or existing migration was changed in this audit.
 
 - Validation of the payable-amount audit correction on commit `e336aff57448466bbd2be489927cd53388043aac`: GitHub Actions run `43677497259` completed successfully. JavaScript syntax, dependency-free regression tests, all focused PostgreSQL suites, migration filename ordering, and recoverable development source snapshot passed. These tests validate the current baseline; they do not yet exercise the identified `grand_total` payment-intent defect because its corrective migration has not been created.
+
+
+## 2026-11-15 — Payment amount source correction
+
+- Corrected `public.create_payment_intent` in `20261115220000_payment_intent_webhook_foundation.sql` to snapshot `commerce_orders.grand_total` rather than legacy `total_price`. This includes agreed Buyer Demand quotation totals and delivery charges, preventing payment intents from under-collecting the authoritative Order amount.
+- Updated `tests/payment-finance-foundation.test.js` with regression assertions requiring `grand_total` and forbidding `total_price` in the payment migration.
+- Source re-fetch confirms four `grand_total` references and zero `total_price` references in the payment migration. The test file contains the corresponding regression assertions. CI status for the two latest commits has not yet been reported; do not mark runtime verification complete until CI confirms.
+- Development-only commits: `135eecb2e60a7f06dfb86aeb42129463d7d3dad2` (migration), `3d5fb5d93f855b568d7aaf86f0b92f301ca1da91` (test). No hosted SQL, Live Supabase, `main`, Production, DNS or deployment changes.
