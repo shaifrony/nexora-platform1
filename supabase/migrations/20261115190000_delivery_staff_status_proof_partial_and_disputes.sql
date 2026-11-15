@@ -117,7 +117,8 @@ grant execute on function private.can_manage_delivery_job_evidence(uuid) to auth
 -- Buyer/Seller can read evidence for their own order. No update/delete policy exists.
 insert into storage.buckets(id,name,public)
 values('nexora-delivery-evidence','nexora-delivery-evidence',false)
-on conflict(id) do update set public=false;
+on conflict(id) do update set public=false, file_size_limit=10485760,
+  allowed_mime_types=array['image/jpeg','image/png','image/webp'];
 
 drop policy if exists nexora_delivery_evidence_upload on storage.objects;
 create policy nexora_delivery_evidence_upload on storage.objects
@@ -247,7 +248,7 @@ begin
  end if;
  insert into private.delivery_proof_records(job_id,commerce_order_id,delivered_quantity,delivered_package_count,
    recipient_name,recipient_acknowledged,photo_paths,signature_path,note,created_by,actor_type)
- values(p_job_id,v_job.commerce_order_id,p_delivered_quantity,p_delivered_package_count,
+ values(p_job_id,v_job.commerce_order_id,p_delivered_quantity,coalesce(p_delivered_package_count,0),
    nullif(btrim(coalesce(p_recipient_name,'')),''),coalesce(p_recipient_acknowledged,false),
    coalesce(p_photo_paths,'{}'),p_signature_path,nullif(btrim(coalesce(p_note,'')),''),v_actor,v_actor_type)
  returning id into v_record_id;
@@ -378,6 +379,116 @@ returns void language sql security invoker set search_path=''
 as $$ select private.review_delivery_dispute($1,$2,$3); $$;
 revoke all on function public.review_delivery_dispute(uuid,text,text) from public,anon;
 grant execute on function public.review_delivery_dispute(uuid,text,text) to authenticated;
+
+
+create or replace function private.get_my_assigned_delivery_jobs()
+returns table(
+ job_id uuid,job_reference text,job_status text,package_description text,package_count integer,
+ pickup_contact_name text,pickup_contact_phone text,pickup_address text,pickup_city text,pickup_country text,
+ recipient_contact_name text,recipient_contact_phone text,delivery_address text,delivery_city text,delivery_country text,
+ delivery_deadline timestamptz,updated_at timestamptz
+)
+language plpgsql security definer set search_path=''
+as $
+declare v_actor uuid:=auth.uid();
+begin
+ if v_actor is null or not exists(select 1 from public.profiles p where p.id=v_actor
+   and p.role in ('buyer','seller','porter') and p.account_status='active') then
+   raise exception 'Active identity-bound delivery worker account required' using errcode='42501';
+ end if;
+ return query
+ select j.id,j.job_reference,j.job_status,j.package_description,j.package_count,
+   j.pickup_contact_name,j.pickup_contact_phone,j.pickup_address,j.pickup_city,j.pickup_country,
+   j.recipient_contact_name,j.recipient_contact_phone,j.delivery_address,j.delivery_city,j.delivery_country,
+   j.delivery_deadline,j.updated_at
+ from public.delivery_jobs j
+ join public.delivery_network_staff s on s.id=j.assigned_staff_id
+ join public.delivery_network_partners dp on dp.id=s.partner_id
+ where s.auth_user_id=v_actor and s.staff_status='active' and dp.partner_status='approved'
+   and j.assignment_source in ('nexora_team','courier_partner')
+   and j.job_status in ('assigned','accepted','picked_up','in_transit','out_for_delivery','partially_delivered')
+ order by j.delivery_deadline asc nulls last,j.updated_at desc
+ limit 100;
+end;
+$;
+revoke all on function private.get_my_assigned_delivery_jobs() from public,anon,authenticated;
+grant execute on function private.get_my_assigned_delivery_jobs() to authenticated;
+create or replace function public.get_my_assigned_delivery_jobs()
+returns table(
+ job_id uuid,job_reference text,job_status text,package_description text,package_count integer,
+ pickup_contact_name text,pickup_contact_phone text,pickup_address text,pickup_city text,pickup_country text,
+ recipient_contact_name text,recipient_contact_phone text,delivery_address text,delivery_city text,delivery_country text,
+ delivery_deadline timestamptz,updated_at timestamptz
+)
+language sql security invoker set search_path=''
+as $ select * from private.get_my_assigned_delivery_jobs(); $;
+revoke all on function public.get_my_assigned_delivery_jobs() from public,anon;
+grant execute on function public.get_my_assigned_delivery_jobs() to authenticated;
+
+create or replace function private.get_my_delivery_proof_records(p_job_id uuid)
+returns table(
+ proof_id uuid,delivered_quantity numeric,delivered_package_count integer,recipient_name text,
+ recipient_acknowledged boolean,photo_paths text[],signature_path text,note text,created_at timestamptz
+)
+language plpgsql security definer set search_path=''
+as $
+begin
+ if auth.uid() is null or not private.can_read_delivery_job_evidence(p_job_id) then
+   raise exception 'You are not authorized to view this delivery evidence' using errcode='42501';
+ end if;
+ return query
+ select p.id,p.delivered_quantity,p.delivered_package_count,p.recipient_name,
+   p.recipient_acknowledged,p.photo_paths,p.signature_path,p.note,p.created_at
+ from private.delivery_proof_records p where p.job_id=p_job_id
+ order by p.created_at,p.id;
+end;
+$;
+revoke all on function private.get_my_delivery_proof_records(uuid) from public,anon,authenticated;
+grant execute on function private.get_my_delivery_proof_records(uuid) to authenticated;
+create or replace function public.get_my_delivery_proof_records(p_job_id uuid)
+returns table(
+ proof_id uuid,delivered_quantity numeric,delivered_package_count integer,recipient_name text,
+ recipient_acknowledged boolean,photo_paths text[],signature_path text,note text,created_at timestamptz
+)
+language sql security invoker set search_path=''
+as $ select * from private.get_my_delivery_proof_records($1); $;
+revoke all on function public.get_my_delivery_proof_records(uuid) from public,anon;
+grant execute on function public.get_my_delivery_proof_records(uuid) to authenticated;
+
+create or replace function private.get_my_delivery_disputes(p_job_id uuid)
+returns table(
+ dispute_id uuid,reason_code text,description text,raiser_role text,dispute_status text,
+ resolution text,created_at timestamptz,updated_at timestamptz
+)
+language plpgsql security definer set search_path=''
+as $
+begin
+ if auth.uid() is null or not (
+   private.is_assigned_delivery_staff(p_job_id)
+   or exists(select 1 from public.delivery_jobs j join public.commerce_orders o on o.id=j.commerce_order_id
+     where j.id=p_job_id and (o.buyer_id=auth.uid() or o.seller_id=auth.uid()))
+   or ((select auth.jwt()->>'aal')='aal2' and private.has_nexora_permission('logistics.view')
+     and exists(select 1 from public.admin_staff s join public.profiles p on p.id=s.user_id
+       where s.user_id=auth.uid() and s.is_active=true and p.role='admin' and p.account_status='active'))
+ ) then
+   raise exception 'You are not authorized to view this delivery dispute' using errcode='42501';
+ end if;
+ return query select d.id,d.reason_code,d.description,d.raiser_role,d.dispute_status,
+   d.resolution,d.created_at,d.updated_at
+ from private.delivery_disputes d where d.job_id=p_job_id order by d.created_at desc;
+end;
+$;
+revoke all on function private.get_my_delivery_disputes(uuid) from public,anon,authenticated;
+grant execute on function private.get_my_delivery_disputes(uuid) to authenticated;
+create or replace function public.get_my_delivery_disputes(p_job_id uuid)
+returns table(
+ dispute_id uuid,reason_code text,description text,raiser_role text,dispute_status text,
+ resolution text,created_at timestamptz,updated_at timestamptz
+)
+language sql security invoker set search_path=''
+as $ select * from private.get_my_delivery_disputes($1); $;
+revoke all on function public.get_my_delivery_disputes(uuid) from public,anon;
+grant execute on function public.get_my_delivery_disputes(uuid) to authenticated;
 
 comment on table private.delivery_proof_records is
  'Append-only delivery evidence metadata. Images and recipient signatures live in a private Storage bucket; never expose public object URLs.';
