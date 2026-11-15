@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261115220000_payment_intent_webhook_foundation.sql'), 'utf8');
+const postgresFixture = fs.readFileSync(path.join(__dirname, 'payment-finance-foundation-postgres.test.sql'), 'utf8');
 
 test('payment and finance storage is private, RLS-enabled and not directly browser writable', () => {
   for (const table of ['payment_intents', 'payment_transactions', 'provider_webhook_events', 'finance_accounts', 'finance_journals', 'finance_journal_lines', 'payment_currency_minor_units']) {
@@ -54,4 +55,11 @@ test('double-entry journals validate balance and preserve posted entries with re
   assert.match(migration, /public\.reverse_finance_journal/i);
   assert.match(migration, /reversal_of=p_original_journal_id/i);
   assert.match(migration, /grant execute on function public\.post_finance_journal[\s\S]*to service_role/i);
+});
+
+
+test('payment PostgreSQL fixture models the real grand_total order contract', () => {
+  assert.match(postgresFixture, /order_code text not null,grand_total numeric\(18,2\) not null,currency/i);
+  assert.match(postgresFixture, /order_code,grand_total,currency,order_status/i);
+  assert.doesNotMatch(postgresFixture, /total_price/i);
 });
