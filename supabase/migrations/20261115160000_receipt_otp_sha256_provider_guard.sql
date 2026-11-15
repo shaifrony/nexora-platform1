@@ -89,13 +89,13 @@ begin
    end if;
    v_actor_type:='independent_provider';
  end if;
- if v_old is null or v_old not in ('out_for_delivery','partially_delivered') then
-   raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
- end if;
  select * into v_challenge from private.delivery_receipt_challenges c
  where c.job_id=p_job_id and c.consumed_at is null
  order by c.created_at desc limit 1 for update;
  if not found then return jsonb_build_object('verified',false,'reason','no_active_challenge'); end if;
+ if v_old is null or v_old not in ('out_for_delivery','partially_delivered') then
+   raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
+ end if;
  if v_challenge.expires_at<=now() then
    update private.delivery_receipt_challenges set consumed_at=now() where id=v_challenge.id;
    return jsonb_build_object('verified',false,'reason','expired');
