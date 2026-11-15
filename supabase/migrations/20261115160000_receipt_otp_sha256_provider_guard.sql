@@ -122,8 +122,10 @@ begin
 end;
 $$;
 
+comment on table private.delivery_receipt_challenges is
+ 'Private one-time Buyer receipt challenges. Only a SHA-256 digest of the high-entropy code bound to the shipment and Buyer is stored; raw OTP is never stored.';
 comment on column private.delivery_receipt_challenges.code_hash is
- 'SHA-256 digest of the one-time code combined with the job and Buyer identifiers; raw OTP is never stored.';
+ '64-character SHA-256 digest of the one-time code combined with the job and Buyer identifiers; raw OTP is never stored.';
 commit;
 
     or length(coalesce(p_location_description,''))>500
