@@ -40,18 +40,18 @@
 
 ## Phase 2 — Unified Delivery Jobs and Admin Assignment
 - Delivery jobs can be created as unassigned requests (`requested`) and assigned later by an Admin / Delivery Coordinator.
-- A job can be assigned to exactly one source: an approved independent transport provider, an approved NEXORA-owned team (optionally with an active staff member), or an approved courier company.
+- A job can be assigned to exactly one source: an approved independent transport provider, an approved NEXORA-owned team, or an approved courier company. Selecting a Team/Courier field worker requires a unique active account identity linked through verified Auth contact details.
 - A vehicle is optional; when supplied for an independent provider it must be approved and belong to that provider. Courier partner jobs do not require a NEXORA vehicle record.
 - Assignment history is append-only and records the Admin actor, source, provider/partner/staff/vehicle, reason, and timestamp.
 - Job status vocabulary now supports request, assignment, acceptance, pickup, transit, out-for-delivery, delivered, failure, partial delivery, dispute, return, and cancellation.
-- This phase does not yet implement provider self-service acceptance/status updates, buyer charge checkout, tracking integrations, or completion OTP. Those remain later phases.
+- Provider self-service status updates, Buyer delivery-charge checkout and external tracking integrations remain later phases. Buyer receipt OTP is implemented as a separate guarded workflow.
 
 
 ## Phase 3 — Tracking and operational statuses
 - Added append-only `delivery_tracking_events` and a guarded status transition RPC.
 - Independent Provider owners can update only jobs assigned to their own Provider. Admin / Delivery Coordinator can update with AAL2 and `logistics.assign`.
 - Status transitions are validated in the database; every transition records previous/new status, time, actor, optional location, note, and external tracking code.
-- Courier Partner and NEXORA staff updates remain Admin-entered until partner API and staff field access are built.
+- Independent Provider status updates are self-service. NEXORA Team/Courier workers have an identity-bound receipt queue and OTP verification; other operational status updates remain Admin-entered until the full staff field workflow and partner API are built.
 - `delivered` is a logistics status only. It does not mark a Commerce Order completed; Buyer handover verification and completion report are a separate next phase.
 
 
@@ -65,10 +65,10 @@
 - Static SQL structure checks passed for transaction boundaries, dollar-quote balance, function wrappers, RLS enablement and guarded SECURITY DEFINER routines.
 
 ### Not yet implemented / tested
-- Phase 4: Buyer receipt OTP workflow is staged for Buyers and approved independent Provider owners / MFA Admins; NEXORA team and courier-company staff identity-bound verification remains pending.
+- Phase 4: Buyer receipt OTP is staged for Buyers, approved independent Provider owners, AAL2 Admins and identity-bound NEXORA Team/Courier staff. Partial delivery, disputes and final Order completion remain pending.
 - Phase 5: Buyer delivery-charge quote/checkout, provider cost, NEXORA fee, payment collection and settlement.
 - Phase 6: courier API adapters, webhooks, automated tracking and automatic provider suggestions.
-- Provider/staff/courier real-browser E2E tests have not been run. Focused disposable PostgreSQL authorization tests now cover Buyer OTP ownership, approved Provider ownership and AAL2 Admin order-linking access.
+- Provider/staff/courier real-browser E2E tests have not been run. Focused disposable PostgreSQL authorization tests cover Buyer OTP ownership, approved Provider ownership, AAL2 Admin order-linking, verified staff identity binding, Team/Courier dispatch, staff queue isolation and staff-only OTP verification.
 - Focused migrations are exercised against disposable PostgreSQL fixtures in CI; a complete Supabase CLI migration-chain replay plus hosted Auth/PostgREST/RLS verification remains a separate release gate.
 - The hosted Supabase database currently does not contain the staged Transport/Delivery Network tables; its migration history is behind the Development Branch files. Do not apply only the latest migrations to the hosted database. First reconcile and test the complete ordered migration chain on a safe development database.
 - No hosted migration has been applied, no production deployment has been made, and the main branch remains unchanged.
@@ -145,3 +145,15 @@ Before any real buyer delivery is enabled:
 - The linked-create RPC locks and revalidates the Order before creating the Delivery Job with `commerce_order_id`; this makes the shipment discoverable through the existing Buyer-owned receipt queue and buyer-safe tracking projection.
 - The disposable PostgreSQL test now checks Admin permission/MFA enforcement, eligible Order filtering, pending/Service Order rejection, successful Order linkage and that only the owning Buyer can discover the linked Receipt OTP job.
 - The browser UI has a source regression test for server-authorized Order loading and the linked-create call. Full browser/device E2E and hosted Supabase validation remain release gates.
+
+
+## 2026-11-15 — Identity-bound NEXORA Team and Courier staff receipt verification
+
+- Added staged migration `20261115180000_delivery_staff_receipt_identity.sql`. Existing roster records can be linked to an existing active Buyer/Seller/Porter account only by an AAL2 Admin with `logistics.assign`, and only when exactly one verified Auth email or phone matches the roster contact. No new public role is created and no Provider-owner permission is reused.
+- Each Auth account can be linked to only one staff record. Changing the staff contact email/phone clears the link; Admin can explicitly unbind with a reason. Suspended staff, suspended partners and inactive user profiles cannot access the staff queue or verify receipts.
+- Approved Courier Companies can now have managed worker records, as NEXORA teams already could. Admin assignment accepts an optional worker from either partner kind only when that worker is identity-bound and active.
+- Added a separate staff receipt queue to the shared Transport & Delivery Work Center. The server returns only jobs assigned to the authenticated staff identity; the database independently rechecks the exact staff/job/partner relationship before OTP verification.
+- The staff receipt verification is recorded as `actor_type='delivery_staff'`; it does not elevate the account role or permit access to another worker's jobs.
+- Disposable PostgreSQL CI covers verified email/phone matching, rejection of unverified contacts, NEXORA Team and Courier assignment, unbound worker rejection, own-job queue isolation, denial of cross-worker OTP verification, and successful Team/Courier receipt verification.
+- Development CI [#43662559823](https://github.com/shaifrony/nexora-platform1/actions/runs/43662559823) passed 129/129 source tests, all six focused PostgreSQL suites, JavaScript syntax and 45 active migration filename/order checks.
+- Still pending: complete staff status-update/proof-of-delivery field workflow, SMS/WhatsApp OTP delivery, partial delivery/disputes, final Commerce Order completion, delivery finance/settlement, full Supabase Auth/PostgREST/RLS chain replay and browser/device E2E.
