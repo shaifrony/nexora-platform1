@@ -551,7 +551,7 @@ grant execute on function public.get_admin_delivery_disputes() to authenticated;
 -- from the client, and only returns jobs linked to the caller's own Commerce Orders.
 create or replace function private.get_my_order_delivery_operations(p_order_ids uuid[])
 returns table(
- order_id uuid,job_id uuid,job_reference text,proof_records jsonb,disputes jsonb
+ order_id uuid,job_id uuid,job_reference text,job_status text,proof_records jsonb,disputes jsonb
 )
 language plpgsql security definer set search_path=''
 as $
@@ -565,7 +565,7 @@ begin
    raise exception 'Provide up to 100 Order IDs' using errcode='22023';
  end if;
  return query
- select o.id,j.id,j.job_reference,
+ select o.id,j.id,j.job_reference,j.job_status,
    coalesce((select jsonb_agg(jsonb_build_object(
      'proof_id',p.id,'delivered_quantity',p.delivered_quantity,
      'delivered_package_count',p.delivered_package_count,'recipient_name',p.recipient_name,
