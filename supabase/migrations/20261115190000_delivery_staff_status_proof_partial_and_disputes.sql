@@ -3,6 +3,8 @@
 -- Development branch only. Do not apply to hosted Supabase without explicit release approval.
 begin;
 
+grant usage on schema private to authenticated;
+
 -- Staff receipt verification already records actor_type='delivery_staff'; make the
 -- tracking-history constraint consistent with that existing staged behaviour.
 alter table public.delivery_tracking_events
