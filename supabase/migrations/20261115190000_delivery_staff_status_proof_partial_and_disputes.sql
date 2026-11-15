@@ -300,10 +300,6 @@ begin
    or length(btrim(coalesce(p_description,''))) not between 10 and 2000 then
    raise exception 'Invalid dispute details' using errcode='22023';
  end if;
- if exists(select 1 from private.delivery_disputes d where d.job_id=p_job_id
-   and d.dispute_status in ('open','under_review')) then
-   raise exception 'An active dispute already exists for this delivery' using errcode='23505';
- end if;
  if exists(select 1 from public.commerce_orders o where o.id=v_job.commerce_order_id and o.buyer_id=v_actor) then
    v_role:='buyer';
  elsif exists(select 1 from public.commerce_orders o where o.id=v_job.commerce_order_id and o.seller_id=v_actor) then
@@ -316,6 +312,10 @@ begin
    if v_admin_code is not null then v_role:='admin'; end if;
  end if;
  if v_role is null then raise exception 'Only the order Buyer/Seller, assigned worker or AAL2 logistics Admin can raise a dispute' using errcode='42501'; end if;
+ if exists(select 1 from private.delivery_disputes d where d.job_id=p_job_id
+   and d.dispute_status in ('open','under_review')) then
+   raise exception 'An active dispute already exists for this delivery' using errcode='23505';
+ end if;
  if v_job.job_status not in ('out_for_delivery','partially_delivered','delivered','disputed','delivery_failed','returned') then
    raise exception 'This delivery is not in a disputable state' using errcode='22023';
  end if;
