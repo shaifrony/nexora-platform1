@@ -130,7 +130,7 @@ begin
   if v_admin_code is null then raise exception 'Active Admin membership required' using errcode='42501'; end if;
   select partner_kind into v_partner_kind from public.delivery_network_partners
    where id=p_partner_id and partner_status='approved' for update;
-  if v_partner_kind not in ('nexora_team','courier_company') then
+  if v_partner_kind is null or v_partner_kind not in ('nexora_team','courier_company') then
     raise exception 'Staff must belong to an approved NEXORA team or courier company' using errcode='23514';
   end if;
   if length(btrim(coalesce(p_full_name,''))) not between 2 and 160
@@ -403,7 +403,7 @@ grant execute on function private.bind_delivery_network_staff_identity(uuid) to 
 grant execute on function private.unbind_delivery_network_staff_identity(uuid,text) to authenticated;
 grant execute on function private.get_my_assigned_staff_receipt_jobs() to authenticated;
 grant execute on function private.verify_delivery_receipt_code(uuid,text,text,text) to authenticated;
-grant execute on function private.upsert_delivery_network_staff(uuid,uuid,text,text,text,text[],text,text,text) to authenticated;
+grant execute on function private.upsert_delivery_network_staff(uuid,uuid,text,text,text,text,text[],text,text,text) to authenticated;
 grant execute on function private.assign_delivery_job_network(uuid,text,uuid,uuid,uuid,uuid,text) to authenticated;
 grant execute on function public.bind_delivery_network_staff_identity(uuid) to authenticated;
 grant execute on function public.unbind_delivery_network_staff_identity(uuid,text) to authenticated;
