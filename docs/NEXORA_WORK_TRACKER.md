@@ -197,8 +197,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - During the multilingual architecture source recheck, found that `private.append_product_negotiation_chat_event` in `20261115110000_product_price_negotiation.sql` still had an invalid single-$ PL/pgSQL body delimiter.
 - Corrected it to a matching `$$ ... $$` dollar-quoted body and re-fetched the branch file. Static delimiter check now reports no malformed single-dollar function block and a valid matching double-dollar block.
 - This is source inspection only; the migration was not executed and no SQL behavior is claimed as tested.
-## 2026-11-13 — Translation provider evaluation gate- Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.
-- Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.
+## 2026-11-13 — Translation provider evaluation gate- Verified current LibreTranslate/Argos package listings: Bengali and Arabic are each listed with English in both directions; the published package list does not establish a direct Bangla ↔ Arabic package. LibreTranslate documents intermediate-language pivoting, usually through English, but quality is unverified.- Reviewed Meta NLLB-200 distilled 600M model card: CC-BY-NC 4.0 and research-only / not-production guidance make it unsuitable for NEXORA's commercial production path without separate compatible licensing. It is not selected.
 - Updated `docs/NEXORA_MULTILINGUAL_CHAT_TRANSLATION_ARCHITECTURE.md` with evidence, privacy boundaries and a human-reviewed pilot quality gate.
 - Decision: no provider selected, no Edge Function or provider adapter enabled, no private messages sent to external services. Self-hosted Argos remains a conditional proof-of-concept candidate only; hosting is not free by default.
 - No SQL, provider quality test, Edge Function deployment, browser test or hosted test was run. Live Supabase, Production, DNS and `main` untouched.
@@ -398,7 +397,6 @@ No Live Supabase SQL was executed. No user rows were read or changed. No `main`,
 - Confirmed `20261113100000_create_porter_delivery_workflow.sql` is explicitly marked SUPERSEDED/no-op and must never be executed.- Confirmed `20261113235900_product_market_category.sql` currently contains no product sale-category column change despite its filename; it changes public product/business policies and grants and replaces Product Inquiry RPC logic. Live already has overlapping visibility policies and an earlier Product Inquiry RPC, so this file is blocked from blind replay.
 - Confirmed the `nexora-listing-images` Storage bucket was not found in Storage bucket metadata; its migration also depends on absent `service_listings`.- Confirmed product-linked conversation migration extends an existing Live `conversations` table, while delivery migrations depend on absent delivery base tables. These are partial/new feature groups and remain unexecuted.
 - Detailed per-file classification and limits are recorded in Recovery Plan section 18.
-
 **Current status:** branch-only migration inventory and initial object mapping complete; exact function/trigger/policy/grant replacement audit remains. The `20261114180000` version collision still blocks all migration runners. No file renamed/deleted, no SQL run, no Live writes, no user data queried, no paid Development Branch created.
 
 
@@ -599,7 +597,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Confirmed current branch head after cleanup and retained all existing source files. No changes to `main`, no paid service, no Development Branch, no DB connection, no SQL execution, no migration-history repair, and no Production/Live changes.
 - Result: a GitHub-hosted CLI runner is not currently available without changing the default branch or obtaining another supported CLI runtime. Both are outside current authorization/constraints. Therefore the duplicate version `20261114180000` remains unresolved; do not manually rename or invent a replacement timestamp. Next safe path is to use an already-authorized supported CLI runner/runtime that can execute `supabase migration new` without touching a database, then transfer the CLI-generated filename and proceed with source-only rename.
 
-
 ## 2026-11-14 — Additional isolated CLI-runtime check
 
 - Rechecked the development branch head before work: `8ecb39a223d7d1b309d8d1e69a70a6114019bd59`. Re-fetched both colliding migration files and confirmed they remain distinct SQL bodies; the Product Conversation migration is still the only candidate for a later CLI-generated version, while unified delivery assignment retains the earlier slot needed by the downstream delivery-tracking migration.
@@ -799,7 +796,6 @@ Recovery Plan section 22 commit: `6d8f983211927625f532d5984c655194534fc7d5`.
 - Physical Android testing remains blocked until an isolated test Supabase backend is provided and wired into a non-production preview (or the user explicitly approves a separately scoped test project). No new Supabase project or paid service was created.
 - This is distinct from the completed Android-sized Chromium emulation against the disposable local Supabase stack. No physical-device test is claimed.
 
-
 ## 2026-11-14 — Separate NEXORA-TEST Supabase project created
 
 - User explicitly approved creating a separate Free Supabase Test Project under the NEXORA organization.
@@ -997,8 +993,7 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Made the financial summary explicit: agreed/item subtotal, delivery charge (including zero), and delivery-inclusive grand total with currency. The order card states clearly that an order request is not payment and does not imply delivery booking.
 - Added a safety reminder that the Buyer should confirm completion only after actually receiving the product/service. Seller note is shown as Seller update, not as verified courier tracking.
 - Delivery tracking remains unavailable in the Buyer order card: the staged delivery_tracking_events policy currently exposes events to authorized Admin/provider roles, not Buyers. No Buyer tracking query was added and no privacy/RLS policy was weakened. The UI discloses that separate Delivery Tracking is not currently shown.
-- Static validation: marketplace.js compiles with `new Function`; the query uses only columns present in the Commerce Order table plus the later staged delivery-charge/total extension; state actions remain the existing server-validated cancel/complete RPCs. No browser, Auth, PostgREST, RLS or DB runtime test was performed.
-- Source commit: fc7e9d0a6d2f2d440110f8b6198bb70f1d6c4dc0.
+- Static validation: marketplace.js compiles with `new Function`; the query uses only columns present in the Commerce Order table plus the later staged delivery-charge/total extension; state actions remain the existing server-validated cancel/complete RPCs. No browser, Auth, PostgREST, RLS or DB runtime test was performed.- Source commit: fc7e9d0a6d2f2d440110f8b6198bb70f1d6c4dc0.
 - No SQL/migration, NEXORA-TEST, Live/Production, main, DNS, paid service or deployment changed. Buyer Module remains incomplete and not acceptance-tested.
 
 
@@ -1197,8 +1192,7 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added counter-turn-taking checks, same-side repeat-counter denial, Buyer rejection, expired-quotation denial and negotiation-history visibility isolation.
 - Local PostgreSQL 17 test suite completed with 27 PASS notices; all test data was rolled back and post-test counts for synthetic Auth users, Demands and offers were zero.
 - A second private-column policy dependency was found in seller_offer_negotiations_participant_read. Recovery patch #30 now uses the same private ownership helper for both offer and negotiation-history SELECT policies; no Buyer ID grant was added.
-- Termux runner #27 was updated to fetch immutable current commits for audit #24, behavior #26 and patch #30; fixture-only patch #28 is skipped when the full migration schema already exists.
-- Remaining: duplicate-order/concurrency tests, inactive participant tests, broader order-state transitions, real JWT/PostgREST and browser/mobile E2E. Patch #30 remains recovery-only pending a genuine forward migration timestamp.
+- Termux runner #27 was updated to fetch immutable current commits for audit #24, behavior #26 and patch #30; fixture-only patch #28 is skipped when the full migration schema already exists.- Remaining: duplicate-order/concurrency tests, inactive participant tests, broader order-state transitions, real JWT/PostgREST and browser/mobile E2E. Patch #30 remains recovery-only pending a genuine forward migration timestamp.
 - No active migration was edited; no hosted database, Live/Production, main, DNS or deployment changed.
 
 
@@ -1398,7 +1392,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Frontend contract now requires market_category on new product submissions, displays the type on public/Buyer/Seller/Admin views, supports an optional type filter (default both), and visibly labels legacy records as unclassified.
 - Database column market_category is still absent from the active migration chain. This frontend commit is not deployable until a reviewed database migration and RLS/constraint tests are completed. No deployment was made.
 
-
 ### Dual-listing schema recovery candidate — 2026-11-14
 - Added recovery-only candidate 31_dual_listing_market_category_recovery_candidate.sql (not an active migration): restores public.products.market_category with wholesale/retail/legacy_unclassified values; backfills existing rows without guessing; blocks unclassified new listings; permits pending Seller classification; prevents published Listing type changes; exposes the field to anon; and adds the index.
 - Candidate also adds commerce_orders.market_category_snapshot, backfills existing product Orders, derives new snapshots from the approved Product Listing (ignoring client-supplied values), and prevents snapshot mutation. Service Orders keep a NULL snapshot.
@@ -1597,8 +1590,7 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - No schema, migration, hosted DB or Production changes were made by this test addition. These are source regression checks, not live role/JWT/RLS tests.
 
 
-## 2026-11-15 — Authenticated Product and Service listing read privacy hardening
-- Source audit found that authenticated users had table-wide SELECT on Product and Service listing tables. Public marketplace UI already selected safe fields, but direct Data API queries could still retrieve Admin `admin_note`, `reviewed_by` and `reviewed_at` metadata.
+## 2026-11-15 — Authenticated Product and Service listing read privacy hardening- Source audit found that authenticated users had table-wide SELECT on Product and Service listing tables. Public marketplace UI already selected safe fields, but direct Data API queries could still retrieve Admin `admin_note`, `reviewed_by` and `reviewed_at` metadata.
 - Product SELECT is now column-allowlisted for authenticated clients in `20261114175118_add_dual_listing_market_category.sql`; listing fields needed by Buyer/Seller/Admin UI remain available, while Admin review metadata is excluded.
 - Service listing SELECT is now column-allowlisted in `20261114160000_demand_inbox_quotations_subcategories.sql`; the owning active Seller retrieves their own `admin_note`/`reviewed_at` through `get_my_service_listing_review_notes()` instead of direct table access. Seller Service UI now calls that RPC and merges only the owner-scoped notes.
 - Added three source regression tests for Product and Service safe-column grants, private review-note RPC scope, and Seller UI wiring. One initial test matched an earlier Product subcategory grant and over-captured the Service grant; corrected the capture to the Service-specific column list.
@@ -1799,7 +1791,6 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [ ] Do not apply migration to hosted Supabase or Production without explicit approval.
 
 
-
 ## 2026-11-15 — Commerce order documentation reconciliation
 
 - Updated `docs/NEXORA_COMMERCE_ORDERS.md` to match the staged code: Product MOQ, stock reservation/release/deduction, quantity-tier pricing, Buyer Demand quotation negotiation and source-linked order conversion, delivery charge snapshot, delivery proof/partial delivery/disputes, and current role-scoped data access.
@@ -1854,3 +1845,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added focused Node source tests and disposable PostgreSQL integration tests; local PostgreSQL 18.6 execution passed. GitHub Actions CI #43672885634 passed on exact implementation commit afb09e4bb0374fbe1b74a97e503d8ac5f0faac5e (144 dependency-free JavaScript tests, eight disposable PostgreSQL suites, and active migration filename/order validation).
 - Provider signature verification must happen in a trusted server/Edge adapter before the normalized webhook RPC. No provider has been selected/configured; no funds are moved and no hosted Supabase/Production changes were made.
 - Remaining: provider adapter and sandbox, reconciliation, refunds/chargebacks, seller payable/payout/settlement, dual approval, full Supabase Auth/JWT/PostgREST/RLS and browser/mobile E2E, and business/legal/accounting fund-flow decisions.
+
+## 2026-11-15 — Provider-neutral transaction reconciliation
+
+- Added `supabase/migrations/20261115230000_payment_reconciliation_batch_queue.sql` via Supabase CLI migration generation.
+- Added private RLS-enabled reconciliation batches/rows, idempotent statement ingestion, transaction/amount/currency/status/event matching, duplicate and unmatched detection, and server-only exception review.
+- Reconciliation remains observational: no Payment Intent state, ledger, refund, payout or funds movement is modified by this workflow. Report windows are provenance metadata only; missing internal transactions, provider fees/net settlements and bank-settlement completeness are not yet reconciled.
+- Added static Node and disposable PostgreSQL integration tests; local PostgreSQL execution passed. Added the dedicated PostgreSQL test step to Development CI; exact pushed-commit result pending.
+- Provider-specific statement parsing, bank settlement reconciliation and adapter integration remain pending provider selection and fund-flow decisions.

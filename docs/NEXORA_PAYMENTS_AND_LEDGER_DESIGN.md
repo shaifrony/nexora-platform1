@@ -115,3 +115,16 @@ Migration `20261115220000_payment_intent_webhook_foundation.sql` now stages the 
 Focused tests: `tests/payment-finance-foundation.test.js` and `tests/payment-finance-foundation-postgres.test.sql`. The SQL suite passed locally against a disposable PostgreSQL 18.6 database. GitHub Actions CI #43672885634 passed on the exact implementation commit `afb09e4bb0374fbe1b74a97e503d8ac5f0faac5e`.
 
 Still not implemented: provider-specific cryptographic adapter/checkout, gateway sandbox verification, payment reconciliation reports, refunds, chargebacks, seller payable calculations, payout/settlement, maker-checker approval UI, legal/accounting fund-flow decisions, full Supabase Auth/JWT/PostgREST/RLS integration, and browser/mobile end-to-end validation. No hosted Supabase migration, live payment, or Production change has been made.
+
+
+## 10. Provider-neutral transaction reconciliation — 2026-11-15
+
+Migration `20261115230000_payment_reconciliation_batch_queue.sql` adds a private, RLS-enabled reconciliation inbox for normalized provider transaction statements:
+
+- A service-role-only ingestion RPC accepts a statement reference, report window, source-file SHA-256 and normalized transaction rows. The original report file/body is not stored.
+- Statement references are idempotent; reuse with different content fails. Each provider transaction is matched to the internal transaction reference, amount, currency, normalized status and (when supplied) event ID.
+- Exceptions are classified as unmatched provider transaction, duplicate transaction row, amount mismatch, currency mismatch, state mismatch or event mismatch.
+- A service-role-only review RPC records a resolution/dismissal note and advances the batch to `reviewed` only when all exceptions have been reviewed. A batch with no exceptions is marked `matched`.
+- Reconciliation is deliberately observational: it does not change payment capture state, create ledger entries, trigger refunds, or move money. The report window is retained as provenance metadata; this is not yet two-way completeness checking or bank-settlement matching. Missing internal captures, provider fees/net settlements and payout transfers remain outside this implementation. Provider-specific report parsing and trusted adapter integration remain unimplemented.
+
+Focused SQL test: `tests/payment-reconciliation-postgres.test.sql`; static test: `tests/payment-reconciliation.test.js`. Local disposable PostgreSQL execution passed. CI step has been added and awaits verification on the pushed commit.
