@@ -151,15 +151,17 @@ No gateway, live collection, custody, payout or hosted database change is enable
 
 A source audit was performed before adding payout SQL. It found two delivery/payment boundary issues that must be corrected in a new forward-only migration before Seller payout eligibility can safely be automated.
 
-### 12.1 Buyer collection amount must include delivery charges
+### 12.1 Current Buyer payment amount boundary
 
-The current Commerce Order model adds delivery_charge into generated grand_total, while total_price remains the goods subtotal. The current public.create_payment_intent implementation snapshots commerce_orders.total_price, not grand_total. Therefore an Order with a non-zero delivery charge can currently create a payment intent that under-collects the intended Buyer total.
+A re-check of the actual active migrations corrected an error in the earlier audit note: the current `public.commerce_orders` table has a generated `total_price` (quantity × unit_price), but it does not define `grand_total` or a `delivery_charge` column. The current `public.create_payment_intent` snapshots `total_price`, so it matches the current Commerce Order schema.
 
-Required correction:
-- Snapshot the complete Buyer collection amount from grand_total (or an equivalent immutable, explicitly componentized amount) and retain the goods subtotal and delivery charge as separate immutable components.
-- Do not treat the delivery charge as Seller earnings. It must be allocated only under an approved carrier/partner settlement policy.
-- Reconcile the exact captured amount against the same immutable snapshot before any journal or settlement is created.
-- Add a regression test for a non-zero delivery charge, including idempotent intent reuse and mismatch review.
+This does **not** mean delivery charges are already collected. Delivery charge quotes are handled separately from the current Commerce Order payment snapshot; the provider-neutral payment intent currently represents the goods Order amount only. Before charging delivery fees through NEXORA, define an immutable, itemized Buyer payable snapshot (goods, delivery fee, tax/other approved charges) and the allocation of delivery fees to the carrier/partner. Do not invent a delivery amount or treat a delivery quote as proof of payment.
+
+Required future correction:
+- Add a versioned, immutable amount breakdown for each payable Order or payment attempt, preserving goods subtotal and each separately authorized charge.
+- Capture and reconcile exactly the sum of that approved breakdown, currency and minor-unit precision.
+- Keep delivery-partner payable separate from Seller payable and NEXORA commission.
+- Add tests for a non-zero delivery charge only after the fee snapshot and collection policy are actually introduced.
 
 ### 12.2 A delivered job status is not, by itself, proof of full Order quantity
 
