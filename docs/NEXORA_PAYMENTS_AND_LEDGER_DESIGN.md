@@ -153,9 +153,11 @@ A source audit was performed before adding payout SQL. It found two delivery/pay
 
 ### 12.1 Current Buyer payment amount boundary
 
-A re-check of the actual active migrations corrected an error in the earlier audit note: the current `public.commerce_orders` table has a generated `total_price` (quantity × unit_price), but it does not define `grand_total` or a `delivery_charge` column. The current `public.create_payment_intent` snapshots `total_price`, so it matches the current Commerce Order schema.
+The active migration chain does define both `delivery_charge` and generated `grand_total` in `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql`. Its formula is `round(coalesce(source_offer_total, quantity * unit_price) + delivery_charge, 2)`; for Buyer Demand orders, `source_offer_total` is the authoritative agreed goods subtotal, while `total_price` remains the legacy quantity × unit_price projection.
 
-This does **not** mean delivery charges are already collected. Delivery charge quotes are handled separately from the current Commerce Order payment snapshot; the provider-neutral payment intent currently represents the goods Order amount only. Before charging delivery fees through NEXORA, define an immutable, itemized Buyer payable snapshot (goods, delivery fee, tax/other approved charges) and the allocation of delivery fees to the carrier/partner. Do not invent a delivery amount or treat a delivery quote as proof of payment.
+**Confirmed payment amount defect:** `public.create_payment_intent` still reads `v_order.total_price`, not `v_order.grand_total`. It therefore omits the agreed delivery charge and can use the wrong goods subtotal for Buyer Demand quotations where `source_offer_total` differs from the legacy projection. The Payment Intent can be created for less than the actual Buyer payable amount. This is a real source-level defect, not merely a future design consideration.
+
+The next migration must correct payment intent creation to use the delivery-inclusive `grand_total`, validate it against configured currency precision, and persist an immutable itemized snapshot (goods subtotal, delivery charge, any separately approved tax/other charge, total, currency, and source Order/version identifiers). Add PostgreSQL tests for a product Order with a delivery charge and a Buyer Demand Order whose `source_offer_total` differs from `total_price`; each Payment Intent must equal `grand_total`. Do not treat a delivery quote as payment evidence or Seller earnings.
 
 Required future correction:
 - Add a versioned, immutable amount breakdown for each payable Order or payment attempt, preserving goods subtotal and each separately authorized charge.
