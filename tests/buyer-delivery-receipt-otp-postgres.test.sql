@@ -41,7 +41,6 @@ grant execute on function public.update_delivery_network_job_status(uuid,text,te
 
 \ir ../supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql
 \ir ../supabase/migrations/20261115150000_receipt_otp_work_queues.sql
-\ir ../supabase/migrations/20261115160000_receipt_otp_sha256_provider_guard.sql
 
 insert into public.profiles values
  ('71000000-0000-4000-8000-000000000001','buyer','active'),
@@ -55,6 +54,25 @@ insert into public.transport_providers values
 insert into public.delivery_jobs(id,job_reference,commerce_order_id,job_status,assigned_provider_id) values
  ('74000000-0000-4000-8000-000000000001','NXD-OTP-OWN','72000000-0000-4000-8000-000000000001','out_for_delivery','73000000-0000-4000-8000-000000000001'),
  ('74000000-0000-4000-8000-000000000002','NXD-OTP-OTHER','72000000-0000-4000-8000-000000000002','out_for_delivery','73000000-0000-4000-8000-000000000001');
+
+-- Simulate a still-live legacy MD5 challenge from the prior staged migration.
+insert into private.delivery_receipt_challenges(
+ id,job_id,commerce_order_id,buyer_id,code_hash,expires_at
+) values(
+ '75000000-0000-4000-8000-000000000001',
+ '74000000-0000-4000-8000-000000000001',
+ '72000000-0000-4000-8000-000000000001',
+ '71000000-0000-4000-8000-000000000001',
+ repeat('a',32),now()+interval '10 minutes'
+);
+
+\ir ../supabase/migrations/20261115160000_receipt_otp_sha256_provider_guard.sql
+do $legacy_challenge$ begin
+ if exists(select 1 from private.delivery_receipt_challenges
+   where id='75000000-0000-4000-8000-000000000001') then
+  raise exception 'FAIL: legacy MD5 challenge was not invalidated by SHA-256 migration';
+ end if;
+end $legacy_challenge$;
 
 -- Buyer receipt queue exposes only the authenticated Buyer's own shipment identifiers.
 set role authenticated;
