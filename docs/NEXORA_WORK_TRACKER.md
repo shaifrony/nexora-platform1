@@ -1844,3 +1844,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Extended `tests/admin-delivery-order-linking-postgres.test.sql` to apply the migration and verify a second link is rejected and no duplicate row persists.
 - The existing CI workflow already runs this PostgreSQL fixture; no workflow changes needed. CI run for the test commit is pending.
 - Development branch only. No hosted Supabase, NEXORA-TEST, `main`, DNS or Production changes.
+
+
+## 2026-11-15 — Duplicate Order-to-Delivery link regression closed
+
+- Added migration `20261115200000_unique_delivery_job_per_order.sql` and extended the existing Admin Order-to-Delivery disposable PostgreSQL fixture.
+- First CI attempt exposed a test-fixture issue: the duplicate-link assertion queried `delivery_jobs` while running as the restricted `authenticated` role. The production guard was not the failure; the fixture count assertion was moved outside that RLS role.
+- Final CI run [#43668490721](https://github.com/shaifrony/nexora-platform1/actions/runs/43668490721) passed on exact tested commit `46e8739350ffd73f9c5c8c8ea65e3c60dff2415b`: all static/source tests and all seven disposable PostgreSQL suites passed; recovery snapshot uploaded successfully.
+- No hosted database, NEXORA-TEST, `main`, DNS or Production was changed.
