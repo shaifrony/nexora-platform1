@@ -205,6 +205,15 @@ The webhook state-machine audit found two additional cases to close in the next 
 
 Required regression tests: (1) amount-mismatch capture sets `requires_review`, then a distinct failed event cannot downgrade it; (2) late failure after cancellation/expiry cannot rewrite terminal state; (3) authorized intent past expiry remains explicitly held until provider void/reversal is verified, and cannot silently block a retry forever; (4) repeated and out-of-order callbacks remain idempotent and audited. The service-role adapter must verify provider signature and transaction status before calling the normalized-event RPC; the RPC's service-role check is not itself cryptographic signature verification.
 
+### 12.3.2 Reconciliation import safeguards
+
+Two operational integrity cases remain for the reconciliation implementation:
+
+- Duplicate provider transaction references are detected only within the current batch. If overlapping/re-imported statements place the same provider transaction in a later batch, the row can be marked `matched` again because matching does not search prior batches. The importer must detect prior-batch matches and record an explicit duplicate/overlap exception, with the original batch/row reference retained for audit.
+- Concurrent reviews of different exception rows in one batch can race while counting open rows; both transactions may observe the other's row as still open and leave a fully reviewed batch stuck at `review_required`. Serialize finalization on the parent batch row and recompute the final status under that lock.
+
+Regression coverage should import the same provider transaction in two different statement references (second import must be an exception, never a second match), and exercise simultaneous resolution of the last two open rows (batch must end as `reviewed`). Neither issue should auto-clear or auto-settle any payment; reconciliation remains a review control only.
+
 ### 12.4 Current implementation status and safe boundary
 
 - This audit and specification are documentation only. No settlement tables/RPCs, OTP behavior changes, payment-intent correction, payout adapter, or ledger automation have been deployed or committed.
