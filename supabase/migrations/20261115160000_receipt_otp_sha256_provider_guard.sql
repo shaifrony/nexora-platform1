@@ -5,6 +5,8 @@ begin;
 create extension if not exists pgcrypto with schema extensions;
 
 -- The preceding foundation migration used a 32-character MD5 column constraint.
+-- Invalidate short-lived legacy MD5 challenges before enforcing 64-character digests.
+delete from private.delivery_receipt_challenges where length(code_hash)<>64;
 -- Replace it before writing SHA-256 digests (64 hex characters).
 alter table private.delivery_receipt_challenges
   drop constraint if exists delivery_receipt_challenges_code_hash_check;
@@ -84,6 +86,10 @@ begin
    end if;
    v_actor_type:='independent_provider';
  end if;
+ select job_status into v_old from public.delivery_jobs where id=p_job_id for update;
+ if v_old not in ('out_for_delivery','partially_delivered') then
+   raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
+ end if;
  select * into v_challenge from private.delivery_receipt_challenges c
  where c.job_id=p_job_id and c.consumed_at is null
  order by c.created_at desc limit 1 for update;
@@ -101,10 +107,6 @@ begin
      consumed_at=case when attempts+1>=5 then now() else null end
    where id=v_challenge.id;
    return jsonb_build_object('verified',false,'attempts_remaining',greatest(0,4-v_challenge.attempts));
- end if;
- select job_status into v_old from public.delivery_jobs where id=p_job_id for update;
- if v_old not in ('out_for_delivery','partially_delivered') then
-   raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
  end if;
  update private.delivery_receipt_challenges set consumed_at=now(),verified_at=now() where id=v_challenge.id;
  update public.delivery_jobs set job_status='delivered',updated_at=now() where id=p_job_id;
