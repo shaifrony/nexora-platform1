@@ -39,9 +39,9 @@
         <div id="nxDeliveryPartnersList" class="muted">অনুমতি যাচাইয়ের পর Partner তালিকা দেখা যাবে…</div>
         <hr>
         <form id="nxDeliveryStaffForm" class="card">
-          <h5>NEXORA Own Team-এর কর্মী যোগ করুন</h5>
+          <h5>NEXORA Team / Courier Company কর্মী যোগ করুন</h5>
           <div class="grid">
-            <label>Own Team *<select name="partner_id" id="nxDeliveryStaffPartner" required><option value="">অনুমোদিত Own Team নির্বাচন করুন</option></select></label>
+            <label>Team / Courier Partner *<select name="partner_id" id="nxDeliveryStaffPartner" required><option value="">অনুমোদিত Partner নির্বাচন করুন</option></select></label>
             <label>কর্মীর নাম *<input name="full_name" minlength="2" maxlength="160" required></label>
             <label>ফোন *<input name="contact_phone" minlength="5" maxlength="40" required></label>
             <label>Email<input name="contact_email" type="email" maxlength="254"></label>
@@ -51,6 +51,7 @@
             <label>অবস্থা<select name="staff_status"><option value="active">Active</option><option value="inactive">Inactive</option></select></label>
           </div>
           <label>Admin Notes<textarea name="admin_notes" maxlength="1500"></textarea></label>
+          <p class="muted">কর্মীর Email/Phone অবশ্যই NEXORA account-এ verified থাকতে হবে। কর্মীকে account তৈরি ও verification সম্পন্ন করতে বলুন; এরপর Bind Identity চাপুন।</p>
           <button class="primary" type="submit">কর্মী সংরক্ষণ করুন</button>
         </form>
         <div id="nxDeliveryStaffList" class="muted">কর্মীর তালিকা লোড হচ্ছে…</div>
@@ -102,7 +103,7 @@
     const pHost=$("nxDeliveryPartnersList"), sHost=$("nxDeliveryStaffList"), select=$("nxDeliveryStaffPartner");
     const [pRes,sRes]=await Promise.all([
       db().from("delivery_network_partners").select("id,partner_code,partner_kind,display_name,contact_phone,service_modes,service_countries,service_cities,tracking_mode,partner_status,created_at").order("created_at",{ascending:false}).limit(100),
-      db().from("delivery_network_staff").select("id,staff_code,partner_id,full_name,contact_phone,employment_type,service_cities,vehicle_type,staff_status,created_at").order("created_at",{ascending:false}).limit(200)
+      db().from("delivery_network_staff").select("id,staff_code,partner_id,full_name,contact_phone,contact_email,auth_user_id,employment_type,service_cities,vehicle_type,staff_status,created_at").order("created_at",{ascending:false}).limit(200)
     ]);
     if(pRes.error || sRes.error){
       const err=pRes.error||sRes.error;
@@ -111,8 +112,8 @@
       return;
     }
     const partners=pRes.data||[], staff=sRes.data||[];
-    const own=partners.filter(p=>p.partner_kind==="nexora_team"&&p.partner_status==="approved");
-    select.innerHTML='<option value="">অনুমোদিত Own Team নির্বাচন করুন</option>'+own.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.display_name)+'</option>').join("");
+    const eligible=partners.filter(p=>["nexora_team","courier_company"].includes(p.partner_kind)&&p.partner_status==="approved");
+    select.innerHTML='<option value="">অনুমোদিত Partner নির্বাচন করুন</option>'+eligible.map(p=>'<option value="'+esc(p.id)+'">'+esc(p.display_name)+' · '+(p.partner_kind==="nexora_team"?"NEXORA Team":"Courier") +'</option>').join("");
     pHost.innerHTML=partners.length?partners.map(p=>`
       <article class="offer"><div class="section-head"><strong>${esc(p.display_name)}</strong><span class="tag">${esc(p.partner_status)}</span></div>
       <p class="muted">${esc(p.partner_code)} · ${p.partner_kind==="nexora_team"?"NEXORA Own Team":"Courier / Logistics Partner"}</p>
@@ -120,10 +121,12 @@
       <p class="muted">${esc(p.contact_phone)} · ${esc((p.service_cities||[]).join(", "))}</p>
       <div class="form-actions">${p.partner_status!=="approved"?'<button type="button" class="primary" data-partner-status="approved" data-id="'+esc(p.id)+'">Approve</button>':''}
       ${p.partner_status!=="suspended"?'<button type="button" class="danger" data-partner-status="suspended" data-id="'+esc(p.id)+'">Suspend</button>':''}</div></article>`).join(""):'<p class="muted">এখনো কোনো Team বা Partner যোগ করা হয়নি।</p>';
-    sHost.innerHTML=staff.length?staff.map(s=>`<article class="offer"><strong>${esc(s.full_name)}</strong><p class="muted">${esc(s.staff_code)} · ${esc(s.contact_phone)} · ${esc(s.employment_type)} · ${esc(s.staff_status)}</p><p class="muted">${esc((s.service_cities||[]).join(", "))} · ${esc(s.vehicle_type||"")}</p></article>`).join(""):'<p class="muted">এখনো কোনো নিজস্ব কর্মী নিবন্ধিত নেই।</p>';
+    sHost.innerHTML=staff.length?staff.map(s=>`<article class="offer"><strong>${esc(s.full_name)}</strong><p class="muted">${esc(s.staff_code)} · ${esc(s.contact_phone)} · ${esc(s.employment_type)} · ${esc(s.staff_status)}</p><p class="muted">${esc((s.service_cities||[]).join(", "))} · ${esc(s.vehicle_type||"")}</p><p class="muted">Identity: ${s.auth_user_id?"Bound to verified account":"Not linked"}</p>${s.staff_status==="active"&&!s.auth_user_id?'<button type="button" class="primary" data-bind-staff="'+esc(s.id)+'">Bind verified account</button>':''}${s.auth_user_id?'<button type="button" class="danger" data-unbind-staff="'+esc(s.id)+'">Unbind account</button>':''}</article>`).join(""):'<p class="muted">এখনো কোনো Team/Courier কর্মী নিবন্ধিত নেই।</p>';
     await loadOrderCandidates();
     await loadJobs();
     pHost.querySelectorAll("[data-partner-status]").forEach(btn=>btn.addEventListener("click",()=>changePartnerStatus(btn)));
+    sHost.querySelectorAll("[data-bind-staff]").forEach(btn=>btn.addEventListener("click",()=>bindStaffIdentity(btn)));
+    sHost.querySelectorAll("[data-unbind-staff]").forEach(btn=>btn.addEventListener("click",()=>unbindStaffIdentity(btn)));
   }
   async function loadOrderCandidates() {
     const select=$("nxDeliveryOrderSelect");
@@ -177,6 +180,25 @@
     try{const {error}=await db().rpc("upsert_delivery_network_partner",payload);if(error)throw error;form.reset();message("Partner সংরক্ষিত হয়েছে। Courier Partner এখন Pending review-তে থাকবে; NEXORA Own Team অনুমোদিত হয়েছে।",true);await load();}
     catch(err){message("Partner সংরক্ষণ হয়নি: "+err.message);}
     finally{btn.disabled=false;}
+  }
+  async function bindStaffIdentity(btn) {
+    if(!isAdmin())return message("Admin account প্রয়োজন।");
+    btn.disabled=true;
+    try{
+      const {error}=await db().rpc("bind_delivery_network_staff_identity",{p_staff_id:btn.dataset.bindStaff});
+      if(error)throw error;
+      message("Verified email/phone মিলে কর্মীর NEXORA account যুক্ত হয়েছে।",true);await load();
+    }catch(err){message("Identity bind হয়নি: "+err.message);btn.disabled=false;}
+  }
+  async function unbindStaffIdentity(btn) {
+    const reason=prompt("Identity বিচ্ছিন্ন করার কারণ লিখুন (কমপক্ষে ৫ অক্ষর):");
+    if(!reason||reason.trim().length<5)return;
+    btn.disabled=true;
+    try{
+      const {error}=await db().rpc("unbind_delivery_network_staff_identity",{p_staff_id:btn.dataset.unbindStaff,p_reason:reason.trim()});
+      if(error)throw error;
+      message("কর্মীর account link বিচ্ছিন্ন হয়েছে।",true);await load();
+    }catch(err){message("Identity unbind হয়নি: "+err.message);btn.disabled=false;}
   }
   async function changePartnerStatus(btn) {
     const status=btn.dataset.partnerStatus, reason=status==="suspended"?prompt("Suspend করার কারণ লিখুন (কমপক্ষে ৫ অক্ষর):"):null;
@@ -244,10 +266,10 @@
       const pOpts=options(approvedProviders,p=>p.display_name+" · "+p.city);
       const cOpts=options(approvedPartners.filter(p=>p.partner_kind==="courier_company"),p=>p.display_name);
       const tOpts=options(approvedPartners.filter(p=>p.partner_kind==="nexora_team"),p=>p.display_name);
-      const sOpts=options(activeStaff,s=>s.full_name);
+      const sOpts=options(activeStaff.filter(s=>s.auth_user_id),s=>s.full_name+" · "+s.staff_code);
       const vOpts=options(availableVehicles,v=>v.vehicle_type+" · "+v.registration_number);
       return '<article class="offer" data-network-job="'+esc(j.id)+'" data-job-status="'+esc(j.job_status)+'"><div class="section-head"><strong>'+esc(j.job_reference)+'</strong><span class="tag">'+esc(j.job_status)+'</span></div><p>'+esc(j.package_description)+' · '+esc(j.package_count)+' package(s) · '+esc(j.delivery_mode)+'</p><p class="muted">Pickup: '+esc(j.pickup_city)+', '+esc(j.pickup_country)+' → Delivery: '+esc(j.delivery_city)+', '+esc(j.delivery_country)+'</p><p class="muted">'+esc(j.pickup_address)+' → '+esc(j.delivery_address)+'</p>'+
-      (["requested","assigned"].includes(j.job_status)?'<div class="grid"><label>Assignment Source<select data-field="source"><option value="independent_provider">Independent Provider</option><option value="nexora_team">NEXORA Own Team</option><option value="courier_partner">Courier Partner</option></select></label><label>Independent Provider<select data-field="provider"><option value="">Select Provider</option>'+pOpts+'</select></label><label>Vehicle (optional)<select data-field="vehicle"><option value="">No vehicle / not required</option>'+vOpts+'</select></label><label>NEXORA Team<select data-field="team"><option value="">Select Team</option>'+tOpts+'</select></label><label>Team Staff (optional)<select data-field="staff"><option value="">Select Staff</option>'+sOpts+'</select></label><label>Courier Partner<select data-field="courier"><option value="">Select Courier</option>'+cOpts+'</select></label></div><label>Assignment reason<input data-field="reason" maxlength="1000" placeholder="নতুন assignment / পরিবর্তনের কারণ"></label><button type="button" class="primary" data-assign-job="'+esc(j.id)+'">Assign / Reassign</button>':'<p class="muted">বর্তমান Assignment: '+esc(j.assignment_source||"—")+'</p>')+'</article>';
+      (["requested","assigned"].includes(j.job_status)?'<div class="grid"><label>Assignment Source<select data-field="source"><option value="independent_provider">Independent Provider</option><option value="nexora_team">NEXORA Own Team</option><option value="courier_partner">Courier Partner</option></select></label><label>Independent Provider<select data-field="provider"><option value="">Select Provider</option>'+pOpts+'</select></label><label>Vehicle (optional)<select data-field="vehicle"><option value="">No vehicle / not required</option>'+vOpts+'</select></label><label>NEXORA Team<select data-field="team"><option value="">Select Team</option>'+tOpts+'</select></label><label>Verified Team / Courier Staff (optional)<select data-field="staff"><option value="">Select bound Staff</option>'+sOpts+'</select></label><label>Courier Partner<select data-field="courier"><option value="">Select Courier</option>'+cOpts+'</select></label></div><label>Assignment reason<input data-field="reason" maxlength="1000" placeholder="নতুন assignment / পরিবর্তনের কারণ"></label><button type="button" class="primary" data-assign-job="'+esc(j.id)+'">Assign / Reassign</button>':'<p class="muted">বর্তমান Assignment: '+esc(j.assignment_source||"—")+'</p>')+'</article>';
     }).join(""):'<p class="muted">কোনো Delivery Request নেই।</p>';
     host.querySelectorAll("[data-assign-job]").forEach(btn=>btn.addEventListener("click",()=>assignJob(btn,approvedProviders,availableVehicles,approvedPartners,activeStaff)));
     const transitions={assigned:["accepted","delivery_failed"],accepted:["picked_up","delivery_failed"],picked_up:["in_transit","partially_delivered","delivery_failed"],in_transit:["out_for_delivery","partially_delivered","delivery_failed"],out_for_delivery:["delivered","partially_delivered","delivery_failed"],partially_delivered:["in_transit","out_for_delivery","delivered","disputed"],delivered:["disputed"],delivery_failed:["returned"],disputed:["delivered","returned"]};
@@ -288,7 +310,7 @@
     const source=get("source"),p={p_job_id:btn.dataset.assignJob,p_assignment_source:source,
       p_provider_id:source==="independent_provider"?get("provider"):null,
       p_partner_id:source==="independent_provider"?null:(source==="nexora_team"?get("team"):get("courier")),
-      p_staff_id:source==="nexora_team"?get("staff"):null,
+      p_staff_id:["nexora_team","courier_partner"].includes(source)?get("staff"):null,
       p_vehicle_id:source==="independent_provider"?get("vehicle"):null,
       p_reason:get("reason")};
     if(source==="independent_provider"&&!p.p_provider_id)return message("Independent Provider নির্বাচন করুন।");
