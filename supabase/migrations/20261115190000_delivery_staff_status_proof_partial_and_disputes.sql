@@ -389,7 +389,7 @@ returns table(
  delivery_deadline timestamptz,updated_at timestamptz
 )
 language plpgsql security definer set search_path=''
-as $
+as $$
 declare v_actor uuid:=auth.uid();
 begin
  if v_actor is null or not exists(select 1 from public.profiles p where p.id=v_actor
@@ -410,7 +410,7 @@ begin
  order by j.delivery_deadline asc nulls last,j.updated_at desc
  limit 100;
 end;
-$;
+$$;
 revoke all on function private.get_my_assigned_delivery_jobs() from public,anon,authenticated;
 grant execute on function private.get_my_assigned_delivery_jobs() to authenticated;
 create or replace function public.get_my_assigned_delivery_jobs()
@@ -421,7 +421,7 @@ returns table(
  delivery_deadline timestamptz,updated_at timestamptz
 )
 language sql security invoker set search_path=''
-as $ select * from private.get_my_assigned_delivery_jobs(); $;
+as $$ select * from private.get_my_assigned_delivery_jobs(); $;
 revoke all on function public.get_my_assigned_delivery_jobs() from public,anon;
 grant execute on function public.get_my_assigned_delivery_jobs() to authenticated;
 
@@ -431,7 +431,7 @@ returns table(
  recipient_acknowledged boolean,photo_paths text[],signature_path text,note text,created_at timestamptz
 )
 language plpgsql security definer set search_path=''
-as $
+as $$
 begin
  if auth.uid() is null or not private.can_read_delivery_job_evidence(p_job_id) then
    raise exception 'You are not authorized to view this delivery evidence' using errcode='42501';
@@ -442,7 +442,7 @@ begin
  from private.delivery_proof_records p where p.job_id=p_job_id
  order by p.created_at,p.id;
 end;
-$;
+$$;
 revoke all on function private.get_my_delivery_proof_records(uuid) from public,anon,authenticated;
 grant execute on function private.get_my_delivery_proof_records(uuid) to authenticated;
 create or replace function public.get_my_delivery_proof_records(p_job_id uuid)
@@ -451,7 +451,7 @@ returns table(
  recipient_acknowledged boolean,photo_paths text[],signature_path text,note text,created_at timestamptz
 )
 language sql security invoker set search_path=''
-as $ select * from private.get_my_delivery_proof_records($1); $;
+as $$ select * from private.get_my_delivery_proof_records($1); $;
 revoke all on function public.get_my_delivery_proof_records(uuid) from public,anon;
 grant execute on function public.get_my_delivery_proof_records(uuid) to authenticated;
 
@@ -461,7 +461,7 @@ returns table(
  resolution text,created_at timestamptz,updated_at timestamptz
 )
 language plpgsql security definer set search_path=''
-as $
+as $$
 begin
  if auth.uid() is null or not (
    private.is_assigned_delivery_staff(p_job_id)
@@ -477,7 +477,7 @@ begin
    d.resolution,d.created_at,d.updated_at
  from private.delivery_disputes d where d.job_id=p_job_id order by d.created_at desc;
 end;
-$;
+$$;
 revoke all on function private.get_my_delivery_disputes(uuid) from public,anon,authenticated;
 grant execute on function private.get_my_delivery_disputes(uuid) to authenticated;
 create or replace function public.get_my_delivery_disputes(p_job_id uuid)
@@ -486,7 +486,7 @@ returns table(
  resolution text,created_at timestamptz,updated_at timestamptz
 )
 language sql security invoker set search_path=''
-as $ select * from private.get_my_delivery_disputes($1); $;
+as $$ select * from private.get_my_delivery_disputes($1); $;
 revoke all on function public.get_my_delivery_disputes(uuid) from public,anon;
 grant execute on function public.get_my_delivery_disputes(uuid) to authenticated;
 
