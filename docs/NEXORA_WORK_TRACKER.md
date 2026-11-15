@@ -1773,3 +1773,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Development CI [#43660807743](https://github.com/shaifrony/nexora-platform1/actions/runs/43660807743) passed: 122 dependency-free tests, Buyer Demand, Product Price Negotiation, Buyer-safe Delivery Updates, Buyer Receipt OTP and Admin Order-linking disposable PostgreSQL suites, JavaScript syntax and 44 migration filename/order checks.
 - Latest code remains on `nexora-development`; no hosted Supabase migration, NEXORA-TEST mutation, main-branch change or intentional Production deployment was made. GitHub Pages automation must be checked separately because branch pushes previously triggered a Pages deployment workflow.
 - Remaining: full Supabase CLI migration-chain replay, hosted Auth/PostgREST/RLS and browser/device E2E; identity-bound receipt verification for NEXORA own-team and courier-company workers; external SMS/WhatsApp OTP delivery; delivery charges, payments/settlement, disputes/returns and courier API adapters.
+
+
+## 2026-11-15 — Admin Order → Delivery Job → Buyer Receipt Queue
+- [x] Admin can load a limited candidate list of ready Product Orders only with active Admin membership, `logistics.assign` and JWT AAL2.
+- [x] Linked Delivery Job creation row-locks and revalidates the source Order, then persists `commerce_order_id`.
+- [x] Admin UI supports Order selection and prefill; Manual Delivery Request clears Order-derived values.
+- [x] Disposable PostgreSQL coverage includes Buyer receipt queue ownership isolation for the linked Delivery Job; CI source regression covers the Admin UI.
+- [ ] Confirm latest CI run after the Buyer ownership-isolation fixture correction; then reconcile documentation with its final result.
