@@ -306,6 +306,25 @@ begin
   end;
   if not v_denied then raise exception 'FAIL: Buyer accepted a quote from a Seller without approved Business Profile'; end if;
 
+  -- Demand negotiation events cannot be appended while either participant is suspended.
+  insert into public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
+  values('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000011',16,'BDT','50')
+  returning id into v_offer;
+  update public.profiles set account_status='suspended'
+    where id='10000000-0000-4000-8000-000000000001';
+  v_denied:=false;
+  begin
+    insert into public.seller_offer_negotiations(
+      offer_id,actor_id,actor_role,action,proposed_quantity,proposed_unit_price
+    ) values (
+      v_offer,'10000000-0000-4000-8000-000000000011','seller','counter',20,15
+    );
+  exception when insufficient_privilege then v_denied:=true;
+  end;
+  update public.profiles set account_status='active'
+    where id='10000000-0000-4000-8000-000000000001';
+  if not v_denied then raise exception 'FAIL: Seller appended a Demand counter while Buyer was suspended'; end if;
+
   -- Seller cannot accept a Buyer counter-offer after the represented Buyer account is suspended.
   insert into public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
   values('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000011',15,'BDT','50')
