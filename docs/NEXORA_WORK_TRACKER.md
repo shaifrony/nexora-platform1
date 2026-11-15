@@ -1825,3 +1825,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Clarified remaining isolated Supabase Storage, full migration-chain, Auth/JWT/PostgREST/RLS, browser/device, accessibility, mobile upload and concurrency release gates.
 - Documentation-only change on `nexora-development`; no SQL migration, hosted database, NEXORA-TEST, `main`, DNS or Production was changed.
 - Development CI run #43667886523 passed on the exact documentation commit `9dd0316e60918a2cf1ccfd30b947d5bcf236502a`; the earlier run #43667843594 was superseded/cancelled by the subsequent tracker update.
+
+
+## 2026-11-15 — Inventory/MOQ guide alignment
+
+- Corrected `docs/NEXORA_INVENTORY_MOQ_PRICING.md`: the current staged migration accepts Seller-defined positive MOQ for both Wholesale and Retail product listings; it does not impose Retail MOQ = 1.
+- Clarified that Wholesale/Retail is a per-listing commercial descriptor, not a Buyer account category or visibility/authorization gate. Any active Buyer can order any approved listing when Seller MOQ and stock rules are met.
+- Corrected the documented order validation steps to match the staged database function: active Buyer, approved product/business, Seller MOQ, available stock and quantity-tier price.
+- This is a documentation-only alignment; no SQL, hosted Supabase, NEXORA-TEST, `main`, DNS or Production changes were made.
+- Previous tracker correction CI #43668010815 passed on exact commit `d440d7d82e98880be44b59be9bb2991beea856aa`. CI for this new documentation commit is pending.
