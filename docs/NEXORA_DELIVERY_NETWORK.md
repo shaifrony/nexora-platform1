@@ -22,13 +22,13 @@
 - API tracking mode is metadata only until a provider-specific adapter is implemented.
 - The Phase 1 migration depends on the existing staged Transport Provider and Admin permission foundation. The hosted database currently does not contain those staged tables, so do not apply this migration by itself to production.
 - Delivery staff records are a managed roster only; they cannot yet sign in, accept assignments, or submit proof of delivery.
-- Delivery jobs are not yet linked automatically to commerce orders and no buyer delivery charge checkout exists yet.
+- AAL2 Admin can create a Delivery Job linked to a ready Product Commerce Order; Buyer delivery-charge checkout is not implemented yet.
 
 ## Remaining phases
 1. Provider, own team, and courier partner foundation.
 2. Admin assignment and unified delivery jobs supporting staff, independent providers, and courier partners without forcing one vehicle.
 3. Retail/wholesale delivery details, buyer-paid delivery charge snapshots, and status tracking.
-4. Completion report, receiver OTP / alternative verification, partial delivery and dispute handling.
+4. Buyer receipt OTP, own-team/courier staff identity-bound verification, partial delivery and dispute handling.
 5. Provider costs, NEXORA fees, payment records and settlement.
 6. Courier API adapters and automation.
 
@@ -65,11 +65,11 @@
 - Static SQL structure checks passed for transaction boundaries, dollar-quote balance, function wrappers, RLS enablement and guarded SECURITY DEFINER routines.
 
 ### Not yet implemented / tested
-- Phase 4: Buyer receipt OTP / digital confirmation, Delivery Person completion report, order completion and verified-review integration.
+- Phase 4: Buyer receipt OTP workflow is staged for Buyers and approved independent Provider owners / MFA Admins; NEXORA team and courier-company staff identity-bound verification remains pending.
 - Phase 5: Buyer delivery-charge quote/checkout, provider cost, NEXORA fee, payment collection and settlement.
 - Phase 6: courier API adapters, webhooks, automated tracking and automatic provider suggestions.
-- Provider/staff/courier real-browser E2E tests and negative authorization tests have not been run.
-- No local/disposable Supabase database is connected for migration execution tests.
+- Provider/staff/courier real-browser E2E tests have not been run. Focused disposable PostgreSQL authorization tests now cover Buyer OTP ownership, approved Provider ownership and AAL2 Admin order-linking access.
+- Focused migrations are exercised against disposable PostgreSQL fixtures in CI; a complete Supabase CLI migration-chain replay plus hosted Auth/PostgREST/RLS verification remains a separate release gate.
 - The hosted Supabase database currently does not contain the staged Transport/Delivery Network tables; its migration history is behind the Development Branch files. Do not apply only the latest migrations to the hosted database. First reconcile and test the complete ordered migration chain on a safe development database.
 - No hosted migration has been applied, no production deployment has been made, and the main branch remains unchanged.
 
@@ -115,7 +115,7 @@ Before any real buyer delivery is enabled:
 - Buyers do not receive raw job/tracking tables, exact addresses, private contacts, provider/Admin identity, assignment history, GPS, internal notes or unverified external tracking codes.
 - Buyer Dashboard now groups safe updates under each of the latest 50 orders and supports multiple delivery jobs per order. Operator-reported `delivered` does not complete the Commerce Order; Buyer receipt confirmation remains separate.
 - Disposable PostgreSQL integration passed for status mapping, append-only history, Buyer A/Buyer B isolation, private-table access denial and anonymous RPC denial. Development CI [#43652641287](https://github.com/shaifrony/nexora-platform1/actions/runs/43652641287) passed 120/120 source tests and 40 active migration filename/order checks.
-- Remaining: Buyer receipt OTP/alternative proof, order-to-delivery job creation/assignment UX, delivery charges/payment/settlement, disputes/returns and full Supabase/browser E2E.
+- Remaining: delivery charges/payment/settlement, disputes/returns, NEXORA-team/courier-worker sign-in and receipt verification, SMS/WhatsApp OTP delivery, and full Supabase/browser/device E2E.
 
 
 ## 2026-11-15 — Buyer receipt OTP security foundation (staged)
@@ -127,3 +127,13 @@ Before any real buyer delivery is enabled:
 - The disposable PostgreSQL fixture now covers legacy MD5 challenge invalidation, exact SHA-256 digest, 128-bit code format, five-attempt lockout, Buyer ownership, Provider approval/account revocation and one-time verification. Current CI status must be checked before treating this increment as validated.
 - Scope limitation: SMS/WhatsApp delivery is not configured. NEXORA delivery staff and courier-company workers are roster records without sign-in/field-app identities yet; they must not be given Provider-owner access. A separate scoped identity design is required before enabling their OTP verification.
 - No hosted Supabase migration, Production deployment, DNS/public alias or `main` change is intended.
+
+
+## 2026-11-15 — Admin Commerce Order → Delivery Job linking
+
+- Added staged migration `20261115170000_admin_delivery_order_linking.sql`. The Admin queue exposes only Product Orders in `ready_for_confirmation`; candidate lookup requires an active Admin membership, `logistics.assign`, and JWT AAL2.
+- The candidate projection returns only the operational fields needed to prepare a shipment: order reference, product name/quantity/currency, Buyer-provided fulfilment destination, Seller business display name and sales-centre pickup address, existing shipment count, and ready timestamp. It does not expose Buyer phone/contact details.
+- The linked-create RPC locks the source Commerce Order and rechecks that it remains a ready Product Order before delegating to the existing Delivery Network creator with the exact `commerce_order_id`. This activates the already-staged Buyer-safe tracking and Buyer-owned Receipt OTP queue for that shipment.
+- Admin Delivery Network UI now lets an AAL2 Admin choose a ready Product Order, prefill Seller pickup and Buyer destination details, manually verify missing phone/city data, and create the linked job. Selecting Manual Request clears Order-derived values to prevent stale addresses or references from being reused accidentally.
+- Disposable PostgreSQL CI test denies missing `logistics.assign` and AAL2, verifies only ready Product Orders are listed, confirms the new Delivery Job is linked to the selected Order, and rejects pending and Service Orders. Development CI [#43660807743](https://github.com/shaifrony/nexora-platform1/actions/runs/43660807743) passed 122 dependency-free tests, five disposable PostgreSQL suites, JavaScript syntax and 44 migration filename/order checks.
+- This is staged Development code only. Full Supabase Auth/PostgREST/RLS and browser/device E2E remain outstanding. No hosted migration or Production deployment was performed.
