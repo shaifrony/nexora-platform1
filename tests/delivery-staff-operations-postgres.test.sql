@@ -21,7 +21,7 @@ create table public.delivery_network_partners(id uuid primary key,partner_status
 create table public.delivery_network_staff(id uuid primary key,partner_id uuid not null,auth_user_id uuid,staff_status text not null);
 create table public.delivery_jobs(
  id uuid primary key,job_reference text not null,job_status text not null,
- commerce_order_id uuid,assigned_staff_id uuid,assignment_source text,updated_at timestamptz default now()
+ commerce_order_id uuid,assigned_staff_id uuid,assignment_source text,created_at timestamptz default now(),updated_at timestamptz default now()
 );
 create table public.delivery_tracking_events(
  id bigint generated always as identity primary key,job_id uuid,previous_status text,new_status text,
