@@ -40,6 +40,7 @@ grant execute on function public.update_delivery_network_job_status(uuid,text,te
 
 \ir ../supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql
 \ir ../supabase/migrations/20261115150000_receipt_otp_work_queues.sql
+\ir ../supabase/migrations/20261115160000_receipt_otp_sha256_provider_guard.sql
 
 insert into public.profiles values
  ('71000000-0000-4000-8000-000000000001','buyer','active'),
@@ -93,6 +94,7 @@ create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
 do $block$ begin
  if (select length(payload->>'code') from otp_result)<>16 then raise exception 'FAIL: Buyer did not receive a 16-character OTP'; end if;
+ if (select length(code_hash) from private.delivery_receipt_challenges limit 1)<>64 then raise exception 'FAIL: OTP digest is not SHA-256'; end if;
 end $block$;
 reset role;
 do $block$ begin
