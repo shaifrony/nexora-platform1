@@ -166,8 +166,15 @@ values('94000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000
  '94000000-0000-4000-8000-000000000001'||
  '91000000-0000-4000-8000-000000000004'||'NEXORA-RECEIPT-V1','sha256'),'hex'),
  now()+interval '10 minutes');
+insert into private.delivery_receipt_challenges(job_id,buyer_id,code_hash,expires_at)
+values('94000000-0000-4000-8000-000000000002','91000000-0000-4000-8000-000000000004',
+ encode(extensions.digest('1234567890ABCDEF1234567890ABCDEF'||
+ '94000000-0000-4000-8000-000000000002'||
+ '91000000-0000-4000-8000-000000000004'||'NEXORA-RECEIPT-V1','sha256'),'hex'),
+ now()+interval '10 minutes');
 set role authenticated;
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000003',false);
+select set_config('test.admin.permission','false',false);
 do $denied_verify$ begin
  begin
   perform public.verify_delivery_receipt_code(
@@ -177,9 +184,17 @@ do $denied_verify$ begin
  exception when insufficient_privilege then null;
  end;
 end $denied_verify$;
+do $courier_verified$ begin
+ if (public.verify_delivery_receipt_code(
+   '94000000-0000-4000-8000-000000000002','1234567890ABCDEF1234567890ABCDEF',null,'Courier handover'
+ )->>'verified')::boolean is not true then
+  raise exception 'FAIL: identity-bound Courier worker could not verify own delivery';
+ end if;
+end $courier_verified$;
 reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000002',false);
+select set_config('test.admin.permission','false',false);
 do $verified$ begin
  if (public.verify_delivery_receipt_code(
    '94000000-0000-4000-8000-000000000001','ABCDEF0123456789ABCDEF0123456789',null,'Staff handover'
