@@ -55,3 +55,9 @@ test("unauthorized users cannot infer whether a delivery already has an active d
   assert.ok(body.indexOf("Only the order Buyer/Seller, assigned worker or AAL2 logistics Admin can raise a dispute") <
     body.indexOf("An active dispute already exists for this delivery"));
 });
+
+test("Admin dispute queue requires AAL2 and logistics.view permission", () => {
+  assert.match(sql, /create or replace function private\.get_admin_delivery_disputes/);
+  assert.match(sql, /Active Admin MFA and logistics\.view permission required/);
+  assert.match(sql, /create or replace function public\.get_admin_delivery_disputes/);
+});
