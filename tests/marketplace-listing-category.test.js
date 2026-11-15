@@ -1125,7 +1125,8 @@ test("Direct Buyer product orders validate MOQ and available stock before callin
     marketplaceUi.indexOf("async function loadDemands()")
   );
   assert.match(detail, /name="quantity" type="number" min="\$\{esc\(selected\.minimum_order_quantity\|\|1\)\}" max="\$\{selected\.stock_tracking\?esc\(Math\.max\(0,Number\(selected\.stock_quantity\)-Number\(selected\.reserved_quantity\)\)\):""\}"/);
-  assert.equal((detail.match(/max="\\$\\{selected\\.stock_tracking\\?esc\\(Math\\.max\\(0,Number\\(selected\\.stock_quantity\\)-Number\\(selected\\.reserved_quantity\\)\\)\\):""\\}"/g)||[]).length,2,"both order and negotiation forms must cap quantity at available stock");
+  const stockMaxMarkup = 'max="${selected.stock_tracking?esc(Math.max(0,Number(selected.stock_quantity)-Number(selected.reserved_quantity))):""}"';
+  assert.equal(detail.split(stockMaxMarkup).length-1,2,"both order and negotiation forms must cap quantity at available stock");
   const submit = detail.slice(detail.indexOf('$("nxProductOrderForm")?.addEventListener("submit"'), detail.indexOf('$("nxProductNegotiationForm")?.addEventListener("submit"'));
   assert.match(submit, /Number\.isFinite\(quantity\)/);
   assert.match(submit, /quantity<min/);
