@@ -62,8 +62,14 @@ begin
         or
         (v_staff.contact_phone is not null
           and u.phone_confirmed_at is not null
-          and regexp_replace(coalesce(u.phone,''),'[^0-9]','','g')
-              =regexp_replace(v_staff.contact_phone,'[^0-9]','','g'))
+          and (case
+                when regexp_replace(coalesce(u.phone,''),'[^0-9]','','g') like '880%'
+                  then '0'||substr(regexp_replace(coalesce(u.phone,''),'[^0-9]','','g'),4)
+                else regexp_replace(coalesce(u.phone,''),'[^0-9]','','g') end)
+              =(case
+                when regexp_replace(v_staff.contact_phone,'[^0-9]','','g') like '880%'
+                  then '0'||substr(regexp_replace(v_staff.contact_phone,'[^0-9]','','g'),4)
+                else regexp_replace(v_staff.contact_phone,'[^0-9]','','g') end))
       )
   ) candidate;
 
@@ -260,7 +266,9 @@ begin
  from public.delivery_jobs j
  join public.delivery_network_staff s on s.id=j.assigned_staff_id
  join public.delivery_network_partners dp on dp.id=s.partner_id
+ join public.profiles worker on worker.id=s.auth_user_id
  where s.auth_user_id=v_actor and s.staff_status='active'
+   and worker.account_status='active' and worker.role in ('buyer','seller','porter')
    and dp.partner_status='approved'
    and j.assignment_source in ('nexora_team','courier_partner')
    and j.job_status in ('out_for_delivery','partially_delivered')
