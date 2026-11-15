@@ -52,6 +52,8 @@ insert into public.delivery_jobs values
 
 \ir ../supabase/migrations/20261115190000_delivery_staff_status_proof_partial_and_disputes.sql
 
+grant usage on schema private to authenticated;
+
 -- Assigned worker can advance only their own job through permitted statuses.
 set role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',false);
