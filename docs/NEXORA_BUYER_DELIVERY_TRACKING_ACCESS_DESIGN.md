@@ -62,12 +62,13 @@ The delivery projection test uses a minimal PostgreSQL fixture. It is not a full
 The staged OTP foundation is in:
 - `supabase/migrations/20261115140000_buyer_delivery_receipt_otp.sql`
 - `supabase/migrations/20261115150000_receipt_otp_work_queues.sql`
+- `supabase/migrations/20261115160000_receipt_otp_sha256_provider_guard.sql`
 
-Buyer UI in `marketplace.js` calls the ownership-checked `get_my_order_receipt_jobs` RPC and can request a code only while its own shipment is `out_for_delivery`. The raw 16-character code is rendered only in that Buyer's order card; it is not sent to Seller or persisted in browser storage. The Buyer must share it directly with the assigned Provider.
+Buyer UI in `marketplace.js` calls the ownership-checked `get_my_order_receipt_jobs` RPC and can request a code only while its own shipment is `out_for_delivery`. The raw 32-character code (128 bits from pgcrypto random bytes) is rendered only in that Buyer's order card; only a SHA-256 digest is stored, and it is not sent to Seller or persisted in browser storage. The Buyer must share it directly with the assigned Provider.
 
 Approved independent Provider owners see only their own assigned eligible jobs through `get_my_assigned_receipt_jobs` in the Transport Provider workspace and can submit the code through `verify_delivery_receipt_code`. The Admin Delivery Network queue also provides OTP verification; the database requires an active Admin membership, `logistics.assign` permission and JWT AAL2. The old status RPC and direct delivered transition remain guarded.
 
-The new job-discovery RPCs return only order/job identifiers, job reference and status; they do not expose exact addresses, Buyer identity/contact, provider contacts or tracking internals. The database remains authoritative for ownership, assignment, status, attempts, expiry and one-time consumption.
+The new job-discovery RPCs return only order/job identifiers, job reference and status; they do not expose exact addresses, Buyer identity/contact, provider contacts or tracking internals. The database remains authoritative for ownership, assignment, Provider approval and active-account checks at verification time, status, attempts, expiry and one-time consumption. SHA-256 digest storage uses a 64-character constraint; the legacy 32-character MD5 constraint is replaced by the hardening migration.
 
 **Limitations:** No SMS/WhatsApp provider is configured; the Buyer shares the code directly with the assigned Provider. This interface covers approved independent Provider owners and authorized Admins only. NEXORA own-team staff and courier-company staff do not yet have an identity-bound verification flow and cannot use this Provider-owner RPC. Admin MFA must already be at AAL2; this UI does not initiate MFA enrollment or step-up.
 
