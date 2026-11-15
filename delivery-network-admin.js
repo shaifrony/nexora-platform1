@@ -139,8 +139,15 @@
     const form=$("nxNetworkJobForm"),select=$("nxDeliveryOrderSelect");
     if(!form||!select)return;
     const order=orderCandidates.find(o=>o.order_id===select.value);
-    if(!order)return;
     const set=(name,value)=>{const field=form.elements.namedItem(name);if(field&&value!==null&&value!==undefined)field.value=String(value);};
+    if(!order){
+      [["external_reference",""],["package_description",""],["package_count","1"],
+       ["pickup_contact_name",""],["pickup_contact_phone",""],["pickup_address",""],["pickup_city",""],["pickup_country","Bangladesh"],
+       ["recipient_contact_name",""],["recipient_contact_phone",""],["delivery_address",""],["delivery_city",""],["delivery_country","Bangladesh"]]
+        .forEach(([name,value])=>set(name,value));
+      message("Manual Delivery Request নির্বাচন করা হয়েছে। Pickup ও Buyer-এর গন্তব্যের তথ্য নিজে পূরণ করুন।");
+      return;
+    }
     set("external_reference",order.order_code);
     set("package_description",order.listing_name+" · Order "+order.order_code+" · Quantity "+order.quantity);
     set("package_count",1);
