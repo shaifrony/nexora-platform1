@@ -93,7 +93,7 @@ select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000001'
 create temporary table otp_result as
  select public.request_delivery_receipt_code('74000000-0000-4000-8000-000000000001') as payload;
 do $block$ begin
- if (select length(payload->>'code') from otp_result)<>16 then raise exception 'FAIL: Buyer did not receive a 16-character OTP'; end if;
+ if (select length(payload->>'code') from otp_result)<>32 then raise exception 'FAIL: Buyer did not receive a 32-character OTP'; end if;
  if (select length(code_hash) from private.delivery_receipt_challenges limit 1)<>64 then raise exception 'FAIL: OTP digest is not SHA-256'; end if;
 end $block$;
 reset role;
@@ -126,6 +126,36 @@ do $block$ begin
 end $block$;
 reset role;
 
+-- Provider eligibility is re-checked at verification time, not only when the queue loads.
+update public.profiles set account_status='suspended'
+where id='71000000-0000-4000-8000-000000000011';
+set role authenticated;
+select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000011',false);
+do $inactive_provider$ begin
+ begin
+  perform public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001',repeat('A',32),null,null);
+  raise exception 'FAIL: inactive Provider verified a receipt';
+ exception when insufficient_privilege then null;
+ end;
+end $inactive_provider$;
+reset role;
+update public.profiles set account_status='active'
+where id='71000000-0000-4000-8000-000000000011';
+update public.transport_providers set application_status='suspended'
+where id='73000000-0000-4000-8000-000000000001';
+set role authenticated;
+select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000011',false);
+do $unapproved_provider$ begin
+ begin
+  perform public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001',repeat('A',32),null,null);
+  raise exception 'FAIL: unapproved Provider verified a receipt';
+ exception when insufficient_privilege then null;
+ end;
+end $unapproved_provider$;
+reset role;
+update public.transport_providers set application_status='approved'
+where id='73000000-0000-4000-8000-000000000001';
+
 -- The assigned Provider verifies the Buyer code once; wrong codes consume attempts.
 set role authenticated;
 select set_config('request.jwt.claim.sub','71000000-0000-4000-8000-000000000011',false);
@@ -133,7 +163,7 @@ do $wrong$
 declare v jsonb; i integer;
 begin
  for i in 1..4 loop
-  v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','0000000000000000');
+  v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','00000000000000000000000000000000');
   if coalesce((v->>'verified')::boolean,true) then raise exception 'FAIL: wrong OTP verified'; end if;
  end loop;
 end
