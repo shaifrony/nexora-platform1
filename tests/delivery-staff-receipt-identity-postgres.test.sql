@@ -78,7 +78,7 @@ insert into public.delivery_network_staff(
  id,staff_code,partner_id,full_name,contact_phone,contact_email,employment_type,staff_status,created_by,updated_by
 ) values
  ('93000000-0000-4000-8000-000000000001','NXDS-TEAM-01','92000000-0000-4000-8000-000000000001','Team Driver','01711111111','team.driver@nexora.test','employee','active','91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001'),
- ('93000000-0000-4000-8000-000000000002','NXDS-COURIER-01','92000000-0000-4000-8000-000000000002','Courier Driver','01722222222','courier.driver@nexora.test','contract','active','91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001'),
+ ('93000000-0000-4000-8000-000000000002','NXDS-COURIER-01','92000000-0000-4000-8000-000000000002','Courier Driver','01722222222',null,'contract','active','91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001'),
  ('93000000-0000-4000-8000-000000000003','NXDS-UNVERIFIED','92000000-0000-4000-8000-000000000001','Unverified Driver','01733333333','unverified@nexora.test','employee','active','91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000001');
 insert into public.delivery_jobs(id,job_reference,job_status) values
  ('94000000-0000-4000-8000-000000000001','NXD-TEAM-STAFF','requested'),
@@ -215,5 +215,20 @@ do $audit$ begin
   raise exception 'FAIL: staff identity binding audit trail missing';
  end if;
 end $audit$;
+-- Changing the registered phone invalidates the existing identity link.
+set role authenticated;
+select set_config('request.jwt.claim.sub','91000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{"aal":"aal2"}',false);
+select set_config('test.admin.permission','true',false);
+select public.upsert_delivery_network_staff(
+ '93000000-0000-4000-8000-000000000002','92000000-0000-4000-8000-000000000002',
+ 'Courier Driver','01800000000',null,'contract',array['Dhaka'],null,'active',null
+);
+reset role;
+do $rebind$ begin
+ if (select auth_user_id from public.delivery_network_staff where id='93000000-0000-4000-8000-000000000002') is not null then
+  raise exception 'FAIL: changing staff contact details did not clear the old identity link';
+ end if;
+end $rebind$;
 
 \echo 'PASS: verified staff identity binding, NEXORA Team and Courier assignment, own-job queue isolation, and staff-only OTP receipt verification'
