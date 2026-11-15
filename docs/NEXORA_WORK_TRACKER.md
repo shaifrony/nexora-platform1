@@ -1913,3 +1913,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 
 - Critical additional delivery bypass confirmed: the older Admin/Provider `update_delivery_network_job_status` RPC still permits direct `delivered` transitions from `out_for_delivery`, `partially_delivered`, and `disputed`. The newer worker RPC blocks direct delivery completion but does not replace this older function. Next migration must remove direct `delivered` from all ordinary status paths; only guarded Buyer OTP after exact full-quantity proof and no active dispute may finalize receipt. Recorded in Payments & Ledger Design section 12.3.
+
+
+## 2026-11-15 — Admin delivery UI guard
+
+- Removed ordinary Admin/Provider tracking-menu options that could set `delivered` directly from `out_for_delivery`, `partially_delivered`, or `disputed`. Receipt completion remains available through the Buyer OTP form.
+- Added a source regression test asserting those direct completion choices are absent from the Admin UI transition map.
+- Important: this is a UI safety improvement only. The older backend `update_delivery_network_job_status` RPC still allows those transitions and must be replaced by the next naturally ordered migration; the UI change is not a security boundary.
