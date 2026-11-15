@@ -1852,3 +1852,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - First CI attempt exposed a test-fixture issue: the duplicate-link assertion queried `delivery_jobs` while running as the restricted `authenticated` role. The production guard was not the failure; the fixture count assertion was moved outside that RLS role.
 - Final CI run [#43668490721](https://github.com/shaifrony/nexora-platform1/actions/runs/43668490721) passed on exact tested commit `46e8739350ffd73f9c5c8c8ea65e3c60dff2415b`: all static/source tests and all seven disposable PostgreSQL suites passed; recovery snapshot uploaded successfully.
 - No hosted database, NEXORA-TEST, `main`, DNS or Production was changed.
+
+
+## 2026-11-15 — Payments and Finance Ledger design gate
+
+- Added [NEXORA Payments & Ledger Design](NEXORA_PAYMENTS_AND_LEDGER_DESIGN.md), defining provider-neutral payment intent, verified/idempotent webhook, reconciliation, immutable double-entry ledger, refund/chargeback, payables/settlement and maker-checker controls.
+- Explicitly separates Order fulfilment from payment state; a completed Order, delivery quote or provider callback alone is not proof of captured funds.
+- Identifies business/legal decisions required before selecting a Bangladesh payment provider or enabling money movement: merchant-of-record/funds-flow role, provider account ownership, fee/tax/refund/reserve policy and seller KYC/payout rules.
+- **Implementation remains pending**; no payment gateway, payment capture, refund, payout, live credential or financial ledger is claimed to exist. This design-only commit does not change database schema or hosted services.
+- The repository remains on `nexora-development`; no hosted Supabase, NEXORA-TEST, `main`, DNS or Production change.
+- Current Development CI must be checked for this commit before marking it validated.
