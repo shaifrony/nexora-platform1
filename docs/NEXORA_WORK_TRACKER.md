@@ -1755,3 +1755,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 - Inspected the shared `auth.js` flow: NEXORA already provides TOTP enrollment, challenge/verification and AAL2 gating for active Admin accounts. The Receipt OTP form correctly relies on this app-wide MFA panel plus the database AAL2 guard; a separate Receipt OTP-specific MFA UI is not required.
 - The remaining Receipt OTP identity gap is limited to NEXORA own-team and courier-company staff. Do not grant these workers Provider-owner access; implement only after the existing staff/assignment identity schema is confirmed.
+
+
+## 2026-11-15 — Receipt OTP documentation reconciliation
+
+- Reconciled `docs/NEXORA_DELIVERY_NETWORK.md` with the current staged 128-bit/SHA-256 Buyer → approved Provider owner/Admin flow; removed the obsolete MD5/16-character and “UI not implemented” descriptions.
+- Confirmed from the Delivery Network design that NEXORA team and courier-partner workers are currently roster-only records with no sign-in/field identity. Their OTP verification remains blocked until a separate scoped identity design exists; do not reuse Provider-owner permissions.
