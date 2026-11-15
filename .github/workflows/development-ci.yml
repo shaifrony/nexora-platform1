@@ -108,6 +108,16 @@ jobs:
           createdb nexora_staff_receipt_test
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/delivery-staff-receipt-identity-postgres.test.sql
 
+      - name: Execute Delivery Staff operations PostgreSQL regression suite against isolated disposable database
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_staff_operations_test
+        run: |
+          createdb nexora_staff_operations_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/delivery-staff-operations-postgres.test.sql
+
       - name: Validate active migration filenames and ordering
         shell: bash
         run: |
