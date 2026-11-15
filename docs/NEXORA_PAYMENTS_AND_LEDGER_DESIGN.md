@@ -147,3 +147,50 @@ The business owner has confirmed the intended commercial flow:
 **Important legal and implementation boundary:** this is the confirmed intended product flow, not a finding that NEXORA currently has legal authority to custody, pool or disburse customer funds. Before choosing a provider or enabling real money, obtain Bangladesh legal/accounting advice and provider approval on the permitted merchant-of-record/funds-flow model, licensing/authorization, safeguarded account structure, KYC/AML, consumer protection, tax/VAT, refund/chargeback obligations and seller contracts. If a licensed provider must hold or split funds, implement the approved provider-controlled flow rather than assuming NEXORA can hold funds itself.
 
 No gateway, live collection, custody, payout or hosted database change is enabled by this decision.
+## 12. Settlement backend implementation audit — 2026-11-15
+
+A source audit was performed before adding payout SQL. It found two delivery/payment boundary issues that must be corrected in a new forward-only migration before Seller payout eligibility can safely be automated.
+
+### 12.1 Buyer collection amount must include delivery charges
+
+The current Commerce Order model adds delivery_charge into generated grand_total, while total_price remains the goods subtotal. The current public.create_payment_intent implementation snapshots commerce_orders.total_price, not grand_total. Therefore an Order with a non-zero delivery charge can currently create a payment intent that under-collects the intended Buyer total.
+
+Required correction:
+- Snapshot the complete Buyer collection amount from grand_total (or an equivalent immutable, explicitly componentized amount) and retain the goods subtotal and delivery charge as separate immutable components.
+- Do not treat the delivery charge as Seller earnings. It must be allocated only under an approved carrier/partner settlement policy.
+- Reconcile the exact captured amount against the same immutable snapshot before any journal or settlement is created.
+- Add a regression test for a non-zero delivery charge, including idempotent intent reuse and mismatch review.
+
+### 12.2 A delivered job status is not, by itself, proof of full Order quantity
+
+The current delivery proof workflow records cumulative delivered quantity against the Commerce Order quantity. However, the receipt-verification function accepts both out_for_delivery and partially_delivered job states and transitions the job to delivered. The verified OTP challenge verified_at is then cleared after the guarded transition. A delivered label can therefore represent a Buyer-confirmed partial shipment unless the cumulative proof quantity is independently checked.
+
+Required correction:
+- Persist an immutable receipt-confirmation record for each successfully verified OTP, linked to the Buyer, Order, Delivery Job and the exact proof/quantity snapshot.
+- Allow receipt confirmation for a partial drop without treating the whole Order as fully delivered; allow another confirmation for a later partial drop.
+- Mark the Order delivery complete and open Seller settlement eligibility only when cumulative, validated proof quantity equals the Order quantity (within the existing numeric precision), the final receipt is confirmed, and no active dispute exists.
+- Preserve the raw OTP only in the Buyer response; store a digest/confirmation metadata, never the code itself.
+- A delivery dispute in open or under_review, a failed/returned shipment, quantity shortfall, missing proof, or payment/reconciliation exception must keep settlement on hold.
+
+### 12.3 Proposed settlement gate and ledger lifecycle
+
+The next database implementation should be an append-only, per-Order Seller settlement workflow with private RLS-enabled tables and service-only mutation RPCs. It must not be callable by Buyer/Seller/Porter browser roles to approve or move money.
+
+Eligibility is a conjunction, not a single status:
+1. Exactly one linked Delivery Job exists for the Order.
+2. The payment intent is captured and the captured amount/currency exactly matches the immutable Buyer-total snapshot.
+3. All ordered quantity is supported by validated delivery proof and final Buyer receipt confirmation.
+4. No active delivery dispute, payment exception, unresolved reconciliation exception, refund/chargeback hold or other risk hold exists.
+5. A current, explicitly approved commission/fee/tax policy exists for the Order currency and effective date.
+6. Seller payout destination/KYC status has been verified under the selected licensed provider's requirements.
+
+Recommended states: blocked, eligible, pending_approval, approved, submitted, paid, failed, on_hold, reversed. State changes must be locked, idempotent, audited and monotonic except explicit, separately journaled reversal/hold transitions. A provider payout callback is not sufficient by itself: verify it against the provider's authenticated transfer status and unique transfer reference.
+
+The accounting flow must separate, by currency, at least: provider clearing/receivable, Seller payable, NEXORA commission revenue, delivery-partner payable, tax payable, refund/chargeback liabilities and payout cash/clearing. Journal posting must use the existing balanced, immutable post_finance_journal mechanism. No amount or percentage is to be hard-coded before the commercial fee schedule and carrier allocation policy are approved.
+
+### 12.4 Current implementation status and safe boundary
+
+- This audit and specification are documentation only. No settlement tables/RPCs, OTP behavior changes, payment-intent correction, payout adapter, or ledger automation have been deployed or committed.
+- Existing migrations are immutable. The active chain currently ends at 20261115230000_payment_reconciliation_batch_queue.sql; the local Supabase CLI-generated timestamp observed during this work was earlier than that version. Do not hand-pick/edit a migration timestamp or modify an already-committed migration. Generate the next migration with the official CLI only when its generated version naturally sorts after the active chain.
+- The Vercel Sandbox creation needed for isolated PostgreSQL work was rejected with HTTP 402 because the Hobby team's snapshot-storage usage limit was exceeded. No sandbox was created. No hosted Supabase project was used as a substitute.
+- Implementation remains blocked until an isolated local test runner is available and a valid next migration version can be generated. After that, implement the Buyer-total correction and full-quantity receipt gate first, then settlement eligibility/ledger workflow, then run disposable PostgreSQL tests and Development CI.
