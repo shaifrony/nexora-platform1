@@ -593,7 +593,7 @@ grant execute on function private.get_my_order_delivery_operations(uuid[]) to au
 create or replace function public.get_my_order_delivery_operations(p_order_ids uuid[])
 returns table(order_id uuid,job_id uuid,job_reference text,job_status text,proof_records jsonb,disputes jsonb)
 language sql security invoker set search_path=''
-as $$ select * from private.get_my_order_delivery_operations($1); $;
+as $$ select * from private.get_my_order_delivery_operations($1); $$;
 revoke all on function public.get_my_order_delivery_operations(uuid[]) from public,anon;
 grant execute on function public.get_my_order_delivery_operations(uuid[]) to authenticated;
 
