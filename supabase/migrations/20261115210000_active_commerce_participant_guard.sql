@@ -55,11 +55,17 @@ begin
 end;
 $$;
 revoke all on function private.enforce_active_product_negotiation_participants() from public,anon,authenticated;
-drop trigger if exists product_price_negotiations_require_active_participants on public.product_price_negotiations;
-create trigger product_price_negotiations_require_active_participants
-before insert or update of negotiation_status,buyer_id,seller_id
-on public.product_price_negotiations
-for each row execute function private.enforce_active_product_negotiation_participants();
+do $product_trigger$
+begin
+  if to_regclass('public.product_price_negotiations') is not null then
+    execute 'drop trigger if exists product_price_negotiations_require_active_participants on public.product_price_negotiations';
+    execute 'create trigger product_price_negotiations_require_active_participants
+      before insert or update of negotiation_status,buyer_id,seller_id
+      on public.product_price_negotiations
+      for each row execute function private.enforce_active_product_negotiation_participants()';
+  end if;
+end
+$product_trigger$;
 
 create or replace function private.enforce_active_demand_offer_participants()
 returns trigger
@@ -87,9 +93,15 @@ begin
 end;
 $$;
 revoke all on function private.enforce_active_demand_offer_participants() from public,anon,authenticated;
-drop trigger if exists seller_offer_negotiations_require_active_participants on public.seller_offer_negotiations;
-create trigger seller_offer_negotiations_require_active_participants
-before insert on public.seller_offer_negotiations
-for each row execute function private.enforce_active_demand_offer_participants();
+do $demand_trigger$
+begin
+  if to_regclass('public.seller_offer_negotiations') is not null then
+    execute 'drop trigger if exists seller_offer_negotiations_require_active_participants on public.seller_offer_negotiations';
+    execute 'create trigger seller_offer_negotiations_require_active_participants
+      before insert on public.seller_offer_negotiations
+      for each row execute function private.enforce_active_demand_offer_participants()';
+  end if;
+end
+$demand_trigger$;
 
 commit;
