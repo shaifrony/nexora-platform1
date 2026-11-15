@@ -84,6 +84,9 @@
         </form>
         <h5>Delivery Request & Assignment Queue</h5>
         <div id="nxNetworkJobsList" class="muted">Delivery Job লোড হচ্ছে…</div>
+        <hr><h5>Delivery Dispute Review Queue</h5>
+        <p class="muted">শুধু AAL2 MFA ও logistics.view অনুমতিপ্রাপ্ত Admin অভিযোগ দেখতে পারবেন; সিদ্ধান্ত/সমাধান সংরক্ষণে logistics.assign প্রয়োজন।</p>
+        <div id="nxDeliveryDisputesList" aria-live="polite" class="muted">Dispute Queue লোড হচ্ছে…</div>
       </section>`);
     $("nxDeliveryNetworkRefresh")?.addEventListener("click", load);
     $("nxDeliveryPartnerForm")?.addEventListener("submit", savePartner);
@@ -124,6 +127,7 @@
     sHost.innerHTML=staff.length?staff.map(s=>`<article class="offer"><strong>${esc(s.full_name)}</strong><p class="muted">${esc(s.staff_code)} · ${esc(s.contact_phone)} · ${esc(s.employment_type)} · ${esc(s.staff_status)}</p><p class="muted">${esc((s.service_cities||[]).join(", "))} · ${esc(s.vehicle_type||"")}</p><p class="muted">Identity: ${s.auth_user_id?"Bound to verified account":"Not linked"}</p>${s.staff_status==="active"&&!s.auth_user_id?'<button type="button" class="primary" data-bind-staff="'+esc(s.id)+'">Bind verified account</button>':''}${s.auth_user_id?'<button type="button" class="danger" data-unbind-staff="'+esc(s.id)+'">Unbind account</button>':''}</article>`).join(""):'<p class="muted">এখনো কোনো Team/Courier কর্মী নিবন্ধিত নেই।</p>';
     await loadOrderCandidates();
     await loadJobs();
+    await loadAdminDisputes();
     pHost.querySelectorAll("[data-partner-status]").forEach(btn=>btn.addEventListener("click",()=>changePartnerStatus(btn)));
     sHost.querySelectorAll("[data-bind-staff]").forEach(btn=>btn.addEventListener("click",()=>bindStaffIdentity(btn)));
     sHost.querySelectorAll("[data-unbind-staff]").forEach(btn=>btn.addEventListener("click",()=>unbindStaffIdentity(btn)));
@@ -249,6 +253,42 @@
     } catch(err){message("Delivery Request তৈরি হয়নি: "+err.message);}
     finally{btn.disabled=false;}
   }
+
+  async function loadAdminDisputes() {
+    const host=$("nxDeliveryDisputesList");
+    if(!host||!db()||!isAdmin())return;
+    host.textContent="MFA ও logistics.view permission যাচাই করে Dispute Queue লোড হচ্ছে…";
+    const {data,error}=await db().rpc("get_admin_delivery_disputes");
+    if(error){host.textContent="Dispute Queue পাওয়া যায়নি: "+error.message;return;}
+    const rows=data||[];
+    if(!rows.length){host.innerHTML='<p class="muted">এখনো কোনো Delivery Dispute নেই।</p>';return;}
+    host.innerHTML=rows.map(d=>{
+      const closed=["resolved","rejected"].includes(d.dispute_status);
+      return '<article class="offer" data-admin-dispute="'+esc(d.dispute_id)+'">'+
+        '<div class="section-head"><strong>'+esc(d.job_reference)+' · '+esc(d.reason_code)+'</strong><span class="tag">'+esc(d.dispute_status)+'</span></div>'+
+        '<p>'+esc(d.description)+'</p><p class="muted">উত্থাপনকারী: '+esc(d.raiser_role)+' · '+esc(new Date(d.created_at).toLocaleString())+'</p>'+
+        (d.resolution?'<p class="muted">সিদ্ধান্ত: '+esc(d.resolution)+'</p>':'')+
+        (closed?'<p class="muted">এই Dispute বন্ধ করা হয়েছে।</p>':
+          '<form data-admin-dispute-review="'+esc(d.dispute_id)+'"><label>সিদ্ধান্ত<select name="next_status" required><option value="under_review">পর্যালোচনাধীন</option><option value="resolved">সমাধান হয়েছে</option><option value="rejected">প্রত্যাখ্যান</option></select></label><label>সমাধান/কারণ (বন্ধ করতে কমপক্ষে ১০ অক্ষর)<textarea name="resolution" maxlength="2000"></textarea></label><button class="primary" type="submit">সিদ্ধান্ত সংরক্ষণ</button><p class="muted" role="status" aria-live="polite"></p></form>')+
+        '</article>';
+    }).join("");
+    host.querySelectorAll("[data-admin-dispute-review]").forEach(form=>form.addEventListener("submit",async event=>{
+      event.preventDefault();
+      const button=form.querySelector("button[type=submit]"),status=form.querySelector('[role=status]'),fd=new FormData(form);
+      button.disabled=true;status.textContent="Admin decision সংরক্ষণ হচ্ছে…";
+      try{
+        const {error:reviewError}=await db().rpc("review_delivery_dispute",{
+          p_dispute_id:form.dataset.adminDisputeReview,
+          p_next_status:String(fd.get("next_status")),
+          p_resolution:String(fd.get("resolution")||"").trim()||null
+        });
+        if(reviewError)throw reviewError;
+        message("Delivery Dispute সিদ্ধান্ত সংরক্ষিত হয়েছে।",true);
+        await loadAdminDisputes();
+      }catch(err){status.textContent="সিদ্ধান্ত সংরক্ষণ হয়নি: "+err.message;button.disabled=false;}
+    }));
+  }
+
   async function loadJobs() {
     const host=$("nxNetworkJobsList");if(!host||!db()||!isAdmin())return;
     const [jobs,providers,vehicles,partners,staff]=await Promise.all([
