@@ -96,6 +96,11 @@ create temporary table otp_result as
 do $block$ begin
  if (select length(payload->>'code') from otp_result)<>32 or (select payload->>'code' !~ '^[0-9A-F]{32}$' from otp_result) then raise exception 'FAIL: Buyer did not receive a 32-character hexadecimal OTP'; end if;
  if (select length(code_hash) from private.delivery_receipt_challenges limit 1)<>64 then raise exception 'FAIL: OTP digest is not SHA-256'; end if;
+ if (select code_hash from private.delivery_receipt_challenges limit 1)<>
+   (select encode(extensions.digest((payload->>'code')||'74000000-0000-4000-8000-000000000001'||
+     '71000000-0000-4000-8000-000000000001'||'NEXORA-RECEIPT-V1','sha256'),'hex') from otp_result) then
+   raise exception 'FAIL: stored OTP digest does not match SHA-256';
+ end if;
 end $block$;
 reset role;
 do $block$ begin
@@ -175,9 +180,17 @@ begin
   v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','00000000000000000000000000000000');
   if coalesce((v->>'verified')::boolean,true) then raise exception 'FAIL: wrong OTP verified'; end if;
  end loop;
+ v:=public.verify_delivery_receipt_code('74000000-0000-4000-8000-000000000001','00000000000000000000000000000000');
+ if coalesce((v->>'verified')::boolean,true) then raise exception 'FAIL: fifth wrong OTP attempt verified'; end if;
 end
 $wrong$;
 reset role;
+do $lockout_assert$ begin
+ if not exists(select 1 from private.delivery_receipt_challenges
+   where job_id='74000000-0000-4000-8000-000000000001' and attempts=5 and consumed_at is not null) then
+  raise exception 'FAIL: fifth wrong attempt did not consume the challenge';
+ end if;
+end $lockout_assert$;
 
 -- Use a fresh challenge after cooldown simulation, then verify success and one-time consumption.
 update private.delivery_receipt_challenges set created_at=now()-interval '2 minutes',consumed_at=now()
