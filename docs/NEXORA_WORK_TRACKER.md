@@ -26,7 +26,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 | Verified reviews | Partial | Completed-purchase eligibility and one-review-per-listing staged; public review column grants exclude Buyer ID and moderation metadata. Source regression coverage passes; role/RLS and browser E2E pending |
 | Delivery Network | Partial | Admin AAL2 Order linking, Buyer-safe tracking, Buyer/Provider/Admin Receipt OTP, identity-bound staff queue, worker status/proof/partial/dispute UI and Admin dispute review queue are staged; new disposable PostgreSQL suite passes on commit 9034ab5; full Supabase Storage/Auth/PostgREST and browser/device E2E remain pending |
 | Marketing Department | Pending | Lead, campaign and onboarding modules not complete |
-| Accounts & Finance | Pending | Ledger, reconciliation, refunds/payouts and maker-checker incomplete |
+| Accounts & Finance | Partial | Provider-neutral payment intent, webhook inbox, immutable double-entry ledger and transaction reconciliation foundations staged; NEXORA-first funds flow and delivery-gated Seller payout policy documented. Refunds, Seller payables, payout execution, maker-checker UI and legal/provider approval remain pending |
 | Reports & audit | Partial | Some audit records exist; unified reporting pending |
 | Review RPC local logic validation | Done (local only) | Base/extended local suites and two-session order-acceptance race passed on disposable PostgreSQL 17; local superuser caveat documented; hosted deployment not approved |
 | Separate Admin domain | Not required | Earlier prototype retained temporarily; do not deploy as a second app |
@@ -1844,3 +1844,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Reconciliation remains observational: no Payment Intent state, ledger, refund, payout or funds movement is modified by this workflow. Report windows are provenance metadata only; missing internal transactions, provider fees/net settlements and bank-settlement completeness are not yet reconciled.
 - Added static Node and disposable PostgreSQL integration tests; local PostgreSQL execution passed. GitHub Actions CI #43674068727 passed on exact implementation commit 803724a681015f9dcdd0f20b4609b341d679d0b1 (148 dependency-free JavaScript tests, nine disposable PostgreSQL suites, and active migration filename/order validation).
 - Provider-specific statement parsing, bank settlement reconciliation and adapter integration remain pending provider selection and fund-flow decisions.
+
+## 2026-11-15 — NEXORA-first funds flow and delivery-gated Seller payout decision
+
+- Business owner confirmed the intended commercial flow: **Buyer → NEXORA → Seller**. NEXORA is intended to receive Buyer funds first; Seller payout is eligible only after successful delivery to the Buyer is confirmed.
+- The Buyer receipt OTP is the intended primary delivery-confirmation evidence in the current staged Delivery Network design. Courier status, Order acceptance/completion alone, a delivery quote, or an unverified callback cannot authorize Seller payout.
+- Disputed, failed or unresolved deliveries/payments remain on hold. Partial-delivery settlement is explicitly unresolved; the full Seller payable must not be released on partial proof.
+- Seller payable must be calculated from verified captured funds and approved commission/charge/refund/tax rules, not merely from Order totals. Refunds, chargebacks, payout approval and provider/bank settlement remain independent controlled workflows.
+- Updated [NEXORA Payments & Ledger Design](NEXORA_PAYMENTS_AND_LEDGER_DESIGN.md) with the confirmed flow, delivery gate, partial-delivery hold, and legal/technical boundaries.
+- **This is a product-policy decision and documentation update only.** No payout SQL/RPC, gateway integration, live collection, fund custody, hosted Supabase migration, NEXORA-TEST mutation, main branch, Production, DNS or public alias change was made.
+- Before real funds can move, Bangladesh legal/accounting review and payment-provider approval must confirm NEXORA's permitted funds-flow/merchant-of-record model, licensing/authorization, safeguarded account structure, KYC/AML, tax/VAT, consumer/refund/chargeback obligations and Seller contracts. Implement the provider-approved flow; do not assume NEXORA may custody or disburse funds directly.
+- Documentation CI for this decision commit is pending; the previously recorded 148/148 source tests and nine disposable PostgreSQL suites belong to the prior verified code commit and are not being represented as validation of this documentation change.
