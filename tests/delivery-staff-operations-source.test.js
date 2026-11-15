@@ -97,3 +97,10 @@ test("Buyer and Seller order dashboards show scoped delivery evidence and can ra
   assert.match(marketplaceUi, /wireOrderDeliveryOperations\(host,loadBuyerOrders\)/);
   assert.match(marketplaceUi, /wireOrderDeliveryOperations\(host,loadSellerOrders\)/);
 });
+
+test("Admin UI cannot set Delivered through ordinary tracking status updates", () => {
+  const transitionBlock = adminUi.match(/const transitions=\{([^;]+)\};/);
+  assert.ok(transitionBlock, "Admin status transition map should exist");
+  assert.doesNotMatch(transitionBlock[1], /out_for_delivery:\[([^\]]*\bdelivered\b)|partially_delivered:\[([^\]]*\bdelivered\b)|disputed:\[([^\]]*\bdelivered\b)/);
+  assert.match(adminUi, /verify_delivery_receipt_code/);
+});
