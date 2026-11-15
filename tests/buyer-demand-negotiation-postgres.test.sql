@@ -120,6 +120,7 @@ create table public.commerce_order_events (
 
 -- Execute the exact staged migration against the disposable fixture schema.
 \ir ../supabase/migrations/20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql
+\ir ../supabase/migrations/20261115210000_active_commerce_participant_guard.sql
 
 insert into public.profiles(id,role,account_status) values
   ('10000000-0000-4000-8000-000000000001','buyer','active'),
