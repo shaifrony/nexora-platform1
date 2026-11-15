@@ -86,3 +86,14 @@ test("Buyer and Seller proof/dispute reads are bound to their own Commerce Order
   assert.match(sql, /o\.buyer_id=v_actor or o\.seller_id=v_actor/);
   assert.match(sql, /create or replace function public\.get_my_order_delivery_operations/);
 });
+
+const marketplaceUi = fs.readFileSync(path.join(process.cwd(), "marketplace.js"), "utf8");
+
+test("Buyer and Seller order dashboards show scoped delivery evidence and can raise disputes", () => {
+  assert.match(marketplaceUi, /get_my_order_delivery_operations/);
+  assert.match(marketplaceUi, /orderDeliveryOperationsHtml/);
+  assert.match(marketplaceUi, /createSignedUrl\(img\.dataset\.orderProofPath,300\)/);
+  assert.match(marketplaceUi, /raise_delivery_dispute/);
+  assert.match(marketplaceUi, /wireOrderDeliveryOperations\(host,loadBuyerOrders\)/);
+  assert.match(marketplaceUi, /wireOrderDeliveryOperations\(host,loadSellerOrders\)/);
+});
