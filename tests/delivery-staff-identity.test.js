@@ -37,7 +37,7 @@ test("Admin UI can bind or unbind staff and dispatch either partner type to link
 });
 
 test("signed-in field workers receive only their own receipt queue and can verify OTP", () => {
-  assert.match(staffUi, /rpc\("get_my_assigned_staff_receipt_jobs"\)/);
+  assert.match(staffUi, /rpc\("get_my_assigned_delivery_jobs"\)/);
   assert.match(staffUi, /rpc\("verify_delivery_receipt_code"/);
-  assert.match(staffUi, /data-staff-receipt-form/);
+  assert.match(staffUi, /data-staff-otp-form/);
 });
