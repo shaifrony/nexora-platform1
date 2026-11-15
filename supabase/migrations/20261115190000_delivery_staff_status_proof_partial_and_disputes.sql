@@ -505,4 +505,45 @@ comment on function public.raise_delivery_dispute(uuid,text,text) is
 comment on function public.review_delivery_dispute(uuid,text,text) is
  'AAL2 logistics Admin moves a dispute to review/resolution with an auditable reason.';
 
+
+-- AAL2 logistics-view Admin queue; exposes operational dispute fields only.
+create or replace function private.get_admin_delivery_disputes()
+returns table(
+ dispute_id uuid,job_id uuid,job_reference text,reason_code text,description text,
+ raiser_role text,dispute_status text,resolution text,created_at timestamptz,updated_at timestamptz
+)
+language plpgsql security definer set search_path=''
+as $
+declare v_actor uuid:=auth.uid();
+begin
+ if v_actor is null or (select auth.jwt()->>'aal') is distinct from 'aal2'
+   or not private.has_nexora_permission('logistics.view') then
+   raise exception 'Active Admin MFA and logistics.view permission required' using errcode='42501';
+ end if;
+ if not exists(select 1 from public.admin_staff s join public.profiles p on p.id=s.user_id
+   where s.user_id=v_actor and s.is_active=true and p.role='admin' and p.account_status='active') then
+   raise exception 'Active Admin membership required' using errcode='42501';
+ end if;
+ return query
+ select d.id,d.job_id,j.job_reference,d.reason_code,d.description,d.raiser_role,
+   d.dispute_status,d.resolution,d.created_at,d.updated_at
+ from private.delivery_disputes d join public.delivery_jobs j on j.id=d.job_id
+ order by case when d.dispute_status in ('open','under_review') then 0 else 1 end,
+   d.created_at desc
+ limit 200;
+end;
+$;
+revoke all on function private.get_admin_delivery_disputes() from public,anon,authenticated;
+grant execute on function private.get_admin_delivery_disputes() to authenticated;
+
+create or replace function public.get_admin_delivery_disputes()
+returns table(
+ dispute_id uuid,job_id uuid,job_reference text,reason_code text,description text,
+ raiser_role text,dispute_status text,resolution text,created_at timestamptz,updated_at timestamptz
+)
+language sql security invoker set search_path=''
+as $ select * from private.get_admin_delivery_disputes(); $;
+revoke all on function public.get_admin_delivery_disputes() from public,anon;
+grant execute on function public.get_admin_delivery_disputes() to authenticated;
+
 commit;
