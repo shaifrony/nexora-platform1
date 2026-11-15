@@ -157,3 +157,11 @@ Before any real buyer delivery is enabled:
 - Disposable PostgreSQL CI covers verified email/phone matching, rejection of unverified contacts, NEXORA Team and Courier assignment, unbound worker rejection, own-job queue isolation, denial of cross-worker OTP verification, and successful Team/Courier receipt verification.
 - Development CI [#43662559823](https://github.com/shaifrony/nexora-platform1/actions/runs/43662559823) passed 129/129 source tests, all six focused PostgreSQL suites, JavaScript syntax and 45 active migration filename/order checks.
 - Still pending: complete staff status-update/proof-of-delivery field workflow, SMS/WhatsApp OTP delivery, partial delivery/disputes, final Commerce Order completion, delivery finance/settlement, full Supabase Auth/PostgREST/RLS chain replay and browser/device E2E.
+
+
+## 2026-11-15 — One Delivery Job per Commerce Order
+
+- A Commerce Product Order may now have at most one linked Delivery Job. A partial delivery is represented by additional proof records on that same job, not by creating a second job for the same order.
+- A partial unique index enforces the relationship; a trigger returns a clear duplicate-link error. The migration fails closed if pre-existing duplicate order links are detected, so data must be reviewed rather than silently deleted.
+- The focused Admin Order-to-Delivery PostgreSQL fixture verifies successful linking, duplicate-link rejection, no duplicate row, Buyer receipt-queue isolation, AAL2 and pending/service order denial.
+- This guard is staged on `nexora-development` only.
