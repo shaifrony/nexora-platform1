@@ -1749,3 +1749,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Verification now locks the delivery job before locking its challenge, matching the Buyer request path and avoiding an inverted job/challenge lock order. The assigned Provider and owner-profile rows are share-locked while eligibility is checked, preventing a concurrent suspension from racing the verification.
 - Expanded the disposable PostgreSQL fixture to seed a legacy challenge before the hardening migration, verify its invalidation, check the exact SHA-256 digest, validate 128-bit OTP format, test fifth-attempt lockout, and deny suspended/unapproved Providers. Private digest assertions run after resetting the restricted authenticated role.
 - GitHub status currently reports a Vercel check failure due to the account build-rate limit; this is not evidence that the PostgreSQL CI suite passed. No hosted migration or deployment was attempted. Continue only after the repository CI result can be confirmed.
+
+
+## 2026-11-15 — Admin MFA integration audit correction
+
+- Inspected the shared `auth.js` flow: NEXORA already provides TOTP enrollment, challenge/verification and AAL2 gating for active Admin accounts. The Receipt OTP form correctly relies on this app-wide MFA panel plus the database AAL2 guard; a separate Receipt OTP-specific MFA UI is not required.
+- The remaining Receipt OTP identity gap is limited to NEXORA own-team and courier-company staff. Do not grant these workers Provider-owner access; implement only after the existing staff/assignment identity schema is confirmed.
