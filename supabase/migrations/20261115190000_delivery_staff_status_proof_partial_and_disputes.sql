@@ -74,7 +74,7 @@ as $$
       and worker.account_status='active' and worker.role in ('buyer','seller','porter')
       and j.assignment_source in ('nexora_team','courier_partner')
   );
-$$;
+$$$;
 revoke all on function private.is_assigned_delivery_staff(uuid) from public,anon,authenticated;
 grant execute on function private.is_assigned_delivery_staff(uuid) to authenticated;
 
@@ -94,7 +94,7 @@ as $$
       and exists(select 1 from public.admin_staff s join public.profiles p on p.id=s.user_id
         where s.user_id=auth.uid() and s.is_active=true and p.role='admin' and p.account_status='active')
     );
-$$;
+$$$;
 revoke all on function private.can_read_delivery_job_evidence(uuid) from public,anon,authenticated;
 grant execute on function private.can_read_delivery_job_evidence(uuid) to authenticated;
 
@@ -109,7 +109,7 @@ as $$
       and exists(select 1 from public.admin_staff s join public.profiles p on p.id=s.user_id
         where s.user_id=auth.uid() and s.is_active=true and p.role='admin' and p.account_status='active')
     );
-$$;
+$$$;
 revoke all on function private.can_manage_delivery_job_evidence(uuid) from public,anon,authenticated;
 grant execute on function private.can_manage_delivery_job_evidence(uuid) to authenticated;
 
@@ -170,14 +170,14 @@ begin
     nullif(btrim(coalesce(p_note,'')),''),null,v_actor,'delivery_staff');
   return jsonb_build_object('job_id',p_job_id,'previous_status',v_old,'status',p_next_status);
 end;
-$$;
+$$$;
 revoke all on function private.update_my_delivery_job_status(uuid,text,text,text) from public,anon;
 grant execute on function private.update_my_delivery_job_status(uuid,text,text,text) to authenticated;
 
 create or replace function public.update_my_delivery_job_status(
  p_job_id uuid,p_next_status text,p_location_label text default null,p_note text default null
 ) returns jsonb language sql security invoker set search_path=''
-as $$ select private.update_my_delivery_job_status($1,$2,$3,$4); $$;
+as $$ select private.update_my_delivery_job_status($1,$2,$3,$4); $$$;
 revoke all on function public.update_my_delivery_job_status(uuid,text,text,text) from public,anon;
 grant execute on function public.update_my_delivery_job_status(uuid,text,text,text) to authenticated;
 
@@ -270,7 +270,7 @@ begin
    case when v_job.commerce_order_id is not null and v_already_delivered+p_delivered_quantity<v_order_quantity
      then 'partially_delivered' else v_job.job_status end);
 end;
-$$;
+$$$;
 revoke all on function private.record_delivery_proof(uuid,numeric,integer,text,boolean,text[],text,text) from public,anon;
 grant execute on function private.record_delivery_proof(uuid,numeric,integer,text,boolean,text[],text,text) to authenticated;
 
@@ -279,7 +279,7 @@ create or replace function public.record_delivery_proof(
  p_recipient_name text,p_recipient_acknowledged boolean,p_photo_paths text[],
  p_signature_path text,p_note text
 ) returns jsonb language sql security invoker set search_path=''
-as $$ select private.record_delivery_proof($1,$2,$3,$4,$5,$6,$7,$8); $$;
+as $$ select private.record_delivery_proof($1,$2,$3,$4,$5,$6,$7,$8); $$$;
 revoke all on function public.record_delivery_proof(uuid,numeric,integer,text,boolean,text[],text,text) from public,anon;
 grant execute on function public.record_delivery_proof(uuid,numeric,integer,text,boolean,text[],text,text) to authenticated;
 
@@ -330,13 +330,13 @@ begin
  end if;
  return v_dispute;
 end;
-$$;
+$$$;
 revoke all on function private.raise_delivery_dispute(uuid,text,text) from public,anon;
 grant execute on function private.raise_delivery_dispute(uuid,text,text) to authenticated;
 
 create or replace function public.raise_delivery_dispute(p_job_id uuid,p_reason_code text,p_description text)
 returns uuid language sql security invoker set search_path=''
-as $$ select private.raise_delivery_dispute($1,$2,$3); $$;
+as $$ select private.raise_delivery_dispute($1,$2,$3); $$$;
 revoke all on function public.raise_delivery_dispute(uuid,text,text) from public,anon;
 grant execute on function public.raise_delivery_dispute(uuid,text,text) to authenticated;
 
@@ -370,13 +370,13 @@ begin
  values(v_actor,v_admin_code,'delivery_dispute.reviewed','delivery_dispute',p_dispute_id::text,
    jsonb_build_object('job_id',v_job,'previous_status',v_old,'new_status',p_next_status));
 end;
-$$;
+$$$;
 revoke all on function private.review_delivery_dispute(uuid,text,text) from public,anon;
 grant execute on function private.review_delivery_dispute(uuid,text,text) to authenticated;
 
 create or replace function public.review_delivery_dispute(p_dispute_id uuid,p_next_status text,p_resolution text)
 returns void language sql security invoker set search_path=''
-as $$ select private.review_delivery_dispute($1,$2,$3); $$;
+as $$ select private.review_delivery_dispute($1,$2,$3); $$$;
 revoke all on function public.review_delivery_dispute(uuid,text,text) from public,anon;
 grant execute on function public.review_delivery_dispute(uuid,text,text) to authenticated;
 
@@ -410,7 +410,7 @@ begin
  order by j.delivery_deadline asc nulls last,j.updated_at desc
  limit 100;
 end;
-$$;
+$$$;
 revoke all on function private.get_my_assigned_delivery_jobs() from public,anon,authenticated;
 grant execute on function private.get_my_assigned_delivery_jobs() to authenticated;
 create or replace function public.get_my_assigned_delivery_jobs()
@@ -421,7 +421,7 @@ returns table(
  delivery_deadline timestamptz,updated_at timestamptz
 )
 language sql security invoker set search_path=''
-as $$ select * from private.get_my_assigned_delivery_jobs(); $;
+as $$ select * from private.get_my_assigned_delivery_jobs(); $$;
 revoke all on function public.get_my_assigned_delivery_jobs() from public,anon;
 grant execute on function public.get_my_assigned_delivery_jobs() to authenticated;
 
@@ -442,7 +442,7 @@ begin
  from private.delivery_proof_records p where p.job_id=p_job_id
  order by p.created_at,p.id;
 end;
-$$;
+$$$;
 revoke all on function private.get_my_delivery_proof_records(uuid) from public,anon,authenticated;
 grant execute on function private.get_my_delivery_proof_records(uuid) to authenticated;
 create or replace function public.get_my_delivery_proof_records(p_job_id uuid)
@@ -451,7 +451,7 @@ returns table(
  recipient_acknowledged boolean,photo_paths text[],signature_path text,note text,created_at timestamptz
 )
 language sql security invoker set search_path=''
-as $$ select * from private.get_my_delivery_proof_records($1); $;
+as $$ select * from private.get_my_delivery_proof_records($1); $$;
 revoke all on function public.get_my_delivery_proof_records(uuid) from public,anon;
 grant execute on function public.get_my_delivery_proof_records(uuid) to authenticated;
 
@@ -477,7 +477,7 @@ begin
    d.resolution,d.created_at,d.updated_at
  from private.delivery_disputes d where d.job_id=p_job_id order by d.created_at desc;
 end;
-$$;
+$$$;
 revoke all on function private.get_my_delivery_disputes(uuid) from public,anon,authenticated;
 grant execute on function private.get_my_delivery_disputes(uuid) to authenticated;
 create or replace function public.get_my_delivery_disputes(p_job_id uuid)
@@ -486,7 +486,7 @@ returns table(
  resolution text,created_at timestamptz,updated_at timestamptz
 )
 language sql security invoker set search_path=''
-as $$ select * from private.get_my_delivery_disputes($1); $;
+as $$ select * from private.get_my_delivery_disputes($1); $$;
 revoke all on function public.get_my_delivery_disputes(uuid) from public,anon;
 grant execute on function public.get_my_delivery_disputes(uuid) to authenticated;
 
