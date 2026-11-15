@@ -152,6 +152,11 @@ select set_config('test.admin.permission','true',false);
 reset role;
 select id as dispute_id from private.delivery_disputes where job_id='a5000000-0000-4000-8000-000000000001' \gset
 set role authenticated;
+do $admin_queue$ begin
+ if (select count(*) from public.get_admin_delivery_disputes())<>1 then
+  raise exception 'FAIL: AAL2 Admin dispute queue did not return the open dispute';
+ end if;
+end $admin_queue$;
 select public.review_delivery_dispute(
  :'dispute_id'::uuid,
  'resolved','Seller will deliver the remaining seven units within the agreed window.'
