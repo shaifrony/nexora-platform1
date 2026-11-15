@@ -1808,9 +1808,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - [x] Added a disposable PostgreSQL SQL integration fixture and Node source-level regression tests.
 - [x] Wired the Delivery Staff SQL fixture into Development CI using the existing isolated PostgreSQL service; the workflow executes the migration fixture after the prior Delivery Network/OTP migrations.
 - [x] Fixed SQL dollar quoting, private-schema usage grants, test-role boundaries and expected validation SQLSTATE; reordered dispute authorization so unrelated users cannot infer whether a job already has an active dispute.
-- [x] CI #43665893504 passed on commit 9034ab5: JavaScript syntax, 135 dependency-free tests, seven disposable PostgreSQL migration suites including the new Delivery Staff operations fixture, and migration filename/order validation. This run preceded the later Admin dispute queue/UI additions; a fresh CI run is required for those changes.
+- [x] CI #43666398061 passed on commit `35e19b2`: JavaScript syntax, 138/138 dependency-free tests, seven disposable PostgreSQL migration suites including Delivery Staff operations and the AAL2 Admin dispute queue, and migration filename/order validation. Recovery snapshot artifact was also created for the exact tested commit.
 - [x] Existing Transport Provider Center now exposes the identity-bound worker queue with status updates, photo/signature upload, partial quantity proof, OTP final receipt, proof/dispute history and dispute creation.
-- [x] Added an AAL2 + logistics.view Admin dispute queue RPC and Admin UI for under-review/resolved/rejected decisions; final CI and UI regression validation pending.
+- [x] Added an AAL2 + logistics.view Admin dispute queue RPC and Admin UI for under-review/resolved/rejected decisions; `logistics.assign` remains required for decisions and audit logging. Worker/Admin UI source regressions are included in the passing CI run.
 - [ ] Test Supabase Storage policies and signed access on an isolated Supabase project; no hosted environment touched.
 - [ ] Buyer/Seller-facing proof and dispute views, browser/device E2E, accessibility and mobile upload tests remain pending.
 - [ ] Browser E2E, accessibility, mobile upload and negative authorization tests remain pending.
