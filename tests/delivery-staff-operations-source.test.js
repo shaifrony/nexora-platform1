@@ -47,3 +47,11 @@ test("private proof and dispute retrieval is authorization-scoped", () => {
   assert.match(sql, /private\.get_my_delivery_disputes/);
   assert.match(sql, /private\.can_read_delivery_job_evidence\(p_job_id\)/);
 });
+
+test("unauthorized users cannot infer whether a delivery already has an active dispute", () => {
+  const start = sql.indexOf("create or replace function private.raise_delivery_dispute");
+  const end = sql.indexOf("create or replace function public.raise_delivery_dispute", start);
+  const body = sql.slice(start, end);
+  assert.ok(body.indexOf("Only the order Buyer/Seller, assigned worker or AAL2 logistics Admin can raise a dispute") <
+    body.indexOf("An active dispute already exists for this delivery"));
+});
