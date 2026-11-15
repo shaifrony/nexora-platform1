@@ -1785,10 +1785,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 
 ## 2026-11-15 — Identity-bound Delivery Staff receipt verification
 - [x] Add unique Auth identity binding to the existing Delivery Staff roster without adding a public role or granting Provider-owner permissions.
-- [x] Bind only through one matching confirmed Auth email/phone; require active staff, approved partner, active Buyer/Seller/Porter profile, AAL2 Admin and `logistics.assign`.
+- [x] Bind only through one matching confirmed Auth email/phone (including Bangladesh 0/+880 phone normalization); require active staff, approved partner, active Buyer/Seller/Porter profile, AAL2 Admin and `logistics.assign`.
+- [x] Changing a linked worker's contact email/phone clears the previous identity link; Admin can explicitly unbind with a reason.
 - [x] Support verified field workers under both NEXORA Team and approved Courier Company partners; unbound workers cannot be selected for named-staff dispatch.
 - [x] Add own-assignment-only staff receipt queue and database-side identity/partner/job revalidation before OTP verification; audit actor as `delivery_staff`.
 - [x] Disposable PostgreSQL tests validate verified/unverified binding, both partner types, queue isolation, cross-worker denial and OTP receipt success.
-- [x] Development CI #43662559823 passed: 129/129 source tests, six disposable PostgreSQL suites, JavaScript syntax and 45 migration filename/order checks.
+- [x] Development CI #43662754467 passed: 129/129 source tests, six disposable PostgreSQL suites, JavaScript syntax and 45 migration filename/order checks.
 - [ ] Finish staff operational status/proof-of-delivery field workflow, SMS/WhatsApp OTP delivery, partial delivery/disputes and final Order completion.
 - [ ] Full Supabase migration-chain/Auth/PostgREST/RLS and browser/device E2E; no hosted migration or Production deployment without explicit approval.
