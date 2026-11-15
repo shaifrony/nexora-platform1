@@ -306,6 +306,27 @@ begin
   end;
   if not v_denied then raise exception 'FAIL: Buyer accepted a quote from a Seller without approved Business Profile'; end if;
 
+  -- Seller cannot accept a Buyer counter-offer after the represented Buyer account is suspended.
+  insert into public.seller_offers(demand_id,seller_id,offer_price,currency,available_quantity)
+  values('20000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000011',15,'BDT','50')
+  returning id into v_offer;
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+  perform public.respond_to_demand_offer(v_offer,'counter',20,12,'Buyer counter');
+  update public.profiles set account_status='suspended'
+    where id='10000000-0000-4000-8000-000000000001';
+  perform set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000011',true);
+  v_denied:=false;
+  begin
+    perform public.respond_to_demand_offer(v_offer,'accept',null,null,'Seller accepts');
+  exception when insufficient_privilege then v_denied:=true;
+  end;
+  update public.profiles set account_status='active'
+    where id='10000000-0000-4000-8000-000000000001';
+  if not v_denied then raise exception 'FAIL: Seller accepted a Demand quotation for a suspended Buyer'; end if;
+  if exists(select 1 from public.commerce_orders where source_offer_id=v_offer) then
+    raise exception 'FAIL: order was created for a suspended Buyer';
+  end if;
+
   -- Table-level UPDATE is gone; only lifecycle status remains writable.
   if has_table_privilege('authenticated','public.buyer_demands','UPDATE')
      or has_column_privilege('authenticated','public.buyer_demands','required_quantity','UPDATE')
