@@ -80,3 +80,9 @@ test("Admin UI loads and reviews disputes only through guarded RPCs", () => {
   assert.match(adminUi, /review_delivery_dispute/);
   assert.match(adminUi, /nxDeliveryDisputesList/);
 });
+
+test("Buyer and Seller proof/dispute reads are bound to their own Commerce Order IDs", () => {
+  assert.match(sql, /create or replace function private\.get_my_order_delivery_operations/);
+  assert.match(sql, /o\.buyer_id=v_actor or o\.seller_id=v_actor/);
+  assert.match(sql, /create or replace function public\.get_my_order_delivery_operations/);
+});
