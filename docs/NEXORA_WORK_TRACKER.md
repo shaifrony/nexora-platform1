@@ -1885,3 +1885,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Development CI [#43676524448](https://github.com/shaifrony/nexora-platform1/actions/runs/43676524448) completed successfully on exact commit `307880266057df0b0605ae7b4e46ada0bdcb3ab2`. The run validates the documentation/source state and the existing disposable PostgreSQL suites; it does not validate a Seller Settlement implementation, because no settlement migration has been added.
 - Confirmed the active migration head remains `20261115230000_payment_reconciliation_batch_queue.sql`. The repository CI runner is PostgreSQL 17, available for focused migration fixtures. The interactive local environment still has no working Supabase CLI/PostgreSQL runner, and the prior CLI-generated timestamp was earlier than the active migration head.
 - Seller Settlement implementation remains pending; preserve the forward-only migration rule. No migration was hand-timestamped, no existing migration edited, and no hosted service changed.
+
+
+## 2026-11-15 — Partial receipt completion audit refinement
+
+- Confirmed a second critical interaction between existing delivery RPCs: when multiple proof records cumulatively reach the full Order quantity, `record_delivery_proof` leaves the Job in `partially_delivered`; it does not transition to a final receipt-pending state.
+- `verify_delivery_receipt_code` accepts any `partially_delivered` Job and marks it `delivered` without checking cumulative proof quantity. Thus a valid OTP can currently mark a short-delivery Job as delivered. The challenge `verified_at` is cleared immediately and no immutable receipt-confirmation record remains.
+- The Payments & Ledger Design section 12.3 now records the exact regression matrix: partial 3/10 with OTP remains partial; second proof 7/10 reaches 10/10 but still requires a fresh final Buyer OTP; final OTP writes immutable receipt evidence and only then marks delivered; over-delivery, repeat OTP, active dispute, missing/short/mismatched proof all fail closed.
+- This is a source audit and documentation update only. No existing migration was edited and no SQL/application behavior or hosted service was changed. Implementation remains gated on the official Supabase CLI generating a migration version later than the active chain head.
