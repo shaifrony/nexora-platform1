@@ -163,6 +163,27 @@ select public.review_delivery_dispute(
 );
 reset role;
 
+-- Buyer and Seller receive evidence/dispute history only through their own Order IDs.
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{}',false);
+do $buyer_order_ops$ begin
+ if (select count(*) from public.get_my_order_delivery_operations(array['a2000000-0000-4000-8000-000000000001']::uuid[]))<>2 then
+  raise exception 'FAIL: Buyer order-scoped delivery operations missing';
+ end if;
+end $buyer_order_ops$;
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000002',false);
+select set_config('request.jwt.claims','{}',false);
+do $seller_order_ops$ begin
+ if (select count(*) from public.get_my_order_delivery_operations(array['a2000000-0000-4000-8000-000000000001']::uuid[]))<>2 then
+  raise exception 'FAIL: Seller order-scoped delivery operations missing';
+ end if;
+end $seller_order_ops$;
+reset role;
+
 do $audit$ begin
  if (select dispute_status from private.delivery_disputes where job_id='a5000000-0000-4000-8000-000000000001')<>'resolved' then
   raise exception 'FAIL: Admin resolution not saved';
