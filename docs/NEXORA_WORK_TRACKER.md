@@ -1834,3 +1834,13 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected the documented order validation steps to match the staged database function: active Buyer, approved product/business, Seller MOQ, available stock and quantity-tier price.
 - This is a documentation-only alignment; no SQL, hosted Supabase, NEXORA-TEST, `main`, DNS or Production changes were made.
 - Previous tracker correction CI #43668010815 passed on exact commit `d440d7d82e98880be44b59be9bb2991beea856aa`. CI for this new documentation commit is pending.
+
+
+## 2026-11-15 — Order-to-Delivery idempotency hardening
+
+- Added `20261115200000_unique_delivery_job_per_order.sql`: enforces at most one Delivery Job per Commerce Order using a partial unique index and a clear duplicate-link trigger guard.
+- Migration fails closed with an actionable message if existing Development data already contains duplicate Order links; it does not delete or rewrite existing jobs.
+- Reason: partial delivery is represented by multiple proof records on the same job, so duplicate jobs for one order create ambiguous tracking and receipt-confirmation paths.
+- Extended `tests/admin-delivery-order-linking-postgres.test.sql` to apply the migration and verify a second link is rejected and no duplicate row persists.
+- The existing CI workflow already runs this PostgreSQL fixture; no workflow changes needed. CI run for the test commit is pending.
+- Development branch only. No hosted Supabase, NEXORA-TEST, `main`, DNS or Production changes.
