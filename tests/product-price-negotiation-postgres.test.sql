@@ -186,6 +186,27 @@ begin
  end;
  if not v_denied then raise exception 'FAIL: unrelated Buyer accessed another negotiation'; end if;
 
+ -- Buyer cannot accept a Seller proposal after the Seller account is suspended.
+ v_id:=public.start_product_price_negotiation(
+  '53000000-0000-4000-8000-000000000001',10,80,'Status guard test','Mirpur, Dhaka'
+ );
+ perform set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000011',true);
+ perform public.respond_to_product_price_negotiation(v_id,'counter',10,78,'Seller proposal',null);
+ update public.profiles set account_status='suspended'
+  where id='51000000-0000-4000-8000-000000000011';
+ perform set_config('request.jwt.claim.sub','51000000-0000-4000-8000-000000000001',true);
+ v_denied:=false;
+ begin
+  perform public.respond_to_product_price_negotiation(v_id,'accept',null,null,'Accept suspended Seller',null);
+ exception when insufficient_privilege then v_denied:=true;
+ end;
+ update public.profiles set account_status='active'
+  where id='51000000-0000-4000-8000-000000000011';
+ if not v_denied then raise exception 'FAIL: Buyer accepted a Product Price proposal from a suspended Seller'; end if;
+ if exists(select 1 from public.commerce_orders where id=(select order_id from public.product_price_negotiations where id=v_id)) then
+  raise exception 'FAIL: Order was created for a suspended Seller';
+ end if;
+
  raise notice 'PASS: product price negotiation start, turn-taking, NULL action, rejection, order snapshot, stock reservation and participant authorization';
 end
 $test$;
