@@ -92,6 +92,7 @@ select public.record_delivery_proof(
  array['a5000000-0000-4000-8000-000000000001/photo-1.jpg'],
  'a5000000-0000-4000-8000-000000000001/signature.png','Three units handed over'
 );
+reset role;
 do $partial$ begin
  if (select job_status from public.delivery_jobs where id='a5000000-0000-4000-8000-000000000001')<>'partially_delivered' then
   raise exception 'FAIL: partial proof did not set partially_delivered';
@@ -102,6 +103,7 @@ do $partial$ begin
 end $partial$;
 
 -- A second proof cannot make cumulative delivered quantity exceed the order quantity.
+set role authenticated;
 do $over_delivery$ begin
  begin
   perform public.record_delivery_proof(
@@ -119,6 +121,7 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
 select set_config('request.jwt.claims','{}',false);
 select public.raise_delivery_dispute('a5000000-0000-4000-8000-000000000001','quantity_mismatch','Only three of ten units were received.');
+reset role;
 do $own_dispute$ begin
  if (select count(*) from private.delivery_disputes where job_id='a5000000-0000-4000-8000-000000000001' and raiser_role='buyer')<>1 then
   raise exception 'FAIL: Buyer dispute not recorded';
@@ -146,8 +149,11 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000005',false);
 select set_config('request.jwt.claims','{"aal":"aal2"}',false);
 select set_config('test.admin.permission','true',false);
+reset role;
+select id as dispute_id from private.delivery_disputes where job_id='a5000000-0000-4000-8000-000000000001' \gset
+set role authenticated;
 select public.review_delivery_dispute(
- (select id from private.delivery_disputes where job_id='a5000000-0000-4000-8000-000000000001'),
+ :'dispute_id'::uuid,
  'resolved','Seller will deliver the remaining seven units within the agreed window.'
 );
 reset role;
