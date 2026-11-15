@@ -30,7 +30,14 @@ create table public.business_profiles(
 create table public.products(id uuid primary key,seller_id uuid not null,product_name text not null);
 create table public.delivery_jobs(
  id uuid primary key default gen_random_uuid(),
- commerce_order_id uuid references public.commerce_orders(id)
+ job_reference text,
+ commerce_order_id uuid references public.commerce_orders(id),
+ job_status text not null default 'requested',
+ assigned_provider_id uuid,
+ updated_at timestamptz default now()
+);
+create table public.transport_providers(
+ id uuid primary key,owner_user_id uuid not null,application_status text not null default 'approved'
 );
 
 -- Minimal trusted stand-in for the existing internal Delivery Network creator.
@@ -44,7 +51,7 @@ create function private.create_delivery_network_job(
 as $$
 declare v_id uuid;
 begin
- insert into public.delivery_jobs(commerce_order_id) values(p_commerce_order_id) returning id into v_id;
+ insert into public.delivery_jobs(job_reference,commerce_order_id,job_status) values('NXD-LINKED',p_commerce_order_id,'requested') returning id into v_id;
  return jsonb_build_object('job_id',v_id,'commerce_order_id',p_commerce_order_id);
 end;
 $$;
@@ -52,6 +59,7 @@ $$;
 insert into public.profiles values
  ('81000000-0000-4000-8000-000000000001','admin','active','NEXORA Admin'),
  ('81000000-0000-4000-8000-000000000002','buyer','active','Buyer One'),
+ ('81000000-0000-4000-8000-000000000004','buyer','active','Buyer Two'),
  ('81000000-0000-4000-8000-000000000003','seller','active','Seller One');
 insert into public.admin_staff values('81000000-0000-4000-8000-000000000001','ADM-TEST',true);
 insert into public.business_profiles values(
@@ -66,7 +74,8 @@ insert into public.commerce_orders(
 ) values
  ('83000000-0000-4000-8000-000000000001','NXO-READY','product','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002','81000000-0000-4000-8000-000000000003',25,'BDT','Buyer destination address, Dhaka','ready_for_confirmation',now()),
  ('83000000-0000-4000-8000-000000000002','NXO-PENDING','product','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002','81000000-0000-4000-8000-000000000003',5,'BDT','Buyer destination address, Dhaka','pending',now()),
- ('83000000-0000-4000-8000-000000000003','NXO-SERVICE','service','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002','81000000-0000-4000-8000-000000000003',1,'BDT','Buyer destination address, Dhaka','ready_for_confirmation',now());
+ ('83000000-0000-4000-8000-000000000003','NXO-SERVICE','service','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000002','81000000-0000-4000-8000-000000000003',1,'BDT','Buyer destination address, Dhaka','ready_for_confirmation',now()),
+ ('83000000-0000-4000-8000-000000000004','NXO-OTHER-BUYER','product','82000000-0000-4000-8000-000000000001','81000000-0000-4000-8000-000000000004','81000000-0000-4000-8000-000000000003',5,'BDT','Another Buyer destination, Dhaka','pending',now());
 
 \ir ../supabase/migrations/20261115170000_admin_delivery_order_linking.sql
 
@@ -117,6 +126,19 @@ do $linked$ begin
  end if;
 end $linked$;
 
+-- The linked job must appear in the owning Buyer's narrow Receipt OTP queue only.
+set role authenticated;
+select set_config('request.jwt.claim.sub','81000000-0000-4000-8000-000000000002',false);
+do $buyer_queue$ begin
+ if (select count(*) from public.get_my_order_receipt_jobs(array['83000000-0000-4000-8000-000000000001'::uuid]))<>1 then
+  raise exception 'FAIL: Buyer could not discover the newly linked Delivery Job';
+ end if;
+ if (select count(*) from public.get_my_order_receipt_jobs(array['83000000-0000-4000-8000-000000000004'::uuid]))<>0 then
+  raise exception 'FAIL: Buyer could discover another Buyer's Order shipment';
+ end if;
+end $buyer_queue$;
+reset role;
+
 set role authenticated;
 select set_config('request.jwt.claim.sub','81000000-0000-4000-8000-000000000001',false);
 select set_config('request.jwt.claims','{"aal":"aal2"}',false);
@@ -143,4 +165,4 @@ do $invalid$ begin
 end $invalid$;
 reset role;
 
-\echo 'PASS: Admin AAL2 order candidate access, ready Product Order linking, and pending/service order denial'
+\echo 'PASS: Admin AAL2 order candidate access, ready Product Order linking, Buyer-owned Receipt OTP queue discovery, and pending/service order denial'
