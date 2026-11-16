@@ -1980,3 +1980,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - CI run [#43789045379](https://github.com/shaifrony/nexora-platform1/actions/runs/43789045379) passed JavaScript syntax and all 151 dependency-free tests, but the focused Payment PostgreSQL test exposed a malformed dollar-quote delimiter in the newly added assertion. Corrected the test SQL; latest CI run [#43789156734](https://github.com/shaifrony/nexora-platform1/actions/runs/43789156734) is pending and must be checked before marking the PostgreSQL suite passed.
 - This entry supersedes the brief intermediate branch change that pointed Payment Intent at legacy `total_price`; the final source contract remains delivery-inclusive `grand_total`.
 - All changes remain on `nexora-development`. No migration was applied to any hosted database; no NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed.
+
+
+### Payment fixture follow-up — 2026-11-16
+
+- CI [#43789156734](https://github.com/shaifrony/nexora-platform1/actions/runs/43789156734) confirmed the Payment Intent / Finance Ledger PostgreSQL suite passed, including the delivery-inclusive Product and Buyer Demand amount assertions. The next reconciliation suite exposed a separate stale test fixture whose `commerce_orders` table omitted the active `grand_total` column.
+- Updated `tests/payment-reconciliation-postgres.test.sql` to model `quantity`, `unit_price`, `delivery_charge`, `source_offer_total`, and generated `grand_total`; added source regression checks for this fixture contract.
+- Corrected the fixture regex escaping and re-triggered Development CI [#43789271240](https://github.com/shaifrony/nexora-platform1/actions/runs/43789271240). This run was pending at the time of this tracker update; do not mark reconciliation PostgreSQL or full CI complete until it finishes.
