@@ -11,7 +11,15 @@ create or replace function auth.role() returns text language sql stable set sear
 create table public.profiles(id uuid primary key,role text not null,account_status text not null);
 create table public.commerce_orders(
   id uuid primary key,buyer_id uuid not null references public.profiles(id),seller_id uuid not null references public.profiles(id),
-  order_code text not null,total_price numeric(18,2) not null,currency text not null,order_status text not null
+  order_code text not null,
+  quantity numeric(18,3) not null,
+  unit_price numeric(18,2) not null,
+  total_price numeric(18,2) generated always as (round(quantity*unit_price,2)) stored,
+  delivery_charge numeric(18,2) not null default 0,
+  source_offer_total numeric(18,2),
+  grand_total numeric(18,2) generated always as (round(coalesce(source_offer_total,quantity*unit_price)+delivery_charge,2)) stored,
+  currency text not null,
+  order_status text not null
 );
 \ir ../supabase/migrations/20261115220000_payment_intent_webhook_foundation.sql
 \ir ../supabase/migrations/20261115230000_payment_reconciliation_batch_queue.sql
@@ -19,10 +27,10 @@ create table public.commerce_orders(
 insert into public.profiles(id,role,account_status) values
  ('00000000-0000-4000-8000-000000000001','buyer','active'),
  ('00000000-0000-4000-8000-000000000002','seller','active');
-insert into public.commerce_orders(id,buyer_id,seller_id,order_code,total_price,currency,order_status) values
- ('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON001',123.45,'BDT','accepted'),
- ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON002',99.99,'BDT','accepted'),
- ('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON003',30.00,'USD','accepted');
+insert into public.commerce_orders(id,buyer_id,seller_id,order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total) values
+ ('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON001',1,123.45,'BDT','accepted',0,null),
+ ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON002',1,99.99,'BDT','accepted',0,null),
+ ('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-RECON003',1,30.00,'USD','accepted',0,null);
 
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
