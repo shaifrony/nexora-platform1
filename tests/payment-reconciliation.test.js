@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261115230000_payment_reconciliation_batch_queue.sql'), 'utf8');
+const postgresFixture = fs.readFileSync(path.join(__dirname, 'payment-reconciliation-postgres.test.sql'), 'utf8');
 
 test('reconciliation batches and rows are private, RLS-enabled and not browser-readable', () => {
   for (const table of ['payment_reconciliation_batches', 'payment_reconciliation_rows']) {
@@ -34,4 +35,12 @@ test('exception review is server-only and cannot alter payment capture or ledger
   assert.match(migration, /grant execute on function public\.review_payment_reconciliation_exception[\s\S]*to service_role/i);
   assert.doesNotMatch(migration, /update private\.payment_intents/i);
   assert.doesNotMatch(migration, /update private\.finance_journals/i);
+});
+
+
+test('reconciliation PostgreSQL fixture models delivery-inclusive commerce order totals', () => {
+  assert.match(postgresFixture, /grand_total numeric\\(18,2\\) generated always as/i);
+  assert.match(postgresFixture, /source_offer_total numeric\\(18,2\\)/i);
+  assert.match(postgresFixture, /delivery_charge numeric\\(18,2\\)/i);
+  assert.match(postgresFixture, /order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total/i);
 });
