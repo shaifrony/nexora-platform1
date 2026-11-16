@@ -176,11 +176,11 @@ begin
   end if;
   select cmu.minor_unit_exponent into v_minor_exponent from private.payment_currency_minor_units cmu where cmu.currency=v_order.currency and cmu.enabled;
   if not found then raise exception 'Currency is not enabled for payment; minor-unit precision is not configured' using errcode='22023'; end if;
-  if v_order.grand_total is null or v_order.grand_total<=0 or v_order.grand_total*power(10::numeric,v_minor_exponent)>9223372036854775807 then
+  if v_order.total_price is null or v_order.total_price<=0 or v_order.total_price*power(10::numeric,v_minor_exponent)>9223372036854775807 then
     raise exception 'Order total cannot be represented as minor units' using errcode='22003';
   end if;
   insert into private.payment_intents(order_id,buyer_id,seller_id,amount_minor,currency,idempotency_key,expires_at)
-  values(v_order.id,v_user,v_order.seller_id,round(v_order.grand_total*power(10::numeric,v_minor_exponent))::bigint,v_order.currency,p_idempotency_key,now()+make_interval(mins=>p_expiry_minutes))
+  values(v_order.id,v_user,v_order.seller_id,round(v_order.total_price*power(10::numeric,v_minor_exponent))::bigint,v_order.currency,p_idempotency_key,now()+make_interval(mins=>p_expiry_minutes))
   returning private.payment_intents.id into v_id;
   return query select pi.id,pi.order_id,pi.amount_minor,pi.currency,pi.status,pi.expires_at from private.payment_intents pi where pi.id=v_id;
 end;
