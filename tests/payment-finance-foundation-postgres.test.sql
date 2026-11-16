@@ -12,7 +12,15 @@ create or replace function auth.role() returns text language sql stable set sear
 create table public.profiles(id uuid primary key,role text not null,account_status text not null);
 create table public.commerce_orders(
   id uuid primary key,buyer_id uuid not null references public.profiles(id),seller_id uuid not null references public.profiles(id),
-  order_code text not null,total_price numeric(18,2) not null,currency text not null,order_status text not null
+  order_code text not null,
+  quantity numeric(18,3) not null,
+  unit_price numeric(18,2) not null,
+  total_price numeric(18,2) generated always as (round(quantity*unit_price,2)) stored,
+  delivery_charge numeric(18,2) not null default 0,
+  source_offer_total numeric(18,2),
+  grand_total numeric(18,2) generated always as (round(coalesce(source_offer_total,quantity*unit_price)+delivery_charge,2)) stored,
+  currency text not null,
+  order_status text not null
 );
 \ir ../supabase/migrations/20261115220000_payment_intent_webhook_foundation.sql
 
@@ -20,12 +28,13 @@ insert into public.profiles(id,role,account_status) values
  ('00000000-0000-4000-8000-000000000001','buyer','active'),
  ('00000000-0000-4000-8000-000000000002','seller','active'),
  ('00000000-0000-4000-8000-000000000003','buyer','active');
-insert into public.commerce_orders(id,buyer_id,seller_id,order_code,total_price,currency,order_status) values
- ('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST01',123.45,'BDT','accepted'),
- ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST02',99.99,'BDT','ready_for_confirmation'),
- ('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST03',50.00,'JPY','accepted'),
- ('10000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST04',10.00,'BDT','accepted'),
- ('10000000-0000-4000-8000-000000000005','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST05',20.00,'BDT','accepted');
+insert into public.commerce_orders(id,buyer_id,seller_id,order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total) values
+ ('10000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST01',1,120.00,'BDT','accepted',3.45,null),
+ ('10000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST02',1,99.99,'BDT','ready_for_confirmation',0,null),
+ ('10000000-0000-4000-8000-000000000003','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST03',1,50.00,'JPY','accepted',0,null),
+ ('10000000-0000-4000-8000-000000000004','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','NXO-PAYTEST04',1,10.00,'BDT','accepted',0,null),
+ ('10000000-0000-4000-8000-000000000005','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST05',1,20.00,'BDT','accepted',0,null),
+ ('10000000-0000-4000-8000-000000000006','00000000-0000-4000-8000-000000000001','00000000-0000-4000-8000-000000000002','NXO-PAYTEST06',10,5.00,'BDT','accepted',2.50,80.00);
 
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
@@ -59,6 +68,8 @@ end $$;
 create temporary table test_intent_2 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000002','payment-intent-key-0002',30);
 create temporary table test_intent_3 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000004','payment-intent-key-0003',30);
 create temporary table test_intent_4 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000005','payment-intent-key-0004',30);
+create temporary table test_intent_5 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000006','payment-intent-key-0005',30);
+do $ begin if (select amount_minor from test_intent_5)<>8250 then raise exception 'Buyer Demand source offer total plus delivery charge was not used for payment'; end if; end $;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
 do $$ begin if (select count(*) from public.get_my_payment_intents())<>0 then raise exception 'Cross-Buyer payment intent access was not isolated'; end if; end $$;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
