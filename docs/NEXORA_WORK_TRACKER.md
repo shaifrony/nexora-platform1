@@ -1969,3 +1969,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Applied the same available-stock HTML maximum to the Buyer price-negotiation quantity input; its existing submit handler already checks MOQ and available stock before calling the negotiation RPC.
 - Added source regression assertions to the existing Marketplace test suite to verify both forms publish the available-stock cap and direct Order submission validates before RPC invocation.
 - This is a frontend usability guard only; authoritative quantity/MOQ/stock enforcement remains in the database RPC and is unchanged. CI run for the latest source/test commit is pending. No migration or database was changed, and no Production, `main`, DNS, or deployment action was taken.
+
+
+
+## 2026-11-16 — Payment amount source and PostgreSQL regression alignment
+
+- Re-verified the full active order schema chain: `20261115100000_buyer_demand_quotation_negotiation_and_order_conversion.sql` adds `delivery_charge`, authoritative `source_offer_total`, and generated `grand_total = round(coalesce(source_offer_total, quantity * unit_price) + delivery_charge, 2)`. Payment Intent must therefore use `grand_total`, not legacy `total_price`.
+- Restored `public.create_payment_intent` to snapshot `v_order.grand_total`; source regression requires this field and forbids `v_order.total_price`.
+- Expanded the focused PostgreSQL fixture to model the real generated Order totals, including a normal Product Order with delivery charge (120.00 + 3.45) and a Buyer Demand Order whose agreed `source_offer_total` (80.00) differs from quantity × unit price (50.00), plus delivery charge (2.50). Expected Payment Intent amounts are 12,345 and 8,250 BDT minor units respectively.
+- CI run [#43789045379](https://github.com/shaifrony/nexora-platform1/actions/runs/43789045379) passed JavaScript syntax and all 151 dependency-free tests, but the focused Payment PostgreSQL test exposed a malformed dollar-quote delimiter in the newly added assertion. Corrected the test SQL; latest CI run [#43789156734](https://github.com/shaifrony/nexora-platform1/actions/runs/43789156734) is pending and must be checked before marking the PostgreSQL suite passed.
+- This entry supersedes the brief intermediate branch change that pointed Payment Intent at legacy `total_price`; the final source contract remains delivery-inclusive `grand_total`.
+- All changes remain on `nexora-development`. No migration was applied to any hosted database; no NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed.
