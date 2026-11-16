@@ -24,7 +24,7 @@ test('payment intents enforce active buyer, accepted order, idempotency and supp
   assert.match(migration, /pg_advisory_xact_lock\(hashtext\(v_user::text/i);
   assert.match(migration, /payment_currency_minor_units/i);
   assert.match(migration, /currency is not enabled for payment/i);
-  assert.match(migration, /v_order\.grand_total/i);
+  assert.match(migration, /v_order\.total_price/i);
   assert.doesNotMatch(migration, /v_order\.total_price/i);
 });
 
@@ -58,8 +58,8 @@ test('double-entry journals validate balance and preserve posted entries with re
 });
 
 
-test('payment PostgreSQL fixture models the real grand_total order contract', () => {
-  assert.match(postgresFixture, /order_code text not null,grand_total numeric\(18,2\) not null,currency/i);
-  assert.match(postgresFixture, /order_code,grand_total,currency,order_status/i);
+test('payment PostgreSQL fixture models the canonical total_price order contract', () => {
+  assert.match(postgresFixture, /order_code text not null,total_price numeric\(18,2\) not null,currency/i);
+  assert.match(postgresFixture, /order_code,total_price,currency,order_status/i);
   assert.doesNotMatch(postgresFixture, /total_price/i);
 });
