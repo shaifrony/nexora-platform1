@@ -69,7 +69,7 @@ create temporary table test_intent_2 as select * from public.create_payment_inte
 create temporary table test_intent_3 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000004','payment-intent-key-0003',30);
 create temporary table test_intent_4 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000005','payment-intent-key-0004',30);
 create temporary table test_intent_5 as select * from public.create_payment_intent('10000000-0000-4000-8000-000000000006','payment-intent-key-0005',30);
-do $ begin if (select amount_minor from test_intent_5)<>8250 then raise exception 'Buyer Demand source offer total plus delivery charge was not used for payment'; end if; end $;
+do $$ begin if (select amount_minor from test_intent_5)<>8250 then raise exception 'Buyer Demand source offer total plus delivery charge was not used for payment'; end if; end $$;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000003',false);
 do $$ begin if (select count(*) from public.get_my_payment_intents())<>0 then raise exception 'Cross-Buyer payment intent access was not isolated'; end if; end $$;
 select set_config('request.jwt.claim.sub','00000000-0000-4000-8000-000000000001',false);
