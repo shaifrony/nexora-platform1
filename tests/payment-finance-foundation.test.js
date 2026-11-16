@@ -61,5 +61,5 @@ test('double-entry journals validate balance and preserve posted entries with re
 test('payment PostgreSQL fixture models the canonical total_price order contract', () => {
   assert.match(postgresFixture, /order_code text not null,total_price numeric\(18,2\) not null,currency/i);
   assert.match(postgresFixture, /order_code,total_price,currency,order_status/i);
-  assert.doesNotMatch(postgresFixture, /total_price/i);
+  assert.doesNotMatch(postgresFixture, /grand_total/i);
 });
