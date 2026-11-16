@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-15 (Development CI 148/148; nine disposable PostgreSQL suites; 50 migrations; CI #43674068727)
+Updated: 2026-11-16 (Development CI 152/152; nine disposable PostgreSQL suites; 50 migrations; CI #43789326871)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -1987,3 +1987,15 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - CI [#43789156734](https://github.com/shaifrony/nexora-platform1/actions/runs/43789156734) confirmed the Payment Intent / Finance Ledger PostgreSQL suite passed, including the delivery-inclusive Product and Buyer Demand amount assertions. The next reconciliation suite exposed a separate stale test fixture whose `commerce_orders` table omitted the active `grand_total` column.
 - Updated `tests/payment-reconciliation-postgres.test.sql` to model `quantity`, `unit_price`, `delivery_charge`, `source_offer_total`, and generated `grand_total`; added source regression checks for this fixture contract.
 - Corrected the fixture regex escaping and re-triggered Development CI [#43789271240](https://github.com/shaifrony/nexora-platform1/actions/runs/43789271240). This run was pending at the time of this tracker update; do not mark reconciliation PostgreSQL or full CI complete until it finishes.
+
+
+## 2026-11-16 — Payment and reconciliation CI closeout
+
+- Development CI [#43789326871](https://github.com/shaifrony/nexora-platform1/actions/runs/43789326871) completed successfully on exact branch head `5f8021b3e200c4fa8d3f7aaf75582c0e99aa5f43`.
+- Dependency-free regression suite: **152/152 PASS**.
+- All nine focused disposable PostgreSQL suites completed successfully, including Payment Intent / Finance Ledger and Payment Reconciliation. The reconciliation fixture now matches the active delivery-inclusive Order schema (`quantity`, `unit_price`, `delivery_charge`, `source_offer_total`, generated `grand_total`).
+- Active migration filename/order check: **50 migrations validated**. The recoverable source snapshot job also completed successfully.
+- This confirms focused CI fixtures only; it is not a full Supabase CLI chain replay, hosted Auth/JWT/PostgREST/RLS verification, or browser/mobile E2E. Do not infer production readiness.
+- The final Payment Intent amount source remains `commerce_orders.grand_total`, covering both delivery-inclusive Product Orders and authoritative Buyer Demand quotation totals. The earlier intermediate `total_price` edit was superseded and is not the current source contract.
+- The next M2 implementation candidate remains the Product Price Tier validator's JSON-null guard and its rejection/selection regression matrix. The migration ordering window has advanced beyond the active `20261115230000` head, but this execution environment has no installed Supabase CLI and cannot reach the package/download host. Do not hand-author a timestamp; generate the migration with the official CLI in an environment where it is available, then validate it in disposable PostgreSQL CI before any deployment consideration.
+- All work remains on `nexora-development`. No migration was applied to NEXORA-TEST, Live/Hosted Supabase or any other hosted database; `main`, Production, DNS and deployment were not changed.
