@@ -24,8 +24,8 @@ test('payment intents enforce active buyer, accepted order, idempotency and supp
   assert.match(migration, /pg_advisory_xact_lock\(hashtext\(v_user::text/i);
   assert.match(migration, /payment_currency_minor_units/i);
   assert.match(migration, /currency is not enabled for payment/i);
-  assert.match(migration, /v_order\.total_price/i);
-  assert.match(migration, /v_order\.total_price/i);
+  assert.match(migration, /v_order\.grand_total/i);
+  assert.doesNotMatch(migration, /v_order\.total_price/i);
 });
 
 test('provider events are service-role only, deduplicated and fail closed on amount/currency or state mismatch', () => {
@@ -59,7 +59,9 @@ test('double-entry journals validate balance and preserve posted entries with re
 
 
 test('payment PostgreSQL fixture models the canonical total_price order contract', () => {
-  assert.match(postgresFixture, /order_code text not null,total_price numeric\(18,2\) not null,currency/i);
-  assert.match(postgresFixture, /order_code,total_price,currency,order_status/i);
-  assert.doesNotMatch(postgresFixture, /grand_total/i);
+  assert.match(postgresFixture, /grand_total numeric\(18,2\) generated always as/i);
+  assert.match(postgresFixture, /source_offer_total numeric\(18,2\)/i);
+  assert.match(postgresFixture, /delivery_charge numeric\(18,2\)/i);
+  assert.match(postgresFixture, /order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total/i);
+  assert.match(postgresFixture, /payment-intent-key-0005/i);
 });
