@@ -39,8 +39,8 @@ test('exception review is server-only and cannot alter payment capture or ledger
 
 
 test('reconciliation PostgreSQL fixture models delivery-inclusive commerce order totals', () => {
-  assert.match(postgresFixture, /grand_total numeric\\(18,2\\) generated always as/i);
-  assert.match(postgresFixture, /source_offer_total numeric\\(18,2\\)/i);
-  assert.match(postgresFixture, /delivery_charge numeric\\(18,2\\)/i);
+  assert.match(postgresFixture, /grand_total numeric\(18,2\) generated always as/i);
+  assert.match(postgresFixture, /source_offer_total numeric\(18,2\)/i);
+  assert.match(postgresFixture, /delivery_charge numeric\(18,2\)/i);
   assert.match(postgresFixture, /order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total/i);
 });
