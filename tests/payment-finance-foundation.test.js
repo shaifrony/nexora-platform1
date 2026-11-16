@@ -58,7 +58,7 @@ test('double-entry journals validate balance and preserve posted entries with re
 });
 
 
-test('payment PostgreSQL fixture models the canonical total_price order contract', () => {
+test('payment PostgreSQL fixture models the delivery-inclusive grand_total order contract', () => {
   assert.match(postgresFixture, /grand_total numeric\(18,2\) generated always as/i);
   assert.match(postgresFixture, /source_offer_total numeric\(18,2\)/i);
   assert.match(postgresFixture, /delivery_charge numeric\(18,2\)/i);
