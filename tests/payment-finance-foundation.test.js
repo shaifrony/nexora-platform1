@@ -25,7 +25,7 @@ test('payment intents enforce active buyer, accepted order, idempotency and supp
   assert.match(migration, /payment_currency_minor_units/i);
   assert.match(migration, /currency is not enabled for payment/i);
   assert.match(migration, /v_order\.total_price/i);
-  assert.doesNotMatch(migration, /v_order\.total_price/i);
+  assert.match(migration, /v_order\.total_price/i);
 });
 
 test('provider events are service-role only, deduplicated and fail closed on amount/currency or state mismatch', () => {
