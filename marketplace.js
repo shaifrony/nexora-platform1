@@ -60,6 +60,9 @@
   async function uploadListingImages(files,kind) {
     const selected=Array.from(files||[]);
     if(!selected.length)return {urls:[],paths:[]};
+    const maxFiles=kind==="products"?5:kind==="services"?3:0;
+    if(!maxFiles||selected.length>maxFiles)
+      throw new Error("পণ্যের জন্য সর্বোচ্চ ৫টি এবং সেবার জন্য সর্বোচ্চ ৩টি ছবি আপলোড করা যাবে।");
     if(!user()?.id||!activeSeller()||!state.business||state.business.approval_status!=="approved")
       throw new Error("ছবি আপলোড করতে সক্রিয় Seller এবং অনুমোদিত Business Profile প্রয়োজন।");
     if(selected.some(file=>!listingImageTypes.has(file.type)||file.size>5*1024*1024))
