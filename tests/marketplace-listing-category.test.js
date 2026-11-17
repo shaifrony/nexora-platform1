@@ -1136,7 +1136,7 @@ test("Direct Buyer product orders validate MOQ and available stock before callin
 });
 
 
-const priceTierParserSource = js.match(/function parseProductPriceTiers\\(raw,moq\\)\\{[^\\n]+\\}/);
+const priceTierParserSource = js.match(/function parseProductPriceTiers\(raw,moq\)\{[^\n]+\}/);
 assert.ok(priceTierParserSource, "Seller price-tier parser must exist");
 const parseProductPriceTiers = new Function(priceTierParserSource[0] + "; return parseProductPriceTiers;")();
 
