@@ -2010,3 +2010,9 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - The previously identified database-side JSON-null gap in `private.validate_product_commercial_fields()` remains open: explicitly reject `v_min IS NULL OR v_price IS NULL` before numeric comparisons. The official Supabase CLI is not installed in this execution environment, and outbound DNS resolution to the package registry is unavailable. Therefore no CLI-generated migration timestamp could be obtained here; no timestamp was invented and no historical migration was edited.
 - Next M2 step remains: generate a forward-only migration with the official Supabase CLI in an environment where it is installed, add explicit JSON-null/nonnumeric/finite-value guards, and add a disposable PostgreSQL regression matrix for valid and invalid price tiers. Do not mark the database-side validator fix complete until its PostgreSQL suite passes.
 - All changes remain on `nexora-development`. No migration was applied to NEXORA-TEST, Live/Hosted Supabase or any other hosted database; `main`, Production, DNS and deployments were not changed.
+
+## 2026-11-18 — Listing image upload count guard
+
+- Hardened the shared image-upload helper so product uploads are limited to five files and service uploads to three, matching the UI pickers and edit-form limits. The helper now independently rejects unsupported listing kinds or excess file counts before Storage upload; existing MIME-type and per-file 5 MB checks remain.
+- Added a source regression test covering the product/service count limits and existing file-type/size validation.
+- This is client-side defense-in-depth; Storage policies and backend authorization remain authoritative. CI verification is pending. No migration, database, hosted Supabase, Production, main, DNS or deployment changed.
