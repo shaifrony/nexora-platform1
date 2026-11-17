@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-16 (Development CI 152/152; nine disposable PostgreSQL suites; 50 migrations; CI #43789326871)
+Updated: 2026-11-17 (Development CI 153/153; nine disposable PostgreSQL suites; 50 migrations; CI #44011843827)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -1999,3 +1999,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - The final Payment Intent amount source remains `commerce_orders.grand_total`, covering both delivery-inclusive Product Orders and authoritative Buyer Demand quotation totals. The earlier intermediate `total_price` edit was superseded and is not the current source contract.
 - The next M2 implementation candidate remains the Product Price Tier validator's JSON-null guard and its rejection/selection regression matrix. The migration ordering window has advanced beyond the active `20261115230000` head, but this execution environment has no installed Supabase CLI and cannot reach the package/download host. Do not hand-author a timestamp; generate the migration with the official CLI in an environment where it is available, then validate it in disposable PostgreSQL CI before any deployment consideration.
 - All work remains on `nexora-development`. No migration was applied to NEXORA-TEST, Live/Hosted Supabase or any other hosted database; `main`, Production, DNS and deployment were not changed.
+
+
+## 2026-11-17 — Seller Product Price Tier input hardening and CI closeout
+
+- Re-checked branch head and confirmed the previous Tracker-only CI [#43800211063](https://github.com/shaifrony/nexora-platform1/actions/runs/43800211063) passed, including its recovery snapshot job.
+- Continued the next M2 Marketplace task. The existing Seller-side `parseProductPriceTiers` parser accepted a very large numeric unit-price string that converts to JavaScript `Infinity`; this could pass the client-side `price <= 0` check and fail later during database persistence/order creation.
+- Hardened the existing parser to require finite tier quantity and finite positive unit price. Added regression coverage for a valid tier, overflowing quantity and overflowing unit price. This is a UI input guard only; it does not replace the authoritative database validator.
+- The first test attempt exposed an over-escaped source-matcher regex in the new regression test; corrected it before closeout. The failed intermediate CI [#44011756382](https://github.com/shaifrony/nexora-platform1/actions/runs/44011756382) was caused by that test matcher, not by the application parser. The corrected exact branch head `321a40d27f04533ecc93b40b937b1e85576fb156` passed CI [#44011843827](https://github.com/shaifrony/nexora-platform1/actions/runs/44011843827): **153/153 dependency-free tests PASS**, all nine focused disposable PostgreSQL suites PASS, 50 active migration filenames/order validated, and the recoverable source snapshot uploaded successfully.
+- The previously identified database-side JSON-null gap in `private.validate_product_commercial_fields()` remains open: explicitly reject `v_min IS NULL OR v_price IS NULL` before numeric comparisons. The official Supabase CLI is not installed in this execution environment, and outbound DNS resolution to the package registry is unavailable. Therefore no CLI-generated migration timestamp could be obtained here; no timestamp was invented and no historical migration was edited.
+- Next M2 step remains: generate a forward-only migration with the official Supabase CLI in an environment where it is installed, add explicit JSON-null/nonnumeric/finite-value guards, and add a disposable PostgreSQL regression matrix for valid and invalid price tiers. Do not mark the database-side validator fix complete until its PostgreSQL suite passes.
+- All changes remain on `nexora-development`. No migration was applied to NEXORA-TEST, Live/Hosted Supabase or any other hosted database; `main`, Production, DNS and deployments were not changed.
