@@ -1134,3 +1134,17 @@ test("Direct Buyer product orders validate MOQ and available stock before callin
   assert.match(submit, /পরিমাণ MOQ এবং উপলব্ধ স্টকের মধ্যে হতে হবে/);
   assert.match(submit, /submitCommerceOrder\("product",selected\.id,quantity/);
 });
+
+
+const priceTierParserSource = js.match(/function parseProductPriceTiers\\(raw,moq\\)\\{[^\\n]+\\}/);
+assert.ok(priceTierParserSource, "Seller price-tier parser must exist");
+const parseProductPriceTiers = new Function(priceTierParserSource[0] + "; return parseProductPriceTiers;")();
+
+test("Seller price-tier parser rejects numeric overflow and non-finite unit prices", () => {
+  assert.deepEqual(parseProductPriceTiers("100=95.25", 10), [
+    { min_quantity: 100, unit_price: 95.25 }
+  ]);
+  const overflow = "9".repeat(400);
+  assert.throws(() => parseProductPriceTiers("100=" + overflow, 10));
+  assert.throws(() => parseProductPriceTiers(overflow + "=95", 10));
+});
