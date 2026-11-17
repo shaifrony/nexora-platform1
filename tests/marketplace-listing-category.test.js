@@ -1148,3 +1148,13 @@ test("Seller price-tier parser rejects numeric overflow and non-finite unit pric
   assert.throws(() => parseProductPriceTiers("100=" + overflow, 10));
   assert.throws(() => parseProductPriceTiers(overflow + "=95", 10));
 });
+
+test("Listing image upload helper enforces per-kind file-count limits in addition to picker limits", () => {
+  const start = js.indexOf("async function uploadListingImages(files,kind)");
+  const end = js.indexOf("\n  async function removeListingImages", start);
+  assert.ok(start >= 0 && end > start, "listing image upload helper must exist");
+  const upload = js.slice(start, end);
+  assert.match(upload, /const maxFiles=kind==="products"\?5:kind==="services"\?3:0/);
+  assert.match(upload, /if\(!maxFiles\|\|selected\.length>maxFiles\)/);
+  assert.match(upload, /selected\.some\(file=>!listingImageTypes\.has\(file\.type\)\|\|file\.size>5\*1024\*1024\)/);
+});
