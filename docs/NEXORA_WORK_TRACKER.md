@@ -2030,3 +2030,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected a new-listing validation gap: the Product form previously limited uploaded files to five but did not count externally hosted HTTPS image URLs toward the same five-image listing cap. It now validates the combined total before any Storage upload or database insert.
 - Updated the form label to explain that uploaded files and external URLs share one five-image maximum, and added a source regression test for the combined limit and validation order.
 - Existing per-file type/size checks and Seller/Business approval gates remain unchanged. This is client-side defense-in-depth; database/Storage authorization remains authoritative. No migration or database was changed. All work remains on `nexora-development`; CI is pending. No hosted Supabase, `main`, Production, DNS or deployment changed.
+
+## 2026-11-18 — Listing image guard CI closeout
+
+- Re-verified the exact current Development branch head `478de415ee5dce14c659ad0e1f3a4c9c3a79ac79` and its CI run [#44228410163](https://github.com/shaifrony/nexora-platform1/actions/runs/44228410163).
+- CI completed successfully: JavaScript syntax checks, the full dependency-free regression suite, all nine focused disposable PostgreSQL suites, active migration filename/order validation, and the recoverable source snapshot job.
+- This run includes and validates the preceding image upload count guard, zero-byte image rejection, and combined uploaded-file plus external-URL Product image cap. The source remains client-side defense-in-depth; Storage/database authorization remains authoritative.
+- The next database-side M2 issue remains the JSON-null / special numeric handling in `private.validate_product_commercial_fields()`. It still requires a forward-only migration created with the official Supabase CLI and a focused disposable PostgreSQL regression matrix. The current connected toolset does not expose a local CLI/migration-generation environment; do not invent a migration timestamp or use hosted database tools for this repository task.
+- No migration or database was changed. All source work remains on `nexora-development`; no `main`, Production, Hosted Supabase, NEXORA-TEST, DNS, or deployment changes were made.
