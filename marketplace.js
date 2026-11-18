@@ -65,7 +65,7 @@
       throw new Error("পণ্যের জন্য সর্বোচ্চ ৫টি এবং সেবার জন্য সর্বোচ্চ ৩টি ছবি আপলোড করা যাবে।");
     if(!user()?.id||!activeSeller()||!state.business||state.business.approval_status!=="approved")
       throw new Error("ছবি আপলোড করতে সক্রিয় Seller এবং অনুমোদিত Business Profile প্রয়োজন।");
-    if(selected.some(file=>!listingImageTypes.has(file.type)||file.size>5*1024*1024))
+    if(selected.some(file=>!listingImageTypes.has(file.type)||file.size<=0||file.size>5*1024*1024))
       throw new Error("শুধু JPG, PNG, WEBP বা AVIF ছবি দিন; প্রতিটি ছবির আকার সর্বোচ্চ ৫ MB।");
     const urls=[],paths=[];
     for(const file of selected){

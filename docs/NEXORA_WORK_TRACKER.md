@@ -2016,3 +2016,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Hardened the shared image-upload helper so product uploads are limited to five files and service uploads to three, matching the UI pickers and edit-form limits. The helper now independently rejects unsupported listing kinds or excess file counts before Storage upload; existing MIME-type and per-file 5 MB checks remain.
 - Added a source regression test covering the product/service count limits and existing file-type/size validation.
 - This is client-side defense-in-depth; Storage policies and backend authorization remain authoritative. CI verification is pending. No migration, database, hosted Supabase, Production, main, DNS or deployment changed.
+
+
+## 2026-11-18 — Reject empty listing image files
+
+- Hardened the shared Seller listing image uploader to reject zero-byte image files as well as unsupported MIME types and files larger than 5 MB. This prevents empty objects from being accepted as product/service images.
+- Extended the existing Marketplace source regression assertion to require the non-empty file guard.
+- This remains client-side validation; Storage policies and backend authorization remain authoritative. No migration or database was changed. All work is limited to `nexora-development`; CI is pending for this change. No hosted Supabase, `main`, Production, DNS or deployment was changed.

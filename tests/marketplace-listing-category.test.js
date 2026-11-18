@@ -1156,5 +1156,5 @@ test("Listing image upload helper enforces per-kind file-count limits in additio
   const upload = js.slice(start, end);
   assert.match(upload, /const maxFiles=kind==="products"\?5:kind==="services"\?3:0/);
   assert.match(upload, /if\(!maxFiles\|\|selected\.length>maxFiles\)/);
-  assert.match(upload, /selected\.some\(file=>!listingImageTypes\.has\(file\.type\)\|\|file\.size>5\*1024\*1024\)/);
+  assert.match(upload, /selected\.some\(file=>!listingImageTypes\.has\(file\.type\)\|\|file\.size<=0\|\|file\.size>5\*1024\*1024\)/);
 });
