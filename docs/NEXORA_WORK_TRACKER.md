@@ -2023,3 +2023,10 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Hardened the shared Seller listing image uploader to reject zero-byte image files as well as unsupported MIME types and files larger than 5 MB. This prevents empty objects from being accepted as product/service images.
 - Extended the existing Marketplace source regression assertion to require the non-empty file guard.
 - This remains client-side validation; Storage policies and backend authorization remain authoritative. No migration or database was changed. All work is limited to `nexora-development`; CI is pending for this change. No hosted Supabase, `main`, Production, DNS or deployment was changed.
+
+
+## 2026-11-18 — Enforce total Product image limit
+
+- Corrected a new-listing validation gap: the Product form previously limited uploaded files to five but did not count externally hosted HTTPS image URLs toward the same five-image listing cap. It now validates the combined total before any Storage upload or database insert.
+- Updated the form label to explain that uploaded files and external URLs share one five-image maximum, and added a source regression test for the combined limit and validation order.
+- Existing per-file type/size checks and Seller/Business approval gates remain unchanged. This is client-side defense-in-depth; database/Storage authorization remains authoritative. No migration or database was changed. All work remains on `nexora-development`; CI is pending. No hosted Supabase, `main`, Production, DNS or deployment changed.

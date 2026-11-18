@@ -2062,7 +2062,7 @@ service_category:"সেবার বিভাগ",description:"বিবরণ"
     const externalImages = String(v.images || "").split(/\r?\n/).map(x => x.trim()).filter(Boolean);
     if (externalImages.some(x => !/^https:\/\//i.test(x))) return say("প্রতিটি Product Image URL অবশ্যই HTTPS হতে হবে।");
     const imageFiles=Array.from(form.querySelector('[name="image_files"]')?.files||[]);
-    if(imageFiles.length>5)return say("সর্বোচ্চ ৫টি Product Image আপলোড করুন।");
+    if(imageFiles.length+externalImages.length>5)return say("আপলোড করা ছবি ও বাইরের Image URL মিলিয়ে সর্বোচ্চ ৫টি Product Image দেওয়া যাবে।");
     if (!["wholesale", "retail"].includes(v.market_category)) return say("বিক্রির ধরন নির্বাচন করুন।");
     if (!Number.isFinite(Number(v.price)) || Number(v.price) <= 0) return say("পণ্যের মূল্য শূন্যের বেশি হতে হবে।");
     setBusy(form, true);

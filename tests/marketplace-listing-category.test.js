@@ -1158,3 +1158,15 @@ test("Listing image upload helper enforces per-kind file-count limits in additio
   assert.match(upload, /if\(!maxFiles\|\|selected\.length>maxFiles\)/);
   assert.match(upload, /selected\.some\(file=>!listingImageTypes\.has\(file\.type\)\|\|file\.size<=0\|\|file\.size>5\*1024\*1024\)/);
 });
+
+
+test("New Product listing caps uploaded images and external image URLs together at five", () => {
+  const create = js.slice(
+    js.indexOf('$("productForm")?.addEventListener("submit"'),
+    js.indexOf('const requiredDateInput = $("requiredDate")')
+  );
+  assert.match(create, /const externalImages = String\(v\.images \|\| ""\)\.split\(\/\\r\?\\n\/\)/);
+  assert.match(create, /if\(imageFiles\.length\+externalImages\.length>5\)/);
+  assert.ok(create.indexOf("imageFiles.length+externalImages.length>5") < create.indexOf("uploadListingImages(imageFiles,\"products\")"));
+  assert.match(html, /আপলোড \+ বাইরের URL মিলিয়ে সর্বোচ্চ ৫টি/);
+});
