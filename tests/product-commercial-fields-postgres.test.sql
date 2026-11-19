@@ -1,5 +1,5 @@
-\\set ON_ERROR_STOP on
-\\pset pager off
+\set ON_ERROR_STOP on
+\pset pager off
 
 -- Focused disposable PostgreSQL regression suite for the Product commercial-field trigger.
 -- The migration under test is the exact forward-only file generated with the official Supabase CLI.
@@ -14,7 +14,7 @@ create table public.products (
   price_tiers jsonb not null default '[]'::jsonb
 );
 
-\\ir ../supabase/migrations/20261119035305_nexora_product_commercial_json_numeric_guard.sql
+\ir ../supabase/migrations/20261119035305_nexora_product_commercial_json_numeric_guard.sql
 
 create or replace function private.expect_product_tiers_rejected(p_tiers jsonb, p_label text)
 returns void
