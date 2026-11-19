@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-17 (Development CI 153/153; nine disposable PostgreSQL suites; 50 migrations; CI #44011843827)
+Updated: 2026-11-19 (Development CI 156/156; 10 disposable PostgreSQL suites; 51 migrations; CI #44454831996)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2065,3 +2065,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Exact latest Development head 734d205e435e31b8eef2811ba6d7c80991f9c722 passed GitHub Actions [#44454700558](https://github.com/shaifrony/nexora-platform1/actions/runs/44454700558): **156/156 dependency-free tests PASS**, all ten focused disposable PostgreSQL suites PASS (including the new Product commercial validator suite), **51 active migration filenames/order validated**, and recoverable source snapshot upload succeeded.
 - This focused disposable PostgreSQL test is not a full Supabase CLI migration-chain replay or hosted Auth/JWT/PostgREST/RLS/browser/mobile E2E validation. The migration has not been applied to any hosted database.
 - All changes remain on nexora-development. No NEXORA-TEST, Live/Hosted Supabase, main, Production, DNS, deployment, payment gateway, or payout activation was changed.
+
+
+## 2026-11-19 — M2 Product commercial validator and migration-chain checkpoint
+
+- Product commercial-field database validation is now closed on Development: the forward-only CLI-generated migration rejects SQL/JSON null, malformed and non-finite tier values, invalid ordering/quantities/prices, and excessive tiers. Its dedicated disposable PostgreSQL suite is part of CI.
+- Exact pre-documentation branch head `61b3f22289b39f7f1b0ac1810d6560e7f2a69d74` passed Development CI [#44454831996](https://github.com/shaifrony/nexora-platform1/actions/runs/44454831996): **156/156 dependency-free tests PASS**, all **10 focused disposable PostgreSQL suites PASS**, **51 active migration filenames/versions validated**, and the recoverable source snapshot job succeeded.
+- Refreshed repository-side migration inventory in [NEXORA_MIGRATION_COMPARISON_LEDGER.md](NEXORA_MIGRATION_COMPARISON_LEDGER.md): 51 active SQL files, 51 unique versions, ascending order. Twelve files have been added since the prior 39-file checkpoint, including delivery/receipt, staff operations, payment/reconciliation and Product commercial JSON guard migrations.
+- Important evidence boundary: the above is filename/order validation plus isolated focused fixtures, **not** a complete 51-migration Supabase Native Runtime replay. The prior 39-migration PGlite/Native Runtime records are historical and do not verify the current 51-file head.
+- Hosted migration-history comparison remains based on the earlier 2026-11-13 snapshot and is stale relative to the current branch. No current hosted migration-history/catalog query was run. Original source for the 11 earlier history-only versions remains unrecovered; catalog-based drafts are not original SQL. The complete Foundation baseline/source chain is still not verified.
+- Next M2/release-safe gate: obtain a trusted current schema-only baseline and a genuine disposable Supabase Native Runtime, reconcile Foundation/history sources, then replay the full ordered chain and test Auth/JWT/PostgREST/RLS/Storage. Do not apply latest-only migrations, invent historical SQL, or execute recovery drafts against hosted databases.
+- No migration was applied to any hosted database. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
