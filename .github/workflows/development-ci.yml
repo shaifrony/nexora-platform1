@@ -37,26 +37,6 @@ jobs:
       - name: Check out development branch
         uses: actions/checkout@v4
 
-      - name: Install official Supabase CLI
-        uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
-      - name: Generate migration timestamp with official Supabase CLI (isolated temp directory)
-        shell: bash
-        run: |
-          set -euo pipefail
-          temp_dir="$(mktemp -d)"
-          trap 'rm -rf "$temp_dir"' EXIT
-          mkdir -p "$temp_dir/supabase/migrations"
-          (
-            cd "$temp_dir"
-            supabase migration new nexora_product_commercial_json_numeric_guard
-          )
-          generated="$(find "$temp_dir/supabase/migrations" -maxdepth 1 -type f -name '*_nexora_product_commercial_json_numeric_guard.sql' -print -quit)"
-          test -n "$generated"
-          printf 'OFFICIAL_SUPABASE_CLI_GENERATED_MIGRATION=%s\\n' "$(basename "$generated")"
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -87,6 +67,16 @@ jobs:
         run: |
           createdb nexora_product_test
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/product-price-negotiation-postgres.test.sql
+
+      - name: Execute Product commercial-field JSON numeric guard against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_product_commercial_test
+        run: |
+          createdb nexora_product_commercial_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/product-commercial-fields-postgres.test.sql
 
       - name: Execute Buyer-safe Delivery Updates migration against isolated disposable PostgreSQL
         env:
