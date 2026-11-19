@@ -163,3 +163,31 @@ See [NEXORA_MISSING_MIGRATION_DRAFT_AUDIT.md](NEXORA_MISSING_MIGRATION_DRAFT_AUD
 The current live catalog supports the public product/business allowlists, wholesale price columns/constraints, AAL2 helper definition, cancelled status constraint and safe buyer-demand view represented in the drafts. The default-privilege draft was narrowed during audit to API-facing grants and preserves service_role defaults. These are catalog-consistency findings, not proof of original SQL.
 
 No PostgreSQL parser or isolated migration replay was available. No draft was executed, and none is approved for Live deployment.
+
+
+## 11. Current Development-chain checkpoint — 2026-11-19
+
+This section refreshes the **repository-side** inventory only. It does not refresh or infer the hosted project's migration history.
+
+- Exact branch HEAD before this documentation update: `61b3f22289b39f7f1b0ac1810d6560e7f2a69d74`.
+- Active `supabase/migrations/` inventory: **51 SQL files, 51 unique 14-digit versions**, strictly ascending by filename. The inventory was read from the recursive Git tree and independently checked by Development CI [#44454831996](https://github.com/shaifrony/nexora-platform1/actions/runs/44454831996).
+- Relative to the prior 39-file checkpoint ending at `20261115120000_multilingual_chat_foundation.sql`, 12 forward additions are now present:
+  - `20261115130000_buyer_safe_delivery_updates.sql`
+  - `20261115140000_buyer_delivery_receipt_otp.sql`
+  - `20261115150000_receipt_otp_work_queues.sql`
+  - `20261115160000_receipt_otp_sha256_provider_guard.sql`
+  - `20261115170000_admin_delivery_order_linking.sql`
+  - `20261115180000_delivery_staff_receipt_identity.sql`
+  - `20261115190000_delivery_staff_status_proof_partial_and_disputes.sql`
+  - `20261115200000_unique_delivery_job_per_order.sql`
+  - `20261115210000_active_commerce_participant_guard.sql`
+  - `20261115220000_payment_intent_webhook_foundation.sql`
+  - `20261115230000_payment_reconciliation_batch_queue.sql`
+  - `20261119035305_nexora_product_commercial_json_numeric_guard.sql`
+- CI #44454831996 completed successfully on exact HEAD `61b3f22289b39f7f1b0ac1810d6560e7f2a69d74`: 156/156 dependency-free tests, all 10 focused disposable PostgreSQL suites, 51 migration filename/order checks, and the recovery snapshot job passed.
+- The Product commercial validator migration is covered by its own disposable PostgreSQL suite. This is **not** a full ordered replay of all 51 migrations, a Supabase Native Runtime test, or proof of current hosted schema equivalence.
+- The last documented hosted-history comparison remains the earlier 2026-11-13 snapshot (24 history rows vs 36 then-current files, with 11 history-only versions and 23 then-current files absent from history). It is stale relative to today's 51-file branch and must not be used as a current count. No fresh hosted history/catalog read was performed for this checkpoint.
+- Historical source gaps remain unresolved: the original SQL for the 11 earlier history-only versions was not recovered byte-for-byte; 10 recovery drafts are catalog-based reconstructions, not original migrations. The active branch also still lacks a verified complete Foundation source chain for a clean independent replay.
+- **Disposition:** filename uniqueness/order = PASS; focused CI fixtures = PASS; complete 51-file Supabase migration replay = NOT RUN / BLOCKED; hosted history reconciliation = STALE / NOT REFRESHED; production application = NOT AUTHORIZED.
+
+Next safe migration-chain work: obtain a trusted, current schema-only baseline and a genuine disposable Supabase Native Runtime; reconcile the missing Foundation/history sources there, then replay the complete ordered chain and run Auth/JWT/PostgREST/RLS/Storage tests. Do not apply individual latest migrations to a hosted project, fabricate historical SQL, or promote recovery drafts into the active directory.
