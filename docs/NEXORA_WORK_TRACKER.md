@@ -2038,3 +2038,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - This run includes and validates the preceding image upload count guard, zero-byte image rejection, and combined uploaded-file plus external-URL Product image cap. The source remains client-side defense-in-depth; Storage/database authorization remains authoritative.
 - The next database-side M2 issue remains the JSON-null / special numeric handling in `private.validate_product_commercial_fields()`. It still requires a forward-only migration created with the official Supabase CLI and a focused disposable PostgreSQL regression matrix. The current connected toolset does not expose a local CLI/migration-generation environment; do not invent a migration timestamp or use hosted database tools for this repository task.
 - No migration or database was changed. All source work remains on `nexora-development`; no `main`, Production, Hosted Supabase, NEXORA-TEST, DNS, or deployment changes were made.
+
+
+## 2026-11-19 — Product Detail action hierarchy
+
+- Reduced competing Buyer actions on Product Detail without removing either supported flow: the direct Order Request form is now the primary visible action, while optional price negotiation is placed in an accessible, collapsed-by-default disclosure.
+- Kept the existing MOQ/available-stock checks, negotiation RPC, order RPC, Seller-consent notice, and Buyer-only visibility unchanged.
+- Added a regression test for action order, disclosure containment, and collapsed initial state. Added focused disclosure styling in the existing page stylesheet.
+- No schema, migration, payment, payout, or hosted service was changed. All changes are limited to `nexora-development`; CI is pending. No `main`, Production, Live/Hosted Supabase, NEXORA-TEST, DNS, or deployment was changed.

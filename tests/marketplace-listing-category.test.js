@@ -1170,3 +1170,21 @@ test("New Product listing caps uploaded images and external image URLs together 
   assert.ok(create.indexOf("imageFiles.length+externalImages.length>5") < create.indexOf("uploadListingImages(imageFiles,\"products\")"));
   assert.match(html, /আপলোড \+ বাইরের URL মিলিয়ে সর্বোচ্চ ৫টি/);
 });
+
+ 
+test("Product Detail keeps direct order primary and collapses optional price negotiation", () => {
+  const detail = marketplaceUi.slice(
+    marketplaceUi.indexOf("function renderProducts()"),
+    marketplaceUi.indexOf("async function loadDemands()")
+  );
+  const orderForm = detail.indexOf('id="nxProductOrderForm"');
+  const disclosure = detail.indexOf('<details class="nx-product-negotiation-disclosure"><summary>দরদাম করতে চান? প্রস্তাব পাঠান</summary>');
+  const negotiationForm = detail.indexOf('id="nxProductNegotiationForm"');
+  const contactNotice = detail.indexOf('id="productInquiryArea"');
+  assert.ok(orderForm >= 0, "primary order request form must remain available");
+  assert.ok(disclosure > orderForm, "optional negotiation must follow the primary order form");
+  assert.ok(negotiationForm > disclosure, "negotiation form must be inside its disclosure");
+  assert.ok(contactNotice > negotiationForm, "contact-consent notice must remain after the action choices");
+  assert.doesNotMatch(detail.slice(disclosure, negotiationForm), /\\sopen(?:\\s|>)/, "negotiation disclosure must be collapsed initially");
+  assert.match(detail, /id="nxProductNegotiationForm" class="card nx-order-form"/);
+});
