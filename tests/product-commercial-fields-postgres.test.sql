@@ -16,6 +16,11 @@ create table public.products (
 
 \ir ../supabase/migrations/20261119035305_nexora_product_commercial_json_numeric_guard.sql
 
+create trigger products_validate_commercial_fields
+before insert or update of minimum_order_quantity,stock_tracking,stock_quantity,reserved_quantity,price_tiers
+on public.products
+for each row execute function private.validate_product_commercial_fields();
+
 create or replace function private.expect_product_tiers_rejected(p_tiers jsonb, p_label text)
 returns void
 language plpgsql
