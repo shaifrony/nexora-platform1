@@ -2097,3 +2097,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Extended `tests/delivery-staff-operations-postgres.test.sql` for partial-quantity rejection, stale OTP rejection, fresh full-quantity OTP, immutable receipt evidence, active-dispute blocking and post-delivery proof rejection.
 - Development CI [#44679941501](https://github.com/shaifrony/nexora-platform1/actions/runs/44679941501) passed on exact commit `c710094b0cbbd4bbf67ec6c13d3ca61f574af525`: **158/158 dependency-free tests PASS**, all **10 focused disposable PostgreSQL suites PASS**, JavaScript syntax and migration filename/order validation PASS (**52 active migration files**), and the recovery snapshot job PASS.
 - No migration was applied to Hosted/Live Supabase. No `main`, Production, deployment, DNS, payment gateway or payout was changed. Complete ordered Supabase Native Runtime replay and hosted migration-history reconciliation remain separate release gates.
+
+
+## 2026-11-20 — NEXORA-TEST bootstrap preflight (owner-approved; safely blocked)
+
+- User approved preparing Supabase project `NEXORA-TEST` (`lhxmqoyxoywntmkmmnjb`) as the regular Development/Testing environment.
+- Read-only project inspection confirmed `ACTIVE_HEALTHY`, Postgres 17.11, **0 applied migrations**, **0 public tables**, and no Edge Functions. A read-only verification query succeeded.
+- Inspected the active `nexora-development` migration inventory (52 SQL files) and the existing recovery package. The repository's current authoritative NEXORA-TEST foundation spec explicitly says it is design-only / not deployable; the older local fixture is superseded. The recovery README and compatibility matrix explicitly block replay into an empty Test DB because the feature migrations assume a pre-existing Foundation, original Foundation SQL is not recovered, and full Supabase Native Runtime replay is not certified.
+- Therefore no DDL, DML, migration-history edits, auth/storage settings, or seed data were applied to NEXORA-TEST. This is a deliberate safety stop, not a completed bootstrap.
+- Supabase Free-plan pausing guidance says a few genuine user database requests per day over the previous week are typically sufficient; a single read-only query is not a guarantee. Prefer actual app/API testing or Dashboard usage rather than artificial data mutations.
+- Next gate: create and review a **new Test-only Supabase-native baseline migration** from the approved Foundation spec, verify it against current frontend/feature contracts, then run full ordered 52-migration replay and Auth/JWT/PostgREST/RLS/Storage tests in a disposable Supabase Native Runtime before applying the reviewed chain to NEXORA-TEST.
+- NEXORA main project (`qsjdeqljpnjumceewsjq`) and Production were not changed.
