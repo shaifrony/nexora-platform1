@@ -111,7 +111,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
 - [x] Source-level tests cover active assigned Buyer/Seller checks on Product/Service order transitions, role-specific state changes, stock reservation/release/deduction, MOQ/available-stock validation and tier-price snapshots. The expanded suite [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) passed 93/93 tests; hosted runtime/RLS and browser E2E remain pending.
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
-- [ ] Payment না থাকলে UI স্পষ্টভাবে জানায়—order request মানেই payment বা delivery booking নয়।
+- [x] Buyer order card স্পষ্টভাবে জানায়—order request মানেই payment সম্পন্ন বা delivery booking নয়; `tests/payment-finance-foundation.test.js`-এ regression assertion যোগ করা হয়েছে। Hosted payment collection চালু নয়.
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
 
 ### B-05 — Quotations, communications, reviews ও support
@@ -476,5 +476,5 @@ Implementation rules:
 - Re-checked the existing Buyer order card and Dashboard copy: an order request is explicitly not payment and does not imply a delivery booking; the wallet/payment area is explicitly labelled unavailable.
 - Added source regression assertions in `tests/payment-finance-foundation.test.js` for both disclosures so future UI edits cannot silently imply that Buyer funds are held or that delivery is booked.
 - Updated B-04 payment-clarity and B-06 wallet-placeholder checklist items to reflect the staged UI implementation. This does not mark checkout, wallet, payment collection, delivery booking or browser acceptance as implemented.
-- Development CI for this commit is pending; do not claim the new assertions passed until the exact run completes.
+- Development CI [#44671440419](https://github.com/shaifrony/nexora-platform1/actions/runs/44671440419) completed successfully on exact commit `e3e80877142e82ffa96df69c377fe2193a70730b`: **158/158 dependency-free tests PASS**, all **10 focused PostgreSQL suites PASS**, migration filename/order validation PASS, and the recoverable source snapshot job PASS. This verifies the new source assertions, not hosted payment collection or browser acceptance.
 - No SQL/migration, payment provider, payout, hosted database, `main`, Production or deployment changed.
