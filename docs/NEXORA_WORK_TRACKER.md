@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-19 (Development CI 156/156; 10 disposable PostgreSQL suites; 51 migrations; CI #44454831996)
+Updated: 2026-11-20 (Buyer payment-status clarity regression guard added; 51-migration inventory unchanged)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -67,6 +67,7 @@ Status definitions: **Done (staged)** = committed to Development, not necessaril
 - [x] Buyer Demand form, submission, public-board and Seller-inbox client paths inspected. Staged source review confirms SECURITY INVOKER public projection omits Buyer identity, anon column grants omit buyer_id, Buyer ownership/Seller inbox RLS and offer-inbox gate, required date, and category/subcategory matching without sale-type gates. Read-only catalog audit 24 initially SKIPped because the limited fixture lacked Demand tables. Added local-only Demand fixture 25, behavior tests 26 and one-command Termux runner 27; user execution pending. Buyer quotation acceptance/counter-offer and source-linked order conversion are now staged with source-level regression coverage; JWT/PostgREST/E2E remain pending.
 - [x] Commerce order and verified review workflow staged.
 - [ ] Payments, inventory, dispute/refund and notifications.
+  - [x] Buyer-facing payment clarity is explicit: wallet/payment is unavailable and an order request is not payment or delivery booking. Source regression assertions added in `tests/payment-finance-foundation.test.js`; CI for this update is pending. No gateway, checkout, collection or payout activation.
 - [ ] E2E, mobile and accessibility.
 
 ## M3 — Transport & Logistics
@@ -2076,3 +2077,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Hosted migration-history comparison remains based on the earlier 2026-11-13 snapshot and is stale relative to the current branch. No current hosted migration-history/catalog query was run. Original source for the 11 earlier history-only versions remains unrecovered; catalog-based drafts are not original SQL. The complete Foundation baseline/source chain is still not verified.
 - Next M2/release-safe gate: obtain a trusted current schema-only baseline and a genuine disposable Supabase Native Runtime, reconcile Foundation/history sources, then replay the full ordered chain and test Auth/JWT/PostgREST/RLS/Storage. Do not apply latest-only migrations, invent historical SQL, or execute recovery drafts against hosted databases.
 - No migration was applied to any hosted database. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
+
+
+## 2026-11-20 — M2 Buyer payment-status clarity guard
+
+- Confirmed the Buyer order card explicitly says an order request is not completed payment and does not mean delivery has been booked.
+- Confirmed the Buyer Dashboard wallet/payment area says the feature is not yet active and that an order request is not payment.
+- Added two source regression tests to `tests/payment-finance-foundation.test.js` and reconciled the corresponding B-04/B-06 checkboxes in `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`.
+- CI for this commit is pending; no test result is pre-claimed. The provider-neutral payment/ledger foundation remains non-customer-facing; provider integration, checkout, reconciliation operations, refunds, Seller payable and payout remain gated.
+- No migration or hosted service was changed. No payment gateway, payout, `main`, Production, DNS or deployment was activated.

@@ -65,3 +65,16 @@ test('payment PostgreSQL fixture models the delivery-inclusive grand_total order
   assert.match(postgresFixture, /order_code,quantity,unit_price,currency,order_status,delivery_charge,source_offer_total/i);
   assert.match(postgresFixture, /payment-intent-key-0005/i);
 });
+
+
+const buyerOrderUi = fs.readFileSync(path.join(__dirname, '..', 'marketplace.js'), 'utf8');
+const buyerDashboardHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+
+test('Buyer UI clearly separates an order request from payment and delivery booking', () => {
+  assert.match(buyerOrderUi, /এটি অর্ডার অনুরোধ; Payment সম্পন্ন হয়েছে বা Delivery বুক হয়েছে—এমন অর্থ নয়।/);
+});
+
+test('Buyer wallet and payment area is explicitly unavailable until the feature is implemented', () => {
+  assert.match(buyerDashboardHtml, /aria-label="Wallet and payment feature status"/);
+  assert.match(buyerDashboardHtml, /<small>WALLET &amp; PAYMENTS<\/small>[\s\S]*?<strong>এখনো চালু হয়নি<\/strong>[\s\S]*?<em>Order request মানেই Payment নয়<\/em>/);
+});

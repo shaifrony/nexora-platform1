@@ -127,7 +127,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 
 ### B-06 — Dashboard completeness
 - [ ] Sale type label ও demo text product-এর নির্বাচিত Wholesale/Retail ধরন ঠিকভাবে দেখায় যাচাই।
-- [ ] Wallet balance placeholder-কে বাস্তব wallet না বলা; wallet/payment feature বাস্তবায়ন না হওয়া পর্যন্ত স্পষ্টভাবে unavailable/coming later রাখা।
+- [x] Buyer Dashboard wallet/payment area-তে স্পষ্ট `এখনো চালু হয়নি` এবং `Order request মানেই Payment নয়` disclosure আছে; regression assertion যোগ করা হয়েছে। এটি প্রকৃত wallet/payment integration নয়।
 - [ ] Buyer delivery tracking ও Porter handoff UI সংযুক্ত।
 - [ ] Mobile responsive, keyboard accessibility, loading/error/empty states পরীক্ষা।
 - [ ] Browser E2E: signup, browse both sale types, direct URL, demand, offers, inquiry consent, order, completion, review।
@@ -469,3 +469,12 @@ Implementation rules:
 - A prior disposable local Supabase/Auth/PostgREST run recorded against the historical 38-migration chain remains historical evidence only. It does not prove the current 39-migration chain, latest multilingual-chat migration, or current hosted project state.
 - NEXORA-TEST remains a read-only empty baseline in the latest recorded check; no active migration or recovery candidate is approved for hosted application. The Foundation/replay gate remains closed pending a genuine isolated Supabase runtime and the remaining server-side moderation contracts/browser journeys.
 - The current Marketplace rule is dual listing categories per Product (`wholesale` / `retail` / `legacy_unclassified`), not wholesale-only. Any older wholesale-only notes in this checklist are superseded by the current Work Tracker and Marketplace specification.
+
+
+## 2026-11-20 — Buyer payment-status clarity regression guard
+
+- Re-checked the existing Buyer order card and Dashboard copy: an order request is explicitly not payment and does not imply a delivery booking; the wallet/payment area is explicitly labelled unavailable.
+- Added source regression assertions in `tests/payment-finance-foundation.test.js` for both disclosures so future UI edits cannot silently imply that Buyer funds are held or that delivery is booked.
+- Updated B-04 payment-clarity and B-06 wallet-placeholder checklist items to reflect the staged UI implementation. This does not mark checkout, wallet, payment collection, delivery booking or browser acceptance as implemented.
+- Development CI for this commit is pending; do not claim the new assertions passed until the exact run completes.
+- No SQL/migration, payment provider, payout, hosted database, `main`, Production or deployment changed.
