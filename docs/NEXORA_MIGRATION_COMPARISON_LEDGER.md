@@ -191,3 +191,11 @@ This section refreshes the **repository-side** inventory only. It does not refre
 - **Disposition:** filename uniqueness/order = PASS; focused CI fixtures = PASS; complete 51-file Supabase migration replay = NOT RUN / BLOCKED; hosted history reconciliation = STALE / NOT REFRESHED; production application = NOT AUTHORIZED.
 
 Next safe migration-chain work: obtain a trusted, current schema-only baseline and a genuine disposable Supabase Native Runtime; reconcile the missing Foundation/history sources there, then replay the complete ordered chain and run Auth/JWT/PostgREST/RLS/Storage tests. Do not apply individual latest migrations to a hosted project, fabricate historical SQL, or promote recovery drafts into the active directory.
+
+
+## 2026-11-20 — Active migration inventory checkpoint (52 files)
+
+- Active branch `nexora-development` now contains 52 uniquely versioned, timestamp-ordered SQL migration files.
+- Development CI [#44679941501](https://github.com/shaifrony/nexora-platform1/actions/runs/44679941501) validated all 52 active migration filenames/order and passed all 10 focused disposable PostgreSQL suites plus 158/158 dependency-free tests. The new delivery receipt quantity/replay/dispute/immutability migration is included in the Delivery Staff operations PostgreSQL fixture.
+- This checkpoint does **not** claim a full 52-migration Supabase Native Runtime replay or hosted schema/history equivalence. The 2026-11-13 hosted-history comparison above remains historical and stale; original source for history-only Foundation versions is still unresolved.
+- No Hosted/Live Supabase migration was applied. Production application remains unauthorized pending a trusted baseline, complete ordered replay, and current hosted-history reconciliation.
