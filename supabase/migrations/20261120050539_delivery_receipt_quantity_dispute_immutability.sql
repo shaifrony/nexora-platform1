@@ -201,10 +201,6 @@ begin
   if not found or v_order_id is null then
     raise exception 'Order-linked Delivery Job not found' using errcode='P0002';
   end if;
-  if v_old not in ('out_for_delivery','partially_delivered') then
-    raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
-  end if;
-
   if private.has_nexora_permission('logistics.assign') then
     if (select auth.jwt()->>'aal') is distinct from 'aal2' then
       raise exception 'Admin MFA (AAL2) is required' using errcode='42501';
@@ -231,6 +227,10 @@ begin
       raise exception 'Only the active owner of the approved assigned Provider or authorized Admin can verify receipt' using errcode='42501';
     end if;
     v_actor_type:='independent_provider';
+  end if;
+
+  if v_old not in ('out_for_delivery','partially_delivered') then
+    raise exception 'Shipment is not awaiting receipt confirmation' using errcode='22023';
   end if;
 
   if exists (
