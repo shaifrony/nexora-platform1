@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-20 (CI #44671440419: 158/158 dependency-free tests; 10 focused PostgreSQL suites; 51 migration filename/order checks)
+Updated: 2026-11-20 (CI #44679941501: 158/158 dependency-free tests; 10 focused PostgreSQL suites; 52 migration filename/order checks)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2086,3 +2086,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added two source regression tests to `tests/payment-finance-foundation.test.js` and reconciled the corresponding B-04/B-06 checkboxes in `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md`.
 - Development CI [#44671440419](https://github.com/shaifrony/nexora-platform1/actions/runs/44671440419) passed on exact commit `e3e80877142e82ffa96df69c377fe2193a70730b`: 158/158 dependency-free tests, all 10 focused PostgreSQL suites, migration filename/order validation and recoverable source snapshot succeeded. The provider-neutral payment/ledger foundation remains non-customer-facing; provider integration, checkout, reconciliation operations, refunds, Seller payable and payout remain gated.
 - No migration or hosted service was changed. No payment gateway, payout, `main`, Production, DNS or deployment was activated.
+
+
+## 2026-11-20 — Buyer delivery receipt quantity and OTP replay guard
+
+- Added forward-only migration `20261120050539_delivery_receipt_quantity_dispute_immutability.sql` on `nexora-development`.
+- Receipt OTP verification now requires cumulative private delivery proof to equal the Order quantity; a partial 3/10 shipment cannot be closed. Adding any new proof consumes outstanding receipt challenges, so an OTP requested before partial delivery cannot be replayed after the proof changes.
+- After the remaining quantity is proven (for example 7/10 bringing the total to 10/10), the Buyer can request a fresh OTP. Consumed challenges do not trigger the 60-second active-challenge cooldown.
+- Active delivery disputes block receipt-code issuance and verification. Successful verification writes a private append-only confirmation linked to the Order, Buyer, OTP challenge, verifier and confirmed quantity. Proof cannot be appended after the job is delivered.
+- Extended `tests/delivery-staff-operations-postgres.test.sql` for partial-quantity rejection, stale OTP rejection, fresh full-quantity OTP, immutable receipt evidence, active-dispute blocking and post-delivery proof rejection.
+- Development CI [#44679941501](https://github.com/shaifrony/nexora-platform1/actions/runs/44679941501) passed on exact commit `c710094b0cbbd4bbf67ec6c13d3ca61f574af525`: **158/158 dependency-free tests PASS**, all **10 focused disposable PostgreSQL suites PASS**, JavaScript syntax and migration filename/order validation PASS (**52 active migration files**), and the recovery snapshot job PASS.
+- No migration was applied to Hosted/Live Supabase. No `main`, Production, deployment, DNS, payment gateway or payout was changed. Complete ordered Supabase Native Runtime replay and hosted migration-history reconciliation remain separate release gates.
