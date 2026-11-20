@@ -6,6 +6,8 @@ do $roles$ begin create role authenticated nologin; exception when duplicate_obj
 create schema if not exists auth;
 create schema if not exists private;
 create schema if not exists storage;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 create or replace function auth.uid() returns uuid language sql stable set search_path=''
 as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 create or replace function auth.jwt() returns jsonb language sql stable set search_path=''
@@ -21,8 +23,9 @@ create table public.delivery_network_partners(id uuid primary key,partner_status
 create table public.delivery_network_staff(id uuid primary key,partner_id uuid not null,auth_user_id uuid,staff_status text not null);
 create table public.delivery_jobs(
  id uuid primary key,job_reference text not null,job_status text not null,
- commerce_order_id uuid,assigned_staff_id uuid,assignment_source text,created_at timestamptz default now(),updated_at timestamptz default now()
+ commerce_order_id uuid,assigned_staff_id uuid,assignment_source text,created_at timestamptz default now(),updated_at timestamptz default now(),assigned_provider_id uuid
 );
+create table public.transport_providers(id uuid primary key,owner_user_id uuid not null,application_status text not null);
 create table public.delivery_tracking_events(
  id bigint generated always as identity primary key,job_id uuid,previous_status text,new_status text,
  location_description text,note text,external_tracking_code text,actor_user_id uuid,actor_type text,
@@ -46,11 +49,21 @@ insert into public.delivery_network_partners values
 insert into public.delivery_network_staff values
  ('a4000000-0000-4000-8000-000000000001','a3000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000003','active'),
  ('a4000000-0000-4000-8000-000000000002','a3000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000004','active');
-insert into public.delivery_jobs values
+insert into public.delivery_jobs(id,job_reference,job_status,commerce_order_id,assigned_staff_id,assignment_source,created_at) values
  ('a5000000-0000-4000-8000-000000000001','NXD-OPS-01','assigned','a2000000-0000-4000-8000-000000000001','a4000000-0000-4000-8000-000000000001','nexora_team',now()),
  ('a5000000-0000-4000-8000-000000000002','NXD-OPS-02','assigned','a2000000-0000-4000-8000-000000000001','a4000000-0000-4000-8000-000000000002','nexora_team',now());
 
 \ir ../supabase/migrations/20261115190000_delivery_staff_status_proof_partial_and_disputes.sql
+
+create table private.delivery_receipt_challenges (
+ id uuid primary key default gen_random_uuid(),job_id uuid not null references public.delivery_jobs(id),
+ commerce_order_id uuid not null references public.commerce_orders(id),buyer_id uuid not null references public.profiles(id),
+ code_hash text not null,attempts integer not null default 0,created_at timestamptz not null default now(),
+ expires_at timestamptz not null,consumed_at timestamptz,verified_at timestamptz
+);
+insert into public.transport_providers values
+ ('a6000000-0000-4000-8000-000000000001','a1000000-0000-4000-8000-000000000003','approved');
+\ir ../supabase/migrations/20261120050539_delivery_receipt_quantity_dispute_immutability.sql
 
 grant usage on schema private to authenticated;
 
@@ -197,3 +210,118 @@ do $audit$ begin
 end $audit$;
 
 \echo 'PASS: identity-bound worker status updates, no direct delivered bypass, private photo/signature proof, partial quantity ceiling, Buyer ownership dispute and AAL2 Admin resolution'
+
+-- Receipt OTP can never close a partial quantity. A proof update consumes the old code.
+create temp table receipt_test_codes(code_key text primary key,code text not null);
+grant select,insert on receipt_test_codes to authenticated;
+insert into public.delivery_jobs(id,job_reference,job_status,commerce_order_id,assigned_staff_id,assignment_source,assigned_provider_id)
+values('a5000000-0000-4000-8000-000000000003','NXD-RECEIPT-03','out_for_delivery',
+ 'a2000000-0000-4000-8000-000000000001','a4000000-0000-4000-8000-000000000001','nexora_team',
+ 'a6000000-0000-4000-8000-000000000001');
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
+select set_config('request.jwt.claims','{}',false);
+insert into receipt_test_codes values('stale',(private.request_delivery_receipt_code('a5000000-0000-4000-8000-000000000003')->>'code'));
+reset role;
+
+update public.delivery_jobs set job_status='partially_delivered'
+ where id='a5000000-0000-4000-8000-000000000003';
+insert into private.delivery_proof_records(job_id,commerce_order_id,delivered_quantity,created_by,actor_type)
+values('a5000000-0000-4000-8000-000000000003','a2000000-0000-4000-8000-000000000001',3,
+ 'a1000000-0000-4000-8000-000000000003','delivery_staff');
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
+do $partial_receipt_block$ begin
+ begin
+  perform private.request_delivery_receipt_code('a5000000-0000-4000-8000-000000000003');
+  raise exception 'FAIL: receipt code was issued for only 3/10 units';
+ exception when sqlstate '22023' then null;
+ end;
+end $partial_receipt_block$;
+reset role;
+
+insert into private.delivery_proof_records(job_id,commerce_order_id,delivered_quantity,created_by,actor_type)
+values('a5000000-0000-4000-8000-000000000003','a2000000-0000-4000-8000-000000000001',7,
+ 'a1000000-0000-4000-8000-000000000003','delivery_staff');
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
+insert into receipt_test_codes values('fresh',(private.request_delivery_receipt_code('a5000000-0000-4000-8000-000000000003')->>'code'));
+reset role;
+
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',false);
+select set_config('request.jwt.claims','{}',false);
+do $receipt_replay$ declare v_result jsonb; v_stale text; v_fresh text; begin
+ select code into v_stale from pg_temp.receipt_test_codes where code_key='stale';
+ select code into v_fresh from pg_temp.receipt_test_codes where code_key='fresh';
+ v_result:=private.verify_delivery_receipt_code(
+  'a5000000-0000-4000-8000-000000000003', v_stale);
+ if coalesce((v_result->>'verified')::boolean,false) then
+  raise exception 'FAIL: stale pre-partial OTP was accepted';
+ end if;
+ v_result:=private.verify_delivery_receipt_code(
+  'a5000000-0000-4000-8000-000000000003', v_fresh);
+ if not coalesce((v_result->>'verified')::boolean,false) then
+  raise exception 'FAIL: fresh OTP did not confirm fully proven 10/10 quantity';
+ end if;
+end $receipt_replay$;
+reset role;
+
+do $receipt_immutable$ begin
+ if (select confirmed_quantity from private.delivery_receipt_confirmations
+      where job_id='a5000000-0000-4000-8000-000000000003')<>10 then
+  raise exception 'FAIL: immutable receipt did not retain confirmed quantity 10';
+ end if;
+ begin
+  update private.delivery_receipt_confirmations set confirmed_quantity=3
+   where job_id='a5000000-0000-4000-8000-000000000003';
+  raise exception 'FAIL: receipt confirmation update was allowed';
+ exception when insufficient_privilege then null;
+ end;
+ begin
+  delete from private.delivery_receipt_confirmations
+   where job_id='a5000000-0000-4000-8000-000000000003';
+  raise exception 'FAIL: receipt confirmation delete was allowed';
+ exception when insufficient_privilege then null;
+ end;
+ begin
+  insert into private.delivery_proof_records(job_id,commerce_order_id,delivered_quantity,created_by,actor_type)
+  values('a5000000-0000-4000-8000-000000000003','a2000000-0000-4000-8000-000000000001',1,
+   'a1000000-0000-4000-8000-000000000003','delivery_staff');
+  raise exception 'FAIL: proof was accepted after delivery completion';
+ exception when sqlstate '22023' then null;
+ end;
+end $receipt_immutable$;
+
+-- An active dispute must block OTP verification even when all quantity is proven.
+insert into public.delivery_jobs(id,job_reference,job_status,commerce_order_id,assigned_staff_id,assignment_source,assigned_provider_id)
+values('a5000000-0000-4000-8000-000000000004','NXD-RECEIPT-04','out_for_delivery',
+ 'a2000000-0000-4000-8000-000000000001','a4000000-0000-4000-8000-000000000001','nexora_team',
+ 'a6000000-0000-4000-8000-000000000001');
+insert into private.delivery_proof_records(job_id,commerce_order_id,delivered_quantity,created_by,actor_type)
+values('a5000000-0000-4000-8000-000000000004','a2000000-0000-4000-8000-000000000001',10,
+ 'a1000000-0000-4000-8000-000000000003','delivery_staff');
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000001',false);
+insert into receipt_test_codes values('disputed',(private.request_delivery_receipt_code('a5000000-0000-4000-8000-000000000004')->>'code'));
+reset role;
+insert into private.delivery_disputes(job_id,commerce_order_id,raised_by,raiser_role,reason_code,description)
+values('a5000000-0000-4000-8000-000000000004','a2000000-0000-4000-8000-000000000001',
+ 'a1000000-0000-4000-8000-000000000001','buyer','quantity_mismatch','The delivered quantity is being disputed.');
+set role authenticated;
+select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',false);
+do $active_dispute_receipt_block$ declare v_disputed text; begin
+ select code into v_disputed from pg_temp.receipt_test_codes where code_key='disputed';
+ begin
+  perform private.verify_delivery_receipt_code(
+   'a5000000-0000-4000-8000-000000000004', v_disputed);
+  raise exception 'FAIL: active dispute did not block receipt verification';
+ exception when sqlstate 'P0001' then null;
+ end;
+end $active_dispute_receipt_block$;
+reset role;
+
+\echo 'PASS: partial quantity cannot close; partial proof invalidates stale OTP; fresh full-quantity OTP creates immutable receipt; active dispute and post-delivery proof are blocked'
