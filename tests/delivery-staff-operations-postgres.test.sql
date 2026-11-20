@@ -254,6 +254,7 @@ reset role;
 set role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',false);
 select set_config('request.jwt.claims','{}',false);
+select set_config('test.admin.permission','false',false);
 do $receipt_replay$ declare v_result jsonb; v_stale text; v_fresh text; begin
  select code into v_stale from pg_temp.receipt_test_codes where code_key='stale';
  select code into v_fresh from pg_temp.receipt_test_codes where code_key='fresh';
@@ -313,6 +314,7 @@ values('a5000000-0000-4000-8000-000000000004','a2000000-0000-4000-8000-000000000
  'a1000000-0000-4000-8000-000000000001','buyer','quantity_mismatch','The delivered quantity is being disputed.');
 set role authenticated;
 select set_config('request.jwt.claim.sub','a1000000-0000-4000-8000-000000000003',false);
+select set_config('test.admin.permission','false',false);
 do $active_dispute_receipt_block$ declare v_disputed text; begin
  select code into v_disputed from pg_temp.receipt_test_codes where code_key='disputed';
  begin
