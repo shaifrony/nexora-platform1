@@ -2108,3 +2108,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Supabase Free-plan pausing guidance says a few genuine user database requests per day over the previous week are typically sufficient; a single read-only query is not a guarantee. Prefer actual app/API testing or Dashboard usage rather than artificial data mutations.
 - Next gate: create and review a **new Test-only Supabase-native baseline migration** from the approved Foundation spec, verify it against current frontend/feature contracts, then run full ordered 52-migration replay and Auth/JWT/PostgREST/RLS/Storage tests in a disposable Supabase Native Runtime before applying the reviewed chain to NEXORA-TEST.
 - NEXORA main project (`qsjdeqljpnjumceewsjq`) and Production were not changed.
+
+
+## 2026-11-21 — M2 Buyer Order History accessible loading state
+
+- Confirmed latest branch head before this change: `0d877de9bf7e00711e081545d5a5a6fe9a7251aa`; latest Development CI [#44683915674](https://github.com/shaifrony/nexora-platform1/actions/runs/44683915674) succeeded on that exact SHA (Static checks/dependency-free tests and recoverable source snapshot jobs).
+- Continued the next low-risk Buyer Dashboard item under Module 2: B-06 loading/accessibility states. `loadBuyerOrders()` now exposes `aria-busy=true` during refresh, announces the loading message through a `role=status` region, and clears the busy state on unauthenticated, successful, and error exits. The Buyer Order History host starts with `aria-busy=false`.
+- Added a source regression test in `tests/payment-finance-foundation.test.js` covering the loading announcement and all busy-state exit paths. Updated B-06 in `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md` without marking the broader responsive/accessibility/browser-E2E item complete.
+- This is a source-level accessibility improvement only. Screen-reader, keyboard, browser and mobile E2E are still NOT RUN. The Buyer item/Seller identity snapshot remains blocked on the Foundation and migration-history gate.
+- No SQL/migration, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout was changed.

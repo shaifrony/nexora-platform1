@@ -78,3 +78,18 @@ test('Buyer wallet and payment area is explicitly unavailable until the feature 
   assert.match(buyerDashboardHtml, /aria-label="Wallet and payment feature status"/);
   assert.match(buyerDashboardHtml, /<small>WALLET &amp; PAYMENTS<\/small>[\s\S]*?<strong>এখনো চালু হয়নি<\/strong>[\s\S]*?<em>Order request মানেই Payment নয়<\/em>/);
 });
+
+
+const buyerOrderLoaderStart = buyerOrderUi.indexOf("async function loadBuyerOrders(){");
+const buyerOrderLoaderEnd = buyerOrderUi.indexOf("async function updateSellerProductInventory", buyerOrderLoaderStart);
+const buyerOrderLoader = buyerOrderUi.slice(buyerOrderLoaderStart, buyerOrderLoaderEnd);
+
+test('Buyer Order History announces loading and clears its busy state on every exit path', () => {
+  assert.match(buyerDashboardHtml, /id="nxBuyerOrders" aria-live="polite" aria-busy="false"/);
+  assert.ok(buyerOrderLoaderStart >= 0 && buyerOrderLoaderEnd > buyerOrderLoaderStart);
+  assert.match(buyerOrderLoader, /host\.setAttribute\("aria-busy","true"\)/);
+  assert.match(buyerOrderLoader, /role="status">অর্ডার লোড হচ্ছে…<\/p>/);
+  assert.match(buyerOrderLoader, /if\(!signedIn\(\)\|\|!activeBuyer\(\)\)\{host\.setAttribute\("aria-busy","false"\)/);
+  assert.match(buyerOrderLoader, /host\.querySelectorAll\("\[data-order-action\]"\)[\s\S]*?host\.setAttribute\("aria-busy","false"\);\s*\}catch/);
+  assert.match(buyerOrderLoader, /catch\(err\)\{host\.textContent="অর্ডার লোড হয়নি: "\+err\.message;host\.setAttribute\("aria-busy","false"\);\}/);
+});

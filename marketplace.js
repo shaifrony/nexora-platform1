@@ -602,7 +602,9 @@
 
   async function loadBuyerOrders(){
     const host=$("nxBuyerOrders");if(!host)return;
-    if(!signedIn()||!activeBuyer()){host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
+    if(!signedIn()||!activeBuyer()){host.setAttribute("aria-busy","false");host.textContent="Buyer হিসেবে লগইন করলে আপনার অর্ডার দেখা যাবে।";return;}
+    host.setAttribute("aria-busy","true");
+    host.innerHTML='<p class="muted" role="status">অর্ডার লোড হচ্ছে…</p>';
     try{
       const {data,error}=await client().from("commerce_orders")
         .select("id,order_code,listing_type,listing_id,quantity,unit_price,total_price,source_offer_total,delivery_charge,grand_total,currency,order_status,created_at,accepted_at,ready_at,completed_at,cancelled_at,seller_note")
@@ -724,7 +726,8 @@
         finally{button.disabled=false;}
       }));
       host.querySelectorAll("[data-order-action]").forEach(b=>b.addEventListener("click",()=>transitionCommerceOrder(b.dataset.orderId,b.dataset.orderAction,b.dataset.orderType)));
-    }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;}
+      host.setAttribute("aria-busy","false");
+    }catch(err){host.textContent="অর্ডার লোড হয়নি: "+err.message;host.setAttribute("aria-busy","false");}
   }
   async function updateSellerProductInventory(productId){
     const product=(window.NEXORA_SELLER_PRODUCTS||[]).find(p=>p.id===productId);if(!product)return say("পণ্যের তথ্য পাওয়া যায়নি।");
