@@ -2117,3 +2117,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added a source regression test in `tests/payment-finance-foundation.test.js` covering the loading announcement and all busy-state exit paths. Updated B-06 in `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md` without marking the broader responsive/accessibility/browser-E2E item complete.
 - This is a source-level accessibility improvement only. Screen-reader, keyboard, browser and mobile E2E are still NOT RUN. The Buyer item/Seller identity snapshot remains blocked on the Foundation and migration-history gate.
 - No SQL/migration, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout was changed.
+
+## 2026-11-21 — M2 Buyer Order historical identity audit
+
+- Latest starting HEAD `dcbe48bc8d311a29ac4b3db6fc8e0cbecb3c0072` was verified on `nexora-development`; Development CI [#44863379210](https://github.com/shaifrony/nexora-platform1/actions/runs/44863379210) completed successfully on the exact SHA.
+- Audited the active Commerce Order migrations and Buyer Order History query. Current order rows retain live `listing_type/listing_id` references and financial/status snapshots, but no immutable order-time Product/Service display name or Seller Business Display Name. Buyer Order History selects no historical listing/business label.
+- Recorded the precise evidence and safe design gate in [Buyer Completion Checklist](NEXORA_BUYER_COMPLETION_CHECKLIST.md): first verify exact approved public Product, Service and Business display columns and every order-creation path; then design nullable immutable snapshots for legacy-compatible Product, Service and Buyer Demand orders. Do not guess columns or treat Buyer Demand as a Product listing.
+- Documentation-only change. No migrations, frontend behavior, hosted Supabase, `main`, Production or deployment changed. Payment gateway and payout remain inactive.
+- Next M2 step: complete the source-column and order-path contract review, then add narrowly scoped snapshot migration and regression tests only after all source paths and legacy fallback behavior are specified. Full isolated Supabase Native Runtime replay and hosted Auth/JWT/PostgREST/RLS remain release blockers.
