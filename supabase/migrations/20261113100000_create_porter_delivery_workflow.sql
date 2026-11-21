@@ -1,0 +1,7 @@
+-- SUPERSEDED: Do not apply this legacy migration.
+-- It modeled Porter as a profiles.role='porter' account and assigned jobs to a user ID.
+-- The approved NEXORA product model treats Porter as a transport service:
+-- Transport Providers own/manage one or more Vehicles; delivery jobs must reference
+-- an approved provider and a specific approved vehicle.
+-- Replacement schema is staged in 20261113180000_transport_provider_vehicle_model.sql.
+-- This file is intentionally a no-op to prevent accidental deployment of the legacy model.

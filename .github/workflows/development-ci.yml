@@ -1,0 +1,223 @@
+name: NEXORA Development CI
+
+on:
+  push:
+    branches:
+      - nexora-development
+  pull_request:
+    branches:
+      - nexora-development
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nexora-development-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Static checks and dependency-free tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: nexora_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d nexora_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Check out development branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check JavaScript syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r -d '' file; do
+            node --check "$file"
+          done < <(find . -type f -name '*.js' -not -path './.git/*' -print0)
+
+      - name: Run dependency-free regression tests
+        run: node --test tests/*.test.js
+
+      - name: Execute Buyer Demand migration against disposable PostgreSQL
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_test
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/buyer-demand-negotiation-postgres.test.sql
+
+      - name: Execute Product Price Negotiation migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_product_test
+        run: |
+          createdb nexora_product_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/product-price-negotiation-postgres.test.sql
+
+      - name: Execute Product commercial-field JSON numeric guard against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_product_commercial_test
+        run: |
+          createdb nexora_product_commercial_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/product-commercial-fields-postgres.test.sql
+
+      - name: Execute Buyer-safe Delivery Updates migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_delivery_test
+        run: |
+          createdb nexora_delivery_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/buyer-safe-delivery-updates-postgres.test.sql
+
+      - name: Execute Buyer receipt OTP migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_receipt_test
+        run: |
+          createdb nexora_receipt_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/buyer-delivery-receipt-otp-postgres.test.sql
+
+      - name: Execute Admin Order-to-Delivery linking migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_admin_delivery_test
+        run: |
+          createdb nexora_admin_delivery_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/admin-delivery-order-linking-postgres.test.sql
+
+      - name: Execute identity-bound Delivery Staff receipt migration against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_staff_receipt_test
+        run: |
+          createdb nexora_staff_receipt_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/delivery-staff-receipt-identity-postgres.test.sql
+
+      - name: Execute Delivery Staff operations PostgreSQL regression suite against isolated disposable database
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_staff_operations_test
+        run: |
+          createdb nexora_staff_operations_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/delivery-staff-operations-postgres.test.sql
+
+      - name: Execute Payment Intent and Finance Ledger foundation against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_payment_finance_test
+        run: |
+          createdb nexora_payment_finance_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/payment-finance-foundation-postgres.test.sql
+
+      - name: Execute Payment Reconciliation batch and exception tests against isolated disposable PostgreSQL
+        env:
+          PGHOST: localhost
+          PGUSER: postgres
+          PGPASSWORD: postgres
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/nexora_payment_reconciliation_test
+        run: |
+          createdb nexora_payment_reconciliation_test
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/payment-reconciliation-postgres.test.sql
+
+      - name: Validate active migration filenames and ordering
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs = require("node:fs");
+          const path = require("node:path");
+          const dir = path.join(process.cwd(), "supabase", "migrations");
+          const files = fs.readdirSync(dir).filter(name => name.endsWith(".sql")).sort();
+          if (files.length === 0) throw new Error("No active migrations found");
+          const timestamps = [];
+          for (const name of files) {
+            const match = name.match(/^(\d{14})_[a-z0-9_]+\.sql$/);
+            if (!match) throw new Error("Invalid active migration filename: " + name);
+            timestamps.push(match[1]);
+          }
+          if (new Set(timestamps).size !== timestamps.length) {
+            throw new Error("Duplicate active migration timestamp detected");
+          }
+          if (timestamps.some((value, index) => index > 0 && value < timestamps[index - 1])) {
+            throw new Error("Active migrations are not timestamp ordered");
+          }
+          console.log("Validated " + files.length + " active migration filenames.");
+          NODE
+
+  recovery-snapshot:
+    name: Create recoverable development source snapshot
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/nexora-development'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Check out exact tested commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Create source snapshot and Git history bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p recovery-output
+          git archive --format=tar.gz --prefix=nexora-source/ HEAD -o recovery-output/nexora-source.tar.gz
+          git bundle create recovery-output/nexora-history.bundle --all
+          git bundle verify recovery-output/nexora-history.bundle
+          git rev-parse HEAD > recovery-output/commit-sha.txt
+          printf 'branch=%s\\ncommit=%s\\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" > recovery-output/RESTORE-METADATA.txt
+          cat > recovery-output/RESTORE-INSTRUCTIONS.txt <<'EOF'
+          NEXORA DEVELOPMENT RECOVERY SNAPSHOT
+          
+          1. Keep this artifact in a secure location; it contains the tracked source snapshot and Git history.
+          2. To restore the complete Git repository, download nexora-history.bundle and run:
+             git clone nexora-history.bundle nexora-platform1
+          3. Then run:
+             cd nexora-platform1
+             git checkout nexora-development
+          4. To inspect the source-only snapshot, extract nexora-source.tar.gz.
+          5. Recreate local environment variables from the owner's password manager/secure recovery record.
+          6. Never put .env files, service-role keys, passwords, tokens or recovery codes into Git.
+          7. This artifact does NOT back up Supabase database rows or Storage objects.
+          EOF
+
+      - name: Upload tested recovery snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexora-development-recovery-${{ github.sha }}
+          path: recovery-output/
+          if-no-files-found: error
+          retention-days: 90
+
