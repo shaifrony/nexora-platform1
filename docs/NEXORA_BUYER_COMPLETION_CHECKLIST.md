@@ -1,6 +1,6 @@
 # NEXORA — Buyer বিভাগ সম্পূর্ণকরণ তালিকা
 
-Updated: 2026-11-15  
+Updated: 2026-11-22
 Branch: `nexora-development`  
 Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion blocked by integration/security/E2E tests**
 
@@ -110,6 +110,7 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 - [ ] Buyer account category ছাড়া যেকোনো approved product order করতে পারে—full-schema/runtime verification pending.
 - [ ] MOQ, Retail single-unit default, quantity tiers, stock reservation ও insufficient-stock rejection একই নিয়মে কাজ করে।
 - [x] Source-level tests cover active assigned Buyer/Seller checks on Product/Service order transitions, role-specific state changes, stock reservation/release/deduction, MOQ/available-stock validation and tier-price snapshots. The expanded suite [#43647857697](https://github.com/shaifrony/nexora-platform1/actions/runs/43647857697) passed 93/93 tests; hosted runtime/RLS and browser E2E remain pending.
+- [x] Source regression guard added for both Product/Service and Buyer Demand order transition RPCs: assigned active Buyer/Seller identity, allowed prior states, action-specific actor, rejection reason, stock release/deduction and completion eligibility are asserted. This is static source coverage only; full database/JWT/RLS/browser verification remains pending.
 - [ ] Order cancel/complete শুধুমাত্র অনুমোদিত status transition-এ হয়।
 - [x] Buyer order card স্পষ্টভাবে জানায়—order request মানেই payment সম্পন্ন বা delivery booking নয়; `tests/payment-finance-foundation.test.js`-এ regression assertion যোগ করা হয়েছে। Hosted payment collection চালু নয়.
 - [ ] Buyer order list-এ প্রয়োজনীয় order detail ও delivery progress দেখানো।
