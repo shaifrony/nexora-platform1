@@ -2155,3 +2155,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Updated the Buyer completion checklist to distinguish source-level regression coverage from full runtime acceptance. The state-transition source guard is now recorded as covered, but database/JWT/RLS/browser verification remains pending; no runtime test result is inferred from static assertions.
 - New test commit: `eb2ec401c8e260a0b4865c13c7eb0f0615e99147`; CI is pending and must be verified before claiming this new test passed.
 - No SQL/migration or application behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout was changed.
+
+
+## 2026-11-22 — M2 order-transition regression assertion correction
+
+- Development CI [#45029457499](https://github.com/shaifrony/nexora-platform1/actions/runs/45029457499) completed with 164/166 dependency-free tests passing. The two failures were confined to newly added source assertions: one expected the actor UUID declaration and NULL guard in the reverse order, and one expected the rejection-reason check after the state assignment although the SQL correctly validates the reason first.
+- Corrected `tests/buyer-order-transition-guards.test.js` to assert the actual SQL declaration/guard and actual rejection validation order. No SQL/business logic was changed.
+- Correction commit: `08a2b8bf0a674c5f4116f82060ab3d2994a416cc`. Its exact-HEAD CI must complete successfully before this regression gate is considered closed.
+- No migration, database, hosted service, `main`, Production, DNS, deployment, payment gateway or payout was changed.
