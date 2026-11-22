@@ -21,7 +21,8 @@ const productTransition = readFunction(productOrders, 'create or replace functio
 const demandTransition = readFunction(demandOrders, 'create or replace function private.transition_buyer_demand_order(');
 
 test('Product and Service order transitions enforce assigned active Buyer/Seller identity', () => {
-  assert.match(productTransition, /v_actor\s+is\s+null[\s\S]*?auth\.uid\(\)/i);
+  assert.match(productTransition, /v_actor uuid := auth\.uid\(\)/i);
+  assert.match(productTransition, /if v_actor is null then raise exception 'Login required'/i);
   assert.match(productTransition, /select \* into v_order from public\.commerce_orders where id=p_order_id for update/i);
   assert.match(productTransition, /p\.id=v_actor and p\.account_status='active'[\s\S]*?p\.role='buyer' and p\.id=v_order\.buyer_id[\s\S]*?p\.role='seller' and p\.id=v_order\.seller_id/i);
 });
@@ -32,7 +33,7 @@ test('Product and Service order state machine restricts every action to its perm
     /p_action='ready'[\s\S]*?v_actor<>v_order\.seller_id or v_order\.order_status<>'accepted'[\s\S]*?v_next:='ready_for_confirmation'/i,
     /p_action='complete'[\s\S]*?v_actor<>v_order\.buyer_id or v_order\.order_status<>'ready_for_confirmation'[\s\S]*?v_next:='completed'/i,
     /p_action='cancel'[\s\S]*?v_actor<>v_order\.buyer_id or v_order\.order_status<>'pending'[\s\S]*?v_next:='cancelled'/i,
-    /p_action='reject'[\s\S]*?v_actor<>v_order\.seller_id or v_order\.order_status<>'pending'[\s\S]*?v_next:='rejected'[\s\S]*?length\(btrim\(coalesce\(p_note,''\)\)\) < 5/i,
+    /p_action='reject'[\s\S]*?v_actor<>v_order\.seller_id or v_order\.order_status<>'pending'[\s\S]*?length\(btrim\(coalesce\(p_note,''\)\)\) < 5[\s\S]*?v_next:='rejected'/i,
   ];
   for (const guard of guards) assert.match(productTransition, guard);
   assert.match(productTransition, /else\s+raise exception 'Unsupported order action'/i);
