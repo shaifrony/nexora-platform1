@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-20 (CI #44679941501: 158/158 dependency-free tests; 10 focused PostgreSQL suites; 52 migration filename/order checks)
+Updated: 2026-11-22 (CI #44982313139 passed on 018ee9be9fe6130d1cd502e7c06eb879afb00cd4; next writer-path regression added, new CI pending)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2135,4 +2135,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Reconfirmed safe name sources: `products.product_name`, `service_listings.service_name`, `buyer_demands.product_name`, and approved-only `public_businesses.display_name`. Buyer Demand has no Product/Business ID; resolve its Seller display name by the responding Offer's Seller ID. Never fall back to private profile identity.
 - Updated the Buyer Order identity design and Buyer completion checklist to include the third writer and approval-revalidation requirement. This is a source/documentation audit only; no SQL, frontend behavior, schema, hosted database or runtime test was changed.
 - Next safe step remains blocked on a reconciled Foundation baseline and complete migration history. Do not create/apply the snapshot migration or seed NEXORA-TEST until the approved Test-only baseline and full isolated Supabase Native Runtime replay/Auth/JWT/PostgREST/RLS/Storage gates are complete.
+- No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
+
+
+## 2026-11-22 — M2 Commerce Order writer-path regression inventory
+
+- Verified Development CI [#44982313139](https://github.com/shaifrony/nexora-platform1/actions/runs/44982313139) completed successfully on exact HEAD `018ee9be9fe6130d1cd502e7c06eb879afb00cd4`; both Static checks/dependency-free tests and recoverable source snapshot jobs succeeded.
+- Added `tests/buyer-order-writer-paths.test.js` to keep the three independent Commerce Order INSERT paths visible to the source regression suite: direct Product/Service via `private.create_commerce_order`, Product Price Negotiation acceptance via `private.respond_to_product_price_negotiation`, and Buyer Demand quotation conversion via `private.respond_to_demand_offer`. The test also asserts that Product Price Negotiation remains an independent writer rather than silently assuming it calls the shared direct-order RPC.
+- This is test-only coverage of the writer inventory, not a security fix or runtime database test. The exact approved `public_businesses.business_id + seller_id` revalidation is still missing in the Product Price Negotiation acceptance path; the direct Product/Service writer also currently checks the Business projection by `business_id` only. Both must be corrected in the future forward-only snapshot migration.
+- New test commit: `d5a5cbcc702f43489d92f074a9916703393736c4`. Its Development CI result is pending and must be verified before claiming the new test passed.
+- Snapshot schema/UI migration remains blocked by the unreconciled Foundation baseline and complete migration history. No historical migration was edited, no migration was generated or applied, and no database was changed.
 - No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
