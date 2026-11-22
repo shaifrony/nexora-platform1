@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-22 (CI #44982313139 passed on 018ee9be9fe6130d1cd502e7c06eb879afb00cd4; next writer-path regression added, new CI pending)
+Updated: 2026-11-22 (CI #409 passed on 83a2df30559520c3d6162be162e332f1cfdbec47; Buyer order transition regression added, CI pending)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2146,3 +2146,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - New test commit: `d5a5cbcc702f43489d92f074a9916703393736c4`. Its Development CI result is pending and must be verified before claiming the new test passed.
 - Snapshot schema/UI migration remains blocked by the unreconciled Foundation baseline and complete migration history. No historical migration was edited, no migration was generated or applied, and no database was changed.
 - No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
+
+
+## 2026-11-22 — M2 Buyer Order transition authorization regression
+
+- Re-verified Development HEAD `83a2df30559520c3d6162be162e332f1cfdbec47` and CI [#45029028275](https://github.com/shaifrony/nexora-platform1/actions/runs/45029028275): both Static checks/dependency-free tests and recoverable source snapshot jobs completed successfully. The prior writer-path test is therefore included in a successful CI run; the earlier #408 cancellation is superseded by this successful exact-HEAD run.
+- Audited both effective order state-transition RPCs: `private.transition_commerce_order` (Product/Service) and `private.transition_buyer_demand_order` (Buyer Demand). Added `tests/buyer-order-transition-guards.test.js` to assert active assigned Buyer/Seller identity, row locking, action-specific actor and prior-state guards, required rejection reason, unsupported-action denial, Product stock deduction/release and completion-only review eligibility, plus SECURITY DEFINER/empty search_path.
+- Updated the Buyer completion checklist to distinguish source-level regression coverage from full runtime acceptance. The state-transition source guard is now recorded as covered, but database/JWT/RLS/browser verification remains pending; no runtime test result is inferred from static assertions.
+- New test commit: `eb2ec401c8e260a0b4865c13c7eb0f0615e99147`; CI is pending and must be verified before claiming this new test passed.
+- No SQL/migration or application behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout was changed.
