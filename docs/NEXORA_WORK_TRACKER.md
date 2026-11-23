@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-22 (CI #409 passed on 83a2df30559520c3d6162be162e332f1cfdbec47; Buyer order transition regression added, CI pending)
+Updated: 2026-11-23 (CI #45108160879 failed: 167/168 dependency-free tests; exact assertion mismatch documented below; correction CI pending)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2171,3 +2171,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Continued the next low-risk M2 Buyer Dashboard task: added source regression checks for the existing Buyer delivery-progress UI. The checks require the ownership-filtered Buyer order query and narrow `get_my_order_delivery_updates` RPC, prohibit raw delivery-table reads in the Buyer order loader, require escaped customer-safe fields, preserve the distinction between a delivery-reported state and Buyer order completion, and verify that receipt OTP is offered only for an out-for-delivery job and rendered with `textContent`.
 - Reconciled B-06 checklist: Buyer-safe delivery tracking/receipt UI is staged and has isolated PostgreSQL ownership/privacy coverage; Buyer-facing dispatch/handoff UX and browser/mobile E2E remain open. This does not expose Provider identity/contact details or raw logistics records.
 - This change is regression-test/documentation only; no SQL, migration, application runtime behavior, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout changed. The new commit's CI must be checked before the added tests are considered passed.
+
+
+## 2026-11-23 — M2 Buyer delivery tracking regression assertion correction
+
+- Verified exact Development CI run [#45108160879](https://github.com/shaifrony/nexora-platform1/actions/runs/45108160879) on commit `633d16ca8ec3ab72dba888b69be5bb86e2718e67`. JavaScript syntax passed; dependency-free tests reported **167/168 PASS, 1 FAIL**. The focused PostgreSQL/migration steps were skipped because the dependency-free test step failed.
+- Retrieved the failing job log. The sole failure was the Buyer Order History delivery-tracking source assertion in `tests/delivery-staff-operations-source.test.js`: it expected `esc(u.customer_status)`, while the implementation correctly renders `esc(deliveryStatusLabels[u.customer_status]||u.customer_status)`. Known status labels are mapped to Bengali; unknown fallback values are escaped. The mismatch was in the test expectation, not evidence of an application runtime/security defect.
+- Corrected the regression assertion to match the actual escaped label/fallback expression, retained escaping assertions for the other customer-facing fields, and added a focused assertion for Bengali known labels plus escaped unknown fallback.
+- Correction commit: `f1976772c7a9a79236e5efbdeaf460af6d1e8dcc`. Its exact-HEAD CI is pending; do not count the corrected tests as passed until GitHub Actions confirms success.
+- No application code, SQL, migration, database or business behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
