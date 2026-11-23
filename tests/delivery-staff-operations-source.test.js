@@ -104,3 +104,28 @@ test("Admin UI cannot set Delivered through ordinary tracking status updates", (
   assert.doesNotMatch(transitionBlock[1], /out_for_delivery:\[([^\]]*\bdelivered\b)|partially_delivered:\[([^\]]*\bdelivered\b)|disputed:\[([^\]]*\bdelivered\b)/);
   assert.match(adminUi, /verify_delivery_receipt_code/);
 });
+
+
+const buyerOrderLoaderStart = marketplaceUi.indexOf("async function loadBuyerOrders(){");
+const buyerOrderLoaderEnd = marketplaceUi.indexOf("async function updateSellerProductInventory", buyerOrderLoaderStart);
+const buyerOrderLoader = marketplaceUi.slice(buyerOrderLoaderStart, buyerOrderLoaderEnd);
+
+test("Buyer Order History uses the customer-safe own-order tracking RPC, never raw delivery tables", () => {
+  assert.ok(buyerOrderLoaderStart >= 0 && buyerOrderLoaderEnd > buyerOrderLoaderStart);
+  assert.match(buyerOrderLoader, /\.eq\("buyer_id",user\(\)\.id\)/);
+  assert.match(buyerOrderLoader, /rpc\("get_my_order_delivery_updates",\{p_order_ids:rows\.map\(o=>o\.id\)\}\)/);
+  assert.doesNotMatch(buyerOrderLoader, /\.from\(["']delivery_(?:jobs|tracking_events|customer_updates)["']\)/i);
+  for (const field of ["job_reference", "customer_status", "customer_message", "customer_location_label"]) {
+    assert.match(buyerOrderLoader, new RegExp("esc\\(u\\." + field + "\\)"));
+  }
+  assert.match(buyerOrderLoader, /ডেলিভারি সম্পন্নের রিপোর্ট/);
+  assert.match(buyerOrderLoader, /ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়/);
+  assert.match(buyerOrderLoader, /এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই/);
+});
+
+test("Buyer receipt OTP is offered only for an out-for-delivery own-order job and rendered as text", () => {
+  assert.match(buyerOrderLoader, /job\.job_status==="out_for_delivery"/);
+  assert.match(buyerOrderLoader, /rpc\("request_delivery_receipt_code",\{p_job_id:jobId\}\)/);
+  assert.match(buyerOrderLoader, /output\.textContent="আপনার রিসিপ্ট OTP: "\+data\.code/);
+  assert.doesNotMatch(buyerOrderLoader, /output\.innerHTML/);
+});

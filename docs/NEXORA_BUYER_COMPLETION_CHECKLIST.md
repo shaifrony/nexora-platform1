@@ -129,7 +129,8 @@ Status: **Core Buyer Demand quotation/order flow staged; full Buyer completion b
 ### B-06 — Dashboard completeness
 - [ ] Sale type label ও demo text product-এর নির্বাচিত Wholesale/Retail ধরন ঠিকভাবে দেখায় যাচাই।
 - [x] Buyer Dashboard wallet/payment area-তে স্পষ্ট `এখনো চালু হয়নি` এবং `Order request মানেই Payment নয়` disclosure আছে; regression assertion যোগ করা হয়েছে। এটি প্রকৃত wallet/payment integration নয়।
-- [ ] Buyer delivery tracking ও Porter handoff UI সংযুক্ত।
+- [x] Buyer Order History-তে customer-safe delivery tracking RPC, escaped customer status/message/location, প্রকাশিত update না থাকলে neutral empty state, এবং Buyer receipt OTP flow যুক্ত; source regression guard ও isolated PostgreSQL ownership/privacy suite আছে। Browser/mobile E2E এখনো বাকি.
+- [ ] Buyer-facing Porter handoff/dispatch UX ও সম্পূর্ণ browser/mobile delivery journey যাচাই; Provider-এর private identity/contact তথ্য প্রকাশ নয়।
 - [x] Buyer Order History refresh-এ `role="status"` loading message ও `aria-busy` lifecycle যোগ করা হয়েছে; unauthenticated, success ও error path-এ busy state clear হয়। Source regression guard আছে; এটি screen-reader/browser/mobile E2E pass নয়।
 - [ ] Mobile responsive, keyboard accessibility, loading/error/empty states পরীক্ষা।
 - [ ] Browser E2E: signup, browse both sale types, direct URL, demand, offers, inquiry consent, order, completion, review।

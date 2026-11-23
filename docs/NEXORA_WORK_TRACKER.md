@@ -2163,3 +2163,11 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected `tests/buyer-order-transition-guards.test.js` to assert the actual SQL declaration/guard and actual rejection validation order. No SQL/business logic was changed.
 - Correction commit: `08a2b8bf0a674c5f4116f82060ab3d2994a416cc`. Its exact-HEAD CI must complete successfully before this regression gate is considered closed.
 - No migration, database, hosted service, `main`, Production, DNS, deployment, payment gateway or payout was changed.
+
+
+## 2026-11-23 — M2 Buyer delivery tracking UI regression guard
+
+- Verified Development branch HEAD `97e752cb6ed3ef3e56737e35a76b3985b5d6ff40` and GitHub Actions [#45029658658](https://github.com/shaifrony/nexora-platform1/actions/runs/45029658658) completed successfully on that exact SHA. Both CI jobs succeeded: **166/166 dependency-free tests**, all focused disposable PostgreSQL migration suites, 52 active migration filename/order validation, and recoverable source snapshot.
+- Continued the next low-risk M2 Buyer Dashboard task: added source regression checks for the existing Buyer delivery-progress UI. The checks require the ownership-filtered Buyer order query and narrow `get_my_order_delivery_updates` RPC, prohibit raw delivery-table reads in the Buyer order loader, require escaped customer-safe fields, preserve the distinction between a delivery-reported state and Buyer order completion, and verify that receipt OTP is offered only for an out-for-delivery job and rendered with `textContent`.
+- Reconciled B-06 checklist: Buyer-safe delivery tracking/receipt UI is staged and has isolated PostgreSQL ownership/privacy coverage; Buyer-facing dispatch/handoff UX and browser/mobile E2E remain open. This does not expose Provider identity/contact details or raw logistics records.
+- This change is regression-test/documentation only; no SQL, migration, application runtime behavior, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout changed. The new commit's CI must be checked before the added tests are considered passed.
