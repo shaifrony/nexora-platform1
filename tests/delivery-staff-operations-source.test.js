@@ -115,9 +115,10 @@ test("Buyer Order History uses the customer-safe own-order tracking RPC, never r
   assert.match(buyerOrderLoader, /\.eq\("buyer_id",user\(\)\.id\)/);
   assert.match(buyerOrderLoader, /rpc\("get_my_order_delivery_updates",\{p_order_ids:rows\.map\(o=>o\.id\)\}\)/);
   assert.doesNotMatch(buyerOrderLoader, /\.from\(["']delivery_(?:jobs|tracking_events|customer_updates)["']\)/i);
-  for (const field of ["job_reference", "customer_status", "customer_message", "customer_location_label"]) {
-    assert.match(buyerOrderLoader, new RegExp("esc\\(u\\." + field + "\\)"));
+  for (const field of ["job_reference", "customer_message", "customer_location_label"]) {
+    assert.match(buyerOrderLoader, new RegExp("esc\\\\(u\\\\." + field + "\\\\)"));
   }
+  assert.match(buyerOrderLoader, /esc\\(deliveryStatusLabels\\[u\\.customer_status\\]\\|\\|u\\.customer_status\\)/);
   assert.match(buyerOrderLoader, /ডেলিভারি সম্পন্নের রিপোর্ট/);
   assert.match(buyerOrderLoader, /ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়/);
   assert.match(buyerOrderLoader, /এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই/);
@@ -128,4 +129,11 @@ test("Buyer receipt OTP is offered only for an out-for-delivery own-order job an
   assert.match(buyerOrderLoader, /rpc\("request_delivery_receipt_code",\{p_job_id:jobId\}\)/);
   assert.match(buyerOrderLoader, /output\.textContent="আপনার রিসিপ্ট OTP: "\+data\.code/);
   assert.doesNotMatch(buyerOrderLoader, /output\.innerHTML/);
+});
+
+
+test("Buyer delivery status labels are mapped to Bengali and escaped, including unknown fallback values", () => {
+  assert.match(buyerOrderLoader, /deliveryStatusLabels=\\{[\\s\\S]*?preparing:"ডেলিভারি প্রস্তুতি"/);
+  assert.match(buyerOrderLoader, /delivered:"ডেলিভারি সম্পন্নের রিপোর্ট"/);
+  assert.match(buyerOrderLoader, /esc\\(deliveryStatusLabels\\[u\\.customer_status\\]\\|\\|u\\.customer_status\\)/);
 });
