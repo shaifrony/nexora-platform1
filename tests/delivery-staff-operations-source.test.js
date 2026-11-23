@@ -133,7 +133,8 @@ test("Buyer receipt OTP is offered only for an out-for-delivery own-order job an
 
 
 test("Buyer delivery status labels are mapped to Bengali and escaped, including unknown fallback values", () => {
-  assert.match(buyerOrderLoader, /deliveryStatusLabels=\\{[\\s\\S]*?preparing:"ডেলিভারি প্রস্তুতি"/);
-  assert.match(buyerOrderLoader, /delivered:"ডেলিভারি সম্পন্নের রিপোর্ট"/);
-  assert.match(buyerOrderLoader, /esc\\(deliveryStatusLabels\\[u\\.customer_status\\]\\|\\|u\\.customer_status\\)/);
+  assert.ok(buyerOrderLoader.includes('deliveryStatusLabels={'));
+  assert.ok(buyerOrderLoader.includes('preparing:"ডেলিভারি প্রস্তুতি"'));
+  assert.ok(buyerOrderLoader.includes('delivered:"ডেলিভারি সম্পন্নের রিপোর্ট"'));
+  assert.ok(buyerOrderLoader.includes('esc(deliveryStatusLabels[u.customer_status]||u.customer_status)'));
 });
