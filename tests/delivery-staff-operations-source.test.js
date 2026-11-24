@@ -116,9 +116,9 @@ test("Buyer Order History uses the customer-safe own-order tracking RPC, never r
   assert.match(buyerOrderLoader, /rpc\("get_my_order_delivery_updates",\{p_order_ids:rows\.map\(o=>o\.id\)\}\)/);
   assert.doesNotMatch(buyerOrderLoader, /\.from\(["']delivery_(?:jobs|tracking_events|customer_updates)["']\)/i);
   for (const field of ["job_reference", "customer_message", "customer_location_label"]) {
-    assert.match(buyerOrderLoader, new RegExp("esc\\\\(u\\\\." + field + "\\\\)"));
+    assert.ok(buyerOrderLoader.includes("esc(u." + field + ")"), "Buyer tracking field " + field + " must be escaped");
   }
-  assert.match(buyerOrderLoader, /esc\\(deliveryStatusLabels\\[u\\.customer_status\\]\\|\\|u\\.customer_status\\)/);
+  assert.ok(buyerOrderLoader.includes("esc(deliveryStatusLabels[u.customer_status]||u.customer_status)"), "Buyer status label and fallback must be escaped");
   assert.match(buyerOrderLoader, /ডেলিভারি সম্পন্নের রিপোর্ট/);
   assert.match(buyerOrderLoader, /ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়/);
   assert.match(buyerOrderLoader, /এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই/);
