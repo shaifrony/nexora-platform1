@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-23 (CI #45108160879 failed: 167/168 dependency-free tests; exact assertion mismatch documented below; correction CI pending)
+Updated: 2026-11-24 (CI #45213993703 failed: Buyer delivery source assertion regex was over-escaped; correction CI pending)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2180,3 +2180,12 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected the regression assertion to match the actual escaped label/fallback expression, retained escaping assertions for the other customer-facing fields, and added a focused assertion for Bengali known labels plus escaped unknown fallback.
 - Initial correction commit: `f1976772c7a9a79236e5efbdeaf460af6d1e8dcc`. A follow-up review simplified the new label-map assertions to literal source checks to avoid over-escaped regex patterns; final test commit: `963e78bf2d9b325189154e315f55898e0193c5f8`. Its exact-HEAD CI is pending; do not count the corrected tests as passed until GitHub Actions confirms success.
 - No application code, SQL, migration, database or business behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
+
+
+## 2026-11-24 — M2 Buyer delivery tracking source assertion correction
+
+- Re-checked the Development branch HEAD and its exact GitHub Actions run [#45213993703](https://github.com/shaifrony/nexora-platform1/actions/runs/45213993703) on `5e0a263d5ec06a887d1c7c1df4790e47acf761df`. The run completed with failure in **Static checks and dependency-free tests**; JavaScript syntax passed, but the focused PostgreSQL/migration steps and source snapshot were skipped.
+- Retrieved the failing job log. The single failing test was `Buyer Order History uses the customer-safe own-order tracking RPC, never raw delivery tables` (test file line 113). The source itself contains `esc(u.job_reference)`, `esc(u.customer_message)`, `esc(u.customer_location_label)`, and `esc(deliveryStatusLabels[u.customer_status]||u.customer_status)`; the regression test constructed an over-escaped regular expression that searched for literal backslashes, so it did not match the correct escaped source expressions. This is a test assertion defect, not evidence of an application runtime/privacy defect.
+- Corrected the affected assertions to use exact source-string inclusion checks with field-specific failure messages, avoiding regex-escape ambiguity. Existing assertions for Bengali labels and escaped unknown-status fallback remain.
+- Correction commit: `fa0c310a67cc77483e987e3f5b3be4c65189cb93`. The exact-HEAD CI must complete successfully before this regression gate or downstream PostgreSQL checks are considered passed.
+- No application runtime code, SQL, migration, database or business behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
