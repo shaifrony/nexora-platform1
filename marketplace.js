@@ -644,6 +644,17 @@
         returned:"ফেরত পাঠানো হচ্ছে",
         cancelled:"ডেলিভারি বাতিল"
       };
+      const deliveryStatusGuidance={
+        preparing:"পণ্য পাঠানোর প্রস্তুতি চলছে। নতুন আপডেটের জন্য অপেক্ষা করুন।",
+        picked_up:"পণ্য বিক্রেতার কাছ থেকে ডেলিভারি কর্মীর কাছে হস্তান্তর হয়েছে।",
+        in_transit:"চালান গন্তব্যের পথে। এখানে প্রকাশিত অবস্থান ও সময় দেখুন।",
+        out_for_delivery:"ডেলিভারি কর্মী পৌঁছে দিতে রওনা হয়েছেন। পণ্য ও পরিমাণ যাচাইয়ের আগে রিসিপ্ট OTP শেয়ার করবেন না।",
+        partially_delivered:"আংশিক পণ্য পেয়েছেন—প্রাপ্ত পরিমাণ যাচাই করুন; সব পণ্য না পাওয়া পর্যন্ত অর্ডার সম্পন্ন নিশ্চিত করবেন না।",
+        delivered:"ডেলিভারি কর্মী পৌঁছে দেওয়ার রিপোর্ট দিয়েছেন। পণ্য হাতে পেয়ে যাচাইয়ের পরই রিসিপ্ট OTP দিয়ে গ্রহণ নিশ্চিত করুন।",
+        delivery_issue:"ডেলিভারিতে সমস্যা রিপোর্ট হয়েছে। প্রয়োজন হলে অর্ডারের Proof/Dispute অংশে অভিযোগ জানান।",
+        returned:"চালান ফেরত পাঠানোর প্রক্রিয়ায় রয়েছে। Seller-এর সঙ্গে পরবর্তী ব্যবস্থা নিশ্চিত করুন।",
+        cancelled:"এই চালানের ডেলিভারি বাতিল হয়েছে। অর্ডারের সামগ্রিক অবস্থা আলাদা করে দেখুন।"
+      };
       const counts={pending:0,accepted:0,ready_for_confirmation:0,completed:0,cancelled:0,rejected:0};
       rows.forEach(o=>{counts[o.order_status]=(counts[o.order_status]||0)+1;});
       const summary='<div class="nx-order-summary"><span>সর্বশেষ দেখানো '+rows.length+'টি</span><span>নতুন '+counts.pending+'</span><span>চলমান '+(counts.accepted+counts.ready_for_confirmation)+'</span><span>সম্পন্ন '+counts.completed+'</span></div>';
@@ -690,7 +701,7 @@
         const trackingHtml=trackingUnavailable
           ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>'
           :updates.length
-            ?'<div class="nx-order-timeline"><b>ডেলিভারি ট্র্যাকিং</b><ol>'+updates.map(u=>'<li><b>'+esc(deliveryStatusLabels[u.customer_status]||u.customer_status)+'</b> · '+esc(u.job_reference)+'<br>'+esc(u.customer_message)+(u.customer_location_label?'<br><span class="muted">'+esc(u.customer_location_label)+'</span>':'')+' <span class="muted">· '+esc(formatOrderDate(u.created_at))+'</span></li>').join("")+'</ol><p class="muted">একটি অর্ডারে একাধিক চালান থাকতে পারে। ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়; পণ্য হাতে পেয়ে যাচাই করে আপনাকেই নিশ্চিত করতে হবে।</p></div>'
+            ?'<div class="nx-order-timeline"><b>ডেলিভারি ট্র্যাকিং</b><ol>'+updates.map(u=>'<li><b>'+esc(deliveryStatusLabels[u.customer_status]||u.customer_status)+'</b> · '+esc(u.job_reference)+'<br>'+esc(u.customer_message)+'<br><span class="muted"><b>আপনার করণীয়:</b> '+esc(deliveryStatusGuidance[u.customer_status]||"পরবর্তী আপডেটের জন্য অপেক্ষা করুন।")+'</span>'+(u.customer_location_label?'<br><span class="muted">'+esc(u.customer_location_label)+'</span>':'')+' <span class="muted">· '+esc(formatOrderDate(u.created_at))+'</span></li>').join("")+'</ol><p class="muted">একটি অর্ডারে একাধিক চালান থাকতে পারে। ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়; পণ্য হাতে পেয়ে যাচাই করে আপনাকেই নিশ্চিত করতে হবে।</p></div>'
             :'<p class="muted">এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই। ডেলিভারি ব্যবস্থা তৈরি বা আপডেট হলে এখানে দেখা যাবে।</p>';
         return '<article class="card nx-order-card" data-buyer-order-card data-status="'+esc(o.order_status)+'"><div class="section-head"><strong>'+esc(o.order_code)+'</strong><span class="tag">'+esc(orderStatusLabels[o.order_status]||o.order_status)+'</span></div>'+
           '<p><b>'+itemType+'</b></p>'+priceLine+
