@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-24 (CI #45213993703 failed: Buyer delivery source assertion regex was over-escaped; correction CI pending)
+Updated: 2026-11-25 (CI #45319132611 passed on exact HEAD 2a078ba; 169/169 source tests, 10 focused PostgreSQL suites, 52 migration-order validation and source snapshot passed; Buyer handoff UX follow-up CI pending)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2189,3 +2189,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Corrected the affected assertions to use exact source-string inclusion checks with field-specific failure messages, avoiding regex-escape ambiguity. Existing assertions for Bengali labels and escaped unknown-status fallback remain.
 - Correction commit: `fa0c310a67cc77483e987e3f5b3be4c65189cb93`. The exact-HEAD CI must complete successfully before this regression gate or downstream PostgreSQL checks are considered passed.
 - No application runtime code, SQL, migration, database or business behavior changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS, deployment, payment gateway or payout activation was changed.
+
+
+## 2026-11-25 — M2 Buyer delivery handoff guidance
+
+- Re-inspected the Development branch ref, recent commits, tracker and GitHub Actions. Exact HEAD `2a078ba19779a090550abedc45e487f8dba821ae` completed Development CI [#45319132611](https://github.com/shaifrony/nexora-platform1/actions/runs/45319132611) successfully: **169/169 dependency-free tests PASS**, JavaScript syntax PASS, all **10 focused disposable PostgreSQL suites PASS**, 52 active migration filename/order validation PASS, and recoverable source snapshot job PASS. This validates that exact HEAD only.
+- Continued M2 B-06 with a low-risk Buyer Order History UX improvement. The customer-safe tracking timeline now gives escaped, status-specific next-step guidance for all nine published delivery states: preparation, Seller-to-delivery-worker pickup/handoff, transit, out-for-delivery, partial receipt, delivery-reported (not Buyer completion), issue, return and cancellation. Out-for-delivery guidance explicitly says not to share the receipt OTP before checking the goods and quantity.
+- The guidance consumes only the existing `get_my_order_delivery_updates` customer-safe RPC result and static UI copy. It does not read raw delivery tables or add Provider/worker private identity/contact fields. Existing receipt OTP eligibility and Buyer order-completion controls are unchanged.
+- Added regression coverage in `tests/delivery-staff-operations-source.test.js` for all nine guidance states, escaped rendering, OTP safety copy and absence of private worker identity fields. Updated B-06 in `docs/NEXORA_BUYER_COMPLETION_CHECKLIST.md` to distinguish staged status guidance from the still-pending real handoff journey and browser/mobile E2E.
+- Application commit: `a62424e70d7a7c121ac9510a5b31d863dc3a4eb6`; regression test commit: `38dad45542d2c5a3dfa5705704ab2d507723032f`; Buyer checklist commit: `0fad57d65cb19bb6f6ef27b3238cf1864b409dd5`. The exact-HEAD CI for these new commits is pending; do not count the added regression test as passed until GitHub Actions confirms it.
+- Remaining M2 blockers include actual Buyer-facing Porter handoff/dispatch browser and mobile E2E, keyboard/responsive/screen-reader verification, complete Foundation/migration-history reconciliation, and real Auth/JWT/PostgREST/RLS/Storage verification. Historical identity snapshot changes remain blocked on the Foundation gate.
+- No SQL or migration, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.
