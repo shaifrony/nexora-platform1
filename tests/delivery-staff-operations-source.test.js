@@ -138,3 +138,25 @@ test("Buyer delivery status labels are mapped to Bengali and escaped, including 
   assert.ok(buyerOrderLoader.includes('delivered:"ডেলিভারি সম্পন্নের রিপোর্ট"'));
   assert.ok(buyerOrderLoader.includes('esc(deliveryStatusLabels[u.customer_status]||u.customer_status)'));
 });
+
+
+test("Buyer delivery handoff guidance covers every customer-safe state without exposing worker identity", () => {
+  const guidance = [
+    'preparing:"পণ্য পাঠানোর প্রস্তুতি চলছে।',
+    'picked_up:"পণ্য বিক্রেতার কাছ থেকে ডেলিভারি কর্মীর কাছে হস্তান্তর হয়েছে।',
+    'in_transit:"চালান গন্তব্যের পথে।',
+    'out_for_delivery:"ডেলিভারি কর্মী পৌঁছে দিতে রওনা হয়েছেন।',
+    'partially_delivered:"আংশিক পণ্য পেয়েছেন',
+    'delivered:"ডেলিভারি কর্মী পৌঁছে দেওয়ার রিপোর্ট দিয়েছেন।',
+    'delivery_issue:"ডেলিভারিতে সমস্যা রিপোর্ট হয়েছে।',
+    'returned:"চালান ফেরত পাঠানোর প্রক্রিয়ায় রয়েছে।',
+    'cancelled:"এই চালানের ডেলিভারি বাতিল হয়েছে।'
+  ];
+  for (const expected of guidance) {
+    assert.ok(buyerOrderLoader.includes(expected), "Missing Buyer guidance: " + expected);
+  }
+  assert.ok(buyerOrderLoader.includes('<b>আপনার করণীয়:</b>'));
+  assert.ok(buyerOrderLoader.includes('esc(deliveryStatusGuidance[u.customer_status]||"পরবর্তী আপডেটের জন্য অপেক্ষা করুন।")'));
+  assert.ok(buyerOrderLoader.includes("পণ্য ও পরিমাণ যাচাইয়ের আগে রিসিপ্ট OTP শেয়ার করবেন না"));
+  assert.doesNotMatch(buyerOrderLoader, /provider_(?:id|phone|email)|assigned_staff_id|driver_phone/i);
+});
