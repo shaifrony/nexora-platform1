@@ -1188,3 +1188,13 @@ test("Product Detail keeps direct order primary and collapses optional price neg
   assert.doesNotMatch(detail.slice(disclosure, negotiationForm), /\\sopen(?:\\s|>)/, "negotiation disclosure must be collapsed initially");
   assert.match(detail, /id="nxProductNegotiationForm" class="card nx-order-form"/);
 });
+
+
+test("Wholesale and Retail labels render consistently and safely across catalog and product detail surfaces", () => {
+  const localizedLabel = 'esc(p.market_category === "wholesale" ? "পাইকারি" : p.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")';
+  const selectedLabel = 'esc(selected.market_category === "wholesale" ? "পাইকারি" : selected.market_category === "retail" ? "খুচরা" : "ধরন নির্ধারিত হয়নি")';
+  assert.ok(js.split(localizedLabel).length - 1 >= 3, "catalog, Buyer/Seller or Admin product surfaces should use the same escaped Wholesale/Retail label mapping");
+  assert.ok(js.includes(selectedLabel), "Product detail must show the selected sale type with an explicit legacy fallback");
+  assert.match(js, /!\["wholesale",\s*"retail"\]\.includes\(v\.market_category\)/);
+  assert.match(js, /ধরন নির্ধারিত হয়নি/);
+});
