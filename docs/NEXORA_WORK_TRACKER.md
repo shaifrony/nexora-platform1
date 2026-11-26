@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-26 (CI #45542239610 passed on exact HEAD a0aea45; 170/170 dependency-free tests, 10 focused PostgreSQL suites, 52 active migration filename/order validation and source snapshot passed; Buyer tracking retry change pending CI)
+Updated: 2026-11-26 (CI #45751994115 passed on exact HEAD 172e2bb; 171/171 dependency-free tests, 10 focused PostgreSQL suites, 52 active migration filename/order validation and source snapshot passed; next sale-type label regression test is queued for CI)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2211,3 +2211,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - This app/test/checklist/tracker change is committed together on Development. Its exact-HEAD CI is pending; the new retry regression assertion must not be counted as passed until that run completes.
 - Browser/mobile, keyboard and screen-reader E2E remain unverified. Buyer dispatch/handoff journey, Foundation/migration-history reconciliation, isolated full Supabase Native Runtime replay, Auth/JWT/PostgREST/RLS/Storage verification and historical order identity snapshots remain open.
 - No SQL/migration, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.
+
+
+## 2026-11-26 — M2 Buyer delivery retry CI closeout and sale-type label audit
+
+- Re-inspected Development branch HEAD, recent commits, main tracker and GitHub Actions before continuing. Branch head at start of this task was `172e2bb8d4ec8682cc40c0e81990573afb450897`.
+- GitHub Actions [#45751994115](https://github.com/shaifrony/nexora-platform1/actions/runs/45751994115) completed successfully on that exact SHA. Both jobs succeeded: JavaScript syntax; **171/171 dependency-free tests**; all **10 focused disposable PostgreSQL suites**; **52 active migration filename/order validations**; and recoverable source snapshot upload. The previous report's 170-test count was stale; the authoritative job log reports 171 passing tests.
+- Closed the pending CI note for the Buyer customer-safe delivery tracking retry in the Buyer completion checklist.
+- Continued the next low-risk M2 B-06 item with a source audit of Product sale-type labels. Confirmed public Product cards and Buyer Product detail render the selected `wholesale` / `retail` values as escaped Bengali “পাইকারি” / “খুচরা” labels, while legacy/unclassified values remain explicitly “ধরন নির্ধারিত হয়নি”. Seller/Admin product surfaces use the same localized mapping.
+- Added a source regression test in `tests/marketplace-listing-category.test.js` to guard consistent escaped labels, Product detail mapping and explicit legacy fallback. Updated the Buyer completion checklist and this tracker. Test commit: `180cab0e9e8339c333e240058f1ed90161a692b3`; checklist commit: `bb8f12f2eea85c007dd5901d9139a8ad60a5f17c`. The new label regression test's exact-HEAD CI is pending and must not be counted as passed yet.
+- Remaining M2 blockers: real Buyer-facing Porter handoff/dispatch browser and mobile E2E; keyboard/screen-reader/responsive verification; Foundation and complete migration-history reconciliation; isolated full Supabase Native Runtime replay; Auth/JWT/PostgREST/RLS/Storage verification; and historical order identity snapshot design/implementation behind the Foundation gate.
+- No SQL/migration or database was changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.
