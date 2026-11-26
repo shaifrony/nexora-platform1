@@ -160,3 +160,11 @@ test("Buyer delivery handoff guidance covers every customer-safe state without e
   assert.ok(buyerOrderLoader.includes("পণ্য ও পরিমাণ যাচাইয়ের আগে রিসিপ্ট OTP শেয়ার করবেন না"));
   assert.doesNotMatch(buyerOrderLoader, /provider_(?:id|phone|email)|assigned_staff_id|driver_phone/i);
 });
+
+
+test("Buyer can retry customer-safe delivery tracking after a temporary RPC failure", () => {
+  assert.ok(buyerOrderLoader.includes('ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না।'));
+  assert.ok(buyerOrderLoader.includes('data-buyer-orders-retry'));
+  assert.ok(buyerOrderLoader.includes('aria-label="ডেলিভারি ট্র্যাকিং আবার লোড করুন"'));
+  assert.ok(buyerOrderLoader.includes('host.querySelectorAll("[data-buyer-orders-retry]").forEach(button=>button.addEventListener("click",()=>loadBuyerOrders()));'));
+});

@@ -1,6 +1,6 @@
 # NEXORA Work Tracker
 
-Updated: 2026-11-25 (CI #45319132611 passed on exact HEAD 2a078ba; 169/169 source tests, 10 focused PostgreSQL suites, 52 migration-order validation and source snapshot passed; Buyer handoff UX follow-up CI pending)
+Updated: 2026-11-26 (CI #45542239610 passed on exact HEAD a0aea45; 170/170 dependency-free tests, 10 focused PostgreSQL suites, 52 active migration filename/order validation and source snapshot passed; Buyer tracking retry change pending CI)
 
 Recovery and ownership guide: [NEXORA Recovery & Ownership](NEXORA_RECOVERY_AND_OWNERSHIP.md). Development CI now publishes a tested source archive + full Git history bundle after successful branch validation (90-day artifact retention). Run #43663966808 verified both validation and snapshot jobs; artifact size 2,174,401 bytes, expires 2027-02-13. This is not a database/Storage backup; hosted backup and restore remain pre-launch gates.
 
@@ -2200,3 +2200,14 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Application commit: `a62424e70d7a7c121ac9510a5b31d863dc3a4eb6`; regression test commit: `38dad45542d2c5a3dfa5705704ab2d507723032f`; Buyer checklist commit: `0fad57d65cb19bb6f6ef27b3238cf1864b409dd5`. The exact-HEAD CI for these new commits is pending; do not count the added regression test as passed until GitHub Actions confirms it.
 - Remaining M2 blockers include actual Buyer-facing Porter handoff/dispatch browser and mobile E2E, keyboard/responsive/screen-reader verification, complete Foundation/migration-history reconciliation, and real Auth/JWT/PostgREST/RLS/Storage verification. Historical identity snapshot changes remain blocked on the Foundation gate.
 - No SQL or migration, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.
+
+
+## 2026-11-26 — M2 Buyer delivery tracking retry on transient read failure
+
+- Re-verified branch `nexora-development` exact HEAD `a0aea45c58eec7d5635b7e8f3892eaec9ec90810`, recent branch commits and the main tracker before editing.
+- GitHub Actions [#45542239610](https://github.com/shaifrony/nexora-platform1/actions/runs/45542239610) completed successfully on that exact HEAD. Both jobs succeeded. The static job log confirms **170/170 dependency-free tests**, all **10 focused disposable PostgreSQL suites**, **52 active migration filename/order validations**, JavaScript syntax, and the recoverable source snapshot job.
+- Continued M2 B-06 with a small Buyer Order History resilience improvement: when the existing customer-safe `get_my_order_delivery_updates` RPC temporarily fails, the Buyer now sees an accessible “আবার চেষ্টা করুন” control. Activating it reruns the existing own-order loader and clears/rebuilds the loading state; it does not query raw delivery tables or expose worker/provider identity or contact data.
+- Added a focused source regression assertion for the failure message, accessible label, retry control and event handler. Updated the Buyer completion checklist to record the previously completed handoff-guidance CI result and this new retry control.
+- This app/test/checklist/tracker change is committed together on Development. Its exact-HEAD CI is pending; the new retry regression assertion must not be counted as passed until that run completes.
+- Browser/mobile, keyboard and screen-reader E2E remain unverified. Buyer dispatch/handoff journey, Foundation/migration-history reconciliation, isolated full Supabase Native Runtime replay, Auth/JWT/PostgREST/RLS/Storage verification and historical order identity snapshots remain open.
+- No SQL/migration, database, NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.

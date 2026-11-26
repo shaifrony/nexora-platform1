@@ -699,7 +699,7 @@
         const updates=trackingByOrder.get(o.id)||[];
         const operationsHtml=operationsUnavailable?'<p class="muted">Proof/Dispute তথ্য আপাতত লোড করা যাচ্ছে না।</p>':orderDeliveryOperationsHtml(operationsByOrder.get(o.id)||[]);
         const trackingHtml=trackingUnavailable
-          ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p>'
+          ?'<p class="muted">ডেলিভারি ট্র্যাকিং আপাতত লোড করা যাচ্ছে না। পরে আবার চেষ্টা করুন।</p><button type="button" class="light" data-buyer-orders-retry aria-label="ডেলিভারি ট্র্যাকিং আবার লোড করুন">আবার চেষ্টা করুন</button>'
           :updates.length
             ?'<div class="nx-order-timeline"><b>ডেলিভারি ট্র্যাকিং</b><ol>'+updates.map(u=>'<li><b>'+esc(deliveryStatusLabels[u.customer_status]||u.customer_status)+'</b> · '+esc(u.job_reference)+'<br>'+esc(u.customer_message)+'<br><span class="muted"><b>আপনার করণীয়:</b> '+esc(deliveryStatusGuidance[u.customer_status]||"পরবর্তী আপডেটের জন্য অপেক্ষা করুন।")+'</span>'+(u.customer_location_label?'<br><span class="muted">'+esc(u.customer_location_label)+'</span>':'')+' <span class="muted">· '+esc(formatOrderDate(u.created_at))+'</span></li>').join("")+'</ol><p class="muted">একটি অর্ডারে একাধিক চালান থাকতে পারে। ডেলিভারি রিপোর্ট মানেই অর্ডার সম্পন্ন নয়; পণ্য হাতে পেয়ে যাচাই করে আপনাকেই নিশ্চিত করতে হবে।</p></div>'
             :'<p class="muted">এখনো কোনো প্রকাশিত ডেলিভারি আপডেট নেই। ডেলিভারি ব্যবস্থা তৈরি বা আপডেট হলে এখানে দেখা যাবে।</p>';
@@ -714,6 +714,7 @@
           action+'</article>';
       }).join("")+'</div><p class="muted" data-buyer-order-empty hidden>এই অবস্থায় কোনো অর্ডার নেই।</p>';
       await wireOrderDeliveryOperations(host,loadBuyerOrders);
+      host.querySelectorAll("[data-buyer-orders-retry]").forEach(button=>button.addEventListener("click",()=>loadBuyerOrders()));
       const filterSelect=$("nxBuyerOrderStatusFilter");
       if(filterSelect)filterSelect.addEventListener("change",()=>{
         const cards=[...host.querySelectorAll("[data-buyer-order-card]")];
