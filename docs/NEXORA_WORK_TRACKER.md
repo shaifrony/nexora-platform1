@@ -2222,3 +2222,43 @@ Source audit surfaced UX friction to address next: multiple competing CTAs on Pr
 - Added a source regression test in `tests/marketplace-listing-category.test.js` to guard consistent escaped labels, Product detail mapping and explicit legacy fallback. Updated the Buyer completion checklist and this tracker. Test commit: `180cab0e9e8339c333e240058f1ed90161a692b3`; checklist commit: `bb8f12f2eea85c007dd5901d9139a8ad60a5f17c`. The new label regression test's exact-HEAD CI is pending and must not be counted as passed yet.
 - Remaining M2 blockers: real Buyer-facing Porter handoff/dispatch browser and mobile E2E; keyboard/screen-reader/responsive verification; Foundation and complete migration-history reconciliation; isolated full Supabase Native Runtime replay; Auth/JWT/PostgREST/RLS/Storage verification; and historical order identity snapshot design/implementation behind the Foundation gate.
 - No SQL/migration or database was changed. No NEXORA-TEST, Live/Hosted Supabase, `main`, Production, DNS or deployment was changed. Payment gateway and payout activation remain inactive.
+
+
+## 2026-11-26 — Project-wide completion audit (evidence-based planning estimate)
+
+**Audit scope:** latest Development branch source/docs, Buyer completion checklist, marketplace/business/demand progress notes, migration/recovery/review closeout documents, recent commit history and exact-HEAD GitHub Actions run. This is a source-and-documentation audit, not a production-readiness certification.
+
+### Verified branch and CI baseline
+- Branch: `nexora-development`; audited HEAD before this audit: `42420fd01ab9280929accffa8eb9a5e4013ba7ea`.
+- Latest completed run at audit start: [#45786380890](https://github.com/shaifrony/nexora-platform1/actions/runs/45786380890), exact HEAD `42420fd`, conclusion **success**. Both static/regression + disposable PostgreSQL validation and recoverable source snapshot jobs succeeded.
+- Job steps confirmed successful: JavaScript syntax; dependency-free regression suite; focused Buyer Demand, Product Price Negotiation, Product commercial-fields, Buyer-safe Delivery Updates, Buyer receipt OTP, Admin Order-to-Delivery linking, identity-bound Delivery Staff receipt, Delivery Staff operations, Payment Intent/Finance Ledger foundation and Payment Reconciliation PostgreSQL suites; active migration filename/order validation; source snapshot + Git history bundle upload.
+- This CI does not prove a full current migration-chain replay in a genuine isolated Supabase Native Runtime, hosted JWT/PostgREST/RLS/Storage/Realtime behavior, browser/mobile E2E, live backup/restore, or Production readiness.
+
+### Module-by-module audit (planning estimates, not measured test coverage)
+| Module | Estimate | Evidence / reason |
+|---|---:|---|
+| M1 — Buyer | 65% | Demand, quotations, order paths, safe delivery tracking/OTP, retry and UI guidance are staged; Buyer checklist still has runtime, migration reconciliation, browser/mobile E2E, accessibility, historical order snapshots and review-scope blockers. |
+| M2 — Seller | 60% | Business Profile, Product/Service listings, approval/edit workflow, commercial terms and negotiation foundations exist; full seller journey, listing review/runtime verification, browser/mobile E2E and end-to-end operational completeness remain. |
+| M3 — Porter / Logistics | 45% | Delivery partner/team/provider model, assignment, staff identity, dispatch/receipt queues, OTP and Admin linking are staged and focused disposable PostgreSQL suites pass; complete field operations/proof, messaging, charge/settlement, courier APIs and device/browser E2E remain. |
+| M4 — Admin departments | 25% | Protected Admin console, MFA/AAL2, role/permission and parts of Transport/Accounts workflows exist; Director/MD/Marketing/Accounts department operations, scoped reports, staff lifecycle and full E2E are not complete. |
+| M5 — Integration / release | 15% | CI, source snapshot, some local security/review tests and design documents exist; migration history reconciliation, genuine isolated Supabase replay, complete Auth/JWT/RLS/PostgREST, browser/mobile E2E, backup/restore rehearsal and explicit release approval remain open. |
+
+**Overall planning estimate: approximately 42% complete.** This is a weighted engineering judgement (M1 25%, M2 25%, M3 20%, M4 15%, M5 15%), not a count of passing tests or lines of code. Reasonable uncertainty is ±8 percentage points because several staged features have not been exercised in a complete isolated Supabase runtime or real browser/device journey. Do not present this as a verified delivery percentage or imply 42% of the work/time is done.
+
+### Cross-cutting release blockers (must remain visible)
+1. Hosted Supabase migration history is behind the staged Development chain; forward migration order and missing history must be reconciled before any hosted migration.
+2. Current full migration chain needs a genuine isolated Supabase Native Runtime rehearsal. PGlite/fixture/focused disposable PostgreSQL suites are useful but not equivalent to full Supabase.
+3. Hosted Auth-issued JWT, PostgREST, RLS/column grants, Storage, Realtime and Edge Function behavior remain unverified for the current exact chain.
+4. Buyer/Seller/Porter/Admin browser and Android mobile E2E, responsive layout, keyboard/screen-reader accessibility and negative authorization flows remain incomplete.
+5. Historical Order identity snapshot design must be resolved for Product, Service and Buyer Demand without inventing Product IDs or exposing Seller private data.
+6. Business-level verified-review scope for Buyer Demand orders and review column-grant hardening remain open.
+7. Delivery field proof/status, delivery fee/settlement and courier integrations remain incomplete.
+8. Payment provider, refund, Seller payable/payout, maker-checker and legal/provider decisions are not approved. Do not activate gateway or payout.
+9. Backup/restore of hosted database and Storage, and a restore rehearsal, are not verified. CI source artifacts are not database backups.
+10. Production release remains blocked; no deployment approval is implied.
+
+### Next work order
+- Keep Module priority M1 → M2 → M3 → M4 → M5 (the project-specific established order remains Buyer → Seller → Porter → Admin; use the existing internal Module 2→3→1→4→5 execution order only where the tracker defines it).
+- Before new feature scope, close the M1 Buyer Order historical identity snapshot design gate with exact source-column/RPC mapping and regression plan; no schema change until the design and migration ordering are reviewed.
+- Then continue the lowest-risk incomplete Buyer journey item, updating the Buyer checklist and tracker with exact CI evidence.
+- Never modify `main`, Production, Live/Hosted Supabase, DNS or deployment; never apply hosted migrations without explicit approval.
