@@ -1,0 +1,95 @@
+-- Adds per-listing Wholesale/Retail classification without introducing account categories.
+-- Existing records are preserved as legacy_unclassified; no historic sale type is guessed.
+BEGIN;
+
+ALTER TABLE public.products
+  ADD COLUMN market_category text;
+
+UPDATE public.products
+SET market_category = 'legacy_unclassified'
+WHERE market_category IS NULL;
+
+ALTER TABLE public.products
+  ALTER COLUMN market_category SET DEFAULT 'legacy_unclassified',
+  ALTER COLUMN market_category SET NOT NULL;
+
+ALTER TABLE public.products
+  ADD CONSTRAINT products_market_category_check
+  CHECK (market_category IN ('wholesale', 'retail', 'legacy_unclassified'));
+
+COMMENT ON COLUMN public.products.market_category IS
+  'Per-listing sale channel. New listings must be wholesale or retail; legacy_unclassified preserves historical rows without guessing.';
+
+CREATE INDEX products_market_category_status_created_idx
+  ON public.products (market_category, listing_status, created_at DESC);
+
+-- anon has column-scoped SELECT on products; authenticated has table SELECT.
+GRANT SELECT (market_category) ON public.products TO anon, authenticated;
+
+-- Authenticated Marketplace clients need listing data, not Admin review metadata.
+REVOKE SELECT ON public.products FROM authenticated;
+GRANT SELECT (
+  id, business_id, seller_id, product_code, slug, product_name, category,
+  subcategory, market_category, image_urls, description, origin, specifications_quality,
+  price, currency, listing_status, created_at, updated_at,
+  minimum_order_quantity, stock_tracking, stock_quantity, reserved_quantity, price_tiers
+) ON public.products TO authenticated;
+
+-- Existing products_owner_pending_update RLS policy restricts Seller updates to pending listings.
+GRANT UPDATE (market_category) ON public.products TO authenticated;
+
+CREATE OR REPLACE FUNCTION private.guard_product_market_category()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $$
+BEGIN
+  IF NEW.market_category IS NULL
+     OR NEW.market_category NOT IN ('wholesale', 'retail') THEN
+    RAISE EXCEPTION 'New or reclassified listings must use wholesale or retail market_category'
+      USING ERRCODE = '23514';
+  END IF;
+
+  IF TG_OP = 'UPDATE'
+     AND OLD.listing_status = 'approved'
+     AND NEW.market_category IS DISTINCT FROM OLD.market_category THEN
+    RAISE EXCEPTION 'Published listing market_category is immutable; create a separate listing'
+      USING ERRCODE = '23514';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION private.guard_product_market_category()
+  FROM PUBLIC, anon, authenticated;
+
+CREATE TRIGGER products_guard_market_category
+  BEFORE INSERT OR UPDATE OF market_category ON public.products
+  FOR EACH ROW
+  EXECUTE FUNCTION private.guard_product_market_category();
+
+
+-- Review notes are not readable through the Product table grant. Return them
+-- only to the owning active Seller or an MFA-protected active NEXORA Admin.
+create or replace function public.get_my_product_listing_review_notes()
+returns table(product_id uuid, admin_note text, reviewed_at timestamptz)
+language sql
+security definer
+set search_path=''
+as $
+  select p.id,p.admin_note,p.reviewed_at
+  from public.products p
+  where (
+    (p.seller_id=(select auth.uid()) and exists(
+      select 1 from public.profiles pr
+      where pr.id=(select auth.uid()) and pr.role='seller' and pr.account_status='active'
+    ))
+    or (public.is_nexora_admin() and (select auth.jwt()->>'aal')='aal2')
+  )
+  order by p.updated_at desc;
+$;
+revoke all on function public.get_my_product_listing_review_notes() from public,anon;
+grant execute on function public.get_my_product_listing_review_notes() to authenticated;
+
+COMMIT;

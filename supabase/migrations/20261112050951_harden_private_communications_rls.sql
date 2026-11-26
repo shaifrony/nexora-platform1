@@ -1,0 +1,61 @@
+-- Prevent recursive RLS evaluation and restrict private communication field updates.
+create schema if not exists private;
+revoke all on schema private from public,anon;
+grant usage on schema private to authenticated;
+create or replace function private.is_conversation_member(p_conversation_id uuid)
+returns boolean language sql stable security definer set search_path=''
+as $$ select exists(select 1 from public.conversation_participants cp where cp.conversation_id=p_conversation_id and cp.user_id=(select auth.uid()) and cp.invitation_status='accepted'); $$;
+create or replace function private.is_conversation_creator(p_conversation_id uuid)
+returns boolean language sql stable security definer set search_path=''
+as $$ select exists(select 1 from public.conversations c where c.id=p_conversation_id and c.created_by=(select auth.uid())); $$;
+revoke all on function private.is_conversation_member(uuid) from public,anon;
+revoke all on function private.is_conversation_creator(uuid) from public,anon;
+grant execute on function private.is_conversation_member(uuid) to authenticated;
+grant execute on function private.is_conversation_creator(uuid) to authenticated;
+drop policy if exists conversations_participant_read on public.conversations;
+create policy conversations_participant_read on public.conversations for select to authenticated using (private.is_conversation_member(id) or private.is_conversation_creator(id));
+drop policy if exists conversations_creator_or_member_update on public.conversations;
+create policy conversations_creator_or_member_update on public.conversations for update to authenticated using (private.is_conversation_member(id) or private.is_conversation_creator(id)) with check (private.is_conversation_member(id) or private.is_conversation_creator(id));
+drop policy if exists participants_read_self_or_members on public.conversation_participants;
+create policy participants_read_self_or_members on public.conversation_participants for select to authenticated using (user_id=(select auth.uid()) or private.is_conversation_member(conversation_id));
+drop policy if exists participants_invite_by_member on public.conversation_participants;
+create policy participants_invite_by_creator on public.conversation_participants for insert to authenticated with check (invited_by=(select auth.uid()) and ((user_id=(select auth.uid()) and invitation_status='accepted') or (user_id<>(select auth.uid()) and invitation_status='pending')) and private.is_conversation_creator(conversation_id));
+drop policy if exists participants_accept_own_invite on public.conversation_participants;
+drop policy if exists participants_leave_self on public.conversation_participants;
+create policy participants_update_own_status on public.conversation_participants for update to authenticated using (user_id=(select auth.uid()) and invitation_status in ('pending','accepted')) with check (user_id=(select auth.uid()) and invitation_status in ('accepted','declined','left'));
+drop policy if exists messages_participant_read on public.messages;
+create policy messages_participant_read on public.messages for select to authenticated using (private.is_conversation_member(conversation_id));
+drop policy if exists messages_participant_send on public.messages;
+create policy messages_participant_send on public.messages for insert to authenticated with check (sender_id=(select auth.uid()) and exists(select 1 from public.conversations c where c.id=conversation_id and c.status='active') and private.is_conversation_member(conversation_id));
+drop policy if exists messages_owner_edit on public.messages;
+create policy messages_owner_edit on public.messages for update to authenticated using (sender_id=(select auth.uid()) and private.is_conversation_member(conversation_id) and deleted_at is null) with check (sender_id=(select auth.uid()) and private.is_conversation_member(conversation_id));
+drop policy if exists messages_owner_delete on public.messages;
+create policy messages_owner_delete on public.messages for delete to authenticated using (sender_id=(select auth.uid()) and private.is_conversation_member(conversation_id));
+drop policy if exists attachments_participant_read on public.message_attachments;
+create policy attachments_participant_read on public.message_attachments for select to authenticated using (private.is_conversation_member(conversation_id));
+drop policy if exists attachments_sender_insert on public.message_attachments;
+create policy attachments_sender_insert on public.message_attachments for insert to authenticated with check (uploaded_by=(select auth.uid()) and private.is_conversation_member(conversation_id) and exists(select 1 from public.messages m where m.id=message_id and m.sender_id=(select auth.uid()) and m.conversation_id=message_attachments.conversation_id));
+drop policy if exists calls_participant_read on public.call_sessions;
+create policy calls_participant_read on public.call_sessions for select to authenticated using (private.is_conversation_member(conversation_id));
+drop policy if exists calls_participant_start on public.call_sessions;
+create policy calls_participant_start on public.call_sessions for insert to authenticated with check (initiated_by=(select auth.uid()) and call_status='ringing' and private.is_conversation_member(conversation_id));
+drop policy if exists calls_participant_update on public.call_sessions;
+create policy calls_participant_update on public.call_sessions for update to authenticated using (private.is_conversation_member(conversation_id)) with check (private.is_conversation_member(conversation_id));
+drop policy if exists call_signals_sender_recipient_read on public.call_signals;
+create policy call_signals_sender_recipient_read on public.call_signals for select to authenticated using ((sender_id=(select auth.uid()) or recipient_id=(select auth.uid())) and private.is_conversation_member(conversation_id));
+drop policy if exists call_signals_sender_insert on public.call_signals;
+create policy call_signals_sender_insert on public.call_signals for insert to authenticated with check (sender_id=(select auth.uid()) and recipient_id<>(select auth.uid()) and private.is_conversation_member(conversation_id) and exists(select 1 from public.call_sessions cs where cs.id=call_id and cs.conversation_id=call_signals.conversation_id) and exists(select 1 from public.conversation_participants cp where cp.conversation_id=call_signals.conversation_id and cp.user_id=recipient_id and cp.invitation_status='accepted') and octet_length(payload::text)<=65536);
+revoke update on public.conversations,public.conversation_participants,public.messages,public.call_sessions from authenticated;
+grant update (title,status,updated_at) on public.conversations to authenticated;
+grant update (invitation_status,joined_at) on public.conversation_participants to authenticated;
+grant update (body,edited_at,deleted_at) on public.messages to authenticated;
+grant update (call_status,started_at,ended_at) on public.call_sessions to authenticated;
+create index if not exists call_sessions_initiated_by_idx on public.call_sessions(initiated_by);
+create index if not exists call_signals_call_id_idx on public.call_signals(call_id);
+create index if not exists call_signals_conversation_id_idx on public.call_signals(conversation_id);
+create index if not exists call_signals_sender_id_idx on public.call_signals(sender_id);
+create index if not exists conversation_participants_invited_by_idx on public.conversation_participants(invited_by);
+create index if not exists conversations_created_by_idx on public.conversations(created_by);
+create index if not exists message_attachments_message_id_idx on public.message_attachments(message_id);
+create index if not exists message_attachments_uploaded_by_idx on public.message_attachments(uploaded_by);
+create index if not exists messages_reply_to_id_idx on public.messages(reply_to_id);
